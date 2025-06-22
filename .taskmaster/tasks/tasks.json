@@ -631,7 +631,7 @@
           3,
           6
         ],
-        "status": "pending",
+        "status": "in-progress",
         "subtasks": [
           {
             "id": 1,
@@ -639,7 +639,7 @@
             "description": "Create the base navigation drawer component with TV-specific layout and dimensions",
             "dependencies": [],
             "details": "Implement a navigation drawer that slides in from the left side of the screen. Use TV-safe dimensions (10% padding from edges). Create drawer container with proper z-index layering and backdrop overlay. Set up drawer states (open/closed) and basic structure for menu items.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -1513,7 +1513,7 @@
     ],
     "metadata": {
       "created": "2025-06-22T03:41:46.714Z",
-      "updated": "2025-06-22T20:32:04.796Z",
+      "updated": "2025-06-22T20:42:22.877Z",
       "description": "Tasks for master context"
     }
   }
