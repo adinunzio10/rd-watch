@@ -16,7 +16,9 @@
       "mcp__taskmaster-ai__update_subtask",
       "mcp__taskmaster-ai__next_task",
       "Bash(git checkout:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(mkdir:*)"
     ],
     "deny": []
   }

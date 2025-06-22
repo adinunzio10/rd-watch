@@ -67,6 +67,14 @@ dependencies {
     implementation(libs.hilt.navigation.compose)
     kapt(libs.hilt.compiler)
     
+    // Network dependencies
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.converter.moshi)
+    implementation(libs.okhttp)
+    implementation(libs.okhttp.logging.interceptor)
+    implementation(libs.moshi)
+    implementation(libs.moshi.kotlin)
+    
     // Hilt testing dependencies
     testImplementation(libs.hilt.android.testing)
     kaptTest(libs.hilt.compiler)
