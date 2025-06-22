@@ -1036,7 +1036,7 @@
         "dependencies": [
           3
         ],
-        "status": "pending",
+        "status": "in-progress",
         "subtasks": [
           {
             "id": 1,
@@ -1044,7 +1044,7 @@
             "description": "Add ExoPlayer dependencies to build.gradle and create basic player initialization",
             "dependencies": [],
             "details": "Add ExoPlayer core, UI, and extension dependencies. Create singleton player instance with proper lifecycle management in Application class or dependency injection module.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -1055,7 +1055,7 @@
               1
             ],
             "details": "Design custom PlayerControlView with large, TV-friendly buttons. Implement focus handling, D-pad navigation, and remote control key mapping. Include play/pause, seek, and menu buttons.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -1066,7 +1066,7 @@
               1
             ],
             "details": "Setup MediaSource factories for HLS, DASH, and progressive media. Configure extractors for common formats (MP4, MKV, WebM). Add format detection based on URL or MIME type.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -1078,7 +1078,7 @@
               3
             ],
             "details": "Configure SubtitleView with TV-appropriate text size and positioning. Support WebVTT, SRT, and TTML formats. Add subtitle selection UI and style customization options.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -1113,7 +1113,7 @@
               1
             ],
             "details": "Build state machine for player states (idle, buffering, ready, ended, error). Persist playback position across app restarts. Handle configuration changes and background playback.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -1148,7 +1148,7 @@
               7
             ],
             "details": "Handle network errors, format incompatibility, DRM failures, and decoder errors. Create error UI with retry options. Implement automatic quality downgrade on repeated errors.",
-            "status": "pending",
+            "status": "in-progress",
             "testStrategy": ""
           },
           {
@@ -1513,7 +1513,7 @@
     ],
     "metadata": {
       "created": "2025-06-22T03:41:46.714Z",
-      "updated": "2025-06-22T19:51:41.318Z",
+      "updated": "2025-06-22T20:12:56.593Z",
       "description": "Tasks for master context"
     }
   }
