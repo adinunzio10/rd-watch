@@ -1,7 +1,9 @@
 package com.rdwatch.androidtv.di
 
 import android.content.Context
+import androidx.media3.common.util.UnstableApi
 import com.rdwatch.androidtv.player.ExoPlayerManager
+import com.rdwatch.androidtv.player.MediaSourceFactory
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -9,15 +11,25 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
+@UnstableApi
 @Module
 @InstallIn(SingletonComponent::class)
 object PlayerModule {
     
     @Provides
     @Singleton
-    fun provideExoPlayerManager(
+    fun provideMediaSourceFactory(
         @ApplicationContext context: Context
+    ): MediaSourceFactory {
+        return MediaSourceFactory(context)
+    }
+    
+    @Provides
+    @Singleton
+    fun provideExoPlayerManager(
+        @ApplicationContext context: Context,
+        mediaSourceFactory: MediaSourceFactory
     ): ExoPlayerManager {
-        return ExoPlayerManager(context)
+        return ExoPlayerManager(context, mediaSourceFactory)
     }
 }

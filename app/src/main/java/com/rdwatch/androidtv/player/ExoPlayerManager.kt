@@ -3,6 +3,7 @@ package com.rdwatch.androidtv.player
 import android.content.Context
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
+import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -12,9 +13,11 @@ import kotlinx.coroutines.flow.asStateFlow
 import javax.inject.Inject
 import javax.inject.Singleton
 
+@UnstableApi
 @Singleton
 class ExoPlayerManager @Inject constructor(
-    @ApplicationContext private val context: Context
+    @ApplicationContext private val context: Context,
+    private val mediaSourceFactory: MediaSourceFactory
 ) {
     private var _exoPlayer: ExoPlayer? = null
     val exoPlayer: ExoPlayer get() = _exoPlayer ?: createPlayer()
@@ -76,13 +79,27 @@ class ExoPlayerManager @Inject constructor(
             }
     }
     
-    fun prepareMedia(mediaUrl: String, title: String? = null) {
+    fun prepareMedia(mediaUrl: String, title: String? = null, metadata: MediaMetadata? = null) {
         val mediaItem = MediaItem.Builder()
             .setUri(mediaUrl)
-            .apply { title?.let { setMediaMetadata(androidx.media3.common.MediaMetadata.Builder().setTitle(it).build()) } }
+            .apply { 
+                title?.let { 
+                    setMediaMetadata(
+                        androidx.media3.common.MediaMetadata.Builder()
+                            .setTitle(it)
+                            .apply { 
+                                metadata?.description?.let { setDescription(it) }
+                                metadata?.thumbnailUrl?.let { setArtworkUri(android.net.Uri.parse(it)) }
+                            }
+                            .build()
+                    ) 
+                } 
+            }
             .build()
-            
-        exoPlayer.setMediaItem(mediaItem)
+        
+        // Create appropriate media source based on format
+        val mediaSource = mediaSourceFactory.createMediaSource(mediaItem)
+        exoPlayer.setMediaSource(mediaSource)
         exoPlayer.prepare()
         
         updatePlayerState { 
@@ -92,6 +109,14 @@ class ExoPlayerManager @Inject constructor(
                 error = null
             )
         }
+    }
+    
+    fun isFormatSupported(url: String): Boolean {
+        return mediaSourceFactory.isFormatSupported(url)
+    }
+    
+    fun getSupportedFormats(): List<String> {
+        return mediaSourceFactory.getSupportedFormats()
     }
     
     fun play() {

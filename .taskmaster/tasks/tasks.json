@@ -1055,7 +1055,7 @@
               1
             ],
             "details": "Design custom PlayerControlView with large, TV-friendly buttons. Implement focus handling, D-pad navigation, and remote control key mapping. Include play/pause, seek, and menu buttons.",
-            "status": "in-progress",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -1066,7 +1066,7 @@
               1
             ],
             "details": "Setup MediaSource factories for HLS, DASH, and progressive media. Configure extractors for common formats (MP4, MKV, WebM). Add format detection based on URL or MIME type.",
-            "status": "pending",
+            "status": "in-progress",
             "testStrategy": ""
           },
           {
@@ -1513,7 +1513,7 @@
     ],
     "metadata": {
       "created": "2025-06-22T03:41:46.714Z",
-      "updated": "2025-06-22T20:06:21.227Z",
+      "updated": "2025-06-22T20:08:29.749Z",
       "description": "Tasks for master context"
     }
   }
