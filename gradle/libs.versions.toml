@@ -1,14 +1,26 @@
 [versions]
 agp = "8.7.3"
-kotlin = "1.9.24"
+kotlin = "1.9.25"
 coreKtx = "1.16.0"
 leanback = "1.2.0"
 glide = "4.11.0"
+composeBom = "2024.12.01"
+composeCompiler = "1.5.15"
+tvFoundation = "1.0.0"
+tvMaterial = "1.0.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-leanback = { group = "androidx.leanback", name = "leanback", version.ref = "leanback" }
 glide = { group = "com.github.bumptech.glide", name = "glide", version.ref = "glide" }
+androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }
+androidx-compose-ui = { group = "androidx.compose.ui", name = "ui" }
+androidx-compose-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
+androidx-compose-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview" }
+androidx-compose-material3 = { group = "androidx.compose.material3", name = "material3" }
+androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version = "1.9.3" }
+androidx-tv-foundation = { group = "androidx.tv", name = "tv-foundation", version = "1.0.0-alpha11" }
+androidx-tv-material = { group = "androidx.tv", name = "tv-material", version = "1.0.0-alpha11" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

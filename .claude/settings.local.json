@@ -8,7 +8,12 @@
       "mcp__taskmaster-ai__expand_task",
       "mcp__taskmaster-ai__get_task",
       "Bash(cp:*)",
-      "Bash(true)"
+      "Bash(true)",
+      "mcp__taskmaster-ai__set_task_status",
+      "Bash(./gradlew:*)",
+      "Bash(export ANDROID_HOME=/Users/alfredodinunzio/Library/Android/sdk)",
+      "Bash($ANDROID_HOME/platform-tools/adb:*)",
+      "mcp__taskmaster-ai__update_subtask"
     ],
     "deny": []
   }
