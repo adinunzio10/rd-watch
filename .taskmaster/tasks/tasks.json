@@ -1113,7 +1113,7 @@
               1
             ],
             "details": "Build state machine for player states (idle, buffering, ready, ended, error). Persist playback position across app restarts. Handle configuration changes and background playback.",
-            "status": "in-progress",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -1148,7 +1148,7 @@
               7
             ],
             "details": "Handle network errors, format incompatibility, DRM failures, and decoder errors. Create error UI with retry options. Implement automatic quality downgrade on repeated errors.",
-            "status": "pending",
+            "status": "in-progress",
             "testStrategy": ""
           },
           {
@@ -1513,7 +1513,7 @@
     ],
     "metadata": {
       "created": "2025-06-22T03:41:46.714Z",
-      "updated": "2025-06-22T20:11:07.209Z",
+      "updated": "2025-06-22T20:12:56.593Z",
       "description": "Tasks for master context"
     }
   }

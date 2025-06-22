@@ -5,6 +5,7 @@ import androidx.media3.common.util.UnstableApi
 import com.rdwatch.androidtv.player.ExoPlayerManager
 import com.rdwatch.androidtv.player.MediaSourceFactory
 import com.rdwatch.androidtv.player.state.PlaybackStateRepository
+import com.rdwatch.androidtv.player.error.PlayerErrorHandler
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -35,11 +36,18 @@ object PlayerModule {
     
     @Provides
     @Singleton
+    fun providePlayerErrorHandler(): PlayerErrorHandler {
+        return PlayerErrorHandler()
+    }
+    
+    @Provides
+    @Singleton
     fun provideExoPlayerManager(
         @ApplicationContext context: Context,
         mediaSourceFactory: MediaSourceFactory,
-        stateRepository: PlaybackStateRepository
+        stateRepository: PlaybackStateRepository,
+        errorHandler: PlayerErrorHandler
     ): ExoPlayerManager {
-        return ExoPlayerManager(context, mediaSourceFactory, stateRepository)
+        return ExoPlayerManager(context, mediaSourceFactory, stateRepository, errorHandler)
     }
 }

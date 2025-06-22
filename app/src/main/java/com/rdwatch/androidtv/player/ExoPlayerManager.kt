@@ -8,6 +8,7 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
 import com.rdwatch.androidtv.player.state.PlaybackStateRepository
 import com.rdwatch.androidtv.player.state.PlaybackSession
+import com.rdwatch.androidtv.player.error.PlayerErrorHandler
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -23,7 +24,8 @@ import javax.inject.Singleton
 class ExoPlayerManager @Inject constructor(
     @ApplicationContext private val context: Context,
     private val mediaSourceFactory: MediaSourceFactory,
-    private val stateRepository: PlaybackStateRepository
+    private val stateRepository: PlaybackStateRepository,
+    private val errorHandler: PlayerErrorHandler
 ) {
     private var _exoPlayer: ExoPlayer? = null
     val exoPlayer: ExoPlayer get() = _exoPlayer ?: createPlayer()
@@ -43,7 +45,8 @@ class ExoPlayerManager @Inject constructor(
         
         override fun onPlayerError(error: androidx.media3.common.PlaybackException) {
             super.onPlayerError(error)
-            updatePlayerState { copy(error = error.message) }
+            val playerError = errorHandler.handleError(error)
+            updatePlayerState { copy(error = playerError.message) }
         }
         
         override fun onPositionDiscontinuity(
@@ -213,6 +216,24 @@ class ExoPlayerManager @Inject constructor(
             stateRepository.removePlaybackPosition(mediaUrl)
         }
     }
+    
+    fun retryPlayback(): Boolean {
+        val currentError = errorHandler.currentError.value
+        return if (currentError != null && errorHandler.shouldRetry(currentError)) {
+            errorHandler.performRetry()
+            exoPlayer.prepare()
+            true
+        } else {
+            false
+        }
+    }
+    
+    fun clearError() {
+        errorHandler.clearError()
+        updatePlayerState { copy(error = null) }
+    }
+    
+    val playerErrorHandler: PlayerErrorHandler get() = this.errorHandler
 }
 
 data class PlayerState(
