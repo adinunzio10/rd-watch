@@ -16,4 +16,39 @@
     <!-- Error messages -->
     <string name="error_fragment_message">An error occurred</string>
     <string name="dismiss_error">Dismiss</string>
+    
+    <!-- Error types -->
+    <string name="error_unknown">An unexpected error occurred</string>
+    <string name="error_network">Network error</string>
+    <string name="error_no_internet">No internet connection</string>
+    <string name="error_timeout">Request timed out</string>
+    <string name="error_server">Server error</string>
+    <string name="error_bad_request">Bad request</string>
+    <string name="error_unauthorized">Unauthorized</string>
+    <string name="error_forbidden">Access forbidden</string>
+    <string name="error_not_found">Content not found</string>
+    <string name="error_too_many_requests">Too many requests</string>
+    
+    <!-- Error descriptions -->
+    <string name="error_unknown_description">Something went wrong. Please try again later.</string>
+    <string name="error_network_description">Please check your internet connection and try again.</string>
+    <string name="error_no_internet_description">No internet connection available. Please check your network settings.</string>
+    <string name="error_timeout_description">Request timed out. Please try again.</string>
+    <string name="error_server_description">Server is temporarily unavailable. Please try again later.</string>
+    <string name="error_unauthorized_description">Please log in to continue.</string>
+    <string name="error_forbidden_description">You don\'t have permission to access this content.</string>
+    <string name="error_not_found_description">The requested content was not found.</string>
+    <string name="error_too_many_requests_description">Too many requests. Please wait a moment and try again.</string>
+    <string name="error_database_description">Data storage error. Please restart the app.</string>
+    <string name="error_authentication_description">Authentication failed. Please log in again.</string>
+    <string name="error_authorization_description">You don\'t have permission to perform this action.</string>
+    <string name="error_video_player_description">Video playback error. Please try again.</string>
+    
+    <!-- Action buttons -->
+    <string name="action_retry">Retry</string>
+    <string name="action_ok">OK</string>
+    <string name="action_login">Login</string>
+    
+    <!-- Retry messages -->
+    <string name="error_retry_message">Tap retry to try again</string>
 </resources>
