@@ -2,7 +2,8 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.hilt.android)
-    alias(libs.plugins.kotlin.kapt)
+    alias(libs.plugins.kotlin.ksp)
+    alias(libs.plugins.kotlin.compose)
 }
 
 android {
@@ -67,7 +68,7 @@ dependencies {
     // Hilt dependencies
     implementation(libs.hilt.android)
     implementation(libs.hilt.navigation.compose)
-    kapt(libs.hilt.compiler)
+    ksp(libs.hilt.compiler)
     
     // Network dependencies
     implementation(libs.retrofit)
@@ -76,12 +77,12 @@ dependencies {
     implementation(libs.okhttp.logging.interceptor)
     implementation(libs.moshi)
     implementation(libs.moshi.kotlin)
-    kapt(libs.moshi.kotlin.codegen)
+    ksp(libs.moshi.kotlin.codegen)
     
     // Room dependencies
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)
-    kapt(libs.room.compiler)
+    ksp(libs.room.compiler)
     
     // Security
     implementation(libs.androidx.security.crypto)
@@ -93,7 +94,7 @@ dependencies {
     testImplementation(libs.hilt.android.testing)
     testImplementation(libs.room.testing)
     testImplementation(libs.okhttp.mockwebserver)
-    kaptTest(libs.hilt.compiler)
+    kspTest(libs.hilt.compiler)
     
     // Android testing dependencies
     androidTestImplementation(libs.androidx.junit)
@@ -105,7 +106,7 @@ dependencies {
     androidTestImplementation(libs.kotlinx.coroutines.test)
     androidTestImplementation(libs.hilt.android.testing)
     androidTestImplementation(libs.room.testing)
-    kaptAndroidTest(libs.hilt.compiler)
+    kspAndroidTest(libs.hilt.compiler)
     
     // Debug dependencies
     debugImplementation(libs.androidx.compose.ui.tooling)

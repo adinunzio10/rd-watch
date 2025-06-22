@@ -14,3 +14,4 @@ app/build
 .cxx
 local.properties
 node_modules
+.vscode/tasks.json
