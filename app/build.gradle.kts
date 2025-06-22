@@ -63,7 +63,9 @@ dependencies {
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.activity.compose)
     
-    // TV Compose dependencies - will be added later when stable versions are available
+    // TV Compose dependencies - will be added when stable versions are available
+    // implementation(libs.androidx.tv.foundation)
+    // implementation(libs.androidx.tv.material)
     
     // Hilt dependencies
     implementation(libs.hilt.android)
@@ -94,6 +96,9 @@ dependencies {
     
     // Security
     implementation(libs.androidx.security.crypto)
+    
+    // Image loading
+    implementation(libs.coil.compose)
     
     // QR Code generation
     implementation(libs.zxing.core)
