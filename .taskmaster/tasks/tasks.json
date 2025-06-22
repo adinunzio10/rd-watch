@@ -513,7 +513,7 @@
         "dependencies": [
           2
         ],
-        "status": "pending",
+        "status": "in-progress",
         "subtasks": [
           {
             "id": 1,
@@ -521,7 +521,7 @@
             "description": "Create the foundational entity classes for User, Site, Observation, and Model with proper Room annotations",
             "dependencies": [],
             "details": "Define @Entity annotated classes with primary keys, column names, and basic fields. Include @PrimaryKey, @ColumnInfo, and proper data types for each field",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -1513,7 +1513,7 @@
     ],
     "metadata": {
       "created": "2025-06-22T03:41:46.714Z",
-      "updated": "2025-06-22T17:36:28.403Z",
+      "updated": "2025-06-22T19:17:39.701Z",
       "description": "Tasks for master context"
     }
   }
