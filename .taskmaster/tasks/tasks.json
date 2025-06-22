@@ -1,0 +1,1465 @@
+{
+  "master": {
+    "tasks": [
+      {
+        "id": 1,
+        "title": "Initialize Android TV Project",
+        "description": "Set up the Android TV project structure with Jetpack Compose for TV, configure build files, and establish the foundation for rd-watch",
+        "details": "Create new Android TV project with minSdk 24 (Android 7.0). Configure build.gradle.kts with Compose for TV dependencies: androidx.tv:tv-compose-foundation:1.0.0-alpha11, androidx.tv:tv-compose-material3:1.0.0-alpha11. Set up Kotlin 1.9.22 with compose compiler 1.5.10. Configure ProGuard rules for release builds. Add buildFeatures { compose = true }. Set up AndroidManifest.xml with TV-specific features: uses-feature android:name=\"android.software.leanback\" android:required=\"true\", uses-feature android:name=\"android.hardware.touchscreen\" android:required=\"false\". Configure TV launcher intent filter.",
+        "testStrategy": "Verify project builds successfully, launches on Android TV emulator (API 24+), and displays basic Compose UI. Test D-pad navigation works with focusable composables. Validate AndroidManifest permissions and features are correctly declared.",
+        "priority": "high",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 2,
+        "title": "Implement Dependency Injection with Hilt",
+        "description": "Set up Hilt for dependency injection across the application, creating modules for network, database, and repository layers",
+        "details": "Add Hilt dependencies: com.google.dagger:hilt-android:2.50, androidx.hilt:hilt-navigation-compose:1.1.0. Create @HiltAndroidApp class. Set up DI modules: NetworkModule (provides Retrofit, OkHttp, Moshi instances), DatabaseModule (provides Room database, DAOs), RepositoryModule (binds repository implementations). Configure @Provides methods with proper scoping (@Singleton, @ViewModelScoped). Create qualifiers for different API endpoints. Set up Hilt compiler options in build.gradle. Implement HiltViewModel for ViewModels.",
+        "testStrategy": "Write unit tests for DI modules using Hilt testing APIs. Verify all dependencies resolve correctly. Test injection in Activities, ViewModels, and repositories. Use @TestInstallIn to replace modules in tests. Verify no circular dependencies or memory leaks.",
+        "priority": "high",
+        "dependencies": [
+          1
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Set up Hilt in the project",
+            "description": "Add Hilt dependencies to build.gradle files and configure the Android application class",
+            "dependencies": [],
+            "details": "Add Hilt Gradle plugin to project-level build.gradle, add Hilt dependencies to app-level build.gradle including hilt-android, hilt-compiler, and hilt-android-testing. Create or update the Application class with @HiltAndroidApp annotation.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Create Network module with Hilt",
+            "description": "Implement Dagger/Hilt module for network layer dependencies including Retrofit, OkHttp, and API services",
+            "dependencies": [
+              1
+            ],
+            "details": "Create NetworkModule with @Module and @InstallIn annotations. Provide singleton instances for OkHttpClient with interceptors, Retrofit with converters, and API service interfaces. Use @Provides and @Singleton annotations appropriately.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Create Database module with Hilt",
+            "description": "Implement Dagger/Hilt module for database layer including Room database, DAOs, and related dependencies",
+            "dependencies": [
+              1
+            ],
+            "details": "Create DatabaseModule providing Room database instance, DAOs, and any database-related utilities. Configure Room database builder with proper migrations and type converters. Ensure proper scoping with @Singleton.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Create Repository module with Hilt",
+            "description": "Implement Dagger/Hilt module for repository layer that depends on both Network and Database modules",
+            "dependencies": [
+              2,
+              3
+            ],
+            "details": "Create RepositoryModule that provides repository implementations. Repositories should inject network services and DAOs. Implement proper abstractions with interfaces and concrete implementations. Handle dependency injection for all repository classes.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Implement custom qualifiers and scopes",
+            "description": "Create custom qualifiers for distinguishing between similar dependencies and custom scopes if needed",
+            "dependencies": [
+              1
+            ],
+            "details": "Define @Qualifier annotations for cases like multiple OkHttpClient instances, different API endpoints, or database configurations. Create custom scopes if needed beyond standard Hilt scopes. Document usage of each qualifier.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 6,
+            "title": "Configure Hilt testing infrastructure",
+            "description": "Set up Hilt testing components including test rules, test modules, and fake implementations",
+            "dependencies": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "details": "Add hilt-android-testing dependencies, create HiltTestRunner, configure @HiltAndroidTest for test classes. Create test modules with @TestInstallIn to replace production modules. Implement fake repositories and mock network responses for testing.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 7,
+            "title": "Verify Hilt integration and create sample tests",
+            "description": "Validate the complete Hilt setup by creating integration tests and ensuring proper dependency injection",
+            "dependencies": [
+              6
+            ],
+            "details": "Write integration tests that verify proper injection in Activities, Fragments, and ViewModels. Test module replacement in test environment. Create unit tests for repositories with injected dependencies. Document any gotchas or best practices discovered.",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "title": "Design MVVM Architecture Foundation",
+        "description": "Establish MVVM architecture patterns with base classes for ViewModels, UI states, and navigation",
+        "details": "Create BaseViewModel abstract class extending ViewModel with common functionality: error handling, loading states, coroutine scopes. Implement UiState sealed classes for Success, Loading, Error states. Set up ViewModelFactory with Hilt integration. Create BaseRepository with error handling and network status checking. Implement Resource<T> wrapper for API responses. Set up StateFlow for UI state management. Create extension functions for collecting states in Compose. Implement navigation with androidx.navigation:navigation-compose:2.7.7.",
+        "testStrategy": "Test ViewModels with mock repositories, verify state transitions, test error propagation. Use Turbine library for testing Flows. Verify navigation actions trigger correctly. Test memory leaks with LeakCanary.",
+        "priority": "high",
+        "dependencies": [
+          1,
+          2
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create base ViewModel architecture",
+            "description": "Implement abstract BaseViewModel class with lifecycle management, coroutine scope handling, and common state management functionality",
+            "dependencies": [],
+            "details": "Define BaseViewModel extending ViewModel() with protected CoroutineScope, MutableStateFlow for UI state, error handling, and disposable management. Include common functions like launchSafely() for coroutine error handling",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Implement UI state management pattern",
+            "description": "Create sealed classes and data classes for managing UI states including loading, success, error, and empty states",
+            "dependencies": [
+              1
+            ],
+            "details": "Define UiState sealed class with Loading, Success<T>, Error, and Empty states. Create ViewState data class pattern for screen-specific states. Implement StateFlow extensions for state observation",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Design repository base pattern",
+            "description": "Create BaseRepository interface and implementation with common data operations, error handling, and result wrapping",
+            "dependencies": [],
+            "details": "Define Repository<T> interface with CRUD operations. Implement Result<T> wrapper for success/failure states. Add NetworkBoundResource pattern for cache-first data loading with remote sync",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Set up navigation architecture",
+            "description": "Implement Navigation Component with type-safe navigation, deep linking support, and navigation graph structure",
+            "dependencies": [],
+            "details": "Configure Navigation Component dependencies, create NavHostFragment setup, define navigation graph XML with global actions. Implement SafeArgs for type-safe argument passing between destinations",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Create centralized error handling",
+            "description": "Build comprehensive error handling system with custom exceptions, error mappers, and user-friendly error messages",
+            "dependencies": [
+              1,
+              3
+            ],
+            "details": "Define AppException hierarchy for domain-specific errors. Create ErrorHandler singleton with error mapping logic. Implement ErrorMessageProvider for localized error messages. Add retry mechanisms for transient failures",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 6,
+            "title": "Implement reactive programming setup",
+            "description": "Configure RxJava/Kotlin Flow integration with proper schedulers, operators, and lifecycle-aware subscriptions",
+            "dependencies": [
+              1
+            ],
+            "details": "Set up Scheduler providers for IO/Main thread switching. Create Flow extensions for common operations. Implement lifecycle-aware collection with repeatOnLifecycle. Add debounce, throttle, and retry operators",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 7,
+            "title": "Build dependency injection structure",
+            "description": "Configure Hilt/Dagger modules for ViewModels, repositories, and use cases with proper scoping",
+            "dependencies": [
+              1,
+              3,
+              4
+            ],
+            "details": "Create AppModule for singleton dependencies. Set up ViewModelModule with @ViewModelScoped. Configure RepositoryModule with interface bindings. Add NavigationModule for NavController injection",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 8,
+            "title": "Create base UI components",
+            "description": "Develop reusable base Fragment/Activity classes with common functionality, view binding, and state observation",
+            "dependencies": [
+              1,
+              2,
+              4,
+              5,
+              6
+            ],
+            "details": "Implement BaseFragment with ViewBinding delegation, state observation helpers, and error handling. Create BaseActivity with navigation setup. Add extension functions for common UI operations like showing loading states",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "title": "Configure Network Layer with Retrofit",
+        "description": "Set up Retrofit with OkHttp for API communications, including interceptors for authentication and logging",
+        "details": "Add dependencies: com.squareup.retrofit2:retrofit:2.9.0, com.squareup.retrofit2:converter-moshi:2.9.0, com.squareup.okhttp3:logging-interceptor:4.12.0. Create RealDebridApi interface with suspend functions for all endpoints. Implement AuthInterceptor for Bearer token injection. Add TokenAuthenticator for automatic token refresh on 401. Configure OkHttpClient with timeouts (30s connect, 60s read/write), connection pooling, certificate pinning for api.real-debrid.com. Add request/response logging interceptor for debug builds. Implement network connectivity interceptor. Set up Moshi with kotlin-codegen for JSON parsing.",
+        "testStrategy": "Mock API responses using MockWebServer. Test authentication flow, token refresh, error scenarios. Verify request headers and parameters. Test timeout handling and retry logic. Use Charles Proxy to verify actual API calls.",
+        "priority": "high",
+        "dependencies": [
+          2
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Add Retrofit dependencies and configure build.gradle",
+            "description": "Add Retrofit, OkHttp, and JSON converter dependencies to the project",
+            "dependencies": [],
+            "details": "Add dependencies for retrofit2:retrofit, retrofit2:converter-gson (or moshi), okhttp3:okhttp, okhttp3:logging-interceptor to build.gradle. Configure ProGuard rules if needed for release builds.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Create base Retrofit configuration and builder",
+            "description": "Set up the core Retrofit instance with base URL and client configuration",
+            "dependencies": [
+              1
+            ],
+            "details": "Create a RetrofitClient singleton class that builds the Retrofit instance with base URL, timeout configurations, and OkHttpClient. Include connection timeout, read timeout, and write timeout settings.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Implement authentication interceptor",
+            "description": "Create interceptor to handle authentication tokens in API requests",
+            "dependencies": [
+              2
+            ],
+            "details": "Build an AuthInterceptor that adds authentication headers (Bearer token, API key, etc.) to outgoing requests. Include token refresh logic if using OAuth2. Handle token storage securely using encrypted SharedPreferences or KeyStore.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Configure logging and monitoring interceptors",
+            "description": "Set up request/response logging and performance monitoring",
+            "dependencies": [
+              2
+            ],
+            "details": "Implement HttpLoggingInterceptor for debug builds with appropriate log levels. Create custom interceptor for monitoring API performance, response times, and error rates. Ensure sensitive data is not logged in production.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Create API service interfaces",
+            "description": "Define Retrofit interfaces for all API endpoints",
+            "dependencies": [
+              2
+            ],
+            "details": "Create interface classes with @GET, @POST, @PUT, @DELETE annotations for each API endpoint. Define request/response models using data classes. Group related endpoints into logical service interfaces (UserService, AuthService, etc.).",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 6,
+            "title": "Implement error handling and response wrapper",
+            "description": "Create unified error handling mechanism for API responses",
+            "dependencies": [
+              2,
+              5
+            ],
+            "details": "Build a generic ApiResponse wrapper class to handle success/error states. Create custom CallAdapter for automatic error parsing. Implement specific exception classes for different error types (NetworkException, ApiException, AuthException). Handle HTTP error codes appropriately.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 7,
+            "title": "Configure JSON parsing with custom serializers",
+            "description": "Set up Gson/Moshi configuration with custom type adapters",
+            "dependencies": [
+              2,
+              5
+            ],
+            "details": "Configure GsonBuilder or Moshi.Builder with custom date formats, null handling policies, and field naming strategies. Create custom TypeAdapters for complex data types. Handle polymorphic JSON structures if needed.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 8,
+            "title": "Create comprehensive test suite",
+            "description": "Implement unit and integration tests for API configuration",
+            "dependencies": [
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "details": "Write unit tests for interceptors, error handling, and JSON parsing. Create integration tests using MockWebServer to test full API flows. Test authentication scenarios, error cases, and edge conditions. Implement test fixtures and mock responses.",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "title": "Implement OAuth2 Device Flow Authentication",
+        "description": "Create TV-friendly authentication using Real Debrid's OAuth2 device code flow with QR code display",
+        "details": "Implement device code flow: POST /oauth/device/code to get device_code and user_code. Display user_code and verification URL with QR code using com.google.zxing:core:3.5.3. Poll /oauth/device/credentials with device_code at interval specified in response. Handle pending/success/error states. Store tokens securely in EncryptedSharedPreferences. Implement token refresh logic with refresh_token. Create AuthViewModel with states: Initializing, WaitingForUser(code, url), Authenticated, Error. Add countdown timer for code expiration. Generate QR code bitmap for TV display.",
+        "testStrategy": "Test full auth flow with mock responses. Verify token storage encryption. Test code expiration handling. Test refresh token flow. Verify error states for network issues, expired codes, denied access. Test on actual TV to verify QR code readability.",
+        "priority": "high",
+        "dependencies": [
+          3,
+          4
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Set up OAuth2 device code request endpoint",
+            "description": "Implement the initial device code request to the OAuth2 provider",
+            "dependencies": [],
+            "details": "Create service to send POST request to OAuth2 device authorization endpoint with client_id and scope parameters. Handle response containing device_code, user_code, verification_uri, and interval values",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Generate and display QR code for authentication URL",
+            "description": "Create QR code component that displays the verification URL for mobile scanning",
+            "dependencies": [
+              1
+            ],
+            "details": "Use QR code library to generate scannable code from verification_uri. Ensure QR code is TV-optimized with appropriate size and contrast. Include fallback text display of user_code",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Implement device code polling mechanism",
+            "description": "Create background polling service to check authorization status",
+            "dependencies": [
+              1
+            ],
+            "details": "Set up interval-based polling using the interval value from device code response. Send POST requests to token endpoint with device_code. Handle authorization_pending, slow_down, and success responses",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Create secure token storage system",
+            "description": "Implement secure storage for access and refresh tokens",
+            "dependencies": [
+              3
+            ],
+            "details": "Use platform-specific secure storage (KeyChain on tvOS, encrypted preferences on Android TV). Store access_token, refresh_token, and expiry timestamp. Implement encryption for sensitive data",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Build token refresh logic",
+            "description": "Implement automatic token refresh mechanism",
+            "dependencies": [
+              4
+            ],
+            "details": "Create service to monitor token expiry and refresh tokens before expiration. Handle refresh token rotation if required. Implement retry logic with exponential backoff for failed refreshes",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 6,
+            "title": "Design TV-optimized authentication UI states",
+            "description": "Create UI components for different authentication flow states",
+            "dependencies": [
+              2
+            ],
+            "details": "Design screens for: initial code display, waiting for authorization, success confirmation, and error states. Ensure all UI elements are optimized for 10-foot viewing distance with large fonts and high contrast",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 7,
+            "title": "Implement comprehensive error handling",
+            "description": "Add error handling for all authentication flow scenarios",
+            "dependencies": [
+              3,
+              5
+            ],
+            "details": "Handle network errors, expired device codes, invalid grants, rate limiting, and OAuth2 specific errors. Provide user-friendly error messages with TV remote-friendly retry options",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 8,
+            "title": "Create authentication state management",
+            "description": "Build centralized state management for authentication flow",
+            "dependencies": [
+              6,
+              7
+            ],
+            "details": "Implement state machine for authentication states: unauthenticated, pending, authenticated, error. Use observable pattern to notify UI of state changes. Persist authentication state across app restarts",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 9,
+            "title": "Add remote control navigation support",
+            "description": "Ensure authentication flow is fully navigable with TV remote",
+            "dependencies": [
+              6,
+              8
+            ],
+            "details": "Implement focus management for TV remote D-pad navigation. Add keyboard support for manual code entry fallback. Ensure all interactive elements have clear focus indicators",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 10,
+            "title": "Implement authentication flow integration tests",
+            "description": "Create comprehensive tests for the complete authentication flow",
+            "dependencies": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              7,
+              8,
+              9
+            ],
+            "details": "Write unit tests for device code request, polling logic, and token refresh. Create integration tests for complete flow including error scenarios. Add UI tests for remote navigation and state transitions",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "title": "Create Room Database Schema",
+        "description": "Design and implement Room database for local storage of user data, content metadata, watch history, and scraper configurations",
+        "details": "Add androidx.room:room-runtime:2.6.1, androidx.room:room-ktx:2.6.1. Create entities: UserEntity (account info), ContentEntity (movies/shows metadata), WatchProgressEntity (playback positions), LibraryEntity (saved content), ScraperManifestEntity (scraper configs), SearchHistoryEntity, SubtitleSourceEntity. Implement DAOs with Flow returns for reactive updates. Create type converters for complex types (Lists, Dates). Set up database migrations. Configure Room with fallbackToDestructiveMigration for development. Add indices for performance on frequently queried fields. Implement database singleton with proper threading.",
+        "testStrategy": "Write instrumented tests for all DAO operations. Test migrations with Migration test rule. Verify Flow emissions on data changes. Test concurrent access scenarios. Profile query performance. Test foreign key constraints.",
+        "priority": "high",
+        "dependencies": [
+          2
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Design Core Entity Classes",
+            "description": "Create the foundational entity classes for User, Site, Observation, and Model with proper Room annotations",
+            "dependencies": [],
+            "details": "Define @Entity annotated classes with primary keys, column names, and basic fields. Include @PrimaryKey, @ColumnInfo, and proper data types for each field",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Design Relationship Entity Classes",
+            "description": "Create entity classes for junction tables and relationships between core entities",
+            "dependencies": [
+              1
+            ],
+            "details": "Implement UserSiteCrossRef, SiteObservationCrossRef, and other junction tables with @Entity annotations and composite primary keys using @Index",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Implement Type Converters",
+            "description": "Create TypeConverter classes for complex data types like Date, JSON objects, and custom enums",
+            "dependencies": [
+              1
+            ],
+            "details": "Implement @TypeConverter annotated methods for converting between database-storable types and complex Kotlin/Java types. Include converters for timestamps, coordinate systems, and model configurations",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Create Base DAOs",
+            "description": "Implement Data Access Object interfaces for each core entity with basic CRUD operations",
+            "dependencies": [
+              1,
+              2
+            ],
+            "details": "Define @Dao interfaces with @Insert, @Update, @Delete, and @Query methods. Include suspend functions for coroutine support and return Flow for reactive updates",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Implement Relationship DAOs",
+            "description": "Create DAOs with complex queries handling entity relationships and joins",
+            "dependencies": [
+              4
+            ],
+            "details": "Implement @Transaction annotated methods, JOIN queries, and data classes with @Embedded and @Relation annotations for one-to-many and many-to-many relationships",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 6,
+            "title": "Setup Database Builder and Configuration",
+            "description": "Configure Room database class with proper initialization, versioning, and callback handlers",
+            "dependencies": [
+              1,
+              2,
+              3
+            ],
+            "details": "Create @Database annotated abstract class, define entity list, version number, and implement singleton pattern. Configure RoomDatabase.Builder with type converters and migration strategies",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 7,
+            "title": "Add Database Indices and Optimization",
+            "description": "Define indices on frequently queried columns and foreign keys for performance optimization",
+            "dependencies": [
+              1,
+              2
+            ],
+            "details": "Add @Index annotations to entity classes for columns used in WHERE clauses and JOIN conditions. Create composite indices for multi-column queries and ensure foreign key constraints",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 8,
+            "title": "Implement Database Migrations",
+            "description": "Create migration classes for database schema versioning and updates",
+            "dependencies": [
+              6
+            ],
+            "details": "Implement Migration objects for each schema change, handle ALTER TABLE operations, data transformation during migrations, and fallback strategies. Test migration paths thoroughly",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 9,
+            "title": "Create Comprehensive Test Suite",
+            "description": "Develop unit and integration tests for entities, DAOs, type converters, and migrations",
+            "dependencies": [
+              4,
+              5,
+              8
+            ],
+            "details": "Write @RunWith(AndroidJUnit4::class) tests using in-memory database, test CRUD operations, relationship queries, migration scenarios, and edge cases. Include performance benchmarks for complex queries",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 7,
+        "title": "Build Home Screen with Compose for TV",
+        "description": "Create the main home screen with content rows, navigation drawer, and TV-optimized focus handling",
+        "details": "Implement home screen using TvLazyColumn and TvLazyRow from tv-compose. Create content rows: Continue Watching (with progress indicators), Recently Added, My Library, Featured Content. Implement TV navigation drawer with tabs: Home, Search, Library, Downloads, Settings. Use ImmersiveList for featured content carousel. Handle D-pad navigation with proper focus management using focusRequester. Implement overscan safe areas. Add loading skeletons with Shimmer effect. Use Coil (io.coil-kt:coil-compose:2.5.0) for image loading with crossfade animations. Implement error states with retry actions.",
+        "testStrategy": "Test D-pad navigation flow across all elements. Verify focus restoration on configuration changes. Test with different overscan settings. Profile composable recomposition performance. Test loading states and error handling. Verify accessibility with TalkBack.",
+        "priority": "high",
+        "dependencies": [
+          3,
+          6
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Set up TV navigation drawer structure",
+            "description": "Create the base navigation drawer component with TV-specific layout and dimensions",
+            "dependencies": [],
+            "details": "Implement a navigation drawer that slides in from the left side of the screen. Use TV-safe dimensions (10% padding from edges). Create drawer container with proper z-index layering and backdrop overlay. Set up drawer states (open/closed) and basic structure for menu items.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Implement TV-optimized content rows",
+            "description": "Create horizontal scrollable content rows with lazy loading and virtualization",
+            "dependencies": [],
+            "details": "Build reusable ContentRow component that supports horizontal scrolling with D-pad navigation. Implement virtualization to render only visible items plus buffer. Add support for different row types (featured, categories, recently watched). Include proper spacing for TV viewing distance.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Add D-pad focus handling system",
+            "description": "Implement comprehensive focus management for TV remote navigation",
+            "dependencies": [
+              1,
+              2
+            ],
+            "details": "Create FocusManager to handle D-pad navigation (up/down/left/right/select). Implement focus trapping within drawer when open. Add visual focus indicators with proper contrast ratios. Handle focus restoration when drawer closes. Implement spatial navigation algorithm for nearest neighbor focus movement.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Integrate progressive image loading",
+            "description": "Implement lazy loading system for content thumbnails and posters",
+            "dependencies": [
+              2
+            ],
+            "details": "Create ImageLoader component with placeholder support. Implement intersection observer for lazy loading images as they come into viewport. Add low-quality image placeholders (LQIP) for smooth transitions. Include retry logic for failed image loads. Optimize for TV's larger display size with appropriate resolution selection.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Handle loading and error states",
+            "description": "Implement comprehensive loading, error, and empty state handling",
+            "dependencies": [
+              2,
+              4
+            ],
+            "details": "Create loading skeletons for content rows and navigation items. Implement error boundaries for graceful error handling. Add retry mechanisms for failed data fetches. Design empty states for categories with no content. Include loading progress indicators for long-running operations.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 6,
+            "title": "Implement overscan safety margins",
+            "description": "Ensure all UI elements are within TV-safe viewing area",
+            "dependencies": [
+              1,
+              2
+            ],
+            "details": "Apply 5-10% safety margins to account for TV overscan. Create SafeAreaProvider component to manage margins across the app. Ensure critical UI elements (navigation, content, controls) are within safe zones. Test on various TV displays and aspect ratios. Implement adjustable overscan settings.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 7,
+            "title": "Add smooth animations and transitions",
+            "description": "Implement TV-optimized animations for navigation and content transitions",
+            "dependencies": [
+              1,
+              3
+            ],
+            "details": "Create smooth drawer slide animations with easing curves. Implement focus transition animations with appropriate timing (200-300ms). Add content row scroll animations. Include fade-in effects for lazy-loaded images. Ensure animations run at 60fps on TV hardware.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 8,
+            "title": "Ensure comprehensive accessibility",
+            "description": "Implement TV-specific accessibility features and screen reader support",
+            "dependencies": [
+              3,
+              7
+            ],
+            "details": "Add ARIA labels and roles for all interactive elements. Implement announcements for focus changes and navigation. Support high contrast mode for better visibility. Add audio feedback for navigation actions. Ensure proper heading hierarchy for screen readers.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 9,
+            "title": "Optimize performance for TV hardware",
+            "description": "Ensure smooth performance on various TV processors and memory constraints",
+            "dependencies": [
+              2,
+              4,
+              7
+            ],
+            "details": "Implement aggressive memory management for image caching. Optimize render cycles to prevent frame drops. Use requestAnimationFrame for smooth scrolling. Implement component memoization to prevent unnecessary re-renders. Profile and optimize for low-end TV hardware.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 10,
+            "title": "Add keyboard navigation support",
+            "description": "Implement full keyboard navigation as fallback for development and testing",
+            "dependencies": [
+              3,
+              8
+            ],
+            "details": "Map keyboard arrows to D-pad navigation. Add Enter/Space for selection actions. Implement Escape key for back navigation. Add Tab key support for accessibility. Create keyboard shortcut overlay for power users. Ensure consistency between remote and keyboard navigation.",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 8,
+        "title": "Implement Scraper Manifest System",
+        "description": "Create system to load, parse, and manage multiple scraper manifests compatible with Stremio addon format",
+        "details": "Create ScraperManifest data model supporting Torrentio/Knightcrawler formats. Implement manifest parser using Moshi with support for: id, name, version, catalogs, resources, types, idPrefixes. Create ScraperRepository to fetch manifests from URLs, validate JSON schema, store in Room database. Implement manifest refreshing with ETag support. Add default scrapers: torrentio.strem.fun, knightcrawler.elfhosted.com. Support configuration extraction (providers[], sorting, quality filters). Create ScraperManager to coordinate multiple scrapers. Handle network errors with exponential backoff.",
+        "testStrategy": "Test parsing various manifest formats. Mock manifest endpoints. Test invalid JSON handling. Verify manifest storage and retrieval. Test concurrent manifest loading. Verify configuration parameter extraction. Test manifest update detection.",
+        "priority": "high",
+        "dependencies": [
+          4,
+          6
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Define Manifest Data Models",
+            "description": "Create TypeScript interfaces and classes for manifest data structures",
+            "dependencies": [],
+            "details": "Define interfaces for Manifest, ManifestEntry, ManifestMetadata, and related types. Include fields for source URLs, scraper configurations, update timestamps, and validation schemas.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Implement Manifest Parser",
+            "description": "Build parser to handle multiple manifest formats (JSON, YAML, XML)",
+            "dependencies": [
+              1
+            ],
+            "details": "Create a ManifestParser class with format detection, parsing methods for each supported format, and error handling for malformed data. Use libraries like js-yaml for YAML parsing.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Create Manifest Repository",
+            "description": "Implement repository pattern for manifest storage and retrieval",
+            "dependencies": [
+              1
+            ],
+            "details": "Build ManifestRepository with methods for CRUD operations, query capabilities, and persistence layer integration. Support both in-memory and database storage backends.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Add Manifest Validation",
+            "description": "Implement validation logic for manifest data integrity",
+            "dependencies": [
+              1,
+              2
+            ],
+            "details": "Create ManifestValidator using JSON Schema or similar validation library. Validate required fields, data types, URL formats, and business rules. Provide detailed validation error messages.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Handle Multiple Format Support",
+            "description": "Extend parser to auto-detect and handle various manifest formats",
+            "dependencies": [
+              2
+            ],
+            "details": "Implement format detection based on file extensions and content inspection. Add format converters to normalize different formats into unified internal representation.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 6,
+            "title": "Implement Manifest Caching",
+            "description": "Add caching layer for parsed manifests and remote manifest fetching",
+            "dependencies": [
+              3
+            ],
+            "details": "Create ManifestCache with TTL support, cache invalidation strategies, and memory management. Cache both raw manifest data and parsed objects. Support cache warming and preloading.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 7,
+            "title": "Create Manifest Manager Class",
+            "description": "Build central manager to coordinate manifest operations",
+            "dependencies": [
+              2,
+              3,
+              4,
+              6
+            ],
+            "details": "Implement ManifestManager as facade for all manifest operations. Include methods for loading, updating, querying, and synchronizing manifests. Manage manifest lifecycle and dependencies.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 8,
+            "title": "Add Comprehensive Error Handling",
+            "description": "Implement error handling for all manifest operations",
+            "dependencies": [
+              7
+            ],
+            "details": "Create custom error classes for manifest-specific errors. Handle network failures, parsing errors, validation failures, and storage errors. Implement retry logic and fallback strategies.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 9,
+            "title": "Setup Default Scrapers Configuration",
+            "description": "Configure and integrate default scraper manifests",
+            "dependencies": [
+              7,
+              8
+            ],
+            "details": "Create default manifest configurations for built-in scrapers. Set up manifest loading during application initialization. Include scraper metadata, scheduling info, and validation rules.",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 9,
+        "title": "Create Search Interface with Scraper Integration",
+        "description": "Build TV-optimized search UI with voice input support and multi-scraper result aggregation",
+        "details": "Implement search screen with TV keyboard using ComposeKeyboard or custom D-pad optimized keyboard. Add voice search using SpeechRecognizer API. Create search flow: query → scraper selection → parallel searches → result aggregation. Parse scraper search endpoints from manifests (/stream/movie/{imdb}.json, /stream/series/{imdb}:{season}:{episode}.json). Display results grouped by scraper with source indicators. Show cached status badges. Implement search filters: quality (4K/1080p/720p), cached only, file size ranges. Add search history with Room persistence. Handle rate limiting per scraper.",
+        "testStrategy": "Test keyboard navigation and text input. Test voice recognition accuracy. Mock scraper responses. Test result deduplication. Verify filter application. Test search history persistence. Profile search performance with multiple scrapers.",
+        "priority": "high",
+        "dependencies": [
+          7,
+          8
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Design TV Keyboard Layout",
+            "description": "Create an optimized keyboard layout for TV remote navigation with focus states and D-pad support",
+            "dependencies": [],
+            "details": "Design a keyboard interface that works well with directional navigation, implementing large touch targets, predictive text zones, and efficient character selection patterns for TV remotes",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Implement TV Keyboard Component",
+            "description": "Build the TV keyboard React component with remote control navigation and text input handling",
+            "dependencies": [
+              1
+            ],
+            "details": "Create keyboard component with focus management, directional navigation logic, character selection animations, and text buffer management for TV interface",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Set Up Voice Recognition API",
+            "description": "Configure Web Speech API or cloud speech service for voice input on TV platform",
+            "dependencies": [],
+            "details": "Initialize speech recognition service, handle microphone permissions, configure language models, and implement fallback for unsupported platforms",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Create Voice Search UI",
+            "description": "Build voice search interface with visual feedback, waveform display, and transcription preview",
+            "dependencies": [
+              3
+            ],
+            "details": "Implement voice button activation, real-time audio visualization, speech-to-text display, and voice command processing with error handling",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Build Search Orchestration Service",
+            "description": "Create centralized service to coordinate searches across multiple data sources simultaneously",
+            "dependencies": [],
+            "details": "Implement parallel search execution, request deduplication, source priority management, and unified query transformation for different APIs",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 6,
+            "title": "Implement Result Aggregation Logic",
+            "description": "Build system to merge, deduplicate, and rank results from multiple search sources",
+            "dependencies": [
+              5
+            ],
+            "details": "Create result normalization, duplicate detection algorithms, relevance scoring, source weighting, and unified result formatting",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 7,
+            "title": "Create Search Filter System",
+            "description": "Implement filtering capabilities for content type, source, date range, and custom attributes",
+            "dependencies": [
+              6
+            ],
+            "details": "Build filter UI components, filter state management, dynamic filter application, and filter persistence across searches",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 8,
+            "title": "Implement Rate Limiting",
+            "description": "Add rate limiting and request throttling for API calls to prevent quota exhaustion",
+            "dependencies": [
+              5
+            ],
+            "details": "Create token bucket implementation, per-source rate limits, request queuing system, and adaptive throttling based on API responses",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 9,
+            "title": "Build Search History Feature",
+            "description": "Create persistent search history with quick access and search suggestions",
+            "dependencies": [
+              2,
+              4
+            ],
+            "details": "Implement history storage, recent searches display, search term suggestions, history management UI, and privacy-focused data handling",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 10,
+            "title": "Create Search Result Components",
+            "description": "Build TV-optimized UI components for displaying search results with rich media previews",
+            "dependencies": [
+              7
+            ],
+            "details": "Design result cards, implement lazy loading, create result type-specific layouts, add preview functionality, and optimize for TV viewing distance",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 11,
+            "title": "Optimize Search Performance",
+            "description": "Implement caching, prefetching, and performance optimizations for smooth TV experience",
+            "dependencies": [
+              8,
+              10
+            ],
+            "details": "Add result caching layer, implement predictive prefetching, optimize bundle size, reduce render blocking, and ensure 60fps scrolling performance",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 10,
+        "title": "Implement Direct Account File Browser",
+        "description": "Create interface to browse Real Debrid account files directly, bypassing scraper search",
+        "details": "Create dedicated tab/screen for account browsing. Fetch torrents list from /torrents endpoint with pagination. Display files with metadata: name, size, added date, status. Implement sorting: date (newest/oldest), name (A-Z/Z-A), size (largest/smallest). Add filters: file type (video/audio/other), date ranges, size ranges. Create file type detection from extensions. Show storage usage from /user endpoint. Add bulk selection mode for deletion. Implement pull-to-refresh. Cache file list in Room with TTL. Handle large file lists with lazy loading.",
+        "testStrategy": "Test pagination with large file lists. Mock API responses for various file types. Test sorting algorithms. Verify filter combinations work correctly. Test deletion confirmations. Test offline cache behavior. Profile performance with 1000+ files.",
+        "priority": "medium",
+        "dependencies": [
+          4,
+          7
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 11,
+        "title": "Build Content Details Screen",
+        "description": "Create detailed view for selected content showing metadata, available sources, and action buttons",
+        "details": "Design content details screen with backdrop image, poster, title, year, overview. Integrate TMDb API (themoviedb.org/documentation/api) for rich metadata: cast, crew, ratings, genres, runtime. Display available sources from scrapers with quality badges (4K/HDR/1080p/720p). Show source details: size, seeders, release group, cached status. Add action buttons: Play, Download, Add to Library. For TV shows, display season/episode grid with watched indicators. Implement source selection dialog with smart sorting. Add similar content recommendations section. Handle landscape TV layout with split view.",
+        "testStrategy": "Test with movies and TV shows. Verify TMDb data integration. Test source sorting logic. Mock various source scenarios. Test TV show episode navigation. Verify button focus order. Test loading states for metadata fetch.",
+        "priority": "medium",
+        "dependencies": [
+          7,
+          9
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 12,
+        "title": "Integrate ExoPlayer for Video Playback",
+        "description": "Set up ExoPlayer with TV-specific controls and support for various video formats and streaming protocols",
+        "details": "Add androidx.media3:media3-exoplayer:1.2.1, androidx.media3:media3-ui:1.2.1. Create custom PlayerView for TV with D-pad controls. Implement playback from Real Debrid unrestricted links. Support formats: MKV, MP4, AVI, WebM with automatic codec detection. Add TV-specific controls: play/pause, seek (10s skip), progress bar with time. Implement subtitle rendering for SRT/VTT/SSA formats. Add audio track selection dialog. Handle 4K/HDR content with proper color space. Create PlayerViewModel for playback state management. Add bandwidth adaptive streaming. Implement playback speed control (0.5x-2.0x).",
+        "testStrategy": "Test various video formats and codecs. Test 4K/HDR playback on capable devices. Verify subtitle synchronization. Test audio track switching. Test seek accuracy. Verify memory management during playback. Test network interruption handling.",
+        "priority": "high",
+        "dependencies": [
+          3
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Setup ExoPlayer dependency and basic player instance",
+            "description": "Add ExoPlayer dependencies to build.gradle and create basic player initialization",
+            "dependencies": [],
+            "details": "Add ExoPlayer core, UI, and extension dependencies. Create singleton player instance with proper lifecycle management in Application class or dependency injection module.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Implement custom TV-optimized media controls",
+            "description": "Create custom control layout optimized for TV remote navigation with D-pad support",
+            "dependencies": [
+              1
+            ],
+            "details": "Design custom PlayerControlView with large, TV-friendly buttons. Implement focus handling, D-pad navigation, and remote control key mapping. Include play/pause, seek, and menu buttons.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Add multi-format media support",
+            "description": "Configure ExoPlayer to support various video formats including HLS, DASH, and progressive streams",
+            "dependencies": [
+              1
+            ],
+            "details": "Setup MediaSource factories for HLS, DASH, and progressive media. Configure extractors for common formats (MP4, MKV, WebM). Add format detection based on URL or MIME type.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Implement subtitle rendering system",
+            "description": "Add support for embedded and sidecar subtitles with customizable styling",
+            "dependencies": [
+              1,
+              3
+            ],
+            "details": "Configure SubtitleView with TV-appropriate text size and positioning. Support WebVTT, SRT, and TTML formats. Add subtitle selection UI and style customization options.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Create audio track selection functionality",
+            "description": "Implement audio track switching with language detection and selection UI",
+            "dependencies": [
+              1,
+              3
+            ],
+            "details": "Build track selector for multiple audio streams. Display available languages and formats. Implement seamless audio track switching without playback interruption.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 6,
+            "title": "Add HDR and 4K video support",
+            "description": "Configure player for high dynamic range and 4K resolution playback",
+            "dependencies": [
+              1,
+              3
+            ],
+            "details": "Enable HDR10, HDR10+, and Dolby Vision support. Configure surface view for 4K rendering. Add capability detection and fallback for non-HDR displays.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 7,
+            "title": "Implement playback state management",
+            "description": "Create comprehensive state management for playback position, buffering, and player lifecycle",
+            "dependencies": [
+              1
+            ],
+            "details": "Build state machine for player states (idle, buffering, ready, ended, error). Persist playback position across app restarts. Handle configuration changes and background playback.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 8,
+            "title": "Setup adaptive streaming with quality selection",
+            "description": "Configure adaptive bitrate streaming with manual quality override options",
+            "dependencies": [
+              3,
+              7
+            ],
+            "details": "Implement ABR algorithm configuration. Create quality selection UI showing available resolutions. Add bandwidth monitoring and quality switching notifications.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 9,
+            "title": "Add playback speed controls",
+            "description": "Implement variable playback speed with pitch correction",
+            "dependencies": [
+              2,
+              7
+            ],
+            "details": "Add speed selection UI (0.5x to 2.0x). Configure audio processor for pitch correction. Save user's preferred speed setting per content or globally.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 10,
+            "title": "Create comprehensive error handling system",
+            "description": "Implement robust error handling with user-friendly messages and recovery options",
+            "dependencies": [
+              7
+            ],
+            "details": "Handle network errors, format incompatibility, DRM failures, and decoder errors. Create error UI with retry options. Implement automatic quality downgrade on repeated errors.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 11,
+            "title": "Implement advanced seeking and preview thumbnails",
+            "description": "Add smooth seeking with thumbnail previews for better navigation",
+            "dependencies": [
+              2,
+              7
+            ],
+            "details": "Create seek bar with thumbnail preview on hover/focus. Implement frame-accurate seeking. Add chapter markers if available in media metadata.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 12,
+            "title": "Add analytics and performance monitoring",
+            "description": "Implement playback analytics and performance metrics collection",
+            "dependencies": [
+              7,
+              10
+            ],
+            "details": "Track playback events, buffering time, quality switches, and errors. Monitor decoder performance and dropped frames. Create debug overlay for development.",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 13,
+        "title": "Implement Playback State Persistence",
+        "description": "Create system to track and resume playback positions across sessions with exact timestamp accuracy",
+        "details": "Create PlaybackStateRepository to save positions to Room. Track: content ID, current position, total duration, last played timestamp, audio/subtitle track selections. Implement auto-save every 10 seconds during playback. Add resume dialog: 'Resume from X:XX?' with options to start over. For TV shows, track episode completion (>90% watched) and suggest next episode. Create WatchedContentRepository for completion tracking. Implement cleanup for old playback states (>6 months). Sync playback state before app termination. Handle edge cases: very short videos, live streams.",
+        "testStrategy": "Test position save accuracy. Verify resume across app restarts. Test episode completion detection. Test next episode suggestions. Verify database cleanup. Test with various video lengths. Mock system kills during playback.",
+        "priority": "high",
+        "dependencies": [
+          6,
+          12
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 14,
+        "title": "Build Library Management System",
+        "description": "Create user library feature for saving and organizing favorite content with categories",
+        "details": "Implement library categories: Movies, TV Shows, Currently Watching. Create LibraryViewModel with add/remove operations. Design library screen with grid layout and category filters. Add sort options: recently added, alphabetical, last watched. Implement watched/unwatched indicators using playback completion data. Create quick actions on long-press: Remove from library, Mark as watched, Play next episode. Add library search functionality. Implement library export/import for backup. Cache poster images locally for offline viewing. Add library statistics dashboard.",
+        "testStrategy": "Test CRUD operations for library items. Verify category filtering. Test sort algorithms. Test watched status updates. Verify image caching. Test export/import functionality. Test with large libraries (500+ items).",
+        "priority": "medium",
+        "dependencies": [
+          6,
+          11
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 15,
+        "title": "Implement Smart Episode Progression",
+        "description": "Create intelligent system for TV show episode tracking and next episode suggestions",
+        "details": "Build episode tracking with season/episode progress. Create NextEpisodeRepository to calculate next unwatched episode. Implement smart detection: if S01E05 completed, suggest S01E06. Handle season boundaries: S01E10 → S02E01. Add 'Continue Watching' row on home screen with next episodes. Create episode completion notifications. Handle special episodes (S00) separately. Implement binge mode: auto-play next with 10s countdown. Add episode skip functionality for filler episodes. Create visual season progress indicators. Support custom watch order for anthologies.",
+        "testStrategy": "Test episode progression logic with various scenarios. Test season boundary handling. Verify special episode handling. Test binge mode countdown. Test with shows having irregular numbering. Verify progress calculation accuracy. Test skip functionality.",
+        "priority": "medium",
+        "dependencies": [
+          13,
+          14
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 16,
+        "title": "Create Advanced Source Selection UI",
+        "description": "Build sophisticated source picker with quality indicators and smart sorting for optimal stream selection",
+        "details": "Design source selection bottom sheet with quality badges: 4K, HDR10, DV, 1080p, 720p. Display source metadata: file size, codec (H.264/H.265), audio format, release group. Implement smart sorting: cached first, then by quality, then by seeders. Add quick filters: Cached only, 4K only, HDR only. Show health indicators: seeder count, availability percentage. Implement source grouping by release type (WEB-DL, BluRay, CAM). Add release group reputation system. Create preview tooltip showing full filename. Handle season pack detection and indication.",
+        "testStrategy": "Test with various source combinations. Verify sort algorithm correctness. Test filter combinations. Mock different source scenarios. Test UI performance with 50+ sources. Verify season pack indicators. Test release group sorting.",
+        "priority": "medium",
+        "dependencies": [
+          11
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 17,
+        "title": "Implement External Subtitle Integration",
+        "description": "Create subtitle system using free alternatives to OpenSubtitles with hash and name-based matching",
+        "details": "Integrate multiple subtitle APIs: Subdl.com (free tier), SubDB (hash-based), Podnapisi.net. Implement hash calculation for video files (first 64KB + last 64KB). Create subtitle search by: file hash, movie/show name + year/season/episode. Build subtitle selection dialog with language filtering. Support formats: SRT, VTT, SSA/ASS. Implement subtitle download and caching in app storage. Add manual subtitle file selection from device storage. Create subtitle synchronization controls (-5s to +5s adjustment). Handle multi-language subtitle tracks. Add subtitle styling options: size, color, background.",
+        "testStrategy": "Test hash calculation accuracy. Mock subtitle API responses. Test format parsing (SRT/VTT/SSA). Verify synchronization controls. Test language filtering. Test cache management. Verify manual file loading. Test with non-Latin scripts.",
+        "priority": "medium",
+        "dependencies": [
+          12
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 18,
+        "title": "Build Download Management Interface",
+        "description": "Create comprehensive download manager for adding and monitoring Real Debrid transfers",
+        "details": "Create download screen with active/completed sections. Implement add torrent flow: paste magnet link or upload .torrent file. Use /torrents/addMagnet and /torrents/addTorrent endpoints. Display file selection for multi-file torrents via /torrents/info. Show real-time progress using polling or WebSocket. Implement download queue management. Add pause/resume/delete actions. Create background service using WorkManager for monitoring. Show system notifications for completion. Add auto-delete option after streaming. Implement download history with search. Add bandwidth limit settings.",
+        "testStrategy": "Test magnet link parsing. Test file selection UI. Mock download progress updates. Test background service lifecycle. Verify notification behavior. Test queue management. Test auto-delete functionality. Test with large torrents (50+ files).",
+        "priority": "low",
+        "dependencies": [
+          4,
+          7
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 19,
+        "title": "Implement Settings and Preferences",
+        "description": "Create comprehensive settings screen for account, playback, and app customization",
+        "details": "Build settings with categories: Account (logout, view premium days), Playback (default quality, subtitle preferences, auto-play), Display (theme selection, content layout), Network (bandwidth limits, connection timeout), Storage (clear cache, download location), Scrapers (manage manifests, default scraper). Use DataStore for preference persistence. Implement theme switching: Dark/Light/System. Add playback quality preferences: Prefer 4K, Limit to 1080p, Data saver mode. Create external player selection option. Add parental control PIN system. Implement settings backup/restore.",
+        "testStrategy": "Test all preference toggles. Verify DataStore persistence. Test theme switching without restart. Test quality limiting in player. Verify PIN system security. Test settings backup/restore. Test preference migrations.",
+        "priority": "medium",
+        "dependencies": [
+          7
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 20,
+        "title": "Create Season Pack Detection System",
+        "description": "Build intelligent system to detect and handle multi-episode files from season packs",
+        "details": "Implement pattern matching for season pack filenames: 'S01 Complete', 'Season 1', 'S01E01-E10'. Create file analysis to detect multiple episodes in single torrent. Build mapping system: torrent → episodes contained. Store pack information in Room: PackEntity(torrentId, episodes[]). Implement intelligent reuse: if S01E01 uses pack, auto-select same for S01E02. Create UI indicators for pack sources vs single episodes. Handle edge cases: double episodes (S01E01-E02), missing episodes in packs. Add pack preference settings: always prefer packs, ask each time, prefer singles.",
+        "testStrategy": "Test filename pattern recognition. Test episode extraction accuracy. Verify pack reuse logic. Test with various naming conventions. Test double episode handling. Mock different pack scenarios. Test preference application.",
+        "priority": "low",
+        "dependencies": [
+          16
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 21,
+        "title": "Implement Episode Numbering Inconsistency Handler",
+        "description": "Create system to handle shows with problematic episode numbering across different databases",
+        "details": "Create show flagging system: users mark shows with numbering issues. Store flags in Room: ProblematicShowEntity(showId, imdbId, preferredDb). Implement multiple episode guide support: query TMDb, TVDb, Trakt APIs for flagged shows. Create episode mapping table: EpisodeMappingEntity(showId, s01e01_tmdb, s01e01_tvdb, s01e01_trakt). Build UI for users to select preferred episode guide per show. Display episode guide source in player UI. Create community mapping submission system. Handle special cases: production order vs air order. Add manual episode progression override for flagged shows.",
+        "testStrategy": "Test with known problematic shows (Futurama, etc). Verify API response parsing. Test mapping table accuracy. Test guide switching. Verify manual progression. Test with mock community mappings. Test edge cases for splits/mergers.",
+        "priority": "low",
+        "dependencies": [
+          15
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 22,
+        "title": "Build Auto-play with Intelligent Source Selection",
+        "description": "Create smart auto-play system that selects optimal sources for next episodes",
+        "details": "Implement source ranking algorithm: score = (cached ? 1000 : 0) + (quality_score * 100) + (seeders * 10) + (pack_bonus * 50). Create learning system: track user source selections, adjust weights based on preferences. Build fallback chains: primary source → secondary → tertiary. Implement pre-fetching: resolve next episode source during current playback. Add smart pack reuse: if current episode from pack, use same for next. Create source health monitoring: mark failed sources, skip in future. Add user preferences: quality threshold, release group preferences. Show source selection reasoning in UI.",
+        "testStrategy": "Test ranking algorithm with various inputs. Test learning system adaptation. Verify fallback chain execution. Test pre-fetch timing. Test pack reuse logic. Mock source failures. Test preference application. Verify UI reasoning display.",
+        "priority": "low",
+        "dependencies": [
+          15,
+          16,
+          20
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Design core ranking algorithm architecture",
+            "description": "Create the foundational ranking algorithm with scoring mechanisms and weight calculations",
+            "dependencies": [],
+            "details": "Design a flexible ranking system that can score items based on multiple factors including relevance, performance metrics, user behavior, and contextual signals. Include interfaces for pluggable scoring functions.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Implement feedback learning system",
+            "description": "Build a machine learning system that adapts rankings based on user feedback and behavior",
+            "dependencies": [
+              1
+            ],
+            "details": "Create a feedback loop that captures user interactions (clicks, dwell time, conversions) and updates ranking weights. Implement online learning algorithms to continuously improve rankings.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Create intelligent fallback chains",
+            "description": "Develop a system for graceful degradation when primary ranking methods fail",
+            "dependencies": [
+              1
+            ],
+            "details": "Build fallback mechanisms that activate when primary rankers are unavailable or underperforming. Include rule-based fallbacks, cached results, and simplified ranking algorithms.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Implement predictive pre-fetching",
+            "description": "Add intelligent pre-fetching to anticipate user needs and improve response times",
+            "dependencies": [
+              1,
+              2
+            ],
+            "details": "Create a prediction system that pre-computes rankings for likely queries based on user patterns, temporal trends, and contextual signals. Include cache warming strategies.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Build result pack reuse system",
+            "description": "Implement efficient reuse of previously computed ranking results",
+            "dependencies": [
+              1,
+              4
+            ],
+            "details": "Design a caching layer that intelligently stores and reuses ranking results. Include similarity detection to identify when cached results can be adapted for new queries.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 6,
+            "title": "Add comprehensive health monitoring",
+            "description": "Create monitoring systems to track ranking algorithm performance and health",
+            "dependencies": [
+              1,
+              2,
+              3
+            ],
+            "details": "Implement real-time monitoring of ranking quality metrics, latency, error rates, and model drift. Include alerting for anomalies and automatic circuit breakers.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 7,
+            "title": "Integrate user preference system",
+            "description": "Build personalization capabilities into the ranking algorithm",
+            "dependencies": [
+              1,
+              2
+            ],
+            "details": "Create user profile management that captures preferences, historical behavior, and context. Integrate personalization signals into ranking calculations while maintaining privacy.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 8,
+            "title": "Create ranking reasoning UI",
+            "description": "Develop user interface components that explain ranking decisions",
+            "dependencies": [
+              1,
+              7
+            ],
+            "details": "Build UI elements that show why items are ranked as they are, including contributing factors and weights. Provide interactive controls for users to adjust preferences.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 9,
+            "title": "Optimize algorithm performance",
+            "description": "Enhance ranking speed and efficiency through various optimization techniques",
+            "dependencies": [
+              1,
+              2,
+              4,
+              5
+            ],
+            "details": "Implement performance optimizations including vectorization, parallel processing, approximate algorithms, and efficient data structures. Target sub-100ms latency.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 10,
+            "title": "Implement A/B testing framework",
+            "description": "Build infrastructure for testing ranking algorithm variations",
+            "dependencies": [
+              1,
+              2,
+              6
+            ],
+            "details": "Create a framework for running controlled experiments on ranking algorithms. Include traffic splitting, metric collection, and statistical analysis capabilities.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 11,
+            "title": "Create ranking quality metrics",
+            "description": "Develop comprehensive metrics to measure and track ranking effectiveness",
+            "dependencies": [
+              1,
+              2,
+              6,
+              10
+            ],
+            "details": "Implement metrics for relevance (NDCG, MAP), user satisfaction (CTR, dwell time), diversity, freshness, and fairness. Build dashboards for monitoring these metrics.",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 23,
+        "title": "Implement Voice Search and Commands",
+        "description": "Add voice control for search and playback commands using Android TV voice APIs",
+        "details": "Integrate Android TV SearchManager for voice search. Implement voice command recognition: 'Play [movie name]', 'Search for [content]', 'Next episode', 'Pause/Resume'. Create VoiceSearchActivity to handle ACTION_SEARCH intents. Add continuous listening mode during playback for commands. Implement natural language processing for queries: 'Show me action movies', 'Find 4K content'. Add voice feedback using TextToSpeech. Support multiple languages based on system locale. Create custom voice command training UI. Handle ambiguous results with voice-guided selection.",
+        "testStrategy": "Test voice recognition accuracy. Test command parsing. Verify search intent handling. Test with different accents/languages. Test continuous listening battery impact. Mock voice input for automated tests. Test ambiguous query handling.",
+        "priority": "low",
+        "dependencies": [
+          9
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 24,
+        "title": "Create Android TV Recommendations",
+        "description": "Implement Android TV home screen recommendations using Leanback recommendation system",
+        "details": "Implement TvRecommendationService using androidx.tvprovider. Create recommendation channels: Continue Watching, New Episodes, Trending. Build RecommendationBuilder with content metadata and images. Update recommendations using WorkManager periodic tasks. Implement click handling to deep-link into app. Add recommendation preferences: enable/disable, update frequency. Create smart recommendations based on watch history. Handle recommendation limits (max 100 per channel). Add notification channel for recommendations. Implement recommendation analytics tracking.",
+        "testStrategy": "Test recommendation display on launcher. Verify deep-link handling. Test update frequency. Test with maximum recommendations. Verify image loading. Test preference controls. Mock system recommendation limits. Test analytics events.",
+        "priority": "low",
+        "dependencies": [
+          14,
+          15
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 25,
+        "title": "Optimize Performance and Polish UI",
+        "description": "Fine-tune app performance, add animations, and polish the overall user experience",
+        "details": "Profile app with Android Studio Profiler, identify bottlenecks. Optimize image loading: implement progressive loading, memory cache limits. Add Baseline Profiles for faster startup. Implement smooth animations: shared element transitions, parallax effects on scroll. Optimize database queries with proper indices. Add app shortcuts for quick actions. Implement proper error boundaries with fallback UI. Add loading state skeletons throughout. Optimize recomposition with derivedStateOf and remember. Implement proper focus restoration. Add haptic feedback for D-pad actions. Create onboarding flow for first-time users.",
+        "testStrategy": "Measure startup time (<3s target). Profile memory usage (<200MB). Test on low-end devices (Fire TV Stick Lite). Verify animation smoothness (60fps). Test with slow network conditions. Use Macrobenchmark for performance testing. Test focus restoration scenarios.",
+        "priority": "low",
+        "dependencies": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          24
+        ],
+        "status": "pending",
+        "subtasks": []
+      }
+    ],
+    "metadata": {
+      "created": "2025-06-22T03:41:46.714Z",
+      "updated": "2025-06-22T03:41:46.714Z",
+      "description": "Tasks for master context"
+    }
+  }
+}

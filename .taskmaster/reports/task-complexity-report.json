@@ -1,0 +1,213 @@
+{
+	"meta": {
+		"generatedAt": "2025-06-22T03:47:13.678Z",
+		"tasksAnalyzed": 25,
+		"totalTasks": 25,
+		"analysisCount": 25,
+		"thresholdScore": 5,
+		"projectName": "rd-watch",
+		"usedResearch": true
+	},
+	"complexityAnalysis": [
+		{
+			"taskId": 1,
+			"taskTitle": "Initialize Android TV Project",
+			"complexityScore": 4,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "Break down the Android TV project initialization into steps for project creation, Gradle configuration, manifest setup, initial UI scaffolding, and build verification",
+			"reasoning": "Moderate complexity due to TV-specific configurations and Compose for TV setup, but largely follows standard Android project patterns"
+		},
+		{
+			"taskId": 2,
+			"taskTitle": "Implement Dependency Injection with Hilt",
+			"complexityScore": 6,
+			"recommendedSubtasks": 7,
+			"expansionPrompt": "Create subtasks for Hilt setup, individual module creation (Network, Database, Repository), qualifiers, testing configuration, and integration verification",
+			"reasoning": "Requires careful planning of dependency graph, proper scoping, and test infrastructure setup with multiple interconnected modules"
+		},
+		{
+			"taskId": 3,
+			"taskTitle": "Design MVVM Architecture Foundation",
+			"complexityScore": 7,
+			"recommendedSubtasks": 8,
+			"expansionPrompt": "Establish base classes for ViewModels, UI state management, repository patterns, navigation setup, error handling, and reactive programming patterns",
+			"reasoning": "Foundational architecture requiring careful design decisions that will impact the entire app, with complex state management and navigation considerations"
+		},
+		{
+			"taskId": 4,
+			"taskTitle": "Configure Network Layer with Retrofit",
+			"complexityScore": 6,
+			"recommendedSubtasks": 8,
+			"expansionPrompt": "Set up Retrofit configuration, create API interfaces, implement interceptors, configure authentication, add error handling, setup JSON parsing, and create comprehensive tests",
+			"reasoning": "Multiple interceptors, authentication handling, and security considerations make this moderately complex with many configuration details"
+		},
+		{
+			"taskId": 5,
+			"taskTitle": "Implement OAuth2 Device Flow Authentication",
+			"complexityScore": 8,
+			"recommendedSubtasks": 10,
+			"expansionPrompt": "Implement device code request, QR code generation, polling mechanism, token storage, refresh logic, UI states, error handling, and TV-optimized authentication flow",
+			"reasoning": "Complex OAuth2 flow with TV-specific UX challenges, secure token management, and multiple state transitions requiring careful implementation"
+		},
+		{
+			"taskId": 6,
+			"taskTitle": "Create Room Database Schema",
+			"complexityScore": 7,
+			"recommendedSubtasks": 9,
+			"expansionPrompt": "Design entity classes, implement DAOs, create type converters, setup migrations, configure database builder, add indices, implement relations, and create comprehensive tests",
+			"reasoning": "Multiple interconnected entities with complex relationships, requiring careful schema design and migration strategy"
+		},
+		{
+			"taskId": 7,
+			"taskTitle": "Build Home Screen with Compose for TV",
+			"complexityScore": 8,
+			"recommendedSubtasks": 10,
+			"expansionPrompt": "Create TV navigation drawer, implement content rows, add focus handling, integrate image loading, handle loading states, implement overscan safety, add animations, and ensure accessibility",
+			"reasoning": "TV-specific UI challenges with complex focus management, lazy loading, and multiple content sections requiring careful coordination"
+		},
+		{
+			"taskId": 8,
+			"taskTitle": "Implement Scraper Manifest System",
+			"complexityScore": 7,
+			"recommendedSubtasks": 9,
+			"expansionPrompt": "Create manifest models, implement parser, build repository, add validation, handle multiple formats, implement caching, create manager class, add error handling, and setup default scrapers",
+			"reasoning": "Requires parsing external formats, managing multiple data sources, and coordinating between network and storage layers"
+		},
+		{
+			"taskId": 9,
+			"taskTitle": "Create Search Interface with Scraper Integration",
+			"complexityScore": 8,
+			"recommendedSubtasks": 11,
+			"expansionPrompt": "Build TV keyboard, implement voice search, create search orchestration, add result aggregation, implement filters, handle rate limiting, add search history, create UI components, and optimize performance",
+			"reasoning": "Complex multi-source search with TV input challenges, voice integration, and result aggregation requiring sophisticated coordination"
+		},
+		{
+			"taskId": 10,
+			"taskTitle": "Implement Direct Account File Browser",
+			"complexityScore": 6,
+			"recommendedSubtasks": 8,
+			"expansionPrompt": "Create file browser UI, implement pagination, add sorting/filtering, handle file metadata display, implement bulk operations, add caching layer, create refresh mechanism, and optimize for large lists",
+			"reasoning": "Moderate complexity with pagination, filtering, and performance considerations for large file lists"
+		},
+		{
+			"taskId": 11,
+			"taskTitle": "Build Content Details Screen",
+			"complexityScore": 7,
+			"recommendedSubtasks": 9,
+			"expansionPrompt": "Design detail layout, integrate TMDb API, display source information, implement action buttons, create episode grid for TV shows, add recommendations, handle landscape layout, and manage loading states",
+			"reasoning": "Multiple data sources integration with complex UI layout and TV-specific design considerations"
+		},
+		{
+			"taskId": 12,
+			"taskTitle": "Integrate ExoPlayer for Video Playback",
+			"complexityScore": 9,
+			"recommendedSubtasks": 12,
+			"expansionPrompt": "Setup ExoPlayer, create custom TV controls, implement format support, add subtitle rendering, handle audio tracks, support HDR/4K, create playback state management, add adaptive streaming, implement speed controls, and handle errors",
+			"reasoning": "Complex media playback with multiple format support, custom TV controls, and advanced features like HDR and adaptive streaming"
+		},
+		{
+			"taskId": 13,
+			"taskTitle": "Implement Playback State Persistence",
+			"complexityScore": 6,
+			"recommendedSubtasks": 7,
+			"expansionPrompt": "Create playback repository, implement auto-save mechanism, add resume dialog, handle episode completion, implement cleanup logic, sync state on termination, and handle edge cases",
+			"reasoning": "Requires careful state management and synchronization with multiple edge cases to handle"
+		},
+		{
+			"taskId": 14,
+			"taskTitle": "Build Library Management System",
+			"complexityScore": 6,
+			"recommendedSubtasks": 8,
+			"expansionPrompt": "Create library database structure, implement CRUD operations, design library UI, add sorting/filtering, implement quick actions, add search, create export/import, and cache management",
+			"reasoning": "Standard CRUD operations with additional features like export/import and image caching"
+		},
+		{
+			"taskId": 15,
+			"taskTitle": "Implement Smart Episode Progression",
+			"complexityScore": 7,
+			"recommendedSubtasks": 9,
+			"expansionPrompt": "Build progression logic, handle season boundaries, create continue watching feature, implement binge mode, add skip functionality, create progress indicators, handle special episodes, and support custom orders",
+			"reasoning": "Complex logic for episode tracking with multiple edge cases and user experience features"
+		},
+		{
+			"taskId": 16,
+			"taskTitle": "Create Advanced Source Selection UI",
+			"complexityScore": 6,
+			"recommendedSubtasks": 8,
+			"expansionPrompt": "Design source picker UI, implement quality badges, create smart sorting algorithm, add filters, show health indicators, implement grouping, add tooltips, and handle season packs",
+			"reasoning": "Moderate UI complexity with sorting algorithms and multiple data display requirements"
+		},
+		{
+			"taskId": 17,
+			"taskTitle": "Implement External Subtitle Integration",
+			"complexityScore": 8,
+			"recommendedSubtasks": 10,
+			"expansionPrompt": "Integrate multiple subtitle APIs, implement hash calculation, create search logic, build selection UI, handle multiple formats, add caching, implement sync controls, support manual files, and add styling options",
+			"reasoning": "Multiple API integrations with complex matching algorithms and format handling requirements"
+		},
+		{
+			"taskId": 18,
+			"taskTitle": "Build Download Management Interface",
+			"complexityScore": 7,
+			"recommendedSubtasks": 9,
+			"expansionPrompt": "Create download UI, implement torrent addition flow, handle file selection, add progress monitoring, create background service, implement notifications, add queue management, create history, and handle cleanup",
+			"reasoning": "Background service complexity with real-time updates and system integration requirements"
+		},
+		{
+			"taskId": 19,
+			"taskTitle": "Implement Settings and Preferences",
+			"complexityScore": 5,
+			"recommendedSubtasks": 7,
+			"expansionPrompt": "Create settings UI structure, implement preference categories, integrate DataStore, add theme switching, implement parental controls, create backup/restore, and handle migrations",
+			"reasoning": "Standard settings implementation with some additional features like theme switching and parental controls"
+		},
+		{
+			"taskId": 20,
+			"taskTitle": "Create Season Pack Detection System",
+			"complexityScore": 7,
+			"recommendedSubtasks": 8,
+			"expansionPrompt": "Implement pattern matching, create file analysis logic, build mapping system, store pack information, implement reuse logic, create UI indicators, handle edge cases, and add preferences",
+			"reasoning": "Complex pattern matching with multiple edge cases and intelligent reuse system"
+		},
+		{
+			"taskId": 21,
+			"taskTitle": "Implement Episode Numbering Inconsistency Handler",
+			"complexityScore": 8,
+			"recommendedSubtasks": 10,
+			"expansionPrompt": "Create flagging system, integrate multiple APIs, build mapping tables, implement guide switching UI, handle different numbering schemes, add community features, support order variations, and create overrides",
+			"reasoning": "Complex cross-API integration with community features and multiple numbering scheme handling"
+		},
+		{
+			"taskId": 22,
+			"taskTitle": "Build Auto-play with Intelligent Source Selection",
+			"complexityScore": 9,
+			"recommendedSubtasks": 11,
+			"expansionPrompt": "Design ranking algorithm, implement learning system, create fallback chains, add pre-fetching, implement pack reuse, add health monitoring, integrate preferences, create reasoning UI, and optimize performance",
+			"reasoning": "Sophisticated ML-like system with complex algorithms, learning capabilities, and multiple optimization strategies"
+		},
+		{
+			"taskId": 23,
+			"taskTitle": "Implement Voice Search and Commands",
+			"complexityScore": 7,
+			"recommendedSubtasks": 9,
+			"expansionPrompt": "Integrate voice APIs, implement command recognition, create search activity, add continuous listening, implement NLP, add voice feedback, support multiple languages, create training UI, and handle ambiguity",
+			"reasoning": "Voice integration complexity with natural language processing and multi-language support"
+		},
+		{
+			"taskId": 24,
+			"taskTitle": "Create Android TV Recommendations",
+			"complexityScore": 6,
+			"recommendedSubtasks": 8,
+			"expansionPrompt": "Implement recommendation service, create channels, build recommendations, setup periodic updates, handle deep-linking, add preferences, implement smart logic, and track analytics",
+			"reasoning": "System integration with periodic updates and recommendation algorithms"
+		},
+		{
+			"taskId": 25,
+			"taskTitle": "Optimize Performance and Polish UI",
+			"complexityScore": 8,
+			"recommendedSubtasks": 12,
+			"expansionPrompt": "Profile performance, optimize images, add baseline profiles, implement animations, optimize database, add shortcuts, implement error boundaries, add loading states, optimize recomposition, ensure accessibility, add haptics, and create onboarding",
+			"reasoning": "Comprehensive optimization requiring profiling, multiple performance techniques, and polish across entire app"
+		}
+	]
+}

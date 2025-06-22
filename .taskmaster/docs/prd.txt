@@ -1,0 +1,369 @@
+# Overview
+rd-watch is a modern Android TV application that provides seamless streaming access to Real Debrid content, designed specifically for the living room experience. The app solves the problem of accessing Real Debrid's extensive cached torrent library and premium hosting services through an intuitive, TV-optimized interface. Built using Jetpack Compose for TV and modern Android libraries, rd-watch targets Android TV users who want a native, performant solution for streaming their Real Debrid content without relying on third-party addons or complex setups.
+
+# Core Features
+
+## Authentication & Account Management
+- OAuth2 device code flow implementation for TV-friendly authentication
+- Secure token storage and automatic refresh handling
+- Account status display showing premium days remaining and traffic limits
+- Multiple account support with easy switching
+
+## Content Discovery & Search
+- Intuitive search interface optimized for D-pad navigation
+- Search history and suggestions
+- Filter by quality (4K, 1080p, 720p), file type, and size
+- Integration with Real Debrid's torrent search capabilities
+- Display of cached status for instant playback
+
+### Scraper Manifest System
+- Support for scraper manifest URLs (e.g., torrentio.strem.fun/lite/manifest.json)
+- Parse multiple manifest formats (Torrentio, Knightcrawler, etc.)
+- Store and manage multiple scraper manifests
+- Respect scraper-defined settings (providers, quality filters, language, etc.)
+- Display results according to scraper's sort order and priority
+- Show scraper source for each result
+- Automatic manifest refresh/update checking
+- Fallback handling for unavailable scrapers
+
+## Media Library Management
+- Browse and manage active torrents
+- View download history
+- Organize content by type (Movies, TV Shows, Other)
+- Quick access to recently accessed items
+- Favorites/Library system for quick access to preferred content
+- Add/remove content from personal library
+- Library categories (Movies, TV Shows, Currently Watching)
+- Visual indicators for watched/unwatched content
+- Episode tracking for TV series
+
+## Direct Account Access
+- Direct Real Debrid account file browser (bypasses scrapers)
+- List view of all cached/downloaded files in account
+- Filter and sort account files by date, name, size, type
+- Stream files directly from account without scraper search
+- Manage account storage and file deletion
+- Quick access tab for immediate file browsing
+
+## Streaming & Playback
+- Direct streaming of cached content
+- Support for multiple video formats (MKV, MP4, AVI, etc.)
+- Integrated video player with Android TV controls
+- Resume playback with exact position tracking
+- Continue watching with smart episode progression
+- Enhanced auto-play next episode with intelligent source selection
+- Source selection UI showing available quality/release options
+- Smart source prioritization and fallback mechanisms
+- Season pack detection and episode extraction
+- Multi-episode source management (reuse season packs for subsequent episodes)
+- Episode numbering inconsistency handling for problematic shows
+- User-managed show flagging for inconsistent episode numbering
+- Multiple episode guide support (TMDb, TVDb, Trakt) for flagged shows
+- Source-specific episode mapping and validation
+- Subtitle support (SRT, VTT, embedded)
+- External subtitle service integration (alternatives to OpenSubtitles)
+- Subtitle search by content name and hash
+- Multiple subtitle track management
+- Subtitle timing adjustment controls
+- Audio track selection
+- Quality selection based on available sources
+- Skip intro/outro markers (if available)
+- Playback speed controls
+
+## Download Management
+- Add torrents via magnet links or torrent files
+- Select specific files from multi-file torrents
+- Monitor download progress
+- Background download support
+- Auto-delete completed torrents option
+
+## User Experience Features
+- Featured content carousel on home screen
+- Continue watching section with progress indicators
+- Smart episode suggestions (next episode for completed content)
+- Recently added content section
+- Quick actions for common tasks
+- Settings for playback preferences
+- Theme customization (Dark/Light modes)
+- Performance settings for different connection speeds
+- Watch progress tracking across all content
+- Episode/season navigation for TV series
+
+## Scraper Management
+- Add scraper via manifest URL input
+- List of active scraper manifests
+- Enable/disable scrapers without removing
+- View scraper configuration details
+- Default scraper suggestions for easy setup
+- Test scraper connectivity
+
+# User Experience
+
+## User Personas
+1. **Cord Cutter**: Tech-savvy user who has replaced cable with streaming services and uses Real Debrid for additional content
+2. **Home Theater Enthusiast**: User with high-end TV/projector setup wanting maximum quality streaming
+3. **Casual Viewer**: User who wants simple, Netflix-like experience for their Real Debrid content
+
+## Key User Flows
+1. **First Launch**: Splash screen → Welcome/Setup → OAuth authentication → Home screen
+2. **Content Discovery**: Home → Search → Results → Content details → Play/Download
+3. **Playback**: Select content → Choose quality/source → Player launches → Playback controls
+4. **Library Management**: Home → Library → Browse/Filter → Manage content
+
+## UI/UX Considerations
+- Large, readable text optimized for 10-foot viewing distance
+- High contrast design for visibility
+- Focus indicators for D-pad navigation
+- Smooth animations and transitions
+- Quick access to common actions via remote shortcuts
+- Voice search support
+- Loading states and error handling
+
+# Technical Architecture
+
+## System Components
+- **Presentation Layer**: Jetpack Compose for TV with MVVM architecture
+- **Domain Layer**: Use cases and business logic
+- **Data Layer**: Repository pattern with local and remote data sources
+- **Network Layer**: Retrofit for API calls, OkHttp for networking
+- **Local Storage**: Room database for caching, DataStore for preferences
+
+## Data Models
+- User (account info, tokens, preferences)
+- Content (movies, shows, torrents, metadata)
+- Stream (quality options, sources)
+- Source (torrent info, quality, release group, season pack status)
+- Download (progress, status)
+- Playback State (position, history, episode tracking, selected source)
+- Library (user's saved content, categories)
+- Watch Progress (position, completion status, next episode data)
+- Subtitle Source (external subtitle service configurations)
+- Episode (season/episode info, watch status, next episode links, source mapping)
+- Season Pack (multi-episode source, episode file mappings)
+- Show Flagging (user-marked shows with numbering issues, preferred episode guide)
+- Episode Guide Mapping (multiple database mappings for problematic shows)
+
+## APIs and Integrations
+- Real Debrid REST API v2
+- OAuth2 device flow for authentication
+- WebSocket for real-time download updates
+- ExoPlayer for media playback
+- Android TV Leanback services for recommendations
+- Dynamic scraper loading from JSON endpoints
+- Torrentio-compatible scraper format
+- External subtitle service API (alternatives to OpenSubtitles)
+- TMDb API for content metadata and episode information
+- Content hash-based subtitle matching
+
+## Infrastructure Requirements
+- Minimum Android TV OS 7.0 (API 24)
+- Internet connection for API calls
+- Storage for cache and downloads
+- TV remote or game controller support
+
+## Key Technologies
+- Kotlin with Coroutines and Flow
+- Jetpack Compose for TV
+- Hilt for dependency injection
+- Retrofit & Moshi for networking
+- Room for local database
+- ExoPlayer for video playback
+- Coil for image loading
+- WorkManager for background tasks
+
+## Scraper Integration
+- Support for Stremio addon manifest format
+- Extensible parser for different manifest schemas
+- Caching layer for manifest data
+- Concurrent search across multiple scrapers
+
+## Source Management System
+- Intelligent source ranking based on quality, seeds, release group
+- Season pack detection and episode file analysis
+- Source preference learning from user selections
+- Fallback source chains for failed streams
+- Auto-play source selection with manual override option
+
+# Development Roadmap
+
+## MVP Requirements
+1. Core authentication flow with Real Debrid OAuth2
+2. Basic scraper manifest system (single scraper support)
+3. Search functionality through scraper
+4. Direct account file browser (bypassing scrapers)
+5. Source selection UI for available torrents
+6. Display cached content with playback capability
+7. Simple video player with basic controls
+8. Continue watching functionality with position tracking
+9. Basic library/favorites system
+10. Home screen with recent items and continue watching
+11. Settings for account and scraper management
+12. Error handling and offline states
+
+## Phase 2 - Enhanced User Experience
+1. Multiple scraper support
+2. External subtitle service integration
+3. Advanced search filters and sorting
+4. Content categorization (Movies/TV Shows)
+5. Enhanced direct account browser with advanced filtering
+6. Featured content carousel
+7. Smart episode progression (next episode suggestions)
+8. Enhanced library management with categories
+9. TMDb integration for content metadata
+10. Episode tracking for TV series
+11. Download management UI
+
+## Phase 3 - Advanced Source Management
+1. Intelligent auto-play next episode with reliable source selection
+2. Season pack detection and episode file mapping
+3. Source preference learning and prioritization
+4. Fallback source chains and error recovery
+5. Multi-episode source management (reuse season packs)
+6. Advanced source ranking algorithms
+7. User source selection preferences and overrides
+8. Episode numbering inconsistency system for problematic shows
+9. User-managed show flagging interface
+10. Multiple episode database integration (TMDb, TVDb, Trakt)
+11. Source-specific episode validation and mapping
+
+## Phase 4 - Advanced Features
+1. Multiple account support
+2. Voice search integration
+3. Android TV recommendations
+4. Background downloads with notifications
+5. Advanced player features (speed control, gestures)
+6. Parental controls
+
+## Phase 5 - Polish and Optimization
+1. Performance optimizations
+2. Advanced caching strategies
+3. Theme customization options
+4. Analytics integration
+5. Crash reporting
+6. A/B testing framework
+7. Localization support
+
+# Logical Dependency Chain
+
+## Foundation (Must be built first)
+1. Project setup with Compose for TV
+2. Basic navigation structure
+3. Dependency injection setup
+4. Network layer with API client
+5. Authentication module
+6. Local storage setup
+
+## Core Functionality
+1. Search and browse capabilities
+2. Content details display
+3. Basic video player integration
+4. Home screen with content grid
+5. Settings screen
+
+## Enhanced Features (Built on core)
+1. Advanced player controls
+2. Download management
+3. Library organization
+4. User preferences
+5. Content recommendations
+
+## Final Polish
+1. Animations and transitions
+2. Error recovery
+3. Performance tuning
+4. UI refinements
+5. Testing and stability
+
+# Risks and Mitigations
+
+## Technical Challenges
+- **API Rate Limiting**: Implement caching and request throttling
+- **Video Format Compatibility**: Use ExoPlayer with multiple codec support
+- **Large File Streaming**: Implement adaptive bitrate and buffering strategies
+- **TV Input Variations**: Extensive testing on different TV remotes and controllers
+
+## API Stability Risks
+- **Real Debrid API Changes**: Version checking and graceful degradation
+- **Anti-Piracy Measures**: Design app to be compliant and adaptable
+- **Service Availability**: Offline mode with cached content access
+
+## User Experience Risks
+- **Complex Authentication**: Simplified OAuth flow with clear instructions
+- **Navigation Complexity**: User testing and iterative improvements
+- **Performance on Low-End TVs**: Configurable quality settings and optimizations
+
+## Development Risks
+- **Compose for TV Maturity**: Stay updated with latest releases, have Leanback fallback plan
+- **Limited TV-Specific Resources**: Leverage Android TV samples and community
+- **Testing Complexity**: Automated UI tests and device farm testing
+
+# Appendix
+
+## API Endpoints to Implement
+
+### Real Debrid API
+- /oauth/device/code - Device authentication
+- /user - User information
+- /torrents/info - Get torrent information
+- /torrents/addMagnet - Add magnet link
+- /torrents/selectFiles - Select files to download
+- /torrents/delete - Delete torrent
+- /unrestrict/link - Get streaming link
+- /downloads - Download history
+- /traffic - Traffic information
+
+### External Services
+- TMDb API for content metadata
+- Subtitle service API (alternatives: Subdl, SubDB, Podnapisi)
+- Scraper manifest endpoints
+
+## Subtitle Service Alternatives
+Since OpenSubtitles no longer offers free API access, potential alternatives include:
+- **Subdl**: Free API with good coverage
+- **SubDB**: Hash-based subtitle matching
+- **Podnapisi**: European subtitle database
+- **Addic7ed**: For TV show subtitles (scraping)
+- **Local subtitle files**: Support for manually added SRT/VTT files
+- **Embedded subtitles**: Extract from video containers
+
+## Episode Numbering Inconsistency Challenge
+Shows with complex broadcast histories (cancellations, network changes, revivals) often have inconsistent episode numbering across different sources and databases:
+
+**Problematic Shows Examples:**
+- Futurama (Fox → Comedy Central → Hulu)
+- American Dad (Fox → TBS)
+- Family Guy (Fox cancellation/revival)
+- Community (NBC → Yahoo Screen)
+
+**The Problem:**
+- TMDb might number episodes differently than TVDb
+- Release groups may follow different numbering schemes
+- Production order vs. air order discrepancies
+- Network-specific season/episode mappings
+
+**Solution Approach:**
+- User-managed flagging of problematic shows
+- Multiple episode database support for flagged shows
+- Source-specific episode mapping validation
+- Manual episode progression for flagged shows
+- Community-driven episode mapping corrections
+
+## Compliance Considerations
+- Respect Real Debrid terms of service
+- Implement proper error handling for restricted content
+- No circumvention of API limitations
+- Clear communication about service requirements
+
+## Performance Targets
+- App launch to home screen: <3 seconds
+- Search results: <2 seconds
+- Stream start: <5 seconds
+- Smooth 60fps UI animations
+- Memory usage: <200MB baseline
+
+## Testing Strategy
+- Unit tests for business logic
+- Integration tests for API calls
+- UI tests for critical user flows
+- Performance profiling
+- Compatibility testing across TV models
