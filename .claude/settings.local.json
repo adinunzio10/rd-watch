@@ -5,7 +5,10 @@
       "mcp__taskmaster-ai__get_tasks",
       "mcp__taskmaster-ai__analyze_project_complexity",
       "mcp__taskmaster-ai__complexity_report",
-      "mcp__taskmaster-ai__expand_task"
+      "mcp__taskmaster-ai__expand_task",
+      "mcp__taskmaster-ai__get_task",
+      "Bash(cp:*)",
+      "Bash(true)"
     ],
     "deny": []
   }

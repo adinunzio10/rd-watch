@@ -10,7 +10,62 @@
         "priority": "high",
         "dependencies": [],
         "status": "pending",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create Android TV project structure",
+            "description": "Initialize a new Android project with Android TV support using Android Studio or command line tools",
+            "dependencies": [],
+            "details": "Create new project with TV activity template, configure package name (e.g., com.example.androidtvapp), set minimum SDK to API 21 (Android TV requirement), target latest stable SDK. Include Kotlin as primary language and enable Jetpack Compose support during project creation.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Configure Gradle build files for TV and Compose",
+            "description": "Set up Gradle dependencies and configurations specific to Android TV and Compose for TV",
+            "dependencies": [
+              1
+            ],
+            "details": "Add Compose for TV dependencies (androidx.tv:tv-foundation, androidx.tv:tv-material), configure Compose compiler options, add Leanback library dependencies if needed for compatibility. Set up proper build features including compose true, configure ProGuard rules for TV-specific optimizations.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Set up Android TV manifest configurations",
+            "description": "Configure AndroidManifest.xml with TV-specific requirements and permissions",
+            "dependencies": [
+              1
+            ],
+            "details": "Add android.software.leanback feature declaration (required=true for TV-only, false for multi-platform), declare LEANBACK_LAUNCHER intent filter for main activity, remove touchscreen requirement, add appropriate permissions for TV features. Configure banner icon for TV launcher display.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Implement initial TV UI scaffolding with Compose",
+            "description": "Create basic TV navigation structure and home screen using Compose for TV components",
+            "dependencies": [
+              2,
+              3
+            ],
+            "details": "Implement TvLazyRow/TvLazyColumn for content browsing, set up focus handling and D-pad navigation support, create basic home screen with content categories. Implement TV-specific theming with appropriate text sizes and spacing for 10-foot UI experience.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Verify build and TV emulator testing",
+            "description": "Build the project and test on Android TV emulator to ensure proper setup",
+            "dependencies": [
+              4
+            ],
+            "details": "Create Android TV AVD (emulator) with appropriate TV system image, build and deploy the app, verify D-pad navigation works correctly, ensure app appears in TV launcher with proper banner. Test basic UI interactions and focus management on TV interface.",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
       },
       {
         "id": 2,
