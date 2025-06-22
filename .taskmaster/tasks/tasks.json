@@ -171,7 +171,7 @@
           1,
           2
         ],
-        "status": "pending",
+        "status": "in-progress",
         "subtasks": [
           {
             "id": 1,
@@ -179,7 +179,7 @@
             "description": "Implement abstract BaseViewModel class with lifecycle management, coroutine scope handling, and common state management functionality",
             "dependencies": [],
             "details": "Define BaseViewModel extending ViewModel() with protected CoroutineScope, MutableStateFlow for UI state, error handling, and disposable management. Include common functions like launchSafely() for coroutine error handling",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -513,7 +513,7 @@
         "dependencies": [
           2
         ],
-        "status": "in-progress",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -1513,7 +1513,7 @@
     ],
     "metadata": {
       "created": "2025-06-22T03:41:46.714Z",
-      "updated": "2025-06-22T19:28:32.234Z",
+      "updated": "2025-06-22T19:40:40.172Z",
       "description": "Tasks for master context"
     }
   }

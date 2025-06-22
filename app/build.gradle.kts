@@ -70,6 +70,10 @@ dependencies {
     implementation(libs.hilt.navigation.compose)
     ksp(libs.hilt.compiler)
     
+    // ViewModel dependencies
+    implementation(libs.androidx.lifecycle.viewmodel.ktx)
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
+    
     // Network dependencies
     implementation(libs.retrofit)
     implementation(libs.retrofit.converter.moshi)
