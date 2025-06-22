@@ -389,7 +389,7 @@
             "description": "Implement the initial device code request to the OAuth2 provider",
             "dependencies": [],
             "details": "Create service to send POST request to OAuth2 device authorization endpoint with client_id and scope parameters. Handle response containing device_code, user_code, verification_uri, and interval values",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -400,7 +400,7 @@
               1
             ],
             "details": "Use QR code library to generate scannable code from verification_uri. Ensure QR code is TV-optimized with appropriate size and contrast. Include fallback text display of user_code",
-            "status": "pending",
+            "status": "in-progress",
             "testStrategy": ""
           },
           {
@@ -1513,7 +1513,7 @@
     ],
     "metadata": {
       "created": "2025-06-22T03:41:46.714Z",
-      "updated": "2025-06-22T20:24:03.725Z",
+      "updated": "2025-06-22T20:26:29.619Z",
       "description": "Tasks for master context"
     }
   }

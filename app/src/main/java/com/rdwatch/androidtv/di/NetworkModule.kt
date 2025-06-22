@@ -7,6 +7,7 @@ import com.rdwatch.androidtv.di.qualifiers.PublicClient
 import com.rdwatch.androidtv.di.qualifiers.RealDebridApi
 import com.rdwatch.androidtv.network.ApiService
 import com.rdwatch.androidtv.network.api.RealDebridApiService
+import com.rdwatch.androidtv.network.api.OAuth2ApiService
 import com.rdwatch.androidtv.network.interceptors.AuthInterceptor
 import com.rdwatch.androidtv.network.interceptors.TokenAuthenticator
 import com.rdwatch.androidtv.network.interceptors.TokenProvider
@@ -165,6 +166,12 @@ abstract class NetworkModule {
         @Singleton
         fun provideRealDebridApiService(@RealDebridApi retrofit: Retrofit): RealDebridApiService {
             return retrofit.create(RealDebridApiService::class.java)
+        }
+        
+        @Provides
+        @Singleton
+        fun provideOAuth2ApiService(@MainApi retrofit: Retrofit): OAuth2ApiService {
+            return retrofit.create(OAuth2ApiService::class.java)
         }
     }
 }
