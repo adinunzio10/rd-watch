@@ -381,7 +381,7 @@
           3,
           4
         ],
-        "status": "pending",
+        "status": "in-progress",
         "subtasks": [
           {
             "id": 1,
@@ -1036,7 +1036,7 @@
         "dependencies": [
           3
         ],
-        "status": "in-progress",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -1090,7 +1090,7 @@
               3
             ],
             "details": "Build track selector for multiple audio streams. Display available languages and formats. Implement seamless audio track switching without playback interruption.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -1102,7 +1102,7 @@
               3
             ],
             "details": "Enable HDR10, HDR10+, and Dolby Vision support. Configure surface view for 4K rendering. Add capability detection and fallback for non-HDR displays.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -1125,7 +1125,7 @@
               7
             ],
             "details": "Implement ABR algorithm configuration. Create quality selection UI showing available resolutions. Add bandwidth monitoring and quality switching notifications.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -1137,7 +1137,7 @@
               7
             ],
             "details": "Add speed selection UI (0.5x to 2.0x). Configure audio processor for pitch correction. Save user's preferred speed setting per content or globally.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -1148,7 +1148,7 @@
               7
             ],
             "details": "Handle network errors, format incompatibility, DRM failures, and decoder errors. Create error UI with retry options. Implement automatic quality downgrade on repeated errors.",
-            "status": "in-progress",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -1160,7 +1160,7 @@
               7
             ],
             "details": "Create seek bar with thumbnail preview on hover/focus. Implement frame-accurate seeking. Add chapter markers if available in media metadata.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -1172,7 +1172,7 @@
               10
             ],
             "details": "Track playback events, buffering time, quality switches, and errors. Monitor decoder performance and dropped frames. Create debug overlay for development.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           }
         ]
@@ -1513,7 +1513,7 @@
     ],
     "metadata": {
       "created": "2025-06-22T03:41:46.714Z",
-      "updated": "2025-06-22T20:12:56.593Z",
+      "updated": "2025-06-22T20:24:03.725Z",
       "description": "Tasks for master context"
     }
   }

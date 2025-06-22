@@ -20,6 +20,7 @@ espresso = "3.6.1"
 mockk = "1.13.8"
 coroutinesTest = "1.8.0"
 exoplayer = "1.2.1"
+zxing = "3.5.3"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -69,6 +70,8 @@ androidx-media3-session = { group = "androidx.media3", name = "media3-session", 
 androidx-media3-dash = { group = "androidx.media3", name = "media3-exoplayer-dash", version.ref = "exoplayer" }
 androidx-media3-hls = { group = "androidx.media3", name = "media3-exoplayer-hls", version.ref = "exoplayer" }
 androidx-media3-smoothstreaming = { group = "androidx.media3", name = "media3-exoplayer-smoothstreaming", version.ref = "exoplayer" }
+zxing-core = { group = "com.google.zxing", name = "core", version.ref = "zxing" }
+zxing-android-embedded = { group = "com.journeyapps", name = "zxing-android-embedded", version = "4.3.0" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
