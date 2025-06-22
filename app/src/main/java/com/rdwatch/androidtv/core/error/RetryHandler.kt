@@ -70,8 +70,8 @@ class RetryHandler {
 suspend inline fun <T> retryOnFailure(
     maxRetries: Int = RetryHandler.DEFAULT_MAX_RETRIES,
     initialDelay: Long = RetryHandler.DEFAULT_INITIAL_DELAY,
-    crossinline shouldRetry: (Throwable) -> Boolean = { true },
-    crossinline action: suspend () -> T
+    noinline shouldRetry: (Throwable) -> Boolean = { true },
+    noinline action: suspend () -> T
 ): T {
     return RetryHandler().executeWithRetry(
         maxRetries = maxRetries,

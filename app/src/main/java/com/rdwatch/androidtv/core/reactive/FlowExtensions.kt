@@ -13,16 +13,23 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.retry
 import kotlinx.coroutines.flow.retryWhen
-import kotlinx.coroutines.flow.throttleFirst
-import kotlinx.coroutines.flow.throttleLatest
 import kotlinx.coroutines.flow.timeout
+import kotlinx.coroutines.delay
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
+
+// Custom throttle implementations
+fun <T> Flow<T>.throttleFirst(windowDurationMillis: Long): Flow<T> = 
+    debounce(windowDurationMillis)
+
+fun <T> Flow<T>.throttleLatest(timeoutMs: Long): Flow<T> = 
+    debounce(timeoutMs)
 
 fun <T> Flow<T>.switchToIo(dispatcherProvider: DispatcherProvider): Flow<T> = 
     flowOn(dispatcherProvider.io)
@@ -101,22 +108,21 @@ fun <T> Flow<Result<T>>.mapToData(): Flow<T?> =
     map { result -> result.getOrNull() }
 
 fun <T> Flow<Result<T>>.filterSuccess(): Flow<T> = 
-    map { result -> result.getOrNull() }
-        .filterNotNull()
+    mapNotNull { result -> result.getOrNull() }
 
-fun <T> Flow<Result<T>>.onSuccess(action: suspend (T) -> Unit): Flow<Result<T>> = 
+fun <T> Flow<Result<T>>.onFlowSuccess(action: suspend (T) -> Unit): Flow<Result<T>> = 
     onEach { result ->
-        result.onSuccess { data -> action(data) }
+        if (result is Result.Success) action(result.data)
     }
 
-fun <T> Flow<Result<T>>.onError(action: suspend (Throwable) -> Unit): Flow<Result<T>> = 
+fun <T> Flow<Result<T>>.onFlowError(action: suspend (Throwable) -> Unit): Flow<Result<T>> = 
     onEach { result ->
-        result.onError { exception -> action(exception) }
+        if (result is Result.Error) action(result.exception)
     }
 
-fun <T> Flow<Result<T>>.onLoading(action: suspend () -> Unit): Flow<Result<T>> = 
+fun <T> Flow<Result<T>>.onFlowLoading(action: suspend () -> Unit): Flow<Result<T>> = 
     onEach { result ->
-        result.onLoading { action() }
+        if (result is Result.Loading) action()
     }
 
 fun <T> Flow<T>.asResult(): Flow<Result<T>> = 

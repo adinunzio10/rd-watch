@@ -56,6 +56,9 @@ class AuthViewModel @Inject constructor(
                 is Result.Error -> {
                     _authState.value = AuthState.Error("Failed to start authentication: ${result.exception.message}")
                 }
+                is Result.Loading -> {
+                    _authState.value = AuthState.Initializing
+                }
             }
         }
     }
@@ -81,6 +84,9 @@ class AuthViewModel @Inject constructor(
                 is Result.Error -> {
                     _authState.value = AuthState.Error("Authentication failed: ${result.exception.message}")
                 }
+                is Result.Loading -> {
+                    // Polling in progress, state managed by repository
+                }
             }
         }
     }
@@ -100,6 +106,9 @@ class AuthViewModel @Inject constructor(
                 }
                 is Result.Error -> {
                     _authState.value = AuthState.Error("Token refresh failed: ${result.exception.message}")
+                }
+                is Result.Loading -> {
+                    _authState.value = AuthState.Initializing
                 }
             }
         }
