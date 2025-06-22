@@ -1044,7 +1044,7 @@
             "description": "Add ExoPlayer dependencies to build.gradle and create basic player initialization",
             "dependencies": [],
             "details": "Add ExoPlayer core, UI, and extension dependencies. Create singleton player instance with proper lifecycle management in Application class or dependency injection module.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -1055,7 +1055,7 @@
               1
             ],
             "details": "Design custom PlayerControlView with large, TV-friendly buttons. Implement focus handling, D-pad navigation, and remote control key mapping. Include play/pause, seek, and menu buttons.",
-            "status": "pending",
+            "status": "in-progress",
             "testStrategy": ""
           },
           {
@@ -1513,7 +1513,7 @@
     ],
     "metadata": {
       "created": "2025-06-22T03:41:46.714Z",
-      "updated": "2025-06-22T20:02:44.935Z",
+      "updated": "2025-06-22T20:06:21.227Z",
       "description": "Tasks for master context"
     }
   }
