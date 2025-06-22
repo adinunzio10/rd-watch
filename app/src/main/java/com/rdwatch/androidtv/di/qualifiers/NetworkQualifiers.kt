@@ -43,3 +43,10 @@ annotation class PublicClient
 @Qualifier
 @Retention(AnnotationRetention.BINARY)
 annotation class CachingClient
+
+/**
+ * Qualifier for Real-Debrid API endpoint
+ */
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class RealDebridApi

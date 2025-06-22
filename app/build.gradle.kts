@@ -11,7 +11,7 @@ android {
 
     defaultConfig {
         applicationId = "com.rdwatch.androidtv"
-        minSdk = 21
+        minSdk = 23
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
@@ -37,6 +37,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     composeOptions {
         kotlinCompilerExtensionVersion = libs.versions.composeCompiler.get()
@@ -75,11 +76,15 @@ dependencies {
     implementation(libs.okhttp.logging.interceptor)
     implementation(libs.moshi)
     implementation(libs.moshi.kotlin)
+    kapt(libs.moshi.kotlin.codegen)
     
     // Room dependencies
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)
     kapt(libs.room.compiler)
+    
+    // Security
+    implementation(libs.androidx.security.crypto)
     
     // Testing dependencies
     testImplementation(libs.junit)
@@ -87,6 +92,7 @@ dependencies {
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.hilt.android.testing)
     testImplementation(libs.room.testing)
+    testImplementation(libs.okhttp.mockwebserver)
     kaptTest(libs.hilt.compiler)
     
     // Android testing dependencies
