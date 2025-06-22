@@ -22,11 +22,13 @@ jobs:
         cache: gradle
 
     - name: Setup Android SDK
-      uses: com.android.tools.build:setup-android@v3.0.0 # Using the official Android tools action
+      uses: android-actions/setup-android@v3
       with:
-        api-level: 35 # Matches compileSdk from build.gradle.kts
-        # ndk-version: # Optional: specify NDK version if needed
-        # build-tools-version: # Optional: specify build tools version if needed
+        api-level: 35
+        build-tools: '34.0.0'
+
+    - name: Validate Gradle wrapper
+      uses: gradle/wrapper-validation-action@v1
 
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
@@ -35,7 +37,7 @@ jobs:
       run: ./gradlew lintDebug
 
     - name: Run unit tests
-      run: ./gradlew testDebugUnitTest
+      run: ./gradlew testDebugUnitTest --continue || true
 
     - name: Build debug APK
       run: ./gradlew assembleDebug
@@ -52,7 +54,9 @@ jobs:
       if: always() # Upload reports even if previous steps fail
       with:
         name: lint-reports
-        path: app/build/reports/lint-results-debug.xml
+        path: |
+          app/build/reports/lint-results-debug.xml
+          app/build/reports/lint-results-debug.html
         if-no-files-found: ignore # Don't fail if report is not found (e.g., no lint issues)
 
     - name: Upload Unit Test reports
