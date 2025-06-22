@@ -26,6 +26,7 @@ object DatabaseModule {
             AppDatabase::class.java,
             AppDatabase.DATABASE_NAME
         )
+            .addMigrations(*com.rdwatch.androidtv.data.migrations.Migrations.ALL_MIGRATIONS)
             .fallbackToDestructiveMigration() // For development only - remove in production
             .build()
     }

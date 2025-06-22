@@ -591,7 +591,7 @@
               2
             ],
             "details": "Add @Index annotations to entity classes for columns used in WHERE clauses and JOIN conditions. Create composite indices for multi-column queries and ensure foreign key constraints",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -602,7 +602,7 @@
               6
             ],
             "details": "Implement Migration objects for each schema change, handle ALTER TABLE operations, data transformation during migrations, and fallback strategies. Test migration paths thoroughly",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -1513,7 +1513,7 @@
     ],
     "metadata": {
       "created": "2025-06-22T03:41:46.714Z",
-      "updated": "2025-06-22T19:25:36.041Z",
+      "updated": "2025-06-22T19:27:06.416Z",
       "description": "Tasks for master context"
     }
   }
