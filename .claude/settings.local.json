@@ -18,7 +18,10 @@
       "Bash(git checkout:*)",
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(mkdir:*)"
+      "Bash(mkdir:*)",
+      "Bash(./lint-check.sh)",
+      "Bash(find:*)",
+      "Bash(./lint-summary.sh)"
     ],
     "deny": []
   }

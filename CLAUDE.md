@@ -22,6 +22,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 # Lint check
 ./gradlew lint
+
+# Lint summary (concise output)
+./lint-summary.sh
+
+# Basic lint check (minimal output) 
+./lint-check.sh
 ```
 
 ### Testing
