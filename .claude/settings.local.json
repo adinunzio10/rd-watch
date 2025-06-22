@@ -21,7 +21,11 @@
       "Bash(mkdir:*)",
       "Bash(./lint-check.sh)",
       "Bash(find:*)",
-      "Bash(./lint-summary.sh)"
+      "Bash(./lint-summary.sh)",
+      "Bash(rm:*)",
+      "Bash(git push:*)",
+      "Bash(gh pr create:*)",
+      "Bash(gh pr view:*)"
     ],
     "deny": []
   }
