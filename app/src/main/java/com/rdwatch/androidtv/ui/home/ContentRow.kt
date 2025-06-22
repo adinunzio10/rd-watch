@@ -26,6 +26,8 @@ import com.rdwatch.androidtv.Movie
 import com.rdwatch.androidtv.ui.components.SmartTVImageLoader
 import com.rdwatch.androidtv.ui.components.ImagePriority
 import com.rdwatch.androidtv.ui.components.TVBackgroundImage
+import com.rdwatch.androidtv.ui.focus.tvFocusable
+import com.rdwatch.androidtv.ui.focus.TVFocusIndicator
 
 @Composable
 fun TVContentRow(
@@ -109,27 +111,31 @@ fun StandardContentCard(
 ) {
     var isFocused by remember { mutableStateOf(false) }
     
-    Card(
-        onClick = onClick,
-        modifier = modifier
-            .size(
-                width = if (isFocused) 220.dp else 200.dp,
-                height = if (isFocused) 140.dp else 120.dp
-            )
-            .onFocusChanged { isFocused = it.isFocused }
-            .focusable(),
-        colors = CardDefaults.cardColors(
-            containerColor = if (isFocused) {
-                MaterialTheme.colorScheme.primaryContainer
-            } else {
-                MaterialTheme.colorScheme.surface
-            }
-        ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = if (isFocused) 12.dp else 4.dp
-        ),
-        shape = RoundedCornerShape(8.dp)
+    TVFocusIndicator(
+        isFocused = isFocused
     ) {
+        Card(
+            onClick = onClick,
+            modifier = modifier
+                .size(
+                    width = if (isFocused) 220.dp else 200.dp,
+                    height = if (isFocused) 140.dp else 120.dp
+                )
+                .tvFocusable(
+                    onFocusChanged = { isFocused = it.isFocused }
+                ),
+            colors = CardDefaults.cardColors(
+                containerColor = if (isFocused) {
+                    MaterialTheme.colorScheme.primaryContainer
+                } else {
+                    MaterialTheme.colorScheme.surface
+                }
+            ),
+            elevation = CardDefaults.cardElevation(
+                defaultElevation = if (isFocused) 12.dp else 4.dp
+            ),
+            shape = RoundedCornerShape(8.dp)
+        ) {
         Box(
             modifier = Modifier.fillMaxSize()
         ) {
@@ -175,6 +181,7 @@ fun StandardContentCard(
             )
         }
     }
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -186,16 +193,20 @@ fun FeaturedContentCard(
 ) {
     var isFocused by remember { mutableStateOf(false) }
     
-    Card(
-        onClick = onClick,
-        modifier = modifier
-            .size(
-                width = if (isFocused) 360.dp else 320.dp,
-                height = if (isFocused) 200.dp else 180.dp
-            )
-            .onFocusChanged { isFocused = it.isFocused }
-            .focusable(),
-        colors = CardDefaults.cardColors(
+    TVFocusIndicator(
+        isFocused = isFocused
+    ) {
+        Card(
+            onClick = onClick,
+            modifier = modifier
+                .size(
+                    width = if (isFocused) 360.dp else 320.dp,
+                    height = if (isFocused) 200.dp else 180.dp
+                )
+                .tvFocusable(
+                    onFocusChanged = { isFocused = it.isFocused }
+                ),
+            colors = CardDefaults.cardColors(
             containerColor = if (isFocused) {
                 MaterialTheme.colorScheme.primaryContainer
             } else {
@@ -250,6 +261,7 @@ fun FeaturedContentCard(
             }
         }
     }
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -262,16 +274,20 @@ fun ContinueWatchingCard(
 ) {
     var isFocused by remember { mutableStateOf(false) }
     
-    Card(
-        onClick = onClick,
-        modifier = modifier
-            .size(
-                width = if (isFocused) 280.dp else 260.dp,
-                height = if (isFocused) 160.dp else 140.dp
-            )
-            .onFocusChanged { isFocused = it.isFocused }
-            .focusable(),
-        colors = CardDefaults.cardColors(
+    TVFocusIndicator(
+        isFocused = isFocused
+    ) {
+        Card(
+            onClick = onClick,
+            modifier = modifier
+                .size(
+                    width = if (isFocused) 280.dp else 260.dp,
+                    height = if (isFocused) 160.dp else 140.dp
+                )
+                .tvFocusable(
+                    onFocusChanged = { isFocused = it.isFocused }
+                ),
+            colors = CardDefaults.cardColors(
             containerColor = if (isFocused) {
                 MaterialTheme.colorScheme.primaryContainer
             } else {
@@ -349,6 +365,7 @@ fun ContinueWatchingCard(
                 )
             }
         }
+    }
     }
 }
 

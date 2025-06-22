@@ -31,6 +31,10 @@ import com.rdwatch.androidtv.Movie
 import com.rdwatch.androidtv.MovieList
 import com.rdwatch.androidtv.ui.components.PreloadImagesEffect
 import com.rdwatch.androidtv.ui.components.ImagePriority
+import com.rdwatch.androidtv.ui.focus.TVSpatialNavigation
+import com.rdwatch.androidtv.ui.focus.TVKeyHandlers
+import com.rdwatch.androidtv.ui.focus.rememberTVKeyEventHandler
+import com.rdwatch.androidtv.ui.focus.AutoTVFocus
 
 @Composable
 fun TVHomeScreen() {
@@ -38,24 +42,23 @@ fun TVHomeScreen() {
     val drawerFocusRequester = remember { FocusRequester() }
     val contentFocusRequester = remember { FocusRequester() }
     
-    // Handle keyboard/D-pad input
-    val keyHandler = remember {
-        { keyEvent: KeyEvent ->
-            when {
-                keyEvent.key == Key.DirectionLeft && keyEvent.type == KeyEventType.KeyDown -> {
-                    if (!isDrawerOpen) {
-                        isDrawerOpen = true
-                        true
-                    } else false
-                }
-                keyEvent.key == Key.Back && keyEvent.type == KeyEventType.KeyDown -> {
-                    if (isDrawerOpen) {
-                        isDrawerOpen = false
-                        true
-                    } else false
-                }
-                else -> false
-            }
+    // Enhanced key event handler for TV navigation
+    val keyEventHandler = rememberTVKeyEventHandler().apply {
+        onDPadLeft = {
+            if (!isDrawerOpen) {
+                isDrawerOpen = true
+                true
+            } else false
+        }
+        onBack = {
+            if (isDrawerOpen) {
+                isDrawerOpen = false
+                true
+            } else false
+        }
+        onMenu = {
+            isDrawerOpen = !isDrawerOpen
+            true
         }
     }
     
@@ -71,11 +74,13 @@ fun TVHomeScreen() {
         contentFocusRequester.requestFocus()
     }
     
-    Box(
+    TVSpatialNavigation(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .onKeyEvent(keyHandler)
+            .background(MaterialTheme.colorScheme.background),
+        onNavigateLeft = { keyEventHandler.onDPadLeft?.invoke() ?: false },
+        onBack = { keyEventHandler.onBack?.invoke() ?: false },
+        onSelect = { keyEventHandler.onDPadCenter?.invoke() ?: false }
     ) {
         // Main content with overscan safety
         SafeAreaContent(
