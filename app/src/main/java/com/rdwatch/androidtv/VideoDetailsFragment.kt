@@ -87,7 +87,7 @@ class VideoDetailsFragment : DetailsSupportFragment() {
 
     private fun setupDetailsOverviewRow() {
         Log.d(TAG, "doInBackground: " + mSelectedMovie?.toString())
-        val row = DetailsOverviewRow(mSelectedMovie)
+        val row = DetailsOverviewRow(mSelectedMovie as Any)
         row.imageDrawable = ContextCompat.getDrawable(requireActivity(), R.drawable.default_background)
         val width = convertDpToPixel(requireActivity(), DETAIL_THUMB_WIDTH)
         val height = convertDpToPixel(requireActivity(), DETAIL_THUMB_HEIGHT)
@@ -195,7 +195,7 @@ class VideoDetailsFragment : DetailsSupportFragment() {
                 val bundle =
                     ActivityOptionsCompat.makeSceneTransitionAnimation(
                         requireActivity(),
-                        (itemViewHolder?.view as ImageCardView).mainImageView,
+                        (itemViewHolder?.view as ImageCardView).mainImageView!!,
                         DetailsActivity.SHARED_ELEMENT_NAME
                     )
                         .toBundle()
