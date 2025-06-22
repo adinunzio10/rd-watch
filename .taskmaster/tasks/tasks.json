@@ -400,7 +400,7 @@
               1
             ],
             "details": "Use QR code library to generate scannable code from verification_uri. Ensure QR code is TV-optimized with appropriate size and contrast. Include fallback text display of user_code",
-            "status": "in-progress",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -411,7 +411,7 @@
               1
             ],
             "details": "Set up interval-based polling using the interval value from device code response. Send POST requests to token endpoint with device_code. Handle authorization_pending, slow_down, and success responses",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -422,7 +422,7 @@
               3
             ],
             "details": "Use platform-specific secure storage (KeyChain on tvOS, encrypted preferences on Android TV). Store access_token, refresh_token, and expiry timestamp. Implement encryption for sensitive data",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -433,7 +433,7 @@
               4
             ],
             "details": "Create service to monitor token expiry and refresh tokens before expiration. Handle refresh token rotation if required. Implement retry logic with exponential backoff for failed refreshes",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -444,7 +444,7 @@
               2
             ],
             "details": "Design screens for: initial code display, waiting for authorization, success confirmation, and error states. Ensure all UI elements are optimized for 10-foot viewing distance with large fonts and high contrast",
-            "status": "pending",
+            "status": "in-progress",
             "testStrategy": ""
           },
           {
@@ -1513,7 +1513,7 @@
     ],
     "metadata": {
       "created": "2025-06-22T03:41:46.714Z",
-      "updated": "2025-06-22T20:26:29.619Z",
+      "updated": "2025-06-22T20:29:04.932Z",
       "description": "Tasks for master context"
     }
   }
