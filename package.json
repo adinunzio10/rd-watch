@@ -9,8 +9,5 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "packageManager": "pnpm@10.11.1",
-  "dependencies": {
-    "task-master-ai": "^0.18.0"
-  }
+  "packageManager": "pnpm@10.11.1"
 }
