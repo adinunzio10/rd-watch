@@ -23,7 +23,7 @@ import com.rdwatch.androidtv.data.entities.*
         SearchHistoryEntity::class
     ],
     version = 2,
-    exportSchema = true
+    exportSchema = false
 )
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {

@@ -48,18 +48,7 @@ interface ModelDao {
     @Query("SELECT COUNT(*) FROM models WHERE model_name = :modelName AND model_version = :version")
     suspend fun isModelVersionExists(modelName: String, version: String): Int
     
-    @Query("""
-        SELECT * FROM models 
-        WHERE model_name = :modelName 
-        ORDER BY 
-            CASE 
-                WHEN model_version LIKE '%.%.%' THEN 
-                    CAST(SUBSTR(model_version, 1, INSTR(model_version, '.') - 1) AS INTEGER) * 10000 +
-                    CAST(SUBSTR(model_version, INSTR(model_version, '.') + 1, INSTR(SUBSTR(model_version, INSTR(model_version, '.') + 1), '.') - 1) AS INTEGER) * 100 +
-                    CAST(SUBSTR(model_version, INSTR(model_version, '.', INSTR(model_version, '.') + 1) + 1) AS INTEGER)
-                ELSE 0
-            END DESC
-    """)
+    @Query("SELECT * FROM models WHERE model_name = :modelName ORDER BY model_version DESC")
     fun getModelVersionsByName(modelName: String): Flow<List<ModelEntity>>
     
     @Insert(onConflict = OnConflictStrategy.ABORT)

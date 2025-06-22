@@ -40,13 +40,13 @@ interface SearchHistoryDao {
     suspend fun getSearchSuggestions(userId: Long, partialQuery: String, limit: Int = 10): List<String>
     
     @Query("""
-        SELECT search_query, COUNT(*) as frequency FROM search_history 
+        SELECT search_query FROM search_history 
         WHERE user_id = :userId 
         GROUP BY search_query 
-        ORDER BY frequency DESC, search_date DESC 
+        ORDER BY COUNT(*) DESC, search_date DESC 
         LIMIT :limit
     """)
-    suspend fun getPopularSearchQueries(userId: Long, limit: Int = 20): Map<String, Int>
+    suspend fun getPopularSearchQueries(userId: Long, limit: Int = 20): List<String>
     
     @Query("""
         SELECT * FROM search_history 
