@@ -75,6 +75,11 @@ dependencies {
     implementation(libs.moshi)
     implementation(libs.moshi.kotlin)
     
+    // Room dependencies
+    implementation(libs.room.runtime)
+    implementation(libs.room.ktx)
+    kapt(libs.room.compiler)
+    
     // Hilt testing dependencies
     testImplementation(libs.hilt.android.testing)
     kaptTest(libs.hilt.compiler)

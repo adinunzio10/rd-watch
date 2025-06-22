@@ -95,8 +95,8 @@
             "dependencies": [
               1
             ],
-            "details": "Create NetworkModule with @Module and @InstallIn annotations. Provide singleton instances for OkHttpClient with interceptors, Retrofit with converters, and API service interfaces. Use @Provides and @Singleton annotations appropriately.",
-            "status": "in-progress",
+            "details": "Create NetworkModule with @Module and @InstallIn annotations. Provide singleton instances for OkHttpClient with interceptors, Retrofit with converters, and API service interfaces. Use @Provides and @Singleton annotations appropriately.\n<info added on 2025-06-22T04:50:05.406Z>\nImplementation completed with full network layer setup. Added dependencies: Retrofit 2.9.0, OkHttp 4.12.0, Moshi 1.15.0 to libs.versions.toml. NetworkModule created with @Module and @InstallIn(SingletonComponent::class) annotations. Provided singleton instances for HttpLoggingInterceptor with BODY level logging, OkHttpClient with 30s timeouts, Moshi with Kotlin reflection adapter, Retrofit with base URL and Moshi converter, and ApiService interface with movie-related endpoints. All @Provides methods use @Singleton scope. Build verification successful.\n</info added on 2025-06-22T04:50:05.406Z>",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -107,7 +107,7 @@
               1
             ],
             "details": "Create DatabaseModule providing Room database instance, DAOs, and any database-related utilities. Configure Room database builder with proper migrations and type converters. Ensure proper scoping with @Singleton.",
-            "status": "pending",
+            "status": "in-progress",
             "testStrategy": ""
           },
           {
@@ -1513,7 +1513,7 @@
     ],
     "metadata": {
       "created": "2025-06-22T03:41:46.714Z",
-      "updated": "2025-06-22T04:46:31.367Z",
+      "updated": "2025-06-22T04:50:09.531Z",
       "description": "Tasks for master context"
     }
   }
