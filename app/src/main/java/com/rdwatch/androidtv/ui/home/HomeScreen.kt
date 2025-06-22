@@ -29,6 +29,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import com.rdwatch.androidtv.Movie
 import com.rdwatch.androidtv.MovieList
+import com.rdwatch.androidtv.ui.components.PreloadImagesEffect
+import com.rdwatch.androidtv.ui.components.ImagePriority
 
 @Composable
 fun TVHomeScreen() {
@@ -308,6 +310,17 @@ fun TVContentGrid() {
             movies = movies.shuffled().take(6),
             type = ContentRowType.STANDARD
         )
+    )
+    
+    // Preload images for smooth scrolling
+    val allImageUrls = remember(movies) {
+        movies.mapNotNull { it.cardImageUrl } + 
+        movies.mapNotNull { it.backgroundImageUrl }
+    }
+    
+    PreloadImagesEffect(
+        imageUrls = allImageUrls,
+        priority = ImagePriority.LOW
     )
     
     LaunchedEffect(Unit) {

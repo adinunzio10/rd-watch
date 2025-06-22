@@ -18,14 +18,14 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
-import coil.request.ImageRequest
 import com.rdwatch.androidtv.Movie
+import com.rdwatch.androidtv.ui.components.SmartTVImageLoader
+import com.rdwatch.androidtv.ui.components.ImagePriority
+import com.rdwatch.androidtv.ui.components.TVBackgroundImage
 
 @Composable
 fun TVContentRow(
@@ -133,17 +133,13 @@ fun StandardContentCard(
         Box(
             modifier = Modifier.fillMaxSize()
         ) {
-            // Thumbnail image
-            AsyncImage(
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(movie.cardImageUrl)
-                    .crossfade(true)
-                    .build(),
+            // Thumbnail image with smart loading
+            SmartTVImageLoader(
+                imageUrl = movie.cardImageUrl,
                 contentDescription = movie.title,
                 contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .clip(RoundedCornerShape(8.dp))
+                priority = ImagePriority.NORMAL,
+                modifier = Modifier.fillMaxSize()
             )
             
             // Gradient overlay for text readability
@@ -214,32 +210,12 @@ fun FeaturedContentCard(
         Box(
             modifier = Modifier.fillMaxSize()
         ) {
-            // Background image
-            AsyncImage(
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(movie.backgroundImageUrl)
-                    .crossfade(true)
-                    .build(),
+            // Background image with enhanced loading
+            TVBackgroundImage(
+                imageUrl = movie.backgroundImageUrl,
                 contentDescription = movie.title,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .clip(RoundedCornerShape(12.dp))
-            )
-            
-            // Gradient overlay
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        Brush.verticalGradient(
-                            colors = listOf(
-                                Color.Transparent,
-                                Color.Black.copy(alpha = 0.8f)
-                            ),
-                            startY = 0.4f
-                        )
-                    )
+                modifier = Modifier.fillMaxSize(),
+                overlayAlpha = 0.8f
             )
             
             // Content overlay
@@ -310,17 +286,13 @@ fun ContinueWatchingCard(
         Box(
             modifier = Modifier.fillMaxSize()
         ) {
-            // Thumbnail image
-            AsyncImage(
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(movie.cardImageUrl)
-                    .crossfade(true)
-                    .build(),
+            // Thumbnail image with smart loading
+            SmartTVImageLoader(
+                imageUrl = movie.cardImageUrl,
                 contentDescription = movie.title,
                 contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .clip(RoundedCornerShape(10.dp))
+                priority = ImagePriority.HIGH, // Higher priority for continue watching
+                modifier = Modifier.fillMaxSize()
             )
             
             // Gradient overlay
