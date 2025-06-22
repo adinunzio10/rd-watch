@@ -13,7 +13,10 @@
       "Bash(./gradlew:*)",
       "Bash(export ANDROID_HOME=/Users/alfredodinunzio/Library/Android/sdk)",
       "Bash($ANDROID_HOME/platform-tools/adb:*)",
-      "mcp__taskmaster-ai__update_subtask"
+      "mcp__taskmaster-ai__update_subtask",
+      "mcp__taskmaster-ai__next_task",
+      "Bash(git checkout:*)",
+      "Bash(git add:*)"
     ],
     "deny": []
   }

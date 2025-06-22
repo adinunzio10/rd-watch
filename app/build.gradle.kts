@@ -1,6 +1,8 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.hilt.android)
+    alias(libs.plugins.kotlin.kapt)
 }
 
 android {
@@ -59,6 +61,17 @@ dependencies {
     implementation(libs.androidx.activity.compose)
     
     // TV Compose dependencies - will be added later when stable versions are available
+    
+    // Hilt dependencies
+    implementation(libs.hilt.android)
+    implementation(libs.hilt.navigation.compose)
+    kapt(libs.hilt.compiler)
+    
+    // Hilt testing dependencies
+    testImplementation(libs.hilt.android.testing)
+    kaptTest(libs.hilt.compiler)
+    androidTestImplementation(libs.hilt.android.testing)
+    kaptAndroidTest(libs.hilt.compiler)
     
     // Debug dependencies
     debugImplementation(libs.androidx.compose.ui.tooling)
