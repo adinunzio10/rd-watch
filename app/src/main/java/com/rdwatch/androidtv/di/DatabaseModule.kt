@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Room
 import com.rdwatch.androidtv.data.AppDatabase
 import com.rdwatch.androidtv.data.MovieDao
+import com.rdwatch.androidtv.di.qualifiers.MainDatabase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -17,6 +18,7 @@ object DatabaseModule {
 
     @Provides
     @Singleton
+    @MainDatabase
     fun provideAppDatabase(@ApplicationContext context: Context): AppDatabase {
         return Room.databaseBuilder(
             context,
@@ -29,7 +31,7 @@ object DatabaseModule {
 
     @Provides
     @Singleton
-    fun provideMovieDao(database: AppDatabase): MovieDao {
+    fun provideMovieDao(@MainDatabase database: AppDatabase): MovieDao {
         return database.movieDao()
     }
 }
