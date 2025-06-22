@@ -1,9 +1,13 @@
 package com.rdwatch.androidtv.di
 
+import com.rdwatch.androidtv.core.error.ErrorHandler
+import com.rdwatch.androidtv.core.reactive.DispatcherProvider
 import com.rdwatch.androidtv.repository.MovieRepository
 import com.rdwatch.androidtv.repository.MovieRepositoryImpl
+import com.rdwatch.androidtv.repository.base.BaseRepository
 import dagger.Binds
 import dagger.Module
+import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
@@ -17,4 +21,21 @@ abstract class RepositoryModule {
     abstract fun bindMovieRepository(
         movieRepositoryImpl: MovieRepositoryImpl
     ): MovieRepository
+
+    companion object {
+        @Provides
+        @Singleton
+        fun provideRepositoryDependencies(
+            dispatcherProvider: DispatcherProvider,
+            errorHandler: ErrorHandler
+        ): RepositoryDependencies = RepositoryDependencies(
+            dispatcherProvider = dispatcherProvider,
+            errorHandler = errorHandler
+        )
+    }
 }
+
+data class RepositoryDependencies(
+    val dispatcherProvider: DispatcherProvider,
+    val errorHandler: ErrorHandler
+)
