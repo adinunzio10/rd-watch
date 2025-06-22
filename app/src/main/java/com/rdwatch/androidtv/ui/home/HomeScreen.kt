@@ -9,9 +9,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -29,6 +27,8 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import com.rdwatch.androidtv.Movie
+import com.rdwatch.androidtv.MovieList
 
 @Composable
 fun TVHomeScreen() {
@@ -131,8 +131,8 @@ fun TVNavigationDrawer(
     val navigationItems = listOf(
         NavigationItem("Home", Icons.Default.Home),
         NavigationItem("Search", Icons.Default.Search),
-        NavigationItem("Library", Icons.Default.VideoLibrary),
-        NavigationItem("Downloads", Icons.Default.Download),
+        NavigationItem("Library", Icons.Default.PlayArrow), // Using PlayArrow as VideoLibrary alternative
+        NavigationItem("Downloads", Icons.Default.PlayArrow), // Using PlayArrow as Download alternative  
         NavigationItem("Settings", Icons.Default.Settings)
     )
     
@@ -278,86 +278,65 @@ fun SafeAreaContent(
 
 @Composable
 fun TVContentGrid() {
-    val categories = listOf("Featured", "Movies", "TV Shows", "Sports", "News")
-    val sampleContent = listOf("Item 1", "Item 2", "Item 3", "Item 4", "Item 5")
+    val movies = remember { MovieList.list }
+    val firstRowFocusRequester = remember { FocusRequester() }
+    
+    // Create different content categories with varying layouts
+    val contentRows = listOf(
+        ContentRowData(
+            title = "Continue Watching",
+            movies = movies.take(3),
+            type = ContentRowType.CONTINUE_WATCHING
+        ),
+        ContentRowData(
+            title = "Featured",
+            movies = movies.take(4),
+            type = ContentRowType.FEATURED
+        ),
+        ContentRowData(
+            title = "Recently Added",
+            movies = movies,
+            type = ContentRowType.STANDARD
+        ),
+        ContentRowData(
+            title = "My Library",
+            movies = movies.reversed(),
+            type = ContentRowType.STANDARD
+        ),
+        ContentRowData(
+            title = "Popular Movies",
+            movies = movies.shuffled().take(6),
+            type = ContentRowType.STANDARD
+        )
+    )
+    
+    LaunchedEffect(Unit) {
+        firstRowFocusRequester.requestFocus()
+    }
     
     LazyColumn(
         verticalArrangement = Arrangement.spacedBy(32.dp)
     ) {
-        items(categories) { category ->
-            TVContentSection(
-                title = category,
-                items = sampleContent
-            )
-        }
-    }
-}
-
-@Composable
-fun TVContentSection(
-    title: String,
-    items: List<String>
-) {
-    Column(
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.headlineMedium,
-            color = MaterialTheme.colorScheme.onBackground,
-            fontWeight = FontWeight.SemiBold
-        )
-        
-        LazyRow(
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            items(items) { item ->
-                TVContentCard(title = item)
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun TVContentCard(
-    title: String,
-    modifier: Modifier = Modifier
-) {
-    var isFocused by remember { mutableStateOf(false) }
-    
-    Card(
-        modifier = modifier
-            .size(200.dp, 120.dp)
-            .onFocusChanged { isFocused = it.isFocused }
-            .focusable(),
-        colors = CardDefaults.cardColors(
-            containerColor = if (isFocused) {
-                MaterialTheme.colorScheme.primaryContainer
-            } else {
-                MaterialTheme.colorScheme.surface
-            }
-        ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = if (isFocused) 8.dp else 2.dp
-        )
-    ) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleMedium,
-                color = if (isFocused) {
-                    MaterialTheme.colorScheme.onPrimaryContainer
-                } else {
-                    MaterialTheme.colorScheme.onSurface
+        items(contentRows.size) { index ->
+            val row = contentRows[index]
+            TVContentRow(
+                title = row.title,
+                items = row.movies,
+                contentType = row.type,
+                firstItemFocusRequester = if (index == 0) firstRowFocusRequester else null,
+                onItemClick = { movie ->
+                    // TODO: Handle item click navigation
                 }
             )
         }
     }
 }
+
+data class ContentRowData(
+    val title: String,
+    val movies: List<Movie>,
+    val type: ContentRowType
+)
 
 data class NavigationItem(
     val title: String,

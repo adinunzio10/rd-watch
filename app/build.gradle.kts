@@ -97,6 +97,9 @@ dependencies {
     // Security
     implementation(libs.androidx.security.crypto)
     
+    // Image loading
+    implementation(libs.coil.compose)
+    
     // QR Code generation
     implementation(libs.zxing.core)
     implementation(libs.zxing.android.embedded)
