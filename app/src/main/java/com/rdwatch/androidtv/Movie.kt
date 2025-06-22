@@ -1,11 +1,15 @@
 package com.rdwatch.androidtv
 
+import androidx.room.Entity
+import androidx.room.PrimaryKey
 import java.io.Serializable
 
 /**
  * Movie class represents video entity with title, description, image thumbs and video url.
  */
+@Entity(tableName = "movies")
 data class Movie(
+    @PrimaryKey
     var id: Long = 0,
     var title: String? = null,
     var description: String? = null,

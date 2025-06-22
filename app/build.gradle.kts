@@ -1,6 +1,8 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.hilt.android)
+    alias(libs.plugins.kotlin.kapt)
 }
 
 android {
@@ -13,7 +15,8 @@ android {
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
-
+        
+        testInstrumentationRunner = "com.rdwatch.androidtv.HiltTestRunner"
     }
 
     buildTypes {
@@ -59,6 +62,44 @@ dependencies {
     implementation(libs.androidx.activity.compose)
     
     // TV Compose dependencies - will be added later when stable versions are available
+    
+    // Hilt dependencies
+    implementation(libs.hilt.android)
+    implementation(libs.hilt.navigation.compose)
+    kapt(libs.hilt.compiler)
+    
+    // Network dependencies
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.converter.moshi)
+    implementation(libs.okhttp)
+    implementation(libs.okhttp.logging.interceptor)
+    implementation(libs.moshi)
+    implementation(libs.moshi.kotlin)
+    
+    // Room dependencies
+    implementation(libs.room.runtime)
+    implementation(libs.room.ktx)
+    kapt(libs.room.compiler)
+    
+    // Testing dependencies
+    testImplementation(libs.junit)
+    testImplementation(libs.mockk)
+    testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.hilt.android.testing)
+    testImplementation(libs.room.testing)
+    kaptTest(libs.hilt.compiler)
+    
+    // Android testing dependencies
+    androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation(libs.androidx.espresso.core)
+    androidTestImplementation(libs.androidx.test.core)
+    androidTestImplementation(libs.androidx.test.runner)
+    androidTestImplementation(libs.androidx.test.rules)
+    androidTestImplementation(libs.mockk.android)
+    androidTestImplementation(libs.kotlinx.coroutines.test)
+    androidTestImplementation(libs.hilt.android.testing)
+    androidTestImplementation(libs.room.testing)
+    kaptAndroidTest(libs.hilt.compiler)
     
     // Debug dependencies
     debugImplementation(libs.androidx.compose.ui.tooling)

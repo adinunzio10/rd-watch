@@ -13,7 +13,19 @@
       "Bash(./gradlew:*)",
       "Bash(export ANDROID_HOME=/Users/alfredodinunzio/Library/Android/sdk)",
       "Bash($ANDROID_HOME/platform-tools/adb:*)",
-      "mcp__taskmaster-ai__update_subtask"
+      "mcp__taskmaster-ai__update_subtask",
+      "mcp__taskmaster-ai__next_task",
+      "Bash(git checkout:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(mkdir:*)",
+      "Bash(./lint-check.sh)",
+      "Bash(find:*)",
+      "Bash(./lint-summary.sh)",
+      "Bash(rm:*)",
+      "Bash(git push:*)",
+      "Bash(gh pr create:*)",
+      "Bash(gh pr view:*)"
     ],
     "deny": []
   }
