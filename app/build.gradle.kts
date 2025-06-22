@@ -95,6 +95,10 @@ dependencies {
     // Security
     implementation(libs.androidx.security.crypto)
     
+    // QR Code generation
+    implementation(libs.zxing.core)
+    implementation(libs.zxing.android.embedded)
+    
     // ExoPlayer dependencies
     implementation(libs.androidx.media3.exoplayer)
     implementation(libs.androidx.media3.ui)

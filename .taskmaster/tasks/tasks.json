@@ -381,7 +381,7 @@
           3,
           4
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -389,7 +389,7 @@
             "description": "Implement the initial device code request to the OAuth2 provider",
             "dependencies": [],
             "details": "Create service to send POST request to OAuth2 device authorization endpoint with client_id and scope parameters. Handle response containing device_code, user_code, verification_uri, and interval values",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -400,7 +400,7 @@
               1
             ],
             "details": "Use QR code library to generate scannable code from verification_uri. Ensure QR code is TV-optimized with appropriate size and contrast. Include fallback text display of user_code",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -411,7 +411,7 @@
               1
             ],
             "details": "Set up interval-based polling using the interval value from device code response. Send POST requests to token endpoint with device_code. Handle authorization_pending, slow_down, and success responses",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -422,7 +422,7 @@
               3
             ],
             "details": "Use platform-specific secure storage (KeyChain on tvOS, encrypted preferences on Android TV). Store access_token, refresh_token, and expiry timestamp. Implement encryption for sensitive data",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -433,7 +433,7 @@
               4
             ],
             "details": "Create service to monitor token expiry and refresh tokens before expiration. Handle refresh token rotation if required. Implement retry logic with exponential backoff for failed refreshes",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -444,7 +444,7 @@
               2
             ],
             "details": "Design screens for: initial code display, waiting for authorization, success confirmation, and error states. Ensure all UI elements are optimized for 10-foot viewing distance with large fonts and high contrast",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -456,7 +456,7 @@
               5
             ],
             "details": "Handle network errors, expired device codes, invalid grants, rate limiting, and OAuth2 specific errors. Provide user-friendly error messages with TV remote-friendly retry options",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -468,7 +468,7 @@
               7
             ],
             "details": "Implement state machine for authentication states: unauthenticated, pending, authenticated, error. Use observable pattern to notify UI of state changes. Persist authentication state across app restarts",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -480,7 +480,7 @@
               8
             ],
             "details": "Implement focus management for TV remote D-pad navigation. Add keyboard support for manual code entry fallback. Ensure all interactive elements have clear focus indicators",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -498,7 +498,7 @@
               9
             ],
             "details": "Write unit tests for device code request, polling logic, and token refresh. Create integration tests for complete flow including error scenarios. Add UI tests for remote navigation and state transitions",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           }
         ]
@@ -1036,7 +1036,7 @@
         "dependencies": [
           3
         ],
-        "status": "in-progress",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -1090,7 +1090,7 @@
               3
             ],
             "details": "Build track selector for multiple audio streams. Display available languages and formats. Implement seamless audio track switching without playback interruption.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -1102,7 +1102,7 @@
               3
             ],
             "details": "Enable HDR10, HDR10+, and Dolby Vision support. Configure surface view for 4K rendering. Add capability detection and fallback for non-HDR displays.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -1125,7 +1125,7 @@
               7
             ],
             "details": "Implement ABR algorithm configuration. Create quality selection UI showing available resolutions. Add bandwidth monitoring and quality switching notifications.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -1137,7 +1137,7 @@
               7
             ],
             "details": "Add speed selection UI (0.5x to 2.0x). Configure audio processor for pitch correction. Save user's preferred speed setting per content or globally.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -1148,7 +1148,7 @@
               7
             ],
             "details": "Handle network errors, format incompatibility, DRM failures, and decoder errors. Create error UI with retry options. Implement automatic quality downgrade on repeated errors.",
-            "status": "in-progress",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -1160,7 +1160,7 @@
               7
             ],
             "details": "Create seek bar with thumbnail preview on hover/focus. Implement frame-accurate seeking. Add chapter markers if available in media metadata.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -1172,7 +1172,7 @@
               10
             ],
             "details": "Track playback events, buffering time, quality switches, and errors. Monitor decoder performance and dropped frames. Create debug overlay for development.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           }
         ]
@@ -1513,7 +1513,7 @@
     ],
     "metadata": {
       "created": "2025-06-22T03:41:46.714Z",
-      "updated": "2025-06-22T20:12:56.593Z",
+      "updated": "2025-06-22T20:32:04.796Z",
       "description": "Tasks for master context"
     }
   }
