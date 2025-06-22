@@ -8,13 +8,17 @@ import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.media3.ui.PlayerView
+import androidx.media3.common.util.UnstableApi
 import com.rdwatch.androidtv.player.controls.TvPlayerControls
 import com.rdwatch.androidtv.player.controls.TvKeyHandler
+import com.rdwatch.androidtv.player.subtitle.SubtitleManager
 import kotlinx.coroutines.delay
 
+@UnstableApi
 @Composable
 fun TvPlayerView(
     exoPlayerManager: ExoPlayerManager,
+    subtitleManager: SubtitleManager,
     modifier: Modifier = Modifier,
     onMenuToggle: () -> Unit = {},
     autoHideDelay: Long = 5000L
@@ -84,7 +88,7 @@ fun TvPlayerView(
                 )
             }
     ) {
-        // ExoPlayer view
+        // ExoPlayer view with subtitle support
         AndroidView(
             factory = { ctx ->
                 PlayerView(ctx).apply {
@@ -92,6 +96,12 @@ fun TvPlayerView(
                     useController = false // We use our custom controls
                     setShowBuffering(PlayerView.SHOW_BUFFERING_WHEN_PLAYING)
                     setKeepContentOnPlayerReset(true)
+                    
+                    // Configure subtitle view
+                    subtitleView?.let { subtitleView ->
+                        subtitleManager.configureSubtitleView(subtitleView)
+                    }
+                    
                     setOnClickListener {
                         onUserInteraction()
                     }
@@ -99,6 +109,11 @@ fun TvPlayerView(
             },
             update = { playerView ->
                 playerView.player = exoPlayerManager.exoPlayer
+                
+                // Update subtitle styling if changed
+                playerView.subtitleView?.let { subtitleView ->
+                    subtitleManager.configureSubtitleView(subtitleView)
+                }
             },
             modifier = Modifier.fillMaxSize()
         )

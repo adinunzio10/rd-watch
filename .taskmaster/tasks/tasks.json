@@ -1066,7 +1066,7 @@
               1
             ],
             "details": "Setup MediaSource factories for HLS, DASH, and progressive media. Configure extractors for common formats (MP4, MKV, WebM). Add format detection based on URL or MIME type.",
-            "status": "in-progress",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -1078,7 +1078,7 @@
               3
             ],
             "details": "Configure SubtitleView with TV-appropriate text size and positioning. Support WebVTT, SRT, and TTML formats. Add subtitle selection UI and style customization options.",
-            "status": "pending",
+            "status": "in-progress",
             "testStrategy": ""
           },
           {
@@ -1513,7 +1513,7 @@
     ],
     "metadata": {
       "created": "2025-06-22T03:41:46.714Z",
-      "updated": "2025-06-22T20:08:29.749Z",
+      "updated": "2025-06-22T20:09:50.636Z",
       "description": "Tasks for master context"
     }
   }
