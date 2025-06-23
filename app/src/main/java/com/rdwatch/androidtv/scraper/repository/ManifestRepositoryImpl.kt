@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -487,41 +488,39 @@ class ManifestRepositoryImpl @Inject constructor(
         }
     }
     
-    override fun observeManifests(): Flow<ManifestResult<List<ScraperManifest>>> = flow {
+    override fun observeManifests(): Flow<ManifestResult<List<ScraperManifest>>> = 
         dao.getAllScrapers()
-            .map { entities ->
-                entities.mapNotNull { entity -> converter.fromEntity(entity) }
+            .map<List<com.rdwatch.androidtv.data.entities.ScraperManifestEntity>, ManifestResult<List<ScraperManifest>>> { entities ->
+                val manifests = entities.mapNotNull { entity -> converter.fromEntity(entity) }
+                ManifestResult.Success(manifests)
             }
-            .collect { manifests ->
-                emit(ManifestResult.Success(manifests))
+            .catch { e ->
+                emit(ManifestResult.Error(
+                    ManifestStorageException(
+                        "Failed to observe manifests: ${e.message}",
+                        cause = e,
+                        operation = "observeManifests"
+                    )
+                ))
             }
-    }.catch { e ->
-        emit(ManifestResult.Error(
-            ManifestStorageException(
-                "Failed to observe manifests: ${e.message}",
-                cause = e,
-                operation = "observeManifests"
-            )
-        ))
-    }.flowOn(Dispatchers.IO)
+            .flowOn(Dispatchers.IO)
     
-    override fun observeEnabledManifests(): Flow<ManifestResult<List<ScraperManifest>>> = flow {
+    override fun observeEnabledManifests(): Flow<ManifestResult<List<ScraperManifest>>> = 
         dao.getEnabledScrapers()
-            .map { entities ->
-                entities.mapNotNull { entity -> converter.fromEntity(entity) }
+            .map<List<com.rdwatch.androidtv.data.entities.ScraperManifestEntity>, ManifestResult<List<ScraperManifest>>> { entities ->
+                val manifests = entities.mapNotNull { entity -> converter.fromEntity(entity) }
+                ManifestResult.Success(manifests)
             }
-            .collect { manifests ->
-                emit(ManifestResult.Success(manifests))
+            .catch { e ->
+                emit(ManifestResult.Error(
+                    ManifestStorageException(
+                        "Failed to observe enabled manifests: ${e.message}",
+                        cause = e,
+                        operation = "observeEnabledManifests"
+                    )
+                ))
             }
-    }.catch { e ->
-        emit(ManifestResult.Error(
-            ManifestStorageException(
-                "Failed to observe enabled manifests: ${e.message}",
-                cause = e,
-                operation = "observeEnabledManifests"
-            )
-        ))
-    }.flowOn(Dispatchers.IO)
+            .flowOn(Dispatchers.IO)
     
     override fun observeManifest(id: String): Flow<ManifestResult<ScraperManifest>> = flow {
         dao.getScraperByNameFlow(id)

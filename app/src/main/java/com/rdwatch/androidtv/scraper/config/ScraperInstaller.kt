@@ -3,6 +3,8 @@ package com.rdwatch.androidtv.scraper.config
 import com.rdwatch.androidtv.scraper.ScraperManifestManager
 import com.rdwatch.androidtv.scraper.error.ManifestErrorReporter
 import com.rdwatch.androidtv.scraper.models.ManifestException
+import com.rdwatch.androidtv.scraper.models.ManifestStorageException
+import com.rdwatch.androidtv.scraper.models.ManifestNetworkException
 import com.rdwatch.androidtv.scraper.models.ManifestResult
 import com.rdwatch.androidtv.scraper.models.ScraperManifest
 import kotlinx.coroutines.CoroutineScope
@@ -67,7 +69,7 @@ class ScraperInstaller @Inject constructor(
         } catch (e: Exception) {
             _installationStatus.value = InstallationStatus.Failed(e.message ?: "Installation failed")
             ManifestResult.Error(
-                ManifestException("Failed to install default scrapers: ${e.message}", e)
+                ManifestStorageException("Failed to install default scrapers: ${e.message}", e, operation = "installDefaults")
             )
         }
     }
@@ -105,7 +107,7 @@ class ScraperInstaller @Inject constructor(
         } catch (e: Exception) {
             updateScraperStatus(scraper.id, ScraperInstallStatus.FAILED)
             val error = "Failed to install ${scraper.displayName}: ${e.message}"
-            errorReporter.reportError(ManifestException(error, e))
+            errorReporter.reportError(ManifestStorageException(error, e, operation = "install"))
             
             ScraperInstallationResult(
                 scraperId = scraper.id,
@@ -148,7 +150,7 @@ class ScraperInstaller @Inject constructor(
             }
         } catch (e: Exception) {
             val error = "Failed to install from URL $url: ${e.message}"
-            errorReporter.reportError(ManifestException(error, e))
+            errorReporter.reportError(ManifestNetworkException(error, e, url = url))
             
             ScraperInstallationResult(
                 scraperId = "unknown",
@@ -169,7 +171,7 @@ class ScraperInstaller @Inject constructor(
             manifestManager.removeManifest(scraperId)
         } catch (e: Exception) {
             ManifestResult.Error(
-                ManifestException("Failed to uninstall scraper: ${e.message}", e)
+                ManifestStorageException("Failed to uninstall scraper: ${e.message}", e, operation = "uninstall")
             )
         }
     }
@@ -198,7 +200,7 @@ class ScraperInstaller @Inject constructor(
             ManifestResult.Success(installedStates)
         } catch (e: Exception) {
             ManifestResult.Error(
-                ManifestException("Failed to check installed scrapers: ${e.message}", e)
+                ManifestStorageException("Failed to check installed scrapers: ${e.message}", e, operation = "checkInstalled")
             )
         }
     }
@@ -239,7 +241,7 @@ class ScraperInstaller @Inject constructor(
         } catch (e: Exception) {
             _installationStatus.value = InstallationStatus.Failed("Update failed: ${e.message}")
             ManifestResult.Error(
-                ManifestException("Failed to update scrapers: ${e.message}", e)
+                ManifestStorageException("Failed to update scrapers: ${e.message}", e, operation = "updateAll")
             )
         }
     }
@@ -276,7 +278,7 @@ class ScraperInstaller @Inject constructor(
             }
         } catch (e: Exception) {
             ManifestResult.Error(
-                ManifestException("Failed to get recommendations: ${e.message}", e)
+                ManifestStorageException("Failed to get recommendations: ${e.message}", e, operation = "getRecommendations")
             )
         }
     }
@@ -308,7 +310,7 @@ class ScraperInstaller @Inject constructor(
             ManifestResult.Success(Unit)
         } catch (e: Exception) {
             ManifestResult.Error(
-                ManifestException("Failed to initialize installer: ${e.message}", e)
+                ManifestStorageException("Failed to initialize installer: ${e.message}", e, operation = "initialize")
             )
         }
     }

@@ -72,14 +72,14 @@ class ManifestErrorReporter @Inject constructor(
      */
     fun getErrorStatistics(): ErrorStatistics {
         val totalErrors = errorHistory.size
-        val recentErrors = errorHistory.takeLast(100)
+        val recentErrors = errorHistory.toList().takeLast(100)
         
         val errorsByCategory = errorCounts.toMap()
         val recentErrorsByCategory = recentErrors
             .groupBy { it.category }
-            .mapValues { it.value.size }
+            .mapValues { (_, errors) -> errors.size }
         
-        val errorsByManifestStats = errorsByManifest.mapValues { it.value.size }
+        val errorsByManifestStats = errorsByManifest.mapValues { (_, errors) -> errors.size }
         val mostProblematicManifests = errorsByManifestStats
             .toList()
             .sortedByDescending { it.second }
@@ -104,7 +104,7 @@ class ManifestErrorReporter @Inject constructor(
      * Get recent errors
      */
     fun getRecentErrors(limit: Int = 50): List<ErrorReport> {
-        return errorHistory.takeLast(limit).toList()
+        return errorHistory.toList().takeLast(limit)
     }
     
     /**

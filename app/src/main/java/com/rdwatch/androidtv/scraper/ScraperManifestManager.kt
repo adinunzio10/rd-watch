@@ -4,6 +4,9 @@ import com.rdwatch.androidtv.scraper.cache.CacheConfig
 import com.rdwatch.androidtv.scraper.cache.ManifestCache
 import com.rdwatch.androidtv.scraper.cache.SmartCacheManager
 import com.rdwatch.androidtv.scraper.models.ManifestException
+import com.rdwatch.androidtv.scraper.models.ManifestStorageException
+import com.rdwatch.androidtv.scraper.models.ManifestNetworkException
+import com.rdwatch.androidtv.scraper.models.ManifestValidationException
 import com.rdwatch.androidtv.scraper.models.ManifestResult
 import com.rdwatch.androidtv.scraper.models.ScraperManifest
 import com.rdwatch.androidtv.scraper.models.ValidationStatus
@@ -74,7 +77,7 @@ class ScraperManifestManager @Inject constructor(
             }
         } catch (e: Exception) {
             ManifestResult.Error(
-                ManifestException("Failed to get manifest: ${e.message}", e)
+                ManifestStorageException("Failed to get manifest: ${e.message}", e, operation = "getManifest")
             )
         }
     }
@@ -137,7 +140,7 @@ class ScraperManifestManager @Inject constructor(
             }
         } catch (e: Exception) {
             ManifestResult.Error(
-                ManifestException("Failed to add manifest from URL: ${e.message}", e)
+                ManifestNetworkException("Failed to add manifest from URL: ${e.message}", e, url = url)
             )
         }
     }
@@ -167,7 +170,7 @@ class ScraperManifestManager @Inject constructor(
             }
         } catch (e: Exception) {
             ManifestResult.Error(
-                ManifestException("Failed to update manifest: ${e.message}", e)
+                ManifestStorageException("Failed to update manifest: ${e.message}", e, operation = "updateManifest")
             )
         }
     }
@@ -189,7 +192,7 @@ class ScraperManifestManager @Inject constructor(
             }
         } catch (e: Exception) {
             ManifestResult.Error(
-                ManifestException("Failed to remove manifest: ${e.message}", e)
+                ManifestStorageException("Failed to remove manifest: ${e.message}", e, operation = "removeManifest")
             )
         }
     }
@@ -234,7 +237,7 @@ class ScraperManifestManager @Inject constructor(
             )
         } catch (e: Exception) {
             ManifestResult.Error(
-                ManifestException("Bulk import failed: ${e.message}", e)
+                ManifestStorageException("Bulk import failed: ${e.message}", e, operation = "bulkImport")
             )
         }
     }
@@ -280,12 +283,12 @@ class ScraperManifestManager @Inject constructor(
                     )
                 }
                 is ManifestResult.Error -> ManifestResult.Error(
-                    ManifestException("Failed to get manifests for refresh: ${manifestsResult.exception.message}", manifestsResult.exception)
+                    ManifestStorageException("Failed to get manifests for refresh: ${manifestsResult.exception.message}", manifestsResult.exception, operation = "refreshAll")
                 )
             }
         } catch (e: Exception) {
             ManifestResult.Error(
-                ManifestException("Refresh all failed: ${e.message}", e)
+                ManifestStorageException("Refresh all failed: ${e.message}", e, operation = "refreshAll")
             )
         }
     }
@@ -308,7 +311,7 @@ class ScraperManifestManager @Inject constructor(
             }
         } catch (e: Exception) {
             ManifestResult.Error(
-                ManifestException("Failed to refresh manifest: ${e.message}", e)
+                ManifestNetworkException("Failed to refresh manifest: ${e.message}", e)
             )
         }
     }
@@ -352,12 +355,12 @@ class ScraperManifestManager @Inject constructor(
                     )
                 }
                 is ManifestResult.Error -> ManifestResult.Error(
-                    ManifestException("Failed to get manifests for validation: ${manifestsResult.exception.message}", manifestsResult.exception)
+                    ManifestValidationException("Failed to get manifests for validation: ${manifestsResult.exception.message}", manifestsResult.exception)
                 )
             }
         } catch (e: Exception) {
             ManifestResult.Error(
-                ManifestException("Validation failed: ${e.message}", e)
+                ManifestValidationException("Validation failed: ${e.message}", e)
             )
         }
     }
@@ -408,7 +411,7 @@ class ScraperManifestManager @Inject constructor(
             }
         } catch (e: Exception) {
             ManifestResult.Error(
-                ManifestException("Failed to set manifest enabled status: ${e.message}", e)
+                ManifestStorageException("Failed to set manifest enabled status: ${e.message}", e, operation = "setEnabled")
             )
         }
     }
@@ -434,7 +437,7 @@ class ScraperManifestManager @Inject constructor(
             }
         } catch (e: Exception) {
             ManifestResult.Error(
-                ManifestException("Failed to update manifest priority: ${e.message}", e)
+                ManifestStorageException("Failed to update manifest priority: ${e.message}", e, operation = "updatePriority")
             )
         }
     }
@@ -472,7 +475,7 @@ class ScraperManifestManager @Inject constructor(
             }
         } catch (e: Exception) {
             ManifestResult.Error(
-                ManifestException("Failed to get statistics: ${e.message}", e)
+                ManifestStorageException("Failed to get statistics: ${e.message}", e, operation = "getStatistics")
             )
         }
     }
@@ -518,7 +521,7 @@ class ScraperManifestManager @Inject constructor(
             ManifestResult.Success(Unit)
         } catch (e: Exception) {
             ManifestResult.Error(
-                ManifestException("Failed to initialize manager: ${e.message}", e)
+                ManifestStorageException("Failed to initialize manager: ${e.message}", e, operation = "initialize")
             )
         }
     }
@@ -537,7 +540,7 @@ class ScraperManifestManager @Inject constructor(
             ManifestResult.Success(Unit)
         } catch (e: Exception) {
             ManifestResult.Error(
-                ManifestException("Failed to shutdown manager: ${e.message}", e)
+                ManifestStorageException("Failed to shutdown manager: ${e.message}", e, operation = "shutdown")
             )
         }
     }
