@@ -1,6 +1,8 @@
 package com.rdwatch.androidtv.scraper.error
 
 import com.rdwatch.androidtv.scraper.models.ManifestException
+import com.rdwatch.androidtv.scraper.models.ManifestStorageException
+import com.rdwatch.androidtv.scraper.models.ManifestNetworkException
 import com.rdwatch.androidtv.scraper.models.ManifestResult
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -118,7 +120,7 @@ class ManifestCircuitBreaker @Inject constructor() {
                             executeInHalfOpen(operation)
                         } else {
                             ManifestResult.Error(
-                                ManifestException(
+                                ManifestNetworkException(
                                     "Circuit breaker is OPEN for '$key'. " +
                                     "Next retry available at ${java.util.Date(lastFailureTime + config.openTimeoutMs)}"
                                 )
@@ -148,7 +150,7 @@ class ManifestCircuitBreaker @Inject constructor() {
                     }
                 }
             } catch (e: Exception) {
-                val manifestException = if (e is ManifestException) e else ManifestException("Unexpected error", e)
+                val manifestException = if (e is ManifestException) e else ManifestStorageException("Unexpected error", e, operation = "execute")
                 onFailure(manifestException)
                 ManifestResult.Error(manifestException)
             }
@@ -173,7 +175,7 @@ class ManifestCircuitBreaker @Inject constructor() {
                     }
                 }
             } catch (e: Exception) {
-                val manifestException = if (e is ManifestException) e else ManifestException("Unexpected error", e)
+                val manifestException = if (e is ManifestException) e else ManifestStorageException("Unexpected error", e, operation = "executeHalfOpen")
                 circuitState = CircuitState.OPEN
                 lastFailureTime = System.currentTimeMillis()
                 ManifestResult.Error(manifestException)

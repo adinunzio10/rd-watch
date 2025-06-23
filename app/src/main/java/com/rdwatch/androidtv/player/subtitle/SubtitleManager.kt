@@ -12,6 +12,13 @@ import kotlinx.coroutines.flow.asStateFlow
 import javax.inject.Inject
 import javax.inject.Singleton
 
+data class SubtitleTrack(
+    val language: String? = null,
+    val label: String? = null,
+    val url: String? = null,
+    val mimeType: String? = null
+)
+
 @UnstableApi
 @Singleton
 class SubtitleManager @Inject constructor(
@@ -31,10 +38,10 @@ class SubtitleManager @Inject constructor(
         val available = subtitles.mapIndexed { index, track ->
             AvailableSubtitle(
                 id = index,
-                language = track.language,
-                label = track.label,
-                url = track.url,
-                mimeType = track.mimeType,
+                language = track.language ?: "unknown",
+                label = track.label ?: "Subtitle ${index + 1}",
+                url = track.url ?: "",
+                mimeType = track.mimeType ?: "text/vtt",
                 isEmbedded = false
             )
         }

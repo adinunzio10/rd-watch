@@ -2,10 +2,15 @@ package com.rdwatch.androidtv.core.reactive
 
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapConcat
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
+import kotlinx.coroutines.flow.scan
+import kotlinx.coroutines.flow.takeWhile
 import kotlinx.coroutines.flow.zip
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -43,14 +48,14 @@ fun <T> mergeFlows(vararg flows: Flow<T>): Flow<T> = merge(*flows)
 
 fun <T> mergeFlows(flows: List<Flow<T>>): Flow<T> = merge(*flows.toTypedArray())
 
-fun <T, R> Flow<T>.scan(initial: R, operation: suspend (accumulator: R, value: T) -> R): Flow<R> = 
-    kotlinx.coroutines.flow.scan(initial, operation)
+fun <T, R> Flow<T>.scanWithInitial(initial: R, operation: suspend (accumulator: R, value: T) -> R): Flow<R> = 
+    scan(initial, operation)
 
 fun <T> Flow<T>.startWith(value: T): Flow<T> = 
-    kotlinx.coroutines.flow.flowOf(value).plus(this)
+    flowOf(value).plus(this)
 
 fun <T> Flow<T>.startWith(values: List<T>): Flow<T> = 
-    kotlinx.coroutines.flow.flowOf(*values.toTypedArray()).plus(this)
+    merge(flowOf(values).flatMapConcat { it.asFlow() }, this)
 
 fun <T, K> Flow<T>.groupBy(keySelector: (T) -> K): Flow<Pair<K, List<T>>> {
     return map { value ->
@@ -60,13 +65,13 @@ fun <T, K> Flow<T>.groupBy(keySelector: (T) -> K): Flow<Pair<K, List<T>>> {
 }
 
 fun <T> Flow<List<T>>.flatten(): Flow<T> = 
-    kotlinx.coroutines.flow.flatMapConcat { list ->
-        kotlinx.coroutines.flow.flowOf(*list.toTypedArray())
+    flatMapConcat { list ->
+        list.asFlow()
     }
 
 operator fun <T> Flow<T>.plus(other: Flow<T>): Flow<T> = 
     merge(this, other)
 
 fun <T> Flow<T>.takeUntilSignal(signal: Flow<*>): Flow<T> {
-    return kotlinx.coroutines.flow.takeWhile { true }
+    return takeWhile { true }
 }

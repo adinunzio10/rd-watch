@@ -9,8 +9,8 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.BrokenImage
-import androidx.compose.material.icons.filled.Image
+import androidx.compose.material.icons.filled.ErrorOutline
+import androidx.compose.material.icons.filled.ImageNotSupported
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -37,8 +37,8 @@ fun TVImageLoader(
     showPlaceholder: Boolean = true,
     showShimmer: Boolean = true,
     crossfadeEnabled: Boolean = true,
-    errorIcon: ImageVector = Icons.Default.BrokenImage,
-    placeholderIcon: ImageVector = Icons.Default.Image
+    errorIcon: ImageVector = Icons.Default.ErrorOutline,
+    placeholderIcon: ImageVector = Icons.Default.ImageNotSupported
 ) {
     val painter = rememberAsyncImagePainter(
         model = ImageRequest.Builder(LocalContext.current)
@@ -315,11 +315,6 @@ fun SmartTVImageLoader(
     )
 }
 
-enum class ImagePriority {
-    HIGH,    // Critical images (featured content, current view)
-    NORMAL,  // Standard content images
-    LOW      // Background/preview images
-}
 
 enum class CacheStrategy {
     MEMORY_ONLY,      // Fast access, limited storage

@@ -43,7 +43,7 @@ class ManifestErrorHandler @Inject constructor() {
                         }
                         
                         // Apply recovery strategy if available
-                        val recoveryResult = tryRecovery(result.exception, config)
+                        val recoveryResult = tryRecovery<T>(result.exception, config)
                         if (recoveryResult != null) {
                             return recoveryResult
                         }
@@ -58,11 +58,11 @@ class ManifestErrorHandler @Inject constructor() {
             } catch (e: Exception) {
                 lastException = when (e) {
                     is ManifestException -> e
-                    else -> ManifestException("Unexpected error: ${e.message}", e)
+                    else -> ManifestStorageException("Unexpected error: ${e.message}", e, operation = "handleWithRecovery")
                 }
                 
                 if (!isRetryableError(lastException) || attempt == config.maxRetries) {
-                    break
+                    return ManifestResult.Error(lastException)
                 }
                 
                 val delayMs = calculateBackoffDelay(attempt, config)
@@ -72,7 +72,7 @@ class ManifestErrorHandler @Inject constructor() {
         
         // All retries exhausted
         return ManifestResult.Error(
-            lastException ?: ManifestException("Unknown error after ${config.maxRetries} retries")
+            lastException ?: ManifestStorageException("Unknown error after ${config.maxRetries} retries", operation = "handleWithRecovery")
         )
     }
     
@@ -86,7 +86,7 @@ class ManifestErrorHandler @Inject constructor() {
                 exception.statusCode in 500..599 -> ErrorCategory.SERVER_ERROR
                 exception.cause is SocketTimeoutException -> ErrorCategory.TIMEOUT
                 exception.cause is UnknownHostException -> ErrorCategory.NETWORK_CONNECTIVITY
-                else -> ErrorCategory.NETWORK_ERROR
+                else -> ErrorCategory.NETWORK_CONNECTIVITY
             }
             is ManifestParsingException -> ErrorCategory.DATA_FORMAT
             is ManifestValidationException -> ErrorCategory.VALIDATION
@@ -194,7 +194,7 @@ class ManifestErrorHandler @Inject constructor() {
                 // For cache errors, we could try to bypass cache
                 null // Let the calling code handle fallback
             }
-            ErrorCategory.NETWORK_ERROR -> {
+            ErrorCategory.NETWORK_CONNECTIVITY -> {
                 // Could try alternative endpoints if available
                 null
             }
@@ -324,7 +324,7 @@ enum class ErrorCategory {
 /**
  * Comprehensive error report
  */
-data class ErrorReport(
+data class ErrorHandlerReport(
     val timestamp: Long,
     val category: ErrorCategory,
     val exception: ManifestException,

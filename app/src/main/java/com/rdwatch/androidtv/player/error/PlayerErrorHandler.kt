@@ -36,11 +36,19 @@ class PlayerErrorHandler @Inject constructor() {
             
             PlaybackException.ERROR_CODE_IO_BAD_HTTP_STATUS -> {
                 val httpException = exception.cause as? HttpDataSource.HttpDataSourceException
+                val responseCode = httpException?.let { 
+                    // Media3 HttpDataSourceException doesn't expose responseCode directly
+                    // Parse from message or use a default
+                    if (it.message?.contains("400") == true) 400
+                    else if (it.message?.contains("404") == true) 404 
+                    else if (it.message?.contains("500") == true) 500
+                    else 0
+                } ?: 0
                 PlayerError.HttpError(
-                    message = "Server returned error: ${httpException?.responseCode ?: "Unknown"}",
-                    responseCode = httpException?.responseCode ?: 0,
+                    message = "Server returned error: ${httpException?.message ?: "Unknown"}",
+                    responseCode = responseCode,
                     originalException = exception,
-                    retryable = isRetryableHttpError(httpException?.responseCode ?: 0)
+                    retryable = isRetryableHttpError(responseCode)
                 )
             }
             

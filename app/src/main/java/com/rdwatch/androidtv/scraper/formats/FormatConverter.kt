@@ -225,10 +225,10 @@ class FormatConverter @Inject constructor() {
         
         for (line in lines) {
             if (line.contains(":")) {
-                val parts = line.split(":", 2)
+                val parts = line.split(":", limit = 2)
                 if (parts.size == 2) {
-                    val key = parts[0].trim().removeSurrounding("\"")
-                    val value = parts[1].trim().removeSurrounding("\"")
+                    val key: String = parts[0].trim().removeSurrounding("\"")
+                    val value: String = parts[1].trim().removeSurrounding("\"")
                     
                     // Try to parse as different types
                     jsonMap[key] = when {

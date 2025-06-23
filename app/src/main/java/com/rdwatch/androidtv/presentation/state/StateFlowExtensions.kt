@@ -16,10 +16,7 @@ import kotlinx.coroutines.flow.map
 fun <T> StateFlow<T>.collectAsStateWithLifecycle(
     minActiveState: Lifecycle.State = Lifecycle.State.STARTED
 ): State<T> {
-    val lifecycleOwner = LocalLifecycleOwner.current
-    return collectAsState(
-        context = lifecycleOwner.lifecycle.coroutineContext
-    )
+    return collectAsState()
 }
 
 @Composable

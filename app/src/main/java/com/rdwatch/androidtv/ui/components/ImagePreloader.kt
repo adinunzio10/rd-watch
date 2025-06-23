@@ -1,15 +1,23 @@
 package com.rdwatch.androidtv.ui.components
 
+import android.content.Context
 import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalContext
 import coil.ImageLoader
 import coil.request.ImageRequest
 import kotlinx.coroutines.launch
 
+enum class ImagePriority {
+    HIGH, NORMAL, LOW
+}
+
 /**
  * TV-optimized image preloader for smooth scrolling performance
  */
-class TVImagePreloader(private val imageLoader: ImageLoader) {
+class TVImagePreloader(
+    private val imageLoader: ImageLoader,
+    private val context: Context
+) {
     
     suspend fun preloadImages(
         imageUrls: List<String>,
@@ -17,24 +25,10 @@ class TVImagePreloader(private val imageLoader: ImageLoader) {
     ) {
         imageUrls.forEach { url ->
             try {
-                val request = ImageRequest.Builder(imageLoader.defaults.context)
+                val request = ImageRequest.Builder(context)
                     .data(url)
-                    .apply {
-                        when (priority) {
-                            ImagePriority.HIGH -> {
-                                memoryCachePolicy(coil.request.CachePolicy.ENABLED)
-                                diskCachePolicy(coil.request.CachePolicy.ENABLED)
-                            }
-                            ImagePriority.NORMAL -> {
-                                memoryCachePolicy(coil.request.CachePolicy.ENABLED)
-                                diskCachePolicy(coil.request.CachePolicy.ENABLED)
-                            }
-                            ImagePriority.LOW -> {
-                                memoryCachePolicy(coil.request.CachePolicy.ENABLED)
-                                diskCachePolicy(coil.request.CachePolicy.ENABLED)
-                            }
-                        }
-                    }
+                    .memoryCachePolicy(coil.request.CachePolicy.ENABLED)
+                    .diskCachePolicy(coil.request.CachePolicy.ENABLED)
                     .build()
                 
                 imageLoader.execute(request)
@@ -50,7 +44,7 @@ fun rememberTVImagePreloader(): TVImagePreloader {
     val context = LocalContext.current
     
     return remember {
-        TVImagePreloader(ImageLoader(context))
+        TVImagePreloader(ImageLoader(context), context)
     }
 }
 

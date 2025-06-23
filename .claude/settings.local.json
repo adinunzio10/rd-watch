@@ -26,7 +26,13 @@
       "Bash(git push:*)",
       "Bash(gh pr create:*)",
       "Bash(gh pr view:*)",
-      "Bash(mv:*)"
+      "Bash(mv:*)",
+      "Bash(grep:*)",
+      "Bash(cat:*)",
+      "Bash(java:*)",
+      "Bash(sudo pacman:*)",
+      "Bash(pacman:*)",
+      "Bash(wget:*)"
     ],
     "deny": []
   }
