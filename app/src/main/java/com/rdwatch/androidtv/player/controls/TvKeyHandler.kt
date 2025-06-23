@@ -29,12 +29,12 @@ class TvKeyHandler {
                     }
                     
                     // Seek controls
-                    Key.MediaRewind, Key.MediaSkipToPrevious -> {
+                    Key.MediaRewind, Key.MediaPrevious -> {
                         onSeekBackward()
                         true
                     }
                     
-                    Key.MediaFastForward, Key.MediaSkipToNext -> {
+                    Key.MediaFastForward, Key.MediaNext -> {
                         onSeekForward()
                         true
                     }
@@ -151,11 +151,12 @@ class TvKeyHandler {
         val PLAYBACK_SPEEDS = floatArrayOf(0.5f, 0.75f, 1.0f, 1.25f, 1.5f, 1.75f, 2.0f)
         
         fun getNextSpeed(currentSpeed: Float, increment: Boolean): Float {
-            val currentIndex = PLAYBACK_SPEEDS.indexOf(currentSpeed)
+            val currentIndex = PLAYBACK_SPEEDS.indexOfFirst { kotlin.math.abs(it - currentSpeed) < 0.01f }
+            val safeIndex = if (currentIndex == -1) 2 else currentIndex // Default to 1.0x if not found
             val nextIndex = if (increment) {
-                (currentIndex + 1).coerceAtMost(PLAYBACK_SPEEDS.size - 1)
+                (safeIndex + 1).coerceAtMost(PLAYBACK_SPEEDS.size - 1)
             } else {
-                (currentIndex - 1).coerceAtLeast(0)
+                (safeIndex - 1).coerceAtLeast(0)
             }
             return PLAYBACK_SPEEDS.getOrElse(nextIndex) { currentSpeed }
         }

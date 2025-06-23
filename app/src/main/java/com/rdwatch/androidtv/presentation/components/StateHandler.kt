@@ -3,6 +3,7 @@ package com.rdwatch.androidtv.presentation.components
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.rdwatch.androidtv.core.error.ErrorInfo
+import com.rdwatch.androidtv.core.error.toAppException
 import com.rdwatch.androidtv.presentation.state.UiState
 
 @Composable
@@ -36,7 +37,7 @@ fun <T> StateHandler(
                     type = com.rdwatch.androidtv.core.error.ErrorType.UNKNOWN,
                     message = uiState.message ?: uiState.exception.message ?: "An error occurred",
                     canRetry = onRetry != null,
-                    exception = com.rdwatch.androidtv.core.error.toAppException(uiState.exception)
+                    exception = uiState.exception.toAppException()
                 ),
                 onRetry = onRetry,
                 onDismiss = onErrorDismiss,
@@ -88,7 +89,7 @@ fun <T> StateHandler(
                     type = com.rdwatch.androidtv.core.error.ErrorType.UNKNOWN,
                     message = uiState.message ?: uiState.exception.message ?: "An error occurred",
                     canRetry = onRetry != null,
-                    exception = com.rdwatch.androidtv.core.error.toAppException(uiState.exception)
+                    exception = uiState.exception.toAppException()
                 ),
                 onRetry = onRetry,
                 onDismiss = onErrorDismiss,

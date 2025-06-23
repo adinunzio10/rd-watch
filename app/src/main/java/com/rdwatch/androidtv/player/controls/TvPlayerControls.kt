@@ -89,7 +89,7 @@ fun TvPlayerControls(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 TvControlButton(
-                    icon = Icons.Default.Replay10,
+                    icon = Icons.Default.Replay,
                     contentDescription = "Rewind 10 seconds",
                     onClick = onSeekBackward
                 )
@@ -102,7 +102,7 @@ fun TvPlayerControls(
                 )
                 
                 TvControlButton(
-                    icon = Icons.Default.Forward10,
+                    icon = Icons.Default.FastForward,
                     contentDescription = "Forward 10 seconds",
                     onClick = onSeekForward
                 )

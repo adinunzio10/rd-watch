@@ -109,7 +109,7 @@ fun PlayerErrorScreen(
                 if (BuildConfig.DEBUG && error.originalException != null) {
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
-                        text = "Debug: ${error.originalException.message}",
+                        text = "Debug: ${error.originalException?.message ?: "Unknown error"}",
                         color = Color.Gray,
                         fontSize = 12.sp,
                         textAlign = TextAlign.Center
@@ -170,12 +170,12 @@ private fun ErrorActionButton(
 
 private fun getErrorIcon(error: PlayerError): ImageVector {
     return when (error) {
-        is PlayerError.NetworkError -> Icons.Default.WifiOff
+        is PlayerError.NetworkError -> Icons.Default.SignalWifiOff
         is PlayerError.HttpError -> Icons.Default.CloudOff
-        is PlayerError.FormatError -> Icons.Default.Movie
-        is PlayerError.DecoderError -> Icons.Default.DeviceUnknown
+        is PlayerError.FormatError -> Icons.Default.VideoFile
+        is PlayerError.DecoderError -> Icons.Default.Warning
         is PlayerError.DrmError -> Icons.Default.Lock
-        is PlayerError.UnknownError -> Icons.Default.Error
+        is PlayerError.UnknownError -> Icons.Default.ErrorOutline
     }
 }
 

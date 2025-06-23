@@ -105,10 +105,20 @@ fun <T> Flow<T>.handleErrors(
 }
 
 fun <T> Flow<Result<T>>.mapToData(): Flow<T?> = 
-    map { result -> result.getOrNull() }
+    map { result -> 
+        when (result) {
+            is Result.Success -> result.data
+            else -> null
+        }
+    }
 
 fun <T> Flow<Result<T>>.filterSuccess(): Flow<T> = 
-    mapNotNull { result -> result.getOrNull() }
+    mapNotNull { result -> 
+        when (result) {
+            is Result.Success -> result.data
+            else -> null
+        }
+    }
 
 fun <T> Flow<Result<T>>.onFlowSuccess(action: suspend (T) -> Unit): Flow<Result<T>> = 
     onEach { result ->

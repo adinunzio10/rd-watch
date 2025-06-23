@@ -241,10 +241,8 @@ fun TVFocusBoundary(
     content: @Composable () -> Unit
 ) {
     if (trapFocus) {
-        FocusGroup {
-            Box(modifier = modifier) {
-                content()
-            }
+        Box(modifier = modifier.focusable()) {
+            content()
         }
     } else {
         Box(modifier = modifier) {
