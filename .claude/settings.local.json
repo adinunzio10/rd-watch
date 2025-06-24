@@ -37,7 +37,9 @@
       "Bash(task-master list:*)",
       "Bash(task-master show:*)",
       "Bash(task-master set-status:*)",
-      "Bash(task-master:*)"
+      "Bash(task-master:*)",
+      "Bash(echo)",
+      "Bash(ls:*)"
     ],
     "deny": []
   }
