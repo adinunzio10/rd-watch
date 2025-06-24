@@ -60,7 +60,7 @@ fun MovieDetailsScreen(
     // Get playback progress
     val contentProgress by playbackViewModel.inProgressContent.collectAsState()
     val currentMovieProgress = contentProgress.find { it.contentId == movie.videoUrl }
-    val watchProgress = currentMovieProgress?.progressPercentage ?: 0f
+    val watchProgress = currentMovieProgress?.watchPercentage ?: 0f
     val isCompleted = playbackViewModel.isContentCompleted(movie.videoUrl ?: "")
     
     LaunchedEffect(Unit) {
@@ -130,7 +130,7 @@ private fun MovieHeroSection(
     onPlayClick: (Movie) -> Unit,
     onBackPressed: () -> Unit,
     firstFocusRequester: FocusRequester,
-    overscanMargin: Modifier
+    overscanMargin: androidx.compose.ui.unit.Dp
 ) {
     Box(
         modifier = Modifier

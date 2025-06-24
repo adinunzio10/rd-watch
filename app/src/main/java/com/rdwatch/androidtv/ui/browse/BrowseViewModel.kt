@@ -32,7 +32,7 @@ class BrowseViewModel @Inject constructor() : BaseViewModel<BrowseUiState>() {
      */
     private fun loadMovies() {
         launchSafely {
-            updateState { it.copy(isLoading = true, error = null) }
+            updateState { copy(isLoading = true, error = null) }
             
             try {
                 val allMovies = MovieList.list
@@ -42,7 +42,7 @@ class BrowseViewModel @Inject constructor() : BaseViewModel<BrowseUiState>() {
                 val filteredMovies = filterMoviesByCategory(allMovies, uiState.value.selectedCategory)
                 
                 updateState { 
-                    it.copy(
+                    copy(
                         movies = filteredMovies,
                         isLoading = false,
                         error = null
@@ -50,7 +50,7 @@ class BrowseViewModel @Inject constructor() : BaseViewModel<BrowseUiState>() {
                 }
             } catch (e: Exception) {
                 updateState { 
-                    it.copy(
+                    copy(
                         isLoading = false,
                         error = "Failed to load movies: ${e.message}"
                     )
@@ -67,7 +67,7 @@ class BrowseViewModel @Inject constructor() : BaseViewModel<BrowseUiState>() {
         val filteredMovies = filterMoviesByCategory(allMovies, category)
         
         updateState { 
-            it.copy(
+            copy(
                 selectedCategory = category,
                 movies = filteredMovies
             )
@@ -82,12 +82,12 @@ class BrowseViewModel @Inject constructor() : BaseViewModel<BrowseUiState>() {
         val currentCategory = uiState.value.selectedCategory
         
         launchSafely {
-            updateState { it.copy(searchQuery = query) }
+            updateState { copy(searchQuery = query) }
             
             if (query.isBlank()) {
                 // Reset to category filter
                 val filteredMovies = filterMoviesByCategory(allMovies, currentCategory)
-                updateState { it.copy(movies = filteredMovies) }
+                updateState { copy(movies = filteredMovies) }
             } else {
                 // Apply search filter on top of category filter
                 val categoryFiltered = filterMoviesByCategory(allMovies, currentCategory)
@@ -96,7 +96,7 @@ class BrowseViewModel @Inject constructor() : BaseViewModel<BrowseUiState>() {
                     movie.description?.contains(query, ignoreCase = true) == true ||
                     movie.studio?.contains(query, ignoreCase = true) == true
                 }
-                updateState { it.copy(movies = searchFiltered) }
+                updateState { copy(movies = searchFiltered) }
             }
         }
     }
@@ -146,7 +146,7 @@ class BrowseViewModel @Inject constructor() : BaseViewModel<BrowseUiState>() {
     
     override fun handleError(exception: Throwable) {
         updateState { 
-            it.copy(
+            copy(
                 isLoading = false,
                 error = "An error occurred: ${exception.message}"
             )

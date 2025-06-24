@@ -27,7 +27,7 @@ class SettingsViewModel @Inject constructor() : BaseViewModel<SettingsUiState>()
             // TODO: In real implementation, load from SharedPreferences or DataStore
             // For now, using default values
             updateState { 
-                it.copy(
+                copy(
                     isLoading = false,
                     isLoaded = true
                 )
@@ -39,7 +39,7 @@ class SettingsViewModel @Inject constructor() : BaseViewModel<SettingsUiState>()
      * Update video quality setting
      */
     fun updateVideoQuality(quality: VideoQuality) {
-        updateState { it.copy(videoQuality = quality) }
+        updateState { copy(videoQuality = quality) }
         saveSettings()
     }
     
@@ -47,7 +47,7 @@ class SettingsViewModel @Inject constructor() : BaseViewModel<SettingsUiState>()
      * Update playback speed setting
      */
     fun updatePlaybackSpeed(speed: PlaybackSpeed) {
-        updateState { it.copy(playbackSpeed = speed) }
+        updateState { copy(playbackSpeed = speed) }
         saveSettings()
     }
     
@@ -55,7 +55,7 @@ class SettingsViewModel @Inject constructor() : BaseViewModel<SettingsUiState>()
      * Toggle subtitles setting
      */
     fun toggleSubtitles(enabled: Boolean) {
-        updateState { it.copy(subtitlesEnabled = enabled) }
+        updateState { copy(subtitlesEnabled = enabled) }
         saveSettings()
     }
     
@@ -63,7 +63,7 @@ class SettingsViewModel @Inject constructor() : BaseViewModel<SettingsUiState>()
      * Toggle auto play setting
      */
     fun toggleAutoPlay(enabled: Boolean) {
-        updateState { it.copy(autoPlay = enabled) }
+        updateState { copy(autoPlay = enabled) }
         saveSettings()
     }
     
@@ -71,7 +71,7 @@ class SettingsViewModel @Inject constructor() : BaseViewModel<SettingsUiState>()
      * Toggle dark mode setting
      */
     fun toggleDarkMode(enabled: Boolean) {
-        updateState { it.copy(darkMode = enabled) }
+        updateState { copy(darkMode = enabled) }
         saveSettings()
     }
     
@@ -79,7 +79,7 @@ class SettingsViewModel @Inject constructor() : BaseViewModel<SettingsUiState>()
      * Toggle parental controls setting
      */
     fun toggleParentalControls(enabled: Boolean) {
-        updateState { it.copy(parentalControlsEnabled = enabled) }
+        updateState { copy(parentalControlsEnabled = enabled) }
         saveSettings()
     }
     
@@ -87,7 +87,7 @@ class SettingsViewModel @Inject constructor() : BaseViewModel<SettingsUiState>()
      * Toggle notifications setting
      */
     fun toggleNotifications(enabled: Boolean) {
-        updateState { it.copy(notificationsEnabled = enabled) }
+        updateState { copy(notificationsEnabled = enabled) }
         saveSettings()
     }
     
@@ -95,7 +95,7 @@ class SettingsViewModel @Inject constructor() : BaseViewModel<SettingsUiState>()
      * Update data usage limit setting
      */
     fun updateDataUsageLimit(limit: DataUsageLimit) {
-        updateState { it.copy(dataUsageLimit = limit) }
+        updateState { copy(dataUsageLimit = limit) }
         saveSettings()
     }
     
@@ -119,18 +119,18 @@ class SettingsViewModel @Inject constructor() : BaseViewModel<SettingsUiState>()
         launchSafely {
             // TODO: In real implementation, save to SharedPreferences or DataStore
             // For now, just update state to indicate saving
-            updateState { it.copy(isSaving = true) }
+            updateState { copy(isSaving = true) }
             
             // Simulate save delay
             kotlinx.coroutines.delay(300)
             
-            updateState { it.copy(isSaving = false) }
+            updateState { copy(isSaving = false) }
         }
     }
     
     override fun handleError(exception: Throwable) {
         updateState { 
-            it.copy(
+            copy(
                 isLoading = false,
                 isSaving = false,
                 error = "Settings error: ${exception.message}"

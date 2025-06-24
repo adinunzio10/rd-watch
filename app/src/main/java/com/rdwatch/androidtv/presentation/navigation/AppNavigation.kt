@@ -91,11 +91,11 @@ fun AppNavigation(
         
         composable<Screen.Search> {
             SearchScreen(
-                onMovieClick = { movie ->
-                    navController.navigate(Screen.MovieDetails(movie.id.toString()))
-                },
-                onBackPressed = {
+                onNavigateBack = {
                     navController.popBackStack()
+                },
+                onItemSelected = { movieId ->
+                    navController.navigate(Screen.MovieDetails(movieId))
                 }
             )
         }

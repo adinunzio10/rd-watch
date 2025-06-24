@@ -35,7 +35,7 @@ class ProfileViewModel @Inject constructor() : BaseViewModel<ProfileUiState>() {
      */
     private fun loadUserProfile() {
         launchSafely {
-            updateState { it.copy(isLoading = true, error = null) }
+            updateState { copy(isLoading = true, error = null) }
             
             try {
                 // In real implementation, load from user repository/database
@@ -63,7 +63,7 @@ class ProfileViewModel @Inject constructor() : BaseViewModel<ProfileUiState>() {
                 _watchHistory.value = history
                 
                 updateState { 
-                    it.copy(
+                    copy(
                         userProfile = userProfile,
                         watchStatistics = statistics,
                         isLoading = false,
@@ -73,7 +73,7 @@ class ProfileViewModel @Inject constructor() : BaseViewModel<ProfileUiState>() {
                 
             } catch (e: Exception) {
                 updateState { 
-                    it.copy(
+                    copy(
                         isLoading = false,
                         error = "Failed to load profile: ${e.message}"
                     )
@@ -94,7 +94,7 @@ class ProfileViewModel @Inject constructor() : BaseViewModel<ProfileUiState>() {
                     email = email
                 )
                 
-                updateState { it.copy(userProfile = updatedProfile) }
+                updateState { copy(userProfile = updatedProfile) }
                 
                 // TODO: In real implementation, save to repository
                 saveProfileToStorage(updatedProfile)
@@ -118,7 +118,7 @@ class ProfileViewModel @Inject constructor() : BaseViewModel<ProfileUiState>() {
                     val updatedStats = currentStats.copy(
                         favoritesCount = currentFavorites.size
                     )
-                    updateState { it.copy(watchStatistics = updatedStats) }
+                    updateState { copy(watchStatistics = updatedStats) }
                 }
                 
                 // TODO: In real implementation, save to database
@@ -141,7 +141,7 @@ class ProfileViewModel @Inject constructor() : BaseViewModel<ProfileUiState>() {
                     val updatedStats = currentStats.copy(
                         favoritesCount = currentFavorites.size
                     )
-                    updateState { it.copy(watchStatistics = updatedStats) }
+                    updateState { copy(watchStatistics = updatedStats) }
                 }
                 
                 // TODO: In real implementation, update database
@@ -164,7 +164,7 @@ class ProfileViewModel @Inject constructor() : BaseViewModel<ProfileUiState>() {
                     hoursWatched = 0,
                     totalMinutesWatched = 0
                 )
-                updateState { it.copy(watchStatistics = updatedStats) }
+                updateState { copy(watchStatistics = updatedStats) }
             }
             
             // TODO: In real implementation, clear from database
@@ -175,7 +175,7 @@ class ProfileViewModel @Inject constructor() : BaseViewModel<ProfileUiState>() {
      * Update privacy settings
      */
     fun updatePrivacySettings(settings: PrivacySettings) {
-        updateState { it.copy(privacySettings = settings) }
+        updateState { copy(privacySettings = settings) }
         savePrivacySettings(settings)
     }
     
@@ -183,7 +183,7 @@ class ProfileViewModel @Inject constructor() : BaseViewModel<ProfileUiState>() {
      * Update notification preferences
      */
     fun updateNotificationPreferences(preferences: NotificationPreferences) {
-        updateState { it.copy(notificationPreferences = preferences) }
+        updateState { copy(notificationPreferences = preferences) }
         saveNotificationPreferences(preferences)
     }
     
@@ -192,7 +192,7 @@ class ProfileViewModel @Inject constructor() : BaseViewModel<ProfileUiState>() {
      */
     fun signOut() {
         launchSafely {
-            updateState { it.copy(isSigningOut = true) }
+            updateState { copy(isSigningOut = true) }
             
             // TODO: In real implementation, clear user session and navigate to auth
             kotlinx.coroutines.delay(1000) // Simulate sign out process
@@ -233,7 +233,7 @@ class ProfileViewModel @Inject constructor() : BaseViewModel<ProfileUiState>() {
     
     override fun handleError(exception: Throwable) {
         updateState { 
-            it.copy(
+            copy(
                 isLoading = false,
                 isSigningOut = false,
                 error = "Profile error: ${exception.message}"

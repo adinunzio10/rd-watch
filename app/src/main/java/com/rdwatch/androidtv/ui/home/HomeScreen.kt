@@ -105,7 +105,8 @@ fun TVHomeScreen(
             contentFocusRequester = contentFocusRequester,
             onDrawerToggle = { isDrawerOpen = !isDrawerOpen },
             playbackViewModel = playbackViewModel,
-            onShowContinueWatching = { showContinueWatchingManager = true }
+            onShowContinueWatching = { showContinueWatchingManager = true },
+            onMovieClick = onMovieClick
         )
         
         // Navigation drawer
@@ -290,7 +291,8 @@ fun SafeAreaContent(
     contentFocusRequester: FocusRequester,
     onDrawerToggle: () -> Unit,
     playbackViewModel: PlaybackViewModel,
-    onShowContinueWatching: () -> Unit
+    onShowContinueWatching: () -> Unit,
+    onMovieClick: ((Movie) -> Unit)? = null
 ) {
     val overscanMargin = 32.dp // 5% for most TVs
     

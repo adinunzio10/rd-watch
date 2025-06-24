@@ -559,25 +559,3 @@ private fun ActionSetting(title: String, subtitle: String, icon: ImageVector, on
     }
 }
 
-// Settings enums
-enum class VideoQuality(val displayName: String) {
-    AUTO("Auto"),
-    HD_1080P("1080p HD"),
-    HD_720P("720p HD"),
-    SD_480P("480p SD")
-}
-
-enum class PlaybackSpeed(val displayName: String) {
-    SLOW("0.75x"),
-    NORMAL("1.0x"),
-    FAST("1.25x"),
-    FASTER("1.5x"),
-    FASTEST("2.0x")
-}
-
-enum class DataUsageLimit(val displayName: String) {
-    UNLIMITED("Unlimited"),
-    HIGH("High (5GB/month)"),
-    MEDIUM("Medium (2GB/month)"),
-    LOW("Low (1GB/month)")
-}

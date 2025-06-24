@@ -28,7 +28,7 @@ class MovieDetailsViewModel @Inject constructor() : BaseViewModel<MovieDetailsUi
      */
     fun loadMovieDetails(movieId: String) {
         launchSafely {
-            updateState { it.copy(isLoading = true, error = null) }
+            updateState { copy(isLoading = true, error = null) }
             
             try {
                 // Find the movie by ID (converted to Long)
@@ -36,7 +36,7 @@ class MovieDetailsViewModel @Inject constructor() : BaseViewModel<MovieDetailsUi
                 
                 if (movie == null) {
                     updateState { 
-                        it.copy(
+                        copy(
                             isLoading = false,
                             error = "Movie not found"
                         )
@@ -49,7 +49,7 @@ class MovieDetailsViewModel @Inject constructor() : BaseViewModel<MovieDetailsUi
                 _relatedMovies.value = related
                 
                 updateState { 
-                    it.copy(
+                    copy(
                         movie = movie,
                         isLoading = false,
                         error = null,
@@ -59,7 +59,7 @@ class MovieDetailsViewModel @Inject constructor() : BaseViewModel<MovieDetailsUi
                 
             } catch (e: Exception) {
                 updateState { 
-                    it.copy(
+                    copy(
                         isLoading = false,
                         error = "Failed to load movie details: ${e.message}"
                     )
@@ -74,7 +74,7 @@ class MovieDetailsViewModel @Inject constructor() : BaseViewModel<MovieDetailsUi
     fun loadMovie(movie: Movie) {
         launchSafely {
             updateState { 
-                it.copy(
+                copy(
                     movie = movie,
                     isLoading = false,
                     error = null,
@@ -96,7 +96,7 @@ class MovieDetailsViewModel @Inject constructor() : BaseViewModel<MovieDetailsUi
         
         launchSafely {
             // TODO: In real implementation, save to database or remote service
-            updateState { it.copy(isInWatchlist = true) }
+            updateState { copy(isInWatchlist = true) }
         }
     }
     
@@ -106,7 +106,7 @@ class MovieDetailsViewModel @Inject constructor() : BaseViewModel<MovieDetailsUi
     fun removeFromWatchlist() {
         launchSafely {
             // TODO: In real implementation, remove from database or remote service
-            updateState { it.copy(isInWatchlist = false) }
+            updateState { copy(isInWatchlist = false) }
         }
     }
     
@@ -116,7 +116,7 @@ class MovieDetailsViewModel @Inject constructor() : BaseViewModel<MovieDetailsUi
     fun toggleLike() {
         launchSafely {
             val currentState = uiState.value.isLiked
-            updateState { it.copy(isLiked = !currentState) }
+            updateState { copy(isLiked = !currentState) }
             // TODO: In real implementation, save to database or remote service
         }
     }
@@ -140,14 +140,14 @@ class MovieDetailsViewModel @Inject constructor() : BaseViewModel<MovieDetailsUi
         val currentMovie = uiState.value.movie ?: return
         
         launchSafely {
-            updateState { it.copy(isDownloading = true) }
+            updateState { copy(isDownloading = true) }
             
             // TODO: In real implementation, start download service
             // Simulate download process
             kotlinx.coroutines.delay(2000)
             
             updateState { 
-                it.copy(
+                copy(
                     isDownloading = false,
                     isDownloaded = true
                 )
@@ -189,7 +189,7 @@ class MovieDetailsViewModel @Inject constructor() : BaseViewModel<MovieDetailsUi
     
     override fun handleError(exception: Throwable) {
         updateState { 
-            it.copy(
+            copy(
                 isLoading = false,
                 isDownloading = false,
                 error = "An error occurred: ${exception.message}"
