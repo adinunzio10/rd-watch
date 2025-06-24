@@ -39,6 +39,7 @@ import com.rdwatch.androidtv.ui.focus.AutoTVFocus
 import com.rdwatch.androidtv.ui.viewmodel.PlaybackViewModel
 import com.rdwatch.androidtv.ui.components.ResumeDialogOverlay
 import com.rdwatch.androidtv.ui.components.ContinueWatchingManager
+import com.rdwatch.androidtv.navigation.PlaybackNavigationHelper
 
 @Composable
 fun TVHomeScreen(
@@ -427,7 +428,8 @@ fun TVContentGrid(
                     { onShowContinueWatching() }
                 } else null,
                 onItemClick = { movie ->
-                    // TODO: Handle item click navigation
+                    // TODO: Handle item click navigation with proper resume logic
+                    // For now, just show basic functionality
                 }
             )
         }
