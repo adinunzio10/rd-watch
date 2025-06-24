@@ -1544,7 +1544,7 @@
         "description": "Implement basic versions of BrowseScreen, SettingsScreen, MovieDetailsScreen, and ProfileScreen that are referenced in navigation but don't exist yet.",
         "details": "Create four core screen composables with stub implementations:\n\n1. **BrowseScreen**: Main content discovery screen with grid layout for movies/shows. Add search bar, category filters (Movies, TV Shows, Trending). Include basic content grid using LazyVerticalGrid with placeholder cards. Implement navigation to MovieDetailsScreen on item click.\n\n2. **SettingsScreen**: App configuration screen with preference sections. Include Real Debrid account settings, playback preferences, subtitle options, and app theme selection. Use PreferenceCategory composables for organization. Add logout functionality and account status display.\n\n3. **MovieDetailsScreen**: Content detail view with poster, synopsis, cast info, and play button. Display metadata like runtime, genre, release date. Include trailer preview section and related content recommendations. Add library management buttons (Add to Library, Mark as Watched).\n\n4. **ProfileScreen**: User account overview with watch history, library statistics, and account management. Show Recently Watched section, Library summary (total movies/shows), and Real Debrid account info. Include quick access to downloaded content.\n\nEach screen should use Jetpack Compose with proper theming, handle loading states, and include basic error handling. Implement proper navigation arguments where needed (MovieDetailsScreen requires content ID). Add basic UI tests for each screen.",
         "testStrategy": "Test navigation to each screen without crashes. Verify proper theme application and UI responsiveness on TV screens. Test MovieDetailsScreen with valid content ID parameter. Verify SettingsScreen preference interactions. Test BrowseScreen grid layout with mock data. Ensure ProfileScreen displays placeholder content correctly. Test back navigation from all screens. Verify proper focus handling for TV remote navigation on each screen.",
-        "status": "in-progress",
+        "status": "done",
         "dependencies": [
           6
         ],
@@ -1556,7 +1556,7 @@
             "description": "Create BrowseScreen composable with basic Jetpack Compose layout optimized for Android TV navigation",
             "dependencies": [],
             "details": "Implement BrowseScreen using Compose with TV-specific focus handling, grid layout for content browsing, and proper remote control navigation support",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -1565,7 +1565,7 @@
             "description": "Create SettingsScreen composable with settings options layout for Android TV",
             "dependencies": [],
             "details": "Implement SettingsScreen with TV-friendly settings UI, focus management, and basic settings categories layout",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -1574,7 +1574,7 @@
             "description": "Create MovieDetailsScreen composable to display detailed movie information",
             "dependencies": [],
             "details": "Implement MovieDetailsScreen with movie poster, title, description, and action buttons optimized for TV viewing experience",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -1583,7 +1583,7 @@
             "description": "Create ProfileScreen composable with user profile information layout",
             "dependencies": [],
             "details": "Implement ProfileScreen with user avatar, profile information, and account settings optimized for TV navigation",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -1597,7 +1597,7 @@
               4
             ],
             "details": "Create ViewModels following MVVM pattern with proper state management, data handling, and lifecycle awareness for each screen",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -1611,7 +1611,7 @@
               4
             ],
             "details": "Configure NavHost, define navigation routes, implement screen transitions, and ensure proper back navigation handling for TV remote control",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -1623,7 +1623,7 @@
               5
             ],
             "details": "Add sample movie data, create content categories, implement grid layout with placeholder images and titles",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -1637,7 +1637,7 @@
               5
             ],
             "details": "Add sample settings options, movie details placeholder data, and profile information placeholders",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -1651,7 +1651,7 @@
               4
             ],
             "details": "Apply TV-appropriate colors, typography, and spacing from existing theme configuration to all screen components",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -1665,7 +1665,7 @@
               9
             ],
             "details": "Test remote control navigation, focus management, screen transitions, and ensure proper TV UX patterns are followed",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           }
         ]
@@ -1826,7 +1826,7 @@
     ],
     "metadata": {
       "created": "2025-06-22T03:41:46.714Z",
-      "updated": "2025-06-24T04:51:28.725Z",
+      "updated": "2025-06-24T05:18:09.920Z",
       "description": "Tasks for master context"
     }
   }

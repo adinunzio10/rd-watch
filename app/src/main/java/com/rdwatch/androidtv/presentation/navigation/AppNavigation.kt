@@ -6,6 +6,14 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.rdwatch.androidtv.ui.browse.BrowseScreen
+import com.rdwatch.androidtv.ui.settings.SettingsScreen
+import com.rdwatch.androidtv.ui.details.MovieDetailsScreen
+import com.rdwatch.androidtv.ui.profile.ProfileScreen
+import com.rdwatch.androidtv.ui.home.TVHomeScreen
+import com.rdwatch.androidtv.ui.search.SearchScreen
+import com.rdwatch.androidtv.MovieList
 
 @Composable
 fun AppNavigation(
@@ -19,22 +27,56 @@ fun AppNavigation(
         modifier = modifier
     ) {
         composable<Screen.Home> {
-            // TODO: Implement HomeScreen composable
-            // HomeScreen(navController = navController)
+            TVHomeScreen(
+                onNavigateToScreen = { screen ->
+                    navController.navigate(screen)
+                },
+                onMovieClick = { movie ->
+                    navController.navigate(Screen.MovieDetails(movie.id.toString()))
+                }
+            )
         }
         
         composable<Screen.Browse> {
-            // TODO: Implement BrowseScreen composable
-            // BrowseScreen(navController = navController)
+            BrowseScreen(
+                onMovieClick = { movie ->
+                    navController.navigate(Screen.MovieDetails(movie.id.toString()))
+                },
+                onBackPressed = {
+                    navController.popBackStack()
+                }
+            )
         }
         
         composable<Screen.MovieDetails> { backStackEntry ->
             val movieDetails = backStackEntry.toRoute<Screen.MovieDetails>()
-            // TODO: Implement MovieDetailsScreen composable
-            // MovieDetailsScreen(
-            //     movieId = movieDetails.movieId,
-            //     navController = navController
-            // )
+            // Find the movie by ID
+            val movie = MovieList.list.find { it.id.toString() == movieDetails.movieId }
+            
+            if (movie != null) {
+                MovieDetailsScreen(
+                    movie = movie,
+                    onPlayClick = { selectedMovie ->
+                        navController.navigate(
+                            Screen.VideoPlayer(
+                                videoUrl = selectedMovie.videoUrl ?: "",
+                                title = selectedMovie.title ?: ""
+                            )
+                        )
+                    },
+                    onBackPressed = {
+                        navController.popBackStack()
+                    }
+                )
+            } else {
+                // Handle movie not found - navigate to error screen
+                navController.navigate(
+                    Screen.Error(
+                        message = "Movie not found",
+                        canRetry = true
+                    )
+                )
+            }
         }
         
         composable<Screen.VideoPlayer> { backStackEntry ->
@@ -48,18 +90,33 @@ fun AppNavigation(
         }
         
         composable<Screen.Search> {
-            // TODO: Implement SearchScreen composable
-            // SearchScreen(navController = navController)
+            SearchScreen(
+                onMovieClick = { movie ->
+                    navController.navigate(Screen.MovieDetails(movie.id.toString()))
+                },
+                onBackPressed = {
+                    navController.popBackStack()
+                }
+            )
         }
         
         composable<Screen.Settings> {
-            // TODO: Implement SettingsScreen composable
-            // SettingsScreen(navController = navController)
+            SettingsScreen(
+                onBackPressed = {
+                    navController.popBackStack()
+                }
+            )
         }
         
         composable<Screen.Profile> {
-            // TODO: Implement ProfileScreen composable
-            // ProfileScreen(navController = navController)
+            ProfileScreen(
+                onMovieClick = { movie ->
+                    navController.navigate(Screen.MovieDetails(movie.id.toString()))
+                },
+                onBackPressed = {
+                    navController.popBackStack()
+                }
+            )
         }
         
         composable<Screen.Error> { backStackEntry ->
