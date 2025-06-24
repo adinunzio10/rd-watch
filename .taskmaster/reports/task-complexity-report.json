@@ -1,9 +1,9 @@
 {
 	"meta": {
-		"generatedAt": "2025-06-22T03:47:13.678Z",
-		"tasksAnalyzed": 25,
-		"totalTasks": 25,
-		"analysisCount": 25,
+		"generatedAt": "2025-06-24T04:46:12.284Z",
+		"tasksAnalyzed": 19,
+		"totalTasks": 30,
+		"analysisCount": 30,
 		"thresholdScore": 5,
 		"projectName": "rd-watch",
 		"usedResearch": true
@@ -82,22 +82,6 @@
 			"reasoning": "Complex multi-source search with TV input challenges, voice integration, and result aggregation requiring sophisticated coordination"
 		},
 		{
-			"taskId": 10,
-			"taskTitle": "Implement Direct Account File Browser",
-			"complexityScore": 6,
-			"recommendedSubtasks": 8,
-			"expansionPrompt": "Create file browser UI, implement pagination, add sorting/filtering, handle file metadata display, implement bulk operations, add caching layer, create refresh mechanism, and optimize for large lists",
-			"reasoning": "Moderate complexity with pagination, filtering, and performance considerations for large file lists"
-		},
-		{
-			"taskId": 11,
-			"taskTitle": "Build Content Details Screen",
-			"complexityScore": 7,
-			"recommendedSubtasks": 9,
-			"expansionPrompt": "Design detail layout, integrate TMDb API, display source information, implement action buttons, create episode grid for TV shows, add recommendations, handle landscape layout, and manage loading states",
-			"reasoning": "Multiple data sources integration with complex UI layout and TV-specific design considerations"
-		},
-		{
 			"taskId": 12,
 			"taskTitle": "Integrate ExoPlayer for Video Playback",
 			"complexityScore": 9,
@@ -114,100 +98,156 @@
 			"reasoning": "Requires careful state management and synchronization with multiple edge cases to handle"
 		},
 		{
+			"taskId": 10,
+			"taskTitle": "Implement Direct Account File Browser",
+			"complexityScore": 7,
+			"recommendedSubtasks": 12,
+			"expansionPrompt": "Break down the file browser implementation into UI components (list/grid views, sorting controls, filter UI), API integration (pagination, data fetching, caching), file operations (selection, deletion, type detection), and state management (sorting, filtering, selection state).",
+			"reasoning": "Complex feature requiring multiple UI components, API integration with pagination, Room database caching, sorting/filtering logic, and file type detection. Involves both frontend and backend work with performance considerations for large file lists."
+		},
+		{
+			"taskId": 11,
+			"taskTitle": "Build Content Details Screen",
+			"complexityScore": 8,
+			"recommendedSubtasks": 14,
+			"expansionPrompt": "Divide into metadata integration (TMDb API setup, data fetching, caching), UI layout (backdrop/poster display, info sections, action buttons), source management (display, sorting, selection dialog), TV show handling (season/episode grid, watched states), and recommendations section.",
+			"reasoning": "High complexity due to multiple API integrations (TMDb + scrapers), complex UI with different layouts for movies/TV shows, source selection logic, and TV-specific navigation patterns. Requires careful state management and error handling."
+		},
+		{
 			"taskId": 14,
 			"taskTitle": "Build Library Management System",
 			"complexityScore": 6,
-			"recommendedSubtasks": 8,
-			"expansionPrompt": "Create library database structure, implement CRUD operations, design library UI, add sorting/filtering, implement quick actions, add search, create export/import, and cache management",
-			"reasoning": "Standard CRUD operations with additional features like export/import and image caching"
+			"recommendedSubtasks": 10,
+			"expansionPrompt": "Structure around core library operations (CRUD), UI components (grid layout, category filters, sort controls), data persistence (Room entities, ViewModels), advanced features (search, export/import, statistics), and offline support (image caching).",
+			"reasoning": "Moderate complexity involving CRUD operations, Room database design, UI with filtering/sorting, and additional features like export/import. Well-defined scope with clear data flow patterns."
 		},
 		{
 			"taskId": 15,
 			"taskTitle": "Implement Smart Episode Progression",
 			"complexityScore": 7,
-			"recommendedSubtasks": 9,
-			"expansionPrompt": "Build progression logic, handle season boundaries, create continue watching feature, implement binge mode, add skip functionality, create progress indicators, handle special episodes, and support custom orders",
-			"reasoning": "Complex logic for episode tracking with multiple edge cases and user experience features"
+			"recommendedSubtasks": 11,
+			"expansionPrompt": "Break into episode tracking logic (progression calculation, boundary handling), UI components (continue watching row, progress indicators), playback features (auto-play, countdown timer), special cases (anthologies, special episodes), and notification system.",
+			"reasoning": "Complex logic for episode progression with many edge cases (season boundaries, special episodes, anthologies). Requires careful state management and integration with playback system."
 		},
 		{
 			"taskId": 16,
 			"taskTitle": "Create Advanced Source Selection UI",
-			"complexityScore": 6,
+			"complexityScore": 5,
 			"recommendedSubtasks": 8,
-			"expansionPrompt": "Design source picker UI, implement quality badges, create smart sorting algorithm, add filters, show health indicators, implement grouping, add tooltips, and handle season packs",
-			"reasoning": "Moderate UI complexity with sorting algorithms and multiple data display requirements"
+			"expansionPrompt": "Organize into UI design (bottom sheet, quality badges, tooltips), source data display (metadata parsing, grouping), filtering system (quick filters, search), sorting algorithm implementation, and performance optimization for large source lists.",
+			"reasoning": "Focused UI component with moderate complexity. Main challenges are smart sorting algorithm and handling large numbers of sources efficiently. Clear scope with well-defined requirements."
 		},
 		{
 			"taskId": 17,
 			"taskTitle": "Implement External Subtitle Integration",
 			"complexityScore": 8,
-			"recommendedSubtasks": 10,
-			"expansionPrompt": "Integrate multiple subtitle APIs, implement hash calculation, create search logic, build selection UI, handle multiple formats, add caching, implement sync controls, support manual files, and add styling options",
-			"reasoning": "Multiple API integrations with complex matching algorithms and format handling requirements"
+			"recommendedSubtasks": 13,
+			"expansionPrompt": "Divide into API integrations (Subdl, SubDB, Podnapisi), hash calculation system, search implementations (hash-based, name-based), subtitle management (download, cache, format parsing), playback integration (sync controls, styling), and manual file handling.",
+			"reasoning": "High complexity due to multiple API integrations, file hash calculations, various subtitle formats, and real-time synchronization features. Requires careful error handling and format compatibility."
 		},
 		{
 			"taskId": 18,
 			"taskTitle": "Build Download Management Interface",
 			"complexityScore": 7,
-			"recommendedSubtasks": 9,
-			"expansionPrompt": "Create download UI, implement torrent addition flow, handle file selection, add progress monitoring, create background service, implement notifications, add queue management, create history, and handle cleanup",
-			"reasoning": "Background service complexity with real-time updates and system integration requirements"
+			"recommendedSubtasks": 12,
+			"expansionPrompt": "Structure around UI screens (active/completed sections), torrent operations (add magnet/file, file selection), progress monitoring (polling/WebSocket), background service (WorkManager setup), queue management, notifications, and settings integration.",
+			"reasoning": "Complex feature involving background services, real-time updates, file management, and system notifications. Requires careful lifecycle management and error handling."
 		},
 		{
 			"taskId": 19,
 			"taskTitle": "Implement Settings and Preferences",
-			"complexityScore": 5,
-			"recommendedSubtasks": 7,
-			"expansionPrompt": "Create settings UI structure, implement preference categories, integrate DataStore, add theme switching, implement parental controls, create backup/restore, and handle migrations",
-			"reasoning": "Standard settings implementation with some additional features like theme switching and parental controls"
+			"complexityScore": 6,
+			"recommendedSubtasks": 10,
+			"expansionPrompt": "Organize by preference categories (Account, Playback, Display, Network, Storage, Scrapers), DataStore implementation, theme system, player preferences, parental controls, and backup/restore functionality.",
+			"reasoning": "Moderate complexity with many settings categories but straightforward implementation using DataStore. Main challenges are theme switching and preference migration."
 		},
 		{
 			"taskId": 20,
 			"taskTitle": "Create Season Pack Detection System",
-			"complexityScore": 7,
-			"recommendedSubtasks": 8,
-			"expansionPrompt": "Implement pattern matching, create file analysis logic, build mapping system, store pack information, implement reuse logic, create UI indicators, handle edge cases, and add preferences",
-			"reasoning": "Complex pattern matching with multiple edge cases and intelligent reuse system"
+			"complexityScore": 6,
+			"recommendedSubtasks": 9,
+			"expansionPrompt": "Break into pattern matching engine, file analysis logic, Room database schema for pack storage, episode mapping system, UI indicators, preference management, and edge case handling (double episodes, incomplete packs).",
+			"reasoning": "Moderate complexity focused on pattern recognition and data mapping. Requires careful handling of various naming conventions and edge cases."
 		},
 		{
 			"taskId": 21,
 			"taskTitle": "Implement Episode Numbering Inconsistency Handler",
-			"complexityScore": 8,
-			"recommendedSubtasks": 10,
-			"expansionPrompt": "Create flagging system, integrate multiple APIs, build mapping tables, implement guide switching UI, handle different numbering schemes, add community features, support order variations, and create overrides",
-			"reasoning": "Complex cross-API integration with community features and multiple numbering scheme handling"
+			"complexityScore": 9,
+			"recommendedSubtasks": 15,
+			"expansionPrompt": "Divide into flagging system, multi-API integration (TMDb, TVDb, Trakt), mapping database design, UI for guide selection, community submission system, special case handlers (production vs air order), and manual override mechanisms.",
+			"reasoning": "Very high complexity due to multiple API integrations, complex mapping logic, community features, and handling of various edge cases. Requires sophisticated data reconciliation."
 		},
 		{
 			"taskId": 22,
 			"taskTitle": "Build Auto-play with Intelligent Source Selection",
-			"complexityScore": 9,
+			"complexityScore": 8,
 			"recommendedSubtasks": 11,
-			"expansionPrompt": "Design ranking algorithm, implement learning system, create fallback chains, add pre-fetching, implement pack reuse, add health monitoring, integrate preferences, create reasoning UI, and optimize performance",
-			"reasoning": "Sophisticated ML-like system with complex algorithms, learning capabilities, and multiple optimization strategies"
+			"expansionPrompt": "Already has 11 subtasks defined. Focus on refining the ranking algorithm implementation, learning system architecture, and integration with existing source selection and playback systems.",
+			"reasoning": "High complexity with existing subtask breakdown. Involves machine learning concepts, complex ranking algorithms, and integration with multiple existing systems."
 		},
 		{
 			"taskId": 23,
 			"taskTitle": "Implement Voice Search and Commands",
-			"complexityScore": 7,
+			"complexityScore": 6,
 			"recommendedSubtasks": 9,
-			"expansionPrompt": "Integrate voice APIs, implement command recognition, create search activity, add continuous listening, implement NLP, add voice feedback, support multiple languages, create training UI, and handle ambiguity",
-			"reasoning": "Voice integration complexity with natural language processing and multi-language support"
+			"expansionPrompt": "Structure around Android TV voice APIs integration, command recognition system, natural language processing, voice feedback (TTS), multi-language support, continuous listening mode, and ambiguous result handling.",
+			"reasoning": "Moderate complexity using Android TV APIs. Main challenges are natural language processing and handling various voice input scenarios."
 		},
 		{
 			"taskId": 24,
 			"taskTitle": "Create Android TV Recommendations",
-			"complexityScore": 6,
+			"complexityScore": 5,
 			"recommendedSubtasks": 8,
-			"expansionPrompt": "Implement recommendation service, create channels, build recommendations, setup periodic updates, handle deep-linking, add preferences, implement smart logic, and track analytics",
-			"reasoning": "System integration with periodic updates and recommendation algorithms"
+			"expansionPrompt": "Organize into recommendation service setup, channel creation, content selection algorithms, WorkManager scheduling, deep-link handling, preference controls, and analytics integration.",
+			"reasoning": "Moderate complexity using standard Android TV APIs. Well-documented patterns with clear implementation guidelines."
 		},
 		{
 			"taskId": 25,
 			"taskTitle": "Optimize Performance and Polish UI",
-			"complexityScore": 8,
+			"complexityScore": 7,
 			"recommendedSubtasks": 12,
-			"expansionPrompt": "Profile performance, optimize images, add baseline profiles, implement animations, optimize database, add shortcuts, implement error boundaries, add loading states, optimize recomposition, ensure accessibility, add haptics, and create onboarding",
-			"reasoning": "Comprehensive optimization requiring profiling, multiple performance techniques, and polish across entire app"
+			"expansionPrompt": "Break into performance profiling, image optimization, Baseline Profiles, animation implementation, database optimization, error boundaries, loading states, focus management, and onboarding flow creation.",
+			"reasoning": "High complexity due to broad scope covering performance, animations, and UX polish. Requires profiling tools and iterative optimization."
+		},
+		{
+			"taskId": 26,
+			"taskTitle": "Fix Navigation System Integration",
+			"complexityScore": 4,
+			"recommendedSubtasks": 6,
+			"expansionPrompt": "Focus on NavHost setup in MainActivity, navigation graph configuration, navigation handler implementations, focus management integration, deep linking setup, and back stack configuration.",
+			"reasoning": "Low-moderate complexity as it's mainly wiring existing components. Clear scope with well-defined navigation patterns for Android TV."
+		},
+		{
+			"taskId": 27,
+			"taskTitle": "Implement Missing Click Handlers and User Interactions",
+			"complexityScore": 5,
+			"recommendedSubtasks": 8,
+			"expansionPrompt": "Organize by component (HomeScreen, ContentRow), implement navigation handlers, create ViewModels for state management, add TV focus handling, implement loading states, and create error handling patterns.",
+			"reasoning": "Moderate complexity involving multiple UI components but straightforward implementation. Main work is connecting existing UI to navigation and state management."
+		},
+		{
+			"taskId": 28,
+			"taskTitle": "Create Missing Core Screens",
+			"complexityScore": 6,
+			"recommendedSubtasks": 10,
+			"expansionPrompt": "Create each screen as a subtask (BrowseScreen, SettingsScreen, MovieDetailsScreen, ProfileScreen), implement basic layouts, add navigation integration, create ViewModels, and add placeholder content with proper theming.",
+			"reasoning": "Moderate complexity creating four new screens with basic functionality. Each screen is relatively straightforward but requires proper architecture and TV UI patterns."
+		},
+		{
+			"taskId": 29,
+			"taskTitle": "Integrate OAuth Authentication into App Flow",
+			"complexityScore": 5,
+			"recommendedSubtasks": 8,
+			"expansionPrompt": "Structure around startup auth check, authentication UI screen, navigation graph states (authenticated/unauthenticated), token management, sign-out functionality, error handling, and edge case management.",
+			"reasoning": "Moderate complexity integrating existing OAuth system into app flow. Main challenges are state management and handling various authentication scenarios."
+		},
+		{
+			"taskId": 30,
+			"taskTitle": "Replace Mock Data with Real-Debrid API Integration",
+			"complexityScore": 7,
+			"recommendedSubtasks": 11,
+			"expansionPrompt": "Break into repository updates, API data transformation, Room database population, ViewModel modifications, refresh mechanisms, error handling, pagination implementation, and background sync setup.",
+			"reasoning": "High complexity replacing all mock data with real API integration. Requires careful data transformation, error handling, and performance optimization for large datasets."
 		}
 	]
 }

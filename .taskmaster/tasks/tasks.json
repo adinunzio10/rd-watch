@@ -1188,7 +1188,7 @@
           6,
           12
         ],
-        "status": "in-progress",
+        "status": "done",
         "subtasks": []
       },
       {
@@ -1509,11 +1509,324 @@
         ],
         "status": "pending",
         "subtasks": []
+      },
+      {
+        "id": 26,
+        "title": "Fix Navigation System Integration",
+        "description": "Wire MainActivity to use AppNavigation system instead of bypassing it, replacing direct TVHomeScreen() call with NavHost setup and implementing proper navigation between screens.",
+        "details": "Replace the direct TVHomeScreen() call in MainActivity with proper NavHost setup using Compose Navigation. Uncomment and configure navigation destinations in AppNavigation.kt including Home, Search, Library, Downloads, and Settings screens. Implement click handlers in navigation drawer and menu items to actually navigate between screens using NavController. Set up proper navigation graph with startDestination pointing to home screen. Configure navigation animations suitable for TV (slide transitions). Implement back stack management for TV navigation patterns. Add proper focus management when navigating between screens to ensure D-pad navigation works correctly. Create NavigationViewModel to handle navigation state and deep linking. Ensure all navigation actions use the centralized navigation system rather than direct screen calls. Configure proper argument passing between screens for content details navigation.",
+        "testStrategy": "Test navigation flow between all screens using D-pad controls. Verify proper focus restoration when returning to previous screens. Test back button navigation and back stack management. Verify navigation drawer opens and closes correctly with menu selections working. Test deep linking to specific screens. Verify no direct screen instantiation bypasses the navigation system. Test navigation state persistence across configuration changes. Verify proper animation transitions between screens on TV devices.",
+        "status": "pending",
+        "dependencies": [
+          7,
+          3
+        ],
+        "priority": "high",
+        "subtasks": []
+      },
+      {
+        "id": 27,
+        "title": "Implement Missing Click Handlers and User Interactions",
+        "description": "Replace all TODO click handlers in HomeScreen, ContentRow, and other UI components with actual navigation and functionality to enable basic user interaction.",
+        "details": "Replace placeholder click handlers throughout the UI components. In HomeScreen.kt, implement movie card click navigation to detail screen using NavController. In ContentRow.kt, add movie selection logic that updates selected state and triggers detail view. Implement resume dialog navigation from continue watching cards - check playback state and show resume/restart options. Add focus handling for TV remote navigation using Modifier.focusable() and onFocusChanged. Create MovieDetailViewModel to handle movie selection state. Implement deep-link handling for recommendations and external navigation. Add haptic feedback for button presses using LocalHapticFeedback. Handle loading states during navigation transitions. Implement back navigation handling and proper fragment/screen stack management. Add click animations and visual feedback for better UX. Create proper error handling for failed navigation attempts.",
+        "testStrategy": "Test all click handlers respond correctly on Android TV emulator with remote. Verify movie cards navigate to detail screen with correct movie data. Test resume dialog shows when clicking continue watching items. Test focus navigation works properly with D-pad controls. Verify back button navigation maintains proper screen stack. Test deep-link handling from Android TV launcher recommendations. Test loading states during navigation transitions. Verify error handling for network failures during navigation. Test with physical Android TV remote control. Test accessibility navigation with TalkBack enabled.",
+        "status": "pending",
+        "dependencies": [
+          13,
+          19
+        ],
+        "priority": "high",
+        "subtasks": []
+      },
+      {
+        "id": 28,
+        "title": "Create Missing Core Screens",
+        "description": "Implement basic versions of BrowseScreen, SettingsScreen, MovieDetailsScreen, and ProfileScreen that are referenced in navigation but don't exist yet.",
+        "details": "Create four core screen composables with stub implementations:\n\n1. **BrowseScreen**: Main content discovery screen with grid layout for movies/shows. Add search bar, category filters (Movies, TV Shows, Trending). Include basic content grid using LazyVerticalGrid with placeholder cards. Implement navigation to MovieDetailsScreen on item click.\n\n2. **SettingsScreen**: App configuration screen with preference sections. Include Real Debrid account settings, playback preferences, subtitle options, and app theme selection. Use PreferenceCategory composables for organization. Add logout functionality and account status display.\n\n3. **MovieDetailsScreen**: Content detail view with poster, synopsis, cast info, and play button. Display metadata like runtime, genre, release date. Include trailer preview section and related content recommendations. Add library management buttons (Add to Library, Mark as Watched).\n\n4. **ProfileScreen**: User account overview with watch history, library statistics, and account management. Show Recently Watched section, Library summary (total movies/shows), and Real Debrid account info. Include quick access to downloaded content.\n\nEach screen should use Jetpack Compose with proper theming, handle loading states, and include basic error handling. Implement proper navigation arguments where needed (MovieDetailsScreen requires content ID). Add basic UI tests for each screen.",
+        "testStrategy": "Test navigation to each screen without crashes. Verify proper theme application and UI responsiveness on TV screens. Test MovieDetailsScreen with valid content ID parameter. Verify SettingsScreen preference interactions. Test BrowseScreen grid layout with mock data. Ensure ProfileScreen displays placeholder content correctly. Test back navigation from all screens. Verify proper focus handling for TV remote navigation on each screen.",
+        "status": "in-progress",
+        "dependencies": [
+          6
+        ],
+        "priority": "high",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create BrowseScreen with basic layout",
+            "description": "Create BrowseScreen composable with basic Jetpack Compose layout optimized for Android TV navigation",
+            "dependencies": [],
+            "details": "Implement BrowseScreen using Compose with TV-specific focus handling, grid layout for content browsing, and proper remote control navigation support",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Create SettingsScreen with basic layout",
+            "description": "Create SettingsScreen composable with settings options layout for Android TV",
+            "dependencies": [],
+            "details": "Implement SettingsScreen with TV-friendly settings UI, focus management, and basic settings categories layout",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Create MovieDetailsScreen with basic layout",
+            "description": "Create MovieDetailsScreen composable to display detailed movie information",
+            "dependencies": [],
+            "details": "Implement MovieDetailsScreen with movie poster, title, description, and action buttons optimized for TV viewing experience",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Create ProfileScreen with basic layout",
+            "description": "Create ProfileScreen composable with user profile information layout",
+            "dependencies": [],
+            "details": "Implement ProfileScreen with user avatar, profile information, and account settings optimized for TV navigation",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Create ViewModels for each screen",
+            "description": "Implement ViewModel classes for BrowseScreen, SettingsScreen, MovieDetailsScreen, and ProfileScreen",
+            "dependencies": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "details": "Create ViewModels following MVVM pattern with proper state management, data handling, and lifecycle awareness for each screen",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 6,
+            "title": "Implement navigation integration",
+            "description": "Set up Jetpack Navigation Compose to connect all screens with proper TV navigation",
+            "dependencies": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "details": "Configure NavHost, define navigation routes, implement screen transitions, and ensure proper back navigation handling for TV remote control",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 7,
+            "title": "Add placeholder content to BrowseScreen",
+            "description": "Populate BrowseScreen with placeholder movie data and content categories",
+            "dependencies": [
+              1,
+              5
+            ],
+            "details": "Add sample movie data, create content categories, implement grid layout with placeholder images and titles",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 8,
+            "title": "Add placeholder content to other screens",
+            "description": "Populate SettingsScreen, MovieDetailsScreen, and ProfileScreen with placeholder content",
+            "dependencies": [
+              2,
+              3,
+              4,
+              5
+            ],
+            "details": "Add sample settings options, movie details placeholder data, and profile information placeholders",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 9,
+            "title": "Apply proper theming to all screens",
+            "description": "Ensure all screens use consistent Material3 theming optimized for TV displays",
+            "dependencies": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "details": "Apply TV-appropriate colors, typography, and spacing from existing theme configuration to all screen components",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 10,
+            "title": "Test navigation and focus handling",
+            "description": "Verify proper navigation flow and remote control focus handling across all screens",
+            "dependencies": [
+              6,
+              7,
+              8,
+              9
+            ],
+            "details": "Test remote control navigation, focus management, screen transitions, and ensure proper TV UX patterns are followed",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 29,
+        "title": "Integrate OAuth Authentication into App Flow",
+        "description": "Connect the completed OAuth system to app startup sequence, add authentication state checks, create sign-in entry points, and implement post-authentication routing to make OAuth actually usable.",
+        "details": "Modify MainActivity to check authentication state on startup using AuthViewModel. Add authentication state flow observation to redirect unauthenticated users to sign-in screen. Create sign-in entry points in navigation menu and settings screen. Implement AuthenticationScreen composable that displays OAuth flow UI with device code and QR code. Add authenticated/unauthenticated navigation graph states using Compose Navigation. Create post-authentication routing logic to redirect users to their intended destination or default browse screen. Implement sign-out functionality in settings with token cleanup. Add authentication state persistence across app restarts using stored tokens. Create loading states during token validation on app startup. Handle edge cases: expired tokens during app use, network failures during auth check, interrupted OAuth flow. Add proper error handling with user-friendly messages for authentication failures.",
+        "testStrategy": "Test app startup with no stored tokens redirects to sign-in. Verify successful OAuth flow navigates to browse screen. Test token expiration during app use triggers re-authentication. Verify sign-out clears tokens and navigates to sign-in. Test network failures during startup auth check. Verify deep linking works after authentication. Test app restart maintains authentication state. Verify all navigation entry points respect authentication state. Test interrupted OAuth flow recovery.",
+        "status": "pending",
+        "dependencies": [
+          5,
+          28
+        ],
+        "priority": "high",
+        "subtasks": []
+      },
+      {
+        "id": 30,
+        "title": "Replace Mock Data with Real-Debrid API Integration",
+        "description": "Connect UI components to actual Real-Debrid API data instead of hardcoded MovieList.MOCK_DATA. Update repositories to fetch real data, populate database from API responses, connect ViewModels to real data sources.",
+        "details": "Replace MovieList.MOCK_DATA usage throughout the application with Real-Debrid API calls. Create ContentRepository that fetches movie/TV show data from Real-Debrid user library, torrents, and downloads endpoints. Implement data transformation from Real-Debrid API responses to local ContentEntity models. Update MovieRepository to use RealDebridApi service instead of static data. Create data synchronization logic to populate Room database from API responses with proper error handling and offline caching. Modify ViewModels (HomeViewModel, BrowseViewModel, etc.) to use repository Flow emissions instead of static lists. Implement refresh mechanisms with SwipeRefresh or pull-to-refresh patterns. Add loading states and error handling for network failures. Create data mapping functions to transform Real-Debrid torrent info, user library items, and download status into app's content models. Set up periodic background sync using WorkManager to keep local data fresh. Handle pagination for large content libraries and implement incremental loading for better performance.",
+        "testStrategy": "Test API integration with actual Real-Debrid account and verify data flows correctly to UI. Mock Real-Debrid API responses to test various data scenarios including empty libraries, failed requests, and large datasets. Verify database population from API responses with proper entity relationships. Test offline functionality when API is unavailable - app should display cached data. Test loading states and error handling for network timeouts and API errors. Verify ViewModels emit correct data states and UI updates reactively. Test data refresh mechanisms and verify stale data is properly updated. Use integration tests to verify complete data flow from API to UI components. Test pagination and incremental loading with large content libraries. Verify background sync works correctly and doesn't impact app performance.",
+        "status": "pending",
+        "dependencies": [
+          4,
+          6,
+          8,
+          29
+        ],
+        "priority": "high",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Repository Updates",
+            "description": "Update repository layer to integrate with real API endpoints instead of mock data",
+            "dependencies": [],
+            "details": "Modify existing repository classes to make HTTP requests to actual API endpoints, remove mock data generation, and implement proper API client configuration",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "API Data Transformation",
+            "description": "Implement data transformation layer to convert API responses to domain models",
+            "dependencies": [
+              1
+            ],
+            "details": "Create data mappers and DTOs to transform raw API responses into the existing Movie data model, handle nested objects and optional fields",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Room Database Population",
+            "description": "Set up Room database entities and DAOs for local data storage",
+            "dependencies": [
+              2
+            ],
+            "details": "Create Room database schema, entities matching the Movie model, DAOs for CRUD operations, and database migration strategies",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "ViewModel Modifications",
+            "description": "Update ViewModels to work with repository and handle API data flow",
+            "dependencies": [
+              3
+            ],
+            "details": "Modify existing ViewModels to consume data from repository layer, manage loading states, and handle data binding with Compose UI",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Refresh Mechanisms",
+            "description": "Implement pull-to-refresh and manual refresh functionality",
+            "dependencies": [
+              4
+            ],
+            "details": "Add swipe-to-refresh gestures for Android TV remote navigation, implement manual refresh buttons, and coordinate refresh operations across components",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 6,
+            "title": "Error Handling",
+            "description": "Implement comprehensive error handling for API failures and network issues",
+            "dependencies": [
+              2
+            ],
+            "details": "Create error handling strategies for network failures, API errors, data parsing errors, and user-friendly error messages with retry mechanisms",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 7,
+            "title": "Pagination Implementation",
+            "description": "Add pagination support for large datasets from API",
+            "dependencies": [
+              2,
+              6
+            ],
+            "details": "Implement pagination logic in repository layer, create infinite scroll for Android TV navigation, and manage page loading states",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 8,
+            "title": "Background Sync Setup",
+            "description": "Configure background synchronization using WorkManager",
+            "dependencies": [
+              3,
+              6
+            ],
+            "details": "Set up WorkManager for periodic data sync, handle sync conflicts, implement sync status indicators, and configure sync policies",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 9,
+            "title": "Performance Optimization",
+            "description": "Optimize data loading and caching for large datasets",
+            "dependencies": [
+              7,
+              8
+            ],
+            "details": "Implement efficient caching strategies, optimize database queries, add data prefetching, and minimize memory usage during data operations",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 10,
+            "title": "Testing Integration",
+            "description": "Create tests for API integration and data flow",
+            "dependencies": [
+              9
+            ],
+            "details": "Write unit tests for repository layer, integration tests for API calls, database tests, and UI tests for data loading scenarios",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 11,
+            "title": "Documentation and Cleanup",
+            "description": "Update documentation and remove obsolete mock data code",
+            "dependencies": [
+              10
+            ],
+            "details": "Update CLAUDE-architecture.md with new data flow, clean up mock data files, document API integration patterns, and update development setup instructions",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
       }
     ],
     "metadata": {
       "created": "2025-06-22T03:41:46.714Z",
-      "updated": "2025-06-24T02:27:48.408Z",
+      "updated": "2025-06-24T04:51:28.725Z",
       "description": "Tasks for master context"
     }
   }
