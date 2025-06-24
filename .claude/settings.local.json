@@ -42,7 +42,9 @@
       "Bash(ls:*)",
       "Bash(gh run list:*)",
       "Bash(gh run view:*)",
-      "Bash(rg:*)"
+      "Bash(rg:*)",
+      "Bash(gh workflow:*)",
+      "Bash(gh run watch:*)"
     ],
     "deny": []
   }
