@@ -39,7 +39,9 @@
       "Bash(task-master set-status:*)",
       "Bash(task-master:*)",
       "Bash(echo)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(gh run list:*)",
+      "Bash(gh run view:*)"
     ],
     "deny": []
   }
