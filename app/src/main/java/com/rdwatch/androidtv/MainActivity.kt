@@ -3,7 +3,6 @@ package com.rdwatch.androidtv
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.work.WorkManager
 import com.rdwatch.androidtv.navigation.PlaybackNavigationHelper
 import com.rdwatch.androidtv.ui.home.TVHomeScreen
 import com.rdwatch.androidtv.ui.theme.RdwatchTheme
@@ -27,7 +26,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         
         // Schedule periodic cleanup of old playback data
-        playbackCleanupManager.scheduleCleanup(WorkManager.getInstance(this))
+        playbackCleanupManager.scheduleCleanup()
         
         setContent {
             RdwatchTheme {

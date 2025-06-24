@@ -2,14 +2,15 @@ package com.rdwatch.androidtv.navigation
 
 import com.rdwatch.androidtv.Movie
 import com.rdwatch.androidtv.player.ExoPlayerManager
-import com.rdwatch.androidtv.ui.viewmodel.PlaybackViewModel
+import com.rdwatch.androidtv.player.MediaMetadata
+import com.rdwatch.androidtv.player.state.PlaybackStateRepository
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class PlaybackNavigationHelper @Inject constructor(
     private val exoPlayerManager: ExoPlayerManager,
-    private val playbackViewModel: PlaybackViewModel
+    private val playbackStateRepository: PlaybackStateRepository
 ) {
     
     /**
@@ -24,7 +25,7 @@ class PlaybackNavigationHelper @Inject constructor(
         
         if (startFromBeginning) {
             // Remove any existing progress to start fresh
-            playbackViewModel.removeFromContinueWatching(contentId)
+            playbackStateRepository.removePlaybackPosition(contentId)
         }
         
         // Prepare media with content ID for progress tracking
@@ -90,7 +91,8 @@ class PlaybackNavigationHelper @Inject constructor(
         if (playerState.progressPercentage >= 0.9f && playerState.mediaUrl != null) {
             val contentId = getCurrentContentId()
             if (contentId != null) {
-                playbackViewModel.markAsCompleted(contentId)
+                // Mark as completed by removing from continue watching
+                playbackStateRepository.removePlaybackPosition(contentId)
             }
         }
         
@@ -125,9 +127,9 @@ class PlaybackNavigationHelper @Inject constructor(
      */
     fun checkAndShowResumeDialog(movie: Movie): Boolean {
         val contentId = movie.videoUrl ?: movie.title ?: "unknown"
-        val progress = playbackViewModel.getContentProgress(contentId)
+        val playbackPosition = playbackStateRepository.getPlaybackPosition(contentId)
         
-        return if (progress > 0.05f && progress < 0.95f) {
+        return if (playbackPosition != null && playbackPosition.progressPercentage > 0.05f && playbackPosition.progressPercentage < 0.95f) {
             // Content has meaningful progress, show dialog
             // This would typically trigger a dialog in the UI
             true
@@ -154,23 +156,12 @@ class PlaybackNavigationHelper @Inject constructor(
     
     private fun createMediaMetadata(movie: Movie): MediaMetadata {
         return MediaMetadata(
+            title = movie.title,
             description = movie.description,
             thumbnailUrl = movie.cardImageUrl
         )
     }
 }
-
-/**
- * Media metadata for playback
- */
-data class MediaMetadata(
-    val description: String? = null,
-    val thumbnailUrl: String? = null,
-    val studio: String? = null,
-    val genre: String? = null,
-    val year: Int? = null,
-    val duration: Long? = null
-)
 
 /**
  * Navigation events for playback

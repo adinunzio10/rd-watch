@@ -33,7 +33,11 @@
       "Bash(sudo pacman:*)",
       "Bash(pacman:*)",
       "Bash(wget:*)",
-      "Bash(git branch:*)"
+      "Bash(git branch:*)",
+      "Bash(task-master list:*)",
+      "Bash(task-master show:*)",
+      "Bash(task-master set-status:*)",
+      "Bash(task-master:*)"
     ],
     "deny": []
   }

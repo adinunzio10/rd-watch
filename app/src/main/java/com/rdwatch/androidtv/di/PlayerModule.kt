@@ -2,6 +2,7 @@ package com.rdwatch.androidtv.di
 
 import android.content.Context
 import androidx.media3.common.util.UnstableApi
+import com.rdwatch.androidtv.data.repository.PlaybackProgressRepository
 import com.rdwatch.androidtv.player.ExoPlayerManager
 import com.rdwatch.androidtv.player.MediaSourceFactory
 import com.rdwatch.androidtv.player.state.PlaybackStateRepository
@@ -29,9 +30,10 @@ object PlayerModule {
     @Provides
     @Singleton
     fun providePlaybackStateRepository(
-        @ApplicationContext context: Context
+        @ApplicationContext context: Context,
+        playbackProgressRepository: PlaybackProgressRepository
     ): PlaybackStateRepository {
-        return PlaybackStateRepository(context)
+        return PlaybackStateRepository(context, playbackProgressRepository)
     }
     
     @Provides
