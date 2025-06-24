@@ -9,6 +9,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -40,20 +41,33 @@ fun TVContentRow(
     onItemClick: (Movie) -> Unit = {},
     contentType: ContentRowType = ContentRowType.STANDARD,
     firstItemFocusRequester: FocusRequester? = null,
-    playbackViewModel: PlaybackViewModel? = null
+    playbackViewModel: PlaybackViewModel? = null,
+    showViewAll: Boolean = false,
+    onViewAllClick: (() -> Unit)? = null
 ) {
     Column(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // Row title
-        Text(
-            text = title,
-            style = MaterialTheme.typography.headlineMedium,
-            color = MaterialTheme.colorScheme.onBackground,
-            fontWeight = FontWeight.SemiBold,
-            modifier = Modifier.padding(horizontal = 4.dp)
-        )
+        // Row title with optional View All button
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 4.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.headlineMedium,
+                color = MaterialTheme.colorScheme.onBackground,
+                fontWeight = FontWeight.SemiBold
+            )
+            
+            if (showViewAll && onViewAllClick != null) {
+                ViewAllButton(onClick = onViewAllClick)
+            }
+        }
         
         // Content row
         val listState = rememberLazyListState()
@@ -404,6 +418,45 @@ fun ContinueWatchingCard(
             }
         }
     }
+    }
+}
+
+@Composable
+private fun ViewAllButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var isFocused by remember { mutableStateOf(false) }
+    
+    TVFocusIndicator(
+        isFocused = isFocused
+    ) {
+        TextButton(
+            onClick = onClick,
+            modifier = modifier
+                .tvFocusable(
+                    onFocusChanged = { isFocused = it.isFocused }
+                ),
+            colors = ButtonDefaults.textButtonColors(
+                contentColor = MaterialTheme.colorScheme.primary
+            )
+        ) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "View All",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Icon(
+                    imageVector = Icons.Default.ArrowForward,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp)
+                )
+            }
+        }
     }
 }
 
