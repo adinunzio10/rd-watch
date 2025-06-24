@@ -19,6 +19,11 @@ on:
       - 'gradle/**'
       - 'libs.versions.toml'
       - '.github/workflows/android_ci.yml'
+  workflow_dispatch: # Allow manual triggers
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build:
@@ -36,30 +41,12 @@ jobs:
           cache: gradle
 
       - name: Setup Android SDK
-        run: |
-          # Create Android SDK directory
-          sudo mkdir -p /opt/android-sdk
-          sudo chown runner:runner /opt/android-sdk
-          
-          # Set environment variables
-          echo "ANDROID_HOME=/opt/android-sdk" >> $GITHUB_ENV
-          echo "ANDROID_SDK_ROOT=/opt/android-sdk" >> $GITHUB_ENV
-          echo "/opt/android-sdk/cmdline-tools/latest/bin" >> $GITHUB_PATH
-          echo "/opt/android-sdk/platform-tools" >> $GITHUB_PATH
-          
-          # Download and install command line tools
-          cd /opt/android-sdk
-          wget -q https://dl.google.com/android/repository/commandlinetools-linux-12266719_latest.zip
-          unzip -q commandlinetools-linux-12266719_latest.zip
-          rm commandlinetools-linux-12266719_latest.zip
-          mkdir -p cmdline-tools/latest
-          mv cmdline-tools/* cmdline-tools/latest/ || true
-          
-          # Accept licenses automatically
-          yes | cmdline-tools/latest/bin/sdkmanager --licenses || true
-          
-          # Install required SDK components
-          cmdline-tools/latest/bin/sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0"
+        uses: android-actions/setup-android@v3
+        with:
+          packages: |
+            platform-tools
+            platforms;android-35
+            build-tools;35.0.0
 
       # Temporarily disabled due to network connectivity issues
       # - name: Validate Gradle wrapper
@@ -70,14 +57,14 @@ jobs:
           chmod +x gradlew
           chmod +x lint-summary.sh
 
+      - name: Build debug APK
+        run: ./gradlew assembleDebug
+
       - name: Run Android Lint
         run: ./lint-summary.sh
 
       - name: Run unit tests
-        run: ./gradlew testDebugUnitTest --continue || true
-
-      - name: Build debug APK
-        run: ./gradlew assembleDebug
+        run: ./gradlew testDebugUnitTest --continue
 
       - name: Upload debug APK
         uses: actions/upload-artifact@v4
@@ -85,6 +72,7 @@ jobs:
           name: debug-apk
           path: app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error # Fails the workflow if APK is not found
+          retention-days: 7
 
       - name: Upload Lint reports
         uses: actions/upload-artifact@v4
@@ -95,6 +83,7 @@ jobs:
             app/build/reports/lint-results-debug.xml
             app/build/reports/lint-results-debug.html
           if-no-files-found: ignore # Don't fail if report is not found (e.g., no lint issues)
+          retention-days: 7
 
       - name: Upload Unit Test reports
         uses: actions/upload-artifact@v4
@@ -103,3 +92,4 @@ jobs:
           name: unit-test-reports
           path: app/build/reports/tests/testDebugUnitTest/
           if-no-files-found: ignore # Don't fail if reports are not found (e.g., no tests yet)
+          retention-days: 7
