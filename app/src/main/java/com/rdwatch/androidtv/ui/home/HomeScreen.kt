@@ -27,6 +27,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.rdwatch.androidtv.Movie
 import com.rdwatch.androidtv.MovieList
 import com.rdwatch.androidtv.ui.components.PreloadImagesEffect
@@ -35,6 +36,7 @@ import com.rdwatch.androidtv.ui.focus.TVSpatialNavigation
 import com.rdwatch.androidtv.ui.focus.TVKeyHandlers
 import com.rdwatch.androidtv.ui.focus.rememberTVKeyEventHandler
 import com.rdwatch.androidtv.ui.focus.AutoTVFocus
+import com.rdwatch.androidtv.ui.viewmodel.PlaybackViewModel
 
 @Composable
 fun TVHomeScreen() {
@@ -284,38 +286,69 @@ fun SafeAreaContent(
 }
 
 @Composable
-fun TVContentGrid() {
+fun TVContentGrid(
+    playbackViewModel: PlaybackViewModel = hiltViewModel()
+) {
     val movies = remember { MovieList.list }
     val firstRowFocusRequester = remember { FocusRequester() }
     
+    // Observe playback state
+    val inProgressContent by playbackViewModel.inProgressContent.collectAsState()
+    val watchStatistics by playbackViewModel.watchStatistics.collectAsState()
+    
+    // Initialize playback state observation
+    LaunchedEffect(Unit) {
+        playbackViewModel.observePlayerState()
+    }
+    
     // Create different content categories with varying layouts
-    val contentRows = listOf(
-        ContentRowData(
-            title = "Continue Watching",
-            movies = movies.take(3),
-            type = ContentRowType.CONTINUE_WATCHING
-        ),
-        ContentRowData(
-            title = "Featured",
-            movies = movies.take(4),
-            type = ContentRowType.FEATURED
-        ),
-        ContentRowData(
-            title = "Recently Added",
-            movies = movies,
-            type = ContentRowType.STANDARD
-        ),
-        ContentRowData(
-            title = "My Library",
-            movies = movies.reversed(),
-            type = ContentRowType.STANDARD
-        ),
-        ContentRowData(
-            title = "Popular Movies",
-            movies = movies.shuffled().take(6),
-            type = ContentRowType.STANDARD
-        )
-    )
+    val contentRows = remember(inProgressContent) {
+        buildList {
+            // Only show Continue Watching if there's content in progress
+            if (inProgressContent.isNotEmpty()) {
+                val continueWatchingMovies = inProgressContent.mapNotNull { progress ->
+                    // Map content IDs back to movies - in a real app this would be more sophisticated
+                    movies.find { it.videoUrl == progress.contentId }
+                }.take(10)
+                
+                if (continueWatchingMovies.isNotEmpty()) {
+                    add(
+                        ContentRowData(
+                            title = "Continue Watching",
+                            movies = continueWatchingMovies,
+                            type = ContentRowType.CONTINUE_WATCHING
+                        )
+                    )
+                }
+            }
+            
+            // Add other content rows
+            addAll(
+                listOf(
+                    ContentRowData(
+                        title = "Featured",
+                        movies = movies.take(4),
+                        type = ContentRowType.FEATURED
+                    ),
+                    ContentRowData(
+                        title = "Recently Added",
+                        movies = movies,
+                        type = ContentRowType.STANDARD
+                    ),
+                    ContentRowData(
+                        title = "My Library",
+                        movies = movies.reversed(),
+                        type = ContentRowType.STANDARD
+                    ),
+                    ContentRowData(
+                        title = "Popular Movies",
+                        movies = movies.shuffled().take(6),
+                        type = ContentRowType.STANDARD
+                    )
+                )
+            )
+        }
+    }
     
     // Preload images for smooth scrolling
     val allImageUrls = remember(movies) {
@@ -342,6 +375,7 @@ fun TVContentGrid() {
                 items = row.movies,
                 contentType = row.type,
                 firstItemFocusRequester = if (index == 0) firstRowFocusRequester else null,
+                playbackViewModel = playbackViewModel,
                 onItemClick = { movie ->
                     // TODO: Handle item click navigation
                 }
