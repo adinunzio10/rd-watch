@@ -3,8 +3,22 @@ name: Android CI
 on:
   push:
     branches: ["main"]
+    paths:
+      - 'app/**'
+      - 'build.gradle.kts'
+      - 'gradle.properties'
+      - 'gradle/**'
+      - 'libs.versions.toml'
+      - '.github/workflows/android_ci.yml'
   pull_request:
     branches: ["main"]
+    paths:
+      - 'app/**'
+      - 'build.gradle.kts'
+      - 'gradle.properties'
+      - 'gradle/**'
+      - 'libs.versions.toml'
+      - '.github/workflows/android_ci.yml'
 
 jobs:
   build:
