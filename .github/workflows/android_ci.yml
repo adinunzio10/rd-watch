@@ -22,16 +22,30 @@ jobs:
           cache: gradle
 
       - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-        with:
-          packages: |
-            tools
-            platform-tools
-            platforms;android-35
-            build-tools;35.0.0
-
-      - name: Accept Android SDK licenses
-        run: yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
+        run: |
+          # Create Android SDK directory
+          sudo mkdir -p /opt/android-sdk
+          sudo chown runner:runner /opt/android-sdk
+          
+          # Set environment variables
+          echo "ANDROID_HOME=/opt/android-sdk" >> $GITHUB_ENV
+          echo "ANDROID_SDK_ROOT=/opt/android-sdk" >> $GITHUB_ENV
+          echo "/opt/android-sdk/cmdline-tools/latest/bin" >> $GITHUB_PATH
+          echo "/opt/android-sdk/platform-tools" >> $GITHUB_PATH
+          
+          # Download and install command line tools
+          cd /opt/android-sdk
+          wget -q https://dl.google.com/android/repository/commandlinetools-linux-12266719_latest.zip
+          unzip -q commandlinetools-linux-12266719_latest.zip
+          rm commandlinetools-linux-12266719_latest.zip
+          mkdir -p cmdline-tools/latest
+          mv cmdline-tools/* cmdline-tools/latest/ || true
+          
+          # Accept licenses automatically
+          yes | cmdline-tools/latest/bin/sdkmanager --licenses || true
+          
+          # Install required SDK components
+          cmdline-tools/latest/bin/sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0"
 
       - name: Validate Gradle wrapper
         uses: gradle/wrapper-validation-action@v1
