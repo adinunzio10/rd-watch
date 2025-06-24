@@ -32,7 +32,8 @@
       "Bash(java:*)",
       "Bash(sudo pacman:*)",
       "Bash(pacman:*)",
-      "Bash(wget:*)"
+      "Bash(wget:*)",
+      "Bash(git branch:*)"
     ],
     "deny": []
   }
