@@ -153,7 +153,7 @@ class VoiceSearchManager @Inject constructor(
             putExtra(RecognizerIntent.EXTRA_PROMPT, "Say the name of a movie or TV show")
             
             // Disable offensive words filtering for movie titles
-            putExtra(RecognizerIntent.EXTRA_PROFANITY_FILTER, false)
+            putExtra("android.speech.extra.DICTATION_MODE", false)
             
             // Enable confidence scores
             putExtra(RecognizerIntent.EXTRA_CONFIDENCE_SCORES, true)
