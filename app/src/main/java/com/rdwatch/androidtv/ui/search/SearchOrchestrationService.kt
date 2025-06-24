@@ -4,11 +4,13 @@ import com.rdwatch.androidtv.scraper.ScraperManifestManager
 import com.rdwatch.androidtv.scraper.models.ManifestResult
 import com.rdwatch.androidtv.scraper.models.ScraperManifest
 import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.random.Random
 
 /**
  * Orchestrates search operations across multiple scrapers
@@ -273,7 +275,7 @@ class SearchOrchestrationService @Inject constructor(
             if (filters.contentTypes.isNotEmpty()) {
                 // Check if scraper supports requested content types
                 filters.contentTypes.any { contentType ->
-                    scraper.capabilities.any { capability ->
+                    scraper.metadata.capabilities.any { capability ->
                         capability.toString().contains(contentType, ignoreCase = true)
                     }
                 }
@@ -300,8 +302,8 @@ class SearchOrchestrationService @Inject constructor(
                 id = "${scraper.id}_$index",
                 title = "$query Result $index from ${scraper.name}",
                 description = "This is a search result from ${scraper.name} scraper matching '$query'",
-                year = (2000..2024).random(),
-                rating = (6.0f..9.5f).random(),
+                year = Random.nextInt(2000, 2025),
+                rating = Random.nextFloat() * 3.5f + 6.0f, // Generates 6.0 to 9.5
                 scraperSource = scraper.name
             )
         }
