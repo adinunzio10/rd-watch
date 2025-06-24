@@ -12,6 +12,8 @@ import com.rdwatch.androidtv.player.error.PlayerErrorHandler
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -36,10 +38,21 @@ class ExoPlayerManager @Inject constructor(
     private val _playerState = MutableStateFlow(PlayerState())
     val playerState: StateFlow<PlayerState> = _playerState.asStateFlow()
     
+    // Auto-save job for periodic position saving
+    private var autoSaveJob: Job? = null
+    private var currentContentId: String? = null
+    
     private val playerListener = object : Player.Listener {
         override fun onIsPlayingChanged(isPlaying: Boolean) {
             super.onIsPlayingChanged(isPlaying)
             updatePlayerState { copy(isPlaying = isPlaying) }
+            
+            // Start or stop auto-save based on playback state
+            if (isPlaying) {
+                startAutoSave()
+            } else {
+                stopAutoSave()
+            }
         }
         
         
@@ -96,7 +109,13 @@ class ExoPlayerManager @Inject constructor(
             }
     }
     
-    fun prepareMedia(mediaUrl: String, title: String? = null, metadata: MediaMetadata? = null) {
+    fun prepareMedia(
+        mediaUrl: String, 
+        contentId: String? = null, 
+        title: String? = null, 
+        metadata: MediaMetadata? = null,
+        shouldResume: Boolean = true
+    ) {
         val mediaItem = MediaItem.Builder()
             .setUri(mediaUrl)
             .apply { 
@@ -114,6 +133,9 @@ class ExoPlayerManager @Inject constructor(
             }
             .build()
         
+        // Store content ID for progress tracking
+        currentContentId = contentId ?: mediaUrl
+        
         // Create appropriate media source based on format
         val mediaSource = mediaSourceFactory.createMediaSource(mediaItem)
         exoPlayer.setMediaSource(mediaSource)
@@ -126,6 +148,18 @@ class ExoPlayerManager @Inject constructor(
                 error = null
             )
         }
+        
+        // Check for saved position and resume if requested
+        if (shouldResume) {
+            val savedPosition = resumeFromSavedPosition(currentContentId!!)
+            if (savedPosition != null && savedPosition > 5000L) { // Only resume if > 5 seconds
+                exoPlayer.seekTo(savedPosition)
+                updatePlayerState { copy(shouldShowResumeDialog = true, resumePosition = savedPosition) }
+            }
+        }
+        
+        // Start playback session tracking
+        startPlaybackSession(mediaUrl, title)
     }
     
     fun isFormatSupported(url: String): Boolean {
@@ -164,10 +198,13 @@ class ExoPlayerManager @Inject constructor(
     }
     
     fun release() {
+        stopAutoSave()
+        saveCurrentPosition() // Save final position before release
         _exoPlayer?.removeListener(playerListener)
         _exoPlayer?.release()
         _exoPlayer = null
         _playerState.value = PlayerState()
+        currentContentId = null
     }
     
     private fun updatePlayerState(update: PlayerState.() -> PlayerState) {
@@ -207,14 +244,34 @@ class ExoPlayerManager @Inject constructor(
         }
     }
     
-    fun resumeFromSavedPosition(mediaUrl: String): Long? {
-        return stateRepository.getPlaybackPosition(mediaUrl)?.position
+    fun resumeFromSavedPosition(contentId: String): Long? {
+        return stateRepository.getPlaybackPosition(contentId)?.position
     }
     
-    fun markAsWatched(mediaUrl: String) {
-        scope.launch {
-            stateRepository.removePlaybackPosition(mediaUrl)
+    fun markAsWatched(contentId: String? = null) {
+        val idToUse = contentId ?: currentContentId
+        if (idToUse != null) {
+            scope.launch {
+                stateRepository.markAsCompleted(idToUse)
+            }
         }
+    }
+    
+    fun dismissResumeDialog() {
+        updatePlayerState { copy(shouldShowResumeDialog = false, resumePosition = null) }
+    }
+    
+    fun resumeFromDialog() {
+        val resumePos = _playerState.value.resumePosition
+        if (resumePos != null) {
+            exoPlayer.seekTo(resumePos)
+            dismissResumeDialog()
+        }
+    }
+    
+    fun restartFromBeginning() {
+        exoPlayer.seekTo(0L)
+        dismissResumeDialog()
     }
     
     fun retryPlayback(): Boolean {
@@ -234,6 +291,32 @@ class ExoPlayerManager @Inject constructor(
     }
     
     val playerErrorHandler: PlayerErrorHandler get() = this.errorHandler
+    
+    // Auto-save functionality
+    private fun startAutoSave() {
+        stopAutoSave() // Stop any existing job
+        autoSaveJob = scope.launch {
+            while (true) {
+                delay(10_000L) // Save every 10 seconds
+                saveCurrentPosition()
+            }
+        }
+    }
+    
+    private fun stopAutoSave() {
+        autoSaveJob?.cancel()
+        autoSaveJob = null
+    }
+    
+    private fun saveCurrentPosition() {
+        val contentId = currentContentId ?: return
+        val position = exoPlayer.currentPosition
+        val duration = exoPlayer.duration.takeIf { it != androidx.media3.common.C.TIME_UNSET } ?: 0L
+        
+        if (position > 0L && duration > 0L) {
+            stateRepository.savePlaybackPosition(contentId, position, duration)
+        }
+    }
 }
 
 data class PlayerState(
@@ -244,8 +327,35 @@ data class PlayerState(
     val mediaUrl: String? = null,
     val title: String? = null,
     val playbackSpeed: Float = 1.0f,
-    val error: String? = null
-)
+    val error: String? = null,
+    val shouldShowResumeDialog: Boolean = false,
+    val resumePosition: Long? = null
+) {
+    val progressPercentage: Float
+        get() = if (duration > 0) (currentPosition.toFloat() / duration.toFloat()) else 0f
+        
+    val formattedPosition: String
+        get() = formatTime(currentPosition)
+        
+    val formattedDuration: String
+        get() = formatTime(duration)
+        
+    val formattedResumePosition: String
+        get() = resumePosition?.let { formatTime(it) } ?: ""
+    
+    private fun formatTime(timeMs: Long): String {
+        val totalSeconds = timeMs / 1000
+        val hours = totalSeconds / 3600
+        val minutes = (totalSeconds % 3600) / 60
+        val seconds = totalSeconds % 60
+        
+        return if (hours > 0) {
+            String.format("%d:%02d:%02d", hours, minutes, seconds)
+        } else {
+            String.format("%d:%02d", minutes, seconds)
+        }
+    }
+}
 
 enum class PlaybackState {
     IDLE, BUFFERING, READY, ENDED

@@ -3,17 +3,21 @@ package com.rdwatch.androidtv.player.state
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.media3.common.util.UnstableApi
+import com.rdwatch.androidtv.data.repository.PlaybackProgressRepository
+import com.rdwatch.androidtv.data.entities.WatchProgressEntity
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @UnstableApi
 @Singleton
 class PlaybackStateRepository @Inject constructor(
-    @ApplicationContext private val context: Context
+    @ApplicationContext private val context: Context,
+    private val playbackProgressRepository: PlaybackProgressRepository
 ) {
     
     private val prefs: SharedPreferences = context.getSharedPreferences("playback_state", Context.MODE_PRIVATE)
@@ -21,40 +25,81 @@ class PlaybackStateRepository @Inject constructor(
     private val _currentSession = MutableStateFlow<PlaybackSession?>(null)
     val currentSession: StateFlow<PlaybackSession?> = _currentSession.asStateFlow()
     
+    // Default user ID for now - in a real app this would come from user context
+    private val currentUserId: Long get() = 1L
+    
     fun savePlaybackPosition(mediaUrl: String, position: Long, duration: Long) {
         val progress = if (duration > 0) (position.toFloat() / duration.toFloat()) else 0f
         
         // Only save if we're past 5% and before 95% of the content
         if (progress > 0.05f && progress < 0.95f) {
-            prefs.edit()
-                .putLong("${mediaUrl}_position", position)
-                .putLong("${mediaUrl}_duration", duration)
-                .putLong("${mediaUrl}_timestamp", System.currentTimeMillis())
-                .apply()
+            // Save to Room database
+            runBlocking {
+                try {
+                    playbackProgressRepository.savePlaybackProgress(
+                        userId = currentUserId,
+                        contentId = mediaUrl,
+                        progressSeconds = position / 1000, // Convert to seconds
+                        durationSeconds = duration / 1000, // Convert to seconds
+                        deviceInfo = getDeviceInfo()
+                    )
+                } catch (e: Exception) {
+                    // Fallback to SharedPreferences for backward compatibility
+                    prefs.edit()
+                        .putLong("${mediaUrl}_position", position)
+                        .putLong("${mediaUrl}_duration", duration)
+                        .putLong("${mediaUrl}_timestamp", System.currentTimeMillis())
+                        .apply()
+                }
+            }
         }
     }
     
     fun getPlaybackPosition(mediaUrl: String): PlaybackPosition? {
-        val position = prefs.getLong("${mediaUrl}_position", -1L)
-        val duration = prefs.getLong("${mediaUrl}_duration", -1L)
-        val timestamp = prefs.getLong("${mediaUrl}_timestamp", -1L)
-        
-        return if (position != -1L && duration != -1L && timestamp != -1L) {
-            PlaybackPosition(
-                mediaUrl = mediaUrl,
-                position = position,
-                duration = duration,
-                lastUpdated = timestamp
-            )
-        } else null
+        return try {
+            // Try to get from Room database first
+            runBlocking {
+                val progress = playbackProgressRepository.getPlaybackProgress(currentUserId, mediaUrl)
+                progress?.let {
+                    PlaybackPosition(
+                        mediaUrl = it.contentId,
+                        position = it.progressSeconds * 1000, // Convert to milliseconds
+                        duration = it.durationSeconds * 1000, // Convert to milliseconds
+                        lastUpdated = it.updatedAt.time
+                    )
+                }
+            }
+        } catch (e: Exception) {
+            // Fallback to SharedPreferences
+            val position = prefs.getLong("${mediaUrl}_position", -1L)
+            val duration = prefs.getLong("${mediaUrl}_duration", -1L)
+            val timestamp = prefs.getLong("${mediaUrl}_timestamp", -1L)
+            
+            if (position != -1L && duration != -1L && timestamp != -1L) {
+                PlaybackPosition(
+                    mediaUrl = mediaUrl,
+                    position = position,
+                    duration = duration,
+                    lastUpdated = timestamp
+                )
+            } else null
+        }
     }
     
     fun removePlaybackPosition(mediaUrl: String) {
-        prefs.edit()
-            .remove("${mediaUrl}_position")
-            .remove("${mediaUrl}_duration")
-            .remove("${mediaUrl}_timestamp")
-            .apply()
+        try {
+            // Remove from Room database
+            runBlocking {
+                playbackProgressRepository.removeProgress(currentUserId, mediaUrl)
+            }
+        } catch (e: Exception) {
+            // Fallback to SharedPreferences cleanup
+            prefs.edit()
+                .remove("${mediaUrl}_position")
+                .remove("${mediaUrl}_duration")
+                .remove("${mediaUrl}_timestamp")
+                .apply()
+        }
     }
     
     fun startPlaybackSession(session: PlaybackSession) {
@@ -136,6 +181,91 @@ class PlaybackStateRepository @Inject constructor(
     fun clearAllData() {
         prefs.edit().clear().apply()
     }
+    
+    private fun getDeviceInfo(): String {
+        return "${android.os.Build.MANUFACTURER} ${android.os.Build.MODEL} (Android ${android.os.Build.VERSION.RELEASE})"
+    }
+    
+    // New methods for Room database integration
+    suspend fun getInProgressContent(): List<WatchProgressEntity> {
+        return try {
+            playbackProgressRepository.getInProgressContent(currentUserId)
+                .let { flow ->
+                    // For now, we'll get the current state. In production, this should be observed
+                    runBlocking { 
+                        var result: List<WatchProgressEntity> = emptyList()
+                        flow.collect { result = it }
+                        result
+                    }
+                }
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+    
+    suspend fun getCompletedContent(): List<WatchProgressEntity> {
+        return try {
+            playbackProgressRepository.getCompletedContent(currentUserId)
+                .let { flow ->
+                    runBlocking { 
+                        var result: List<WatchProgressEntity> = emptyList()
+                        flow.collect { result = it }
+                        result
+                    }
+                }
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+    
+    suspend fun markAsCompleted(mediaUrl: String) {
+        try {
+            playbackProgressRepository.markAsCompleted(currentUserId, mediaUrl)
+        } catch (e: Exception) {
+            // Handle error - could log or fallback
+        }
+    }
+    
+    suspend fun getTotalWatchTimeSeconds(): Long {
+        return try {
+            playbackProgressRepository.getTotalWatchTimeSeconds(currentUserId)
+        } catch (e: Exception) {
+            0L
+        }
+    }
+    
+    suspend fun getWatchStatistics(): WatchStatistics {
+        return try {
+            val totalTimeSeconds = playbackProgressRepository.getTotalWatchTimeSeconds(currentUserId)
+            val completedCount = playbackProgressRepository.getCompletedWatchCount(currentUserId)
+            val averagePercentage = playbackProgressRepository.getAverageWatchPercentage(currentUserId)
+            
+            WatchStatistics(
+                totalWatchTimeSeconds = totalTimeSeconds,
+                completedContentCount = completedCount,
+                averageWatchPercentage = averagePercentage
+            )
+        } catch (e: Exception) {
+            WatchStatistics()
+        }
+    }
+    
+    suspend fun cleanupOldProgress() {
+        try {
+            playbackProgressRepository.cleanupMinimalProgress()
+        } catch (e: Exception) {
+            // Handle error - could log
+        }
+    }
+}
+
+data class WatchStatistics(
+    val totalWatchTimeSeconds: Long = 0L,
+    val completedContentCount: Int = 0,
+    val averageWatchPercentage: Float = 0f
+) {
+    val totalWatchTimeHours: Float
+        get() = totalWatchTimeSeconds / 3600f
 }
 
 data class PlaybackPosition(

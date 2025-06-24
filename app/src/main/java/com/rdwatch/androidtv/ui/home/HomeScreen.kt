@@ -27,6 +27,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.rdwatch.androidtv.Movie
 import com.rdwatch.androidtv.MovieList
 import com.rdwatch.androidtv.ui.components.PreloadImagesEffect
@@ -35,12 +36,25 @@ import com.rdwatch.androidtv.ui.focus.TVSpatialNavigation
 import com.rdwatch.androidtv.ui.focus.TVKeyHandlers
 import com.rdwatch.androidtv.ui.focus.rememberTVKeyEventHandler
 import com.rdwatch.androidtv.ui.focus.AutoTVFocus
+import com.rdwatch.androidtv.ui.viewmodel.PlaybackViewModel
+import com.rdwatch.androidtv.ui.components.ResumeDialogOverlay
+import com.rdwatch.androidtv.ui.components.ContinueWatchingManager
+import com.rdwatch.androidtv.navigation.PlaybackNavigationHelper
 
 @Composable
-fun TVHomeScreen() {
+fun TVHomeScreen(
+    playbackViewModel: PlaybackViewModel = hiltViewModel()
+) {
     var isDrawerOpen by remember { mutableStateOf(false) }
+    var showContinueWatchingManager by remember { mutableStateOf(false) }
     val drawerFocusRequester = remember { FocusRequester() }
     val contentFocusRequester = remember { FocusRequester() }
+    
+    // Observe playback UI state for resume dialog
+    val playbackUiState by playbackViewModel.uiState.collectAsState()
+    val playerState by playbackViewModel.playerState.collectAsState()
+    val inProgressContent by playbackViewModel.inProgressContent.collectAsState()
+    val movies = remember { MovieList.list }
     
     // Enhanced key event handler for TV navigation
     val keyEventHandler = rememberTVKeyEventHandler().apply {
@@ -86,7 +100,9 @@ fun TVHomeScreen() {
         SafeAreaContent(
             modifier = Modifier.fillMaxSize(),
             contentFocusRequester = contentFocusRequester,
-            onDrawerToggle = { isDrawerOpen = !isDrawerOpen }
+            onDrawerToggle = { isDrawerOpen = !isDrawerOpen },
+            playbackViewModel = playbackViewModel,
+            onShowContinueWatching = { showContinueWatchingManager = true }
         )
         
         // Navigation drawer
@@ -121,6 +137,32 @@ fun TVHomeScreen() {
                     .fillMaxSize()
                     .background(Color.Black.copy(alpha = alpha))
                     .zIndex(0.5f)
+            )
+        }
+        
+        // Resume dialog overlay
+        ResumeDialogOverlay(
+            showDialog = playbackUiState.showResumeDialog || playerState.shouldShowResumeDialog,
+            title = playerState.title ?: "Unknown Title",
+            resumePosition = playerState.formattedResumePosition,
+            onResumeClick = { playbackViewModel.resumeFromDialog() },
+            onRestartClick = { playbackViewModel.restartFromBeginning() },
+            onDismiss = { playbackViewModel.dismissResumeDialog() }
+        )
+        
+        // Continue Watching Manager
+        if (showContinueWatchingManager) {
+            ContinueWatchingManager(
+                inProgressContent = inProgressContent,
+                movies = movies,
+                onPlayClick = { movie ->
+                    // TODO: Navigate to player with movie
+                    showContinueWatchingManager = false
+                },
+                onRemoveClick = { contentId ->
+                    playbackViewModel.removeFromContinueWatching(contentId)
+                },
+                onCloseClick = { showContinueWatchingManager = false }
             )
         }
     }
@@ -241,7 +283,9 @@ fun NavigationDrawerItem(
 fun SafeAreaContent(
     modifier: Modifier = Modifier,
     contentFocusRequester: FocusRequester,
-    onDrawerToggle: () -> Unit
+    onDrawerToggle: () -> Unit,
+    playbackViewModel: PlaybackViewModel,
+    onShowContinueWatching: () -> Unit
 ) {
     val overscanMargin = 32.dp // 5% for most TVs
     
@@ -279,43 +323,79 @@ fun SafeAreaContent(
         }
         
         // Content rows placeholder
-        TVContentGrid()
+        TVContentGrid(
+            playbackViewModel = playbackViewModel,
+            onShowContinueWatching = onShowContinueWatching
+        )
     }
 }
 
 @Composable
-fun TVContentGrid() {
+fun TVContentGrid(
+    playbackViewModel: PlaybackViewModel = hiltViewModel(),
+    onShowContinueWatching: () -> Unit = {}
+) {
     val movies = remember { MovieList.list }
     val firstRowFocusRequester = remember { FocusRequester() }
     
+    // Observe playback state
+    val inProgressContent by playbackViewModel.inProgressContent.collectAsState()
+    val watchStatistics by playbackViewModel.watchStatistics.collectAsState()
+    
+    // Initialize playback state observation
+    LaunchedEffect(Unit) {
+        playbackViewModel.observePlayerState()
+    }
+    
     // Create different content categories with varying layouts
-    val contentRows = listOf(
-        ContentRowData(
-            title = "Continue Watching",
-            movies = movies.take(3),
-            type = ContentRowType.CONTINUE_WATCHING
-        ),
-        ContentRowData(
-            title = "Featured",
-            movies = movies.take(4),
-            type = ContentRowType.FEATURED
-        ),
-        ContentRowData(
-            title = "Recently Added",
-            movies = movies,
-            type = ContentRowType.STANDARD
-        ),
-        ContentRowData(
-            title = "My Library",
-            movies = movies.reversed(),
-            type = ContentRowType.STANDARD
-        ),
-        ContentRowData(
-            title = "Popular Movies",
-            movies = movies.shuffled().take(6),
-            type = ContentRowType.STANDARD
-        )
-    )
+    val contentRows = remember(inProgressContent) {
+        buildList {
+            // Only show Continue Watching if there's content in progress
+            if (inProgressContent.isNotEmpty()) {
+                val continueWatchingMovies = inProgressContent.mapNotNull { progress ->
+                    // Map content IDs back to movies - in a real app this would be more sophisticated
+                    movies.find { it.videoUrl == progress.contentId }
+                }.take(10)
+                
+                if (continueWatchingMovies.isNotEmpty()) {
+                    add(
+                        ContentRowData(
+                            title = "Continue Watching",
+                            movies = continueWatchingMovies,
+                            type = ContentRowType.CONTINUE_WATCHING,
+                            showViewAll = continueWatchingMovies.size > 3
+                        )
+                    )
+                }
+            }
+            
+            // Add other content rows
+            addAll(
+                listOf(
+                    ContentRowData(
+                        title = "Featured",
+                        movies = movies.take(4),
+                        type = ContentRowType.FEATURED
+                    ),
+                    ContentRowData(
+                        title = "Recently Added",
+                        movies = movies,
+                        type = ContentRowType.STANDARD
+                    ),
+                    ContentRowData(
+                        title = "My Library",
+                        movies = movies.reversed(),
+                        type = ContentRowType.STANDARD
+                    ),
+                    ContentRowData(
+                        title = "Popular Movies",
+                        movies = movies.shuffled().take(6),
+                        type = ContentRowType.STANDARD
+                    )
+                )
+            )
+        }
+    }
     
     // Preload images for smooth scrolling
     val allImageUrls = remember(movies) {
@@ -342,8 +422,14 @@ fun TVContentGrid() {
                 items = row.movies,
                 contentType = row.type,
                 firstItemFocusRequester = if (index == 0) firstRowFocusRequester else null,
+                playbackViewModel = playbackViewModel,
+                showViewAll = row.showViewAll,
+                onViewAllClick = if (row.type == ContentRowType.CONTINUE_WATCHING) {
+                    { onShowContinueWatching() }
+                } else null,
                 onItemClick = { movie ->
-                    // TODO: Handle item click navigation
+                    // TODO: Handle item click navigation with proper resume logic
+                    // For now, just show basic functionality
                 }
             )
         }
@@ -353,7 +439,8 @@ fun TVContentGrid() {
 data class ContentRowData(
     val title: String,
     val movies: List<Movie>,
-    val type: ContentRowType
+    val type: ContentRowType,
+    val showViewAll: Boolean = false
 )
 
 data class NavigationItem(
