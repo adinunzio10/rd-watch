@@ -3,6 +3,7 @@ package com.rdwatch.androidtv.di
 import com.rdwatch.androidtv.di.qualifiers.AuthenticatedClient
 import com.rdwatch.androidtv.di.qualifiers.CachingClient
 import com.rdwatch.androidtv.di.qualifiers.MainApi
+import com.rdwatch.androidtv.di.qualifiers.OAuthApi
 import com.rdwatch.androidtv.di.qualifiers.PublicClient
 import com.rdwatch.androidtv.di.qualifiers.RealDebridApi
 import com.rdwatch.androidtv.network.ApiService
@@ -170,7 +171,22 @@ abstract class NetworkModule {
         
         @Provides
         @Singleton
-        fun provideOAuth2ApiService(@MainApi retrofit: Retrofit): OAuth2ApiService {
+        @OAuthApi
+        fun provideOAuthRetrofit(
+            @PublicClient okHttpClient: OkHttpClient,
+            moshi: Moshi
+        ): Retrofit {
+            return Retrofit.Builder()
+                .baseUrl(OAuth2ApiService.OAUTH_BASE_URL)
+                .client(okHttpClient)
+                .addCallAdapterFactory(ApiResponseCallAdapterFactory())
+                .addConverterFactory(MoshiConverterFactory.create(moshi))
+                .build()
+        }
+        
+        @Provides
+        @Singleton
+        fun provideOAuth2ApiService(@OAuthApi retrofit: Retrofit): OAuth2ApiService {
             return retrofit.create(OAuth2ApiService::class.java)
         }
     }

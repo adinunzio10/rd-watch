@@ -9,6 +9,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.rdwatch.androidtv.auth.ui.AuthenticationScreen
 import com.rdwatch.androidtv.ui.browse.BrowseScreen
 import com.rdwatch.androidtv.ui.settings.SettingsScreen
 import com.rdwatch.androidtv.ui.details.MovieDetailsScreen
@@ -21,6 +22,7 @@ import com.rdwatch.androidtv.MovieList
 fun AppNavigation(
     navController: NavHostController,
     startDestination: Screen = Screen.Home,
+    onAuthenticationSuccess: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     NavHost(
@@ -28,6 +30,12 @@ fun AppNavigation(
         startDestination = startDestination,
         modifier = modifier
     ) {
+        composable<Screen.Authentication> {
+            AuthenticationScreen(
+                onAuthenticationSuccess = onAuthenticationSuccess
+            )
+        }
+        
         composable<Screen.Home>(
             enterTransition = {
                 slideIntoContainer(
@@ -180,9 +188,17 @@ fun AppNavigation(
                 )
             }
         ) {
+            val settingsViewModel: com.rdwatch.androidtv.ui.settings.SettingsViewModel = hiltViewModel()
             SettingsScreen(
                 onBackPressed = {
                     navController.popBackStack()
+                },
+                onSignOut = {
+                    settingsViewModel.signOut()
+                    // Navigate to authentication and clear back stack
+                    navController.navigate(Screen.Authentication) {
+                        popUpTo(0) { inclusive = true }
+                    }
                 }
             )
         }
@@ -210,6 +226,7 @@ fun AppNavigation(
                 }
             )
         }
+        
         
         composable<Screen.Error> { backStackEntry ->
             val error = backStackEntry.toRoute<Screen.Error>()

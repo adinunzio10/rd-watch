@@ -113,4 +113,10 @@ class AuthViewModel @Inject constructor(
             }
         }
     }
+    
+    fun checkAuthenticationState() {
+        viewModelScope.launch {
+            authRepository.checkAuthState()
+        }
+    }
 }

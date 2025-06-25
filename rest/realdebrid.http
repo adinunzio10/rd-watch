@@ -1,0 +1,20 @@
+# Real-Debrid Device Authentication Workflow
+
+### Step 1 - Obtain Authentication Data
+
+GET https://api.real-debrid.com/oauth/v2/device/code?client_id=X245A4XAIBGVM&new_credentials=yes
+
+###
+
+# Step 2 - Poll for Credentials
+
+GET https://api.real-debrid.com/oauth/v2/device/credentials?client_id=X245A4XAIBGVM&code=YSQME3SRUTCXZXLNTRWFMAYWDLR7EKZYWD4UG4QU35LMP6FFJOSA
+
+### Step 3 - Exchange Device Code for Access Token
+
+POST https://api.real-debrid.com/oauth/v2/token
+Content-Type: application/x-www-form-urlencoded
+
+client_id=QZ4WL5UT72WP2&client_secret=bbbffe6f24795b3af877717d53d3e0b30e30fca1&code=YSQME3SRUTCXZXLNTRWFMAYWDLR7EKZYWD4UG4QU35LMP6FFJOSA&grant_type=http://oauth.net/grant_type/device/1.0
+
+

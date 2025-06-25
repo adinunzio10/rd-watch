@@ -17,11 +17,17 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Login
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -31,6 +37,10 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.DisposableEffect
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -69,9 +79,6 @@ fun AuthenticationScreen(
         }
     }
     
-    LaunchedEffect(Unit) {
-        viewModel.startAuthentication()
-    }
     
     Box(
         modifier = Modifier
@@ -82,6 +89,11 @@ fun AuthenticationScreen(
         when (val state = authState) {
             is AuthState.Initializing -> {
                 InitializingContent()
+            }
+            is AuthState.Unauthenticated -> {
+                UnauthenticatedContent(
+                    onStartAuthentication = { viewModel.startAuthentication() }
+                )
             }
             is AuthState.WaitingForUser -> {
                 WaitingForUserContent(
@@ -105,20 +117,103 @@ fun AuthenticationScreen(
 
 @Composable
 private fun InitializingContent() {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+    Card(
+        modifier = Modifier.fillMaxWidth(0.8f),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
     ) {
-        CircularProgressIndicator(
-            modifier = Modifier.size(64.dp),
-            strokeWidth = 6.dp
-        )
-        Spacer(modifier = Modifier.height(24.dp))
-        Text(
-            text = "Setting up authentication...",
-            style = MaterialTheme.typography.headlineMedium,
-            textAlign = TextAlign.Center
-        )
+        Column(
+            modifier = Modifier.padding(48.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            CircularProgressIndicator(
+                modifier = Modifier.size(64.dp),
+                strokeWidth = 6.dp,
+                color = MaterialTheme.colorScheme.primary
+            )
+            Spacer(modifier = Modifier.height(24.dp))
+            Text(
+                text = "Setting up authentication...",
+                style = MaterialTheme.typography.headlineMedium.copy(
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.SemiBold
+                ),
+                textAlign = TextAlign.Center,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = "Please wait while we prepare your authentication",
+                style = MaterialTheme.typography.bodyLarge.copy(fontSize = 16.sp),
+                textAlign = TextAlign.Center,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+@Composable
+private fun UnauthenticatedContent(
+    onStartAuthentication: () -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(0.8f),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(48.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Icon(
+                imageVector = Icons.Default.Lock,
+                contentDescription = "Authentication Required",
+                modifier = Modifier.size(64.dp),
+                tint = MaterialTheme.colorScheme.primary
+            )
+            Spacer(modifier = Modifier.height(24.dp))
+            Text(
+                text = "Authentication Required",
+                style = MaterialTheme.typography.headlineMedium.copy(
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.SemiBold
+                ),
+                textAlign = TextAlign.Center,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = "Please sign in to access Real Debrid features",
+                style = MaterialTheme.typography.bodyLarge.copy(fontSize = 16.sp),
+                textAlign = TextAlign.Center,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(modifier = Modifier.height(32.dp))
+            
+            Button(
+                onClick = onStartAuthentication,
+                modifier = Modifier
+                    .fillMaxWidth(0.6f)
+                    .height(56.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary
+                )
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.Login,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(12.dp))
+                Text(
+                    text = "Start Authentication",
+                    style = MaterialTheme.typography.labelLarge.copy(
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                )
+            }
+        }
     }
 }
 
@@ -129,15 +224,33 @@ private fun WaitingForUserContent(
     onRetry: () -> Unit
 ) {
     val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
     var timeLeft by remember { mutableIntStateOf(deviceCodeInfo.expiresIn) }
+    var isExpired by remember { mutableStateOf(false) }
+    var isPaused by remember { mutableStateOf(false) }
     
-    // Countdown timer
-    LaunchedEffect(timeLeft) {
-        if (timeLeft > 0) {
+    // Handle lifecycle events to pause/resume timer
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_PAUSE -> isPaused = true
+                Lifecycle.Event.ON_RESUME -> isPaused = false
+                else -> {}
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
+    
+    // Enhanced countdown timer with lifecycle handling
+    LaunchedEffect(timeLeft, isPaused) {
+        if (timeLeft > 0 && !isPaused && !isExpired) {
             delay(1000L)
             timeLeft--
-        } else {
-            onRetry()
+        } else if (timeLeft <= 0 && !isExpired) {
+            isExpired = true
         }
     }
     
@@ -264,26 +377,153 @@ private fun WaitingForUserContent(
             
             Spacer(modifier = Modifier.height(32.dp))
             
-            // Timer and instructions
-            Text(
-                text = "Code expires in: ${formatTime(timeLeft)}",
-                style = MaterialTheme.typography.bodyLarge.copy(
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Medium
+            // Enhanced timer section with better visual hierarchy
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = when {
+                        isExpired -> MaterialTheme.colorScheme.errorContainer
+                        timeLeft < 120 -> MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)
+                        timeLeft < 300 -> MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.5f)
+                        else -> MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+                    }
                 ),
-                color = if (timeLeft < 60) MaterialTheme.colorScheme.error 
-                       else MaterialTheme.colorScheme.onSurface,
-                textAlign = TextAlign.Center
-            )
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        // Timer icon that changes based on state
+                        Icon(
+                            imageVector = if (isExpired) Icons.Default.Warning else Icons.Default.Schedule,
+                            contentDescription = if (isExpired) "Expired" else "Timer",
+                            modifier = Modifier.size(32.dp),
+                            tint = when {
+                                isExpired -> MaterialTheme.colorScheme.error
+                                timeLeft < 60 -> MaterialTheme.colorScheme.error
+                                timeLeft < 120 -> MaterialTheme.colorScheme.tertiary
+                                else -> MaterialTheme.colorScheme.primary
+                            }
+                        )
+                        
+                        // Circular progress indicator
+                        CircularProgressIndicator(
+                            progress = { if (isExpired) 0f else timeLeft.toFloat() / deviceCodeInfo.expiresIn },
+                            modifier = Modifier.size(64.dp),
+                            strokeWidth = 6.dp,
+                            color = when {
+                                isExpired -> MaterialTheme.colorScheme.error
+                                timeLeft < 60 -> MaterialTheme.colorScheme.error
+                                timeLeft < 120 -> MaterialTheme.colorScheme.tertiary
+                                else -> MaterialTheme.colorScheme.primary
+                            }
+                        )
+                        
+                        Column {
+                            Text(
+                                text = if (isExpired) "Code Expired" else "Code expires in:",
+                                style = MaterialTheme.typography.bodyLarge.copy(
+                                    fontSize = 18.sp,
+                                    fontWeight = FontWeight.Medium
+                                ),
+                                color = when {
+                                    isExpired -> MaterialTheme.colorScheme.error
+                                    timeLeft < 60 -> MaterialTheme.colorScheme.error
+                                    else -> MaterialTheme.colorScheme.onSurfaceVariant
+                                }
+                            )
+                            Text(
+                                text = if (isExpired) "00:00" else formatTime(timeLeft),
+                                style = MaterialTheme.typography.headlineMedium.copy(
+                                    fontSize = 32.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    letterSpacing = 2.sp
+                                ),
+                                color = when {
+                                    isExpired -> MaterialTheme.colorScheme.error
+                                    timeLeft < 60 -> MaterialTheme.colorScheme.error
+                                    timeLeft < 120 -> MaterialTheme.colorScheme.tertiary
+                                    else -> MaterialTheme.colorScheme.primary
+                                }
+                            )
+                        }
+                    }
+                    
+                    // Status message based on timer state
+                    if (isExpired) {
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = "The authentication code has expired. Click 'Get New Code' to generate a fresh code.",
+                            style = MaterialTheme.typography.bodyMedium.copy(fontSize = 16.sp),
+                            textAlign = TextAlign.Center,
+                            color = MaterialTheme.colorScheme.onErrorContainer
+                        )
+                    } else if (timeLeft < 120) {
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Text(
+                            text = "⚠️ Code expires soon! Please complete authentication quickly.",
+                            style = MaterialTheme.typography.bodyMedium.copy(
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Medium
+                            ),
+                            textAlign = TextAlign.Center,
+                            color = if (timeLeft < 60) MaterialTheme.colorScheme.error 
+                                   else MaterialTheme.colorScheme.tertiary
+                        )
+                    }
+                }
+            }
             
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(24.dp))
             
-            Text(
-                text = "Waiting for authentication...",
-                style = MaterialTheme.typography.bodyMedium.copy(fontSize = 16.sp),
-                textAlign = TextAlign.Center,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            // Action buttons section
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                if (isExpired) {
+                    Button(
+                        onClick = onRetry,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary
+                        ),
+                        modifier = Modifier.height(48.dp)
+                    ) {
+                        Text(
+                            text = "Get New Code",
+                            style = MaterialTheme.typography.labelLarge.copy(
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        )
+                    }
+                } else {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            strokeWidth = 2.dp,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Text(
+                            text = "Waiting for authentication...",
+                            style = MaterialTheme.typography.bodyLarge.copy(
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Medium
+                            ),
+                            textAlign = TextAlign.Center,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
         }
     }
 }
@@ -326,64 +566,85 @@ private fun ErrorContent(
         retryFocusRequester.requestFocus()
     }
     
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.errorContainer
+        )
     ) {
-        Text(
-            text = "Authentication Error",
-            style = MaterialTheme.typography.headlineLarge.copy(
-                fontSize = 32.sp,
-                fontWeight = FontWeight.Bold
-            ),
-            color = MaterialTheme.colorScheme.error,
-            textAlign = TextAlign.Center
-        )
-        
-        Spacer(modifier = Modifier.height(16.dp))
-        
-        Text(
-            text = message,
-            style = MaterialTheme.typography.bodyLarge,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.padding(horizontal = 32.dp)
-        )
-        
-        Spacer(modifier = Modifier.height(32.dp))
-        
-        Button(
-            onClick = onRetry,
-            modifier = Modifier
-                .focusRequester(retryFocusRequester)
-                .onFocusChanged { hasFocus = it.hasFocus }
-                .onKeyEvent { keyEvent ->
-                    if (keyEvent.type == KeyEventType.KeyUp && 
-                        (keyEvent.key == Key.DirectionCenter || keyEvent.key == Key.Enter)
-                    ) {
-                        onRetry()
-                        true
-                    } else {
-                        false
-                    }
-                }
-                .border(
-                    width = if (hasFocus) 3.dp else 0.dp,
-                    color = if (hasFocus) MaterialTheme.colorScheme.primary else Color.Transparent,
-                    shape = RoundedCornerShape(8.dp)
-                ),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary
-            )
+        Column(
+            modifier = Modifier.padding(32.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
             Text(
-                text = "Retry Authentication",
-                style = MaterialTheme.typography.bodyLarge.copy(
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Medium
+                text = "Authentication Error",
+                style = MaterialTheme.typography.headlineLarge.copy(
+                    fontSize = 32.sp,
+                    fontWeight = FontWeight.Bold
                 ),
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                color = MaterialTheme.colorScheme.error,
+                textAlign = TextAlign.Center
             )
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            Text(
+                text = getErrorMessage(message),
+                style = MaterialTheme.typography.bodyLarge.copy(fontSize = 18.sp),
+                textAlign = TextAlign.Center,
+                color = MaterialTheme.colorScheme.onErrorContainer,
+                modifier = Modifier.padding(horizontal = 32.dp)
+            )
+            
+            Spacer(modifier = Modifier.height(24.dp))
+            
+            // Error description with helpful information
+            Text(
+                text = getErrorDescription(message),
+                style = MaterialTheme.typography.bodyMedium.copy(fontSize = 16.sp),
+                textAlign = TextAlign.Center,
+                color = MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.8f),
+                modifier = Modifier.padding(horizontal = 32.dp)
+            )
+            
+            Spacer(modifier = Modifier.height(32.dp))
+            
+            Button(
+                onClick = onRetry,
+                modifier = Modifier
+                    .focusRequester(retryFocusRequester)
+                    .onFocusChanged { hasFocus = it.hasFocus }
+                    .onKeyEvent { keyEvent ->
+                        if (keyEvent.type == KeyEventType.KeyUp && 
+                            (keyEvent.key == Key.DirectionCenter || keyEvent.key == Key.Enter)
+                        ) {
+                            onRetry()
+                            true
+                        } else {
+                            false
+                        }
+                    }
+                    .border(
+                        width = if (hasFocus) 3.dp else 0.dp,
+                        color = if (hasFocus) MaterialTheme.colorScheme.primary else Color.Transparent,
+                        shape = RoundedCornerShape(8.dp)
+                    ),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                )
+            ) {
+                Text(
+                    text = "Try Again",
+                    style = MaterialTheme.typography.bodyLarge.copy(
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Medium
+                    ),
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                )
+            }
         }
     }
 }
@@ -392,4 +653,40 @@ private fun formatTime(seconds: Int): String {
     val minutes = seconds / 60
     val remainingSeconds = seconds % 60
     return String.format("%d:%02d", minutes, remainingSeconds)
+}
+
+private fun getErrorMessage(message: String): String {
+    return when {
+        message.contains("network", ignoreCase = true) -> "Network Connection Error"
+        message.contains("timeout", ignoreCase = true) -> "Request Timed Out"
+        message.contains("unauthorized", ignoreCase = true) -> "Authentication Failed"
+        message.contains("forbidden", ignoreCase = true) -> "Access Denied"
+        message.contains("not found", ignoreCase = true) -> "Service Not Found"
+        message.contains("server", ignoreCase = true) -> "Server Error"
+        message.contains("expired", ignoreCase = true) -> "Authentication Expired"
+        message.contains("invalid", ignoreCase = true) -> "Invalid Request"
+        else -> "Authentication Error"
+    }
+}
+
+private fun getErrorDescription(message: String): String {
+    return when {
+        message.contains("network", ignoreCase = true) -> 
+            "Please check your internet connection and try again."
+        message.contains("timeout", ignoreCase = true) -> 
+            "The request took too long to complete. Please try again."
+        message.contains("unauthorized", ignoreCase = true) -> 
+            "Your credentials are invalid. Please check and try again."
+        message.contains("forbidden", ignoreCase = true) -> 
+            "You don't have permission to access this service."
+        message.contains("not found", ignoreCase = true) -> 
+            "The authentication service is currently unavailable."
+        message.contains("server", ignoreCase = true) -> 
+            "There's a problem with the server. Please try again later."
+        message.contains("expired", ignoreCase = true) -> 
+            "Your authentication code has expired. A new code will be generated."
+        message.contains("invalid", ignoreCase = true) -> 
+            "There was an error with the authentication request."
+        else -> "An unexpected error occurred during authentication. Please try again."
+    }
 }

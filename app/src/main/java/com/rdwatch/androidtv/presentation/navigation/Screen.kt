@@ -26,6 +26,9 @@ sealed class Screen {
     data object Profile : Screen()
     
     @Serializable
+    data object Authentication : Screen()
+    
+    @Serializable
     data class Error(val message: String, val canRetry: Boolean = true) : Screen()
 }
 
@@ -37,6 +40,7 @@ object Routes {
     const val SEARCH = "search"
     const val SETTINGS = "settings"
     const val PROFILE = "profile"
+    const val AUTHENTICATION = "authentication"
     const val ERROR = "error/{message}/{canRetry}"
     
     object Args {

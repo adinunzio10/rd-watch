@@ -24,7 +24,11 @@ import com.rdwatch.androidtv.ui.focus.tvFocusable
  * focus management
  */
 @Composable
-fun SettingsScreen(modifier: Modifier = Modifier, onBackPressed: () -> Unit = {}) {
+fun SettingsScreen(
+    modifier: Modifier = Modifier, 
+    onBackPressed: () -> Unit = {},
+    onSignOut: () -> Unit = {}
+) {
     val overscanMargin = 32.dp
     val firstFocusRequester = remember { FocusRequester() }
     val listState = rememberLazyListState()
@@ -201,6 +205,13 @@ fun SettingsScreen(modifier: Modifier = Modifier, onBackPressed: () -> Unit = {}
                                 subtitle = "View terms of service",
                                 icon = Icons.Default.Description,
                                 onClick = { /* TODO: Open terms */}
+                        )
+
+                        ActionSetting(
+                                title = "Sign Out",
+                                subtitle = "Sign out of your Real Debrid account",
+                                icon = Icons.Default.Logout,
+                                onClick = onSignOut
                         )
                     }
                 }

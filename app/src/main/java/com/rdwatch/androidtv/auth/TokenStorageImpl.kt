@@ -19,6 +19,8 @@ class TokenStorageImpl @Inject constructor(
         private const val ACCESS_TOKEN_KEY = "access_token"
         private const val REFRESH_TOKEN_KEY = "refresh_token"
         private const val TOKEN_EXPIRY_KEY = "token_expiry"
+        private const val CLIENT_ID_KEY = "client_id"
+        private const val CLIENT_SECRET_KEY = "client_secret"
     }
     
     private val sharedPreferences by lazy {
@@ -63,6 +65,8 @@ class TokenStorageImpl @Inject constructor(
                 .remove(ACCESS_TOKEN_KEY)
                 .remove(REFRESH_TOKEN_KEY)
                 .remove(TOKEN_EXPIRY_KEY)
+                .remove(CLIENT_ID_KEY)
+                .remove(CLIENT_SECRET_KEY)
                 .apply()
         }
     }
@@ -80,6 +84,36 @@ class TokenStorageImpl @Inject constructor(
     override suspend fun hasRefreshToken(): Boolean {
         return withContext(Dispatchers.IO) {
             !sharedPreferences.getString(REFRESH_TOKEN_KEY, null).isNullOrEmpty()
+        }
+    }
+    
+    override suspend fun saveClientCredentials(clientId: String, clientSecret: String) {
+        withContext(Dispatchers.IO) {
+            sharedPreferences.edit()
+                .putString(CLIENT_ID_KEY, clientId)
+                .putString(CLIENT_SECRET_KEY, clientSecret)
+                .apply()
+        }
+    }
+    
+    override suspend fun getClientId(): String? {
+        return withContext(Dispatchers.IO) {
+            sharedPreferences.getString(CLIENT_ID_KEY, null)
+        }
+    }
+    
+    override suspend fun getClientSecret(): String? {
+        return withContext(Dispatchers.IO) {
+            sharedPreferences.getString(CLIENT_SECRET_KEY, null)
+        }
+    }
+    
+    override suspend fun clearClientCredentials() {
+        withContext(Dispatchers.IO) {
+            sharedPreferences.edit()
+                .remove(CLIENT_ID_KEY)
+                .remove(CLIENT_SECRET_KEY)
+                .apply()
         }
     }
 }
