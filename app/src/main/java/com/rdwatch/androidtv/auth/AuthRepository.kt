@@ -88,43 +88,39 @@ class AuthRepository @Inject constructor(
                 } else {
                     val errorBody = credentialsResponse.errorBody()?.string()
                     val error = parseError(errorBody)
+                    Log.d(TAG, "Credentials polling error (expected until user authorizes): $error")
                     
                     when {
-                        error.contains("authorization_pending", ignoreCase = true) -> {
-                            // Continue polling
-                            delay(currentInterval)
-                        }
                         error.contains("slow_down", ignoreCase = true) -> {
                             // Increase polling interval by 5 seconds
                             currentInterval += 5000L
                             delay(currentInterval)
                         }
                         else -> {
-                            _authState.value = AuthState.Error(error)
-                            return Result.Error(Exception(error))
+                            // Continue polling - errors are expected until user authorizes
+                            delay(currentInterval)
                         }
                     }
                 }
             } catch (e: HttpException) {
-                if (e.code() == 400) {
-                    // Parse the error response
+                if (e.code() == 400 || e.code() == 403) {
+                    // Parse the error response - 400/403 errors are expected until user authorizes
                     val errorBody = e.response()?.errorBody()?.string()
                     val error = parseError(errorBody)
+                    Log.d(TAG, "HTTP ${e.code()} during credentials polling (expected): $error")
                     
                     when {
-                        error.contains("authorization_pending", ignoreCase = true) -> {
-                            delay(currentInterval)
-                        }
                         error.contains("slow_down", ignoreCase = true) -> {
                             currentInterval += 5000L
                             delay(currentInterval)
                         }
                         else -> {
-                            _authState.value = AuthState.Error(error)
-                            return Result.Error(e)
+                            // Continue polling - errors are expected until user authorizes
+                            delay(currentInterval)
                         }
                     }
                 } else {
+                    // Only stop on serious network errors (5xx, etc.)
                     _authState.value = AuthState.Error("Network error: ${e.message}")
                     return Result.Error(e)
                 }
