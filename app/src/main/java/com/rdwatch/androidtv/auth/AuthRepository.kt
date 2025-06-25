@@ -210,6 +210,14 @@ class AuthRepository @Inject constructor(
     
     suspend fun checkAuthState() {
         Log.d(TAG, "checkAuthState() called")
+        
+        // Don't interfere with ongoing authentication flows
+        val currentState = _authState.value
+        if (currentState is AuthState.WaitingForUser) {
+            Log.d(TAG, "Currently in device flow (WaitingForUser), not overriding state")
+            return
+        }
+        
         try {
             Log.d(TAG, "Checking if token is valid...")
             val isTokenValid = tokenStorage.isTokenValid()
