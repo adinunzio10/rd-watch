@@ -105,20 +105,38 @@ fun AuthenticationScreen(
 
 @Composable
 private fun InitializingContent() {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+    Card(
+        modifier = Modifier.fillMaxWidth(0.8f),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
     ) {
-        CircularProgressIndicator(
-            modifier = Modifier.size(64.dp),
-            strokeWidth = 6.dp
-        )
-        Spacer(modifier = Modifier.height(24.dp))
-        Text(
-            text = "Setting up authentication...",
-            style = MaterialTheme.typography.headlineMedium,
-            textAlign = TextAlign.Center
-        )
+        Column(
+            modifier = Modifier.padding(48.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            CircularProgressIndicator(
+                modifier = Modifier.size(64.dp),
+                strokeWidth = 6.dp,
+                color = MaterialTheme.colorScheme.primary
+            )
+            Spacer(modifier = Modifier.height(24.dp))
+            Text(
+                text = "Setting up authentication...",
+                style = MaterialTheme.typography.headlineMedium.copy(
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.SemiBold
+                ),
+                textAlign = TextAlign.Center,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = "Please wait while we prepare your authentication",
+                style = MaterialTheme.typography.bodyLarge.copy(fontSize = 16.sp),
+                textAlign = TextAlign.Center,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
     }
 }
 
@@ -264,26 +282,55 @@ private fun WaitingForUserContent(
             
             Spacer(modifier = Modifier.height(32.dp))
             
-            // Timer and instructions
-            Text(
-                text = "Code expires in: ${formatTime(timeLeft)}",
-                style = MaterialTheme.typography.bodyLarge.copy(
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Medium
-                ),
-                color = if (timeLeft < 60) MaterialTheme.colorScheme.error 
-                       else MaterialTheme.colorScheme.onSurface,
-                textAlign = TextAlign.Center
-            )
+            // Timer and instructions with visual progress
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                CircularProgressIndicator(
+                    progress = timeLeft.toFloat() / deviceCodeInfo.expiresIn,
+                    modifier = Modifier.size(48.dp),
+                    strokeWidth = 4.dp,
+                    color = if (timeLeft < 60) MaterialTheme.colorScheme.error 
+                           else MaterialTheme.colorScheme.primary
+                )
+                
+                Column {
+                    Text(
+                        text = "Code expires in:",
+                        style = MaterialTheme.typography.bodyMedium.copy(fontSize = 16.sp),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = formatTime(timeLeft),
+                        style = MaterialTheme.typography.headlineSmall.copy(
+                            fontSize = 24.sp,
+                            fontWeight = FontWeight.Bold
+                        ),
+                        color = if (timeLeft < 60) MaterialTheme.colorScheme.error 
+                               else MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
             
             Spacer(modifier = Modifier.height(16.dp))
             
-            Text(
-                text = "Waiting for authentication...",
-                style = MaterialTheme.typography.bodyMedium.copy(fontSize = 16.sp),
-                textAlign = TextAlign.Center,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(16.dp),
+                    strokeWidth = 2.dp,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Text(
+                    text = "Waiting for authentication...",
+                    style = MaterialTheme.typography.bodyMedium.copy(fontSize = 16.sp),
+                    textAlign = TextAlign.Center,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         }
     }
 }
@@ -326,64 +373,85 @@ private fun ErrorContent(
         retryFocusRequester.requestFocus()
     }
     
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.errorContainer
+        )
     ) {
-        Text(
-            text = "Authentication Error",
-            style = MaterialTheme.typography.headlineLarge.copy(
-                fontSize = 32.sp,
-                fontWeight = FontWeight.Bold
-            ),
-            color = MaterialTheme.colorScheme.error,
-            textAlign = TextAlign.Center
-        )
-        
-        Spacer(modifier = Modifier.height(16.dp))
-        
-        Text(
-            text = message,
-            style = MaterialTheme.typography.bodyLarge,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.padding(horizontal = 32.dp)
-        )
-        
-        Spacer(modifier = Modifier.height(32.dp))
-        
-        Button(
-            onClick = onRetry,
-            modifier = Modifier
-                .focusRequester(retryFocusRequester)
-                .onFocusChanged { hasFocus = it.hasFocus }
-                .onKeyEvent { keyEvent ->
-                    if (keyEvent.type == KeyEventType.KeyUp && 
-                        (keyEvent.key == Key.DirectionCenter || keyEvent.key == Key.Enter)
-                    ) {
-                        onRetry()
-                        true
-                    } else {
-                        false
-                    }
-                }
-                .border(
-                    width = if (hasFocus) 3.dp else 0.dp,
-                    color = if (hasFocus) MaterialTheme.colorScheme.primary else Color.Transparent,
-                    shape = RoundedCornerShape(8.dp)
-                ),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary
-            )
+        Column(
+            modifier = Modifier.padding(32.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
             Text(
-                text = "Retry Authentication",
-                style = MaterialTheme.typography.bodyLarge.copy(
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Medium
+                text = "Authentication Error",
+                style = MaterialTheme.typography.headlineLarge.copy(
+                    fontSize = 32.sp,
+                    fontWeight = FontWeight.Bold
                 ),
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                color = MaterialTheme.colorScheme.error,
+                textAlign = TextAlign.Center
             )
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            Text(
+                text = getErrorMessage(message),
+                style = MaterialTheme.typography.bodyLarge.copy(fontSize = 18.sp),
+                textAlign = TextAlign.Center,
+                color = MaterialTheme.colorScheme.onErrorContainer,
+                modifier = Modifier.padding(horizontal = 32.dp)
+            )
+            
+            Spacer(modifier = Modifier.height(24.dp))
+            
+            // Error description with helpful information
+            Text(
+                text = getErrorDescription(message),
+                style = MaterialTheme.typography.bodyMedium.copy(fontSize = 16.sp),
+                textAlign = TextAlign.Center,
+                color = MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.8f),
+                modifier = Modifier.padding(horizontal = 32.dp)
+            )
+            
+            Spacer(modifier = Modifier.height(32.dp))
+            
+            Button(
+                onClick = onRetry,
+                modifier = Modifier
+                    .focusRequester(retryFocusRequester)
+                    .onFocusChanged { hasFocus = it.hasFocus }
+                    .onKeyEvent { keyEvent ->
+                        if (keyEvent.type == KeyEventType.KeyUp && 
+                            (keyEvent.key == Key.DirectionCenter || keyEvent.key == Key.Enter)
+                        ) {
+                            onRetry()
+                            true
+                        } else {
+                            false
+                        }
+                    }
+                    .border(
+                        width = if (hasFocus) 3.dp else 0.dp,
+                        color = if (hasFocus) MaterialTheme.colorScheme.primary else Color.Transparent,
+                        shape = RoundedCornerShape(8.dp)
+                    ),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                )
+            ) {
+                Text(
+                    text = "Try Again",
+                    style = MaterialTheme.typography.bodyLarge.copy(
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Medium
+                    ),
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                )
+            }
         }
     }
 }
@@ -392,4 +460,40 @@ private fun formatTime(seconds: Int): String {
     val minutes = seconds / 60
     val remainingSeconds = seconds % 60
     return String.format("%d:%02d", minutes, remainingSeconds)
+}
+
+private fun getErrorMessage(message: String): String {
+    return when {
+        message.contains("network", ignoreCase = true) -> "Network Connection Error"
+        message.contains("timeout", ignoreCase = true) -> "Request Timed Out"
+        message.contains("unauthorized", ignoreCase = true) -> "Authentication Failed"
+        message.contains("forbidden", ignoreCase = true) -> "Access Denied"
+        message.contains("not found", ignoreCase = true) -> "Service Not Found"
+        message.contains("server", ignoreCase = true) -> "Server Error"
+        message.contains("expired", ignoreCase = true) -> "Authentication Expired"
+        message.contains("invalid", ignoreCase = true) -> "Invalid Request"
+        else -> "Authentication Error"
+    }
+}
+
+private fun getErrorDescription(message: String): String {
+    return when {
+        message.contains("network", ignoreCase = true) -> 
+            "Please check your internet connection and try again."
+        message.contains("timeout", ignoreCase = true) -> 
+            "The request took too long to complete. Please try again."
+        message.contains("unauthorized", ignoreCase = true) -> 
+            "Your credentials are invalid. Please check and try again."
+        message.contains("forbidden", ignoreCase = true) -> 
+            "You don't have permission to access this service."
+        message.contains("not found", ignoreCase = true) -> 
+            "The authentication service is currently unavailable."
+        message.contains("server", ignoreCase = true) -> 
+            "There's a problem with the server. Please try again later."
+        message.contains("expired", ignoreCase = true) -> 
+            "Your authentication code has expired. A new code will be generated."
+        message.contains("invalid", ignoreCase = true) -> 
+            "There was an error with the authentication request."
+        else -> "An unexpected error occurred during authentication. Please try again."
+    }
 }

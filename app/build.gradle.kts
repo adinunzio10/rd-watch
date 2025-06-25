@@ -102,6 +102,9 @@ dependencies {
     // Security
     implementation(libs.androidx.security.crypto)
     
+    // DataStore
+    implementation(libs.androidx.datastore.preferences)
+    
     // Image loading
     implementation(libs.coil.compose)
     

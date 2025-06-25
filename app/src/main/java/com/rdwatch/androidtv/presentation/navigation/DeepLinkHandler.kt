@@ -60,6 +60,10 @@ class DeepLinkHandler {
                         navController.navigateToSettings()
                         true
                     }
+                    "auth" -> {
+                        navController.navigate(Screen.Authentication)
+                        true
+                    }
                     else -> false
                 }
             }
@@ -80,6 +84,7 @@ class DeepLinkHandler {
             is Screen.Search -> "$SCHEME://$HOST/search"
             is Screen.Settings -> "$SCHEME://$HOST/settings"
             is Screen.Profile -> "$SCHEME://$HOST/profile"
+            is Screen.Authentication -> "$SCHEME://$HOST/auth"
             is Screen.Error -> "$SCHEME://$HOST/error?message=${Uri.encode(screen.message)}&canRetry=${screen.canRetry}"
         }
     }
