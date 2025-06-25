@@ -18,8 +18,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Login
 import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Login
+import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -35,6 +37,10 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.DisposableEffect
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -194,7 +200,7 @@ private fun UnauthenticatedContent(
                 )
             ) {
                 Icon(
-                    imageVector = Icons.Default.Login,
+                    imageVector = Icons.AutoMirrored.Filled.Login,
                     contentDescription = null,
                     modifier = Modifier.size(20.dp)
                 )
@@ -218,15 +224,33 @@ private fun WaitingForUserContent(
     onRetry: () -> Unit
 ) {
     val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
     var timeLeft by remember { mutableIntStateOf(deviceCodeInfo.expiresIn) }
+    var isExpired by remember { mutableStateOf(false) }
+    var isPaused by remember { mutableStateOf(false) }
     
-    // Countdown timer
-    LaunchedEffect(timeLeft) {
-        if (timeLeft > 0) {
+    // Handle lifecycle events to pause/resume timer
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_PAUSE -> isPaused = true
+                Lifecycle.Event.ON_RESUME -> isPaused = false
+                else -> {}
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
+    
+    // Enhanced countdown timer with lifecycle handling
+    LaunchedEffect(timeLeft, isPaused) {
+        if (timeLeft > 0 && !isPaused && !isExpired) {
             delay(1000L)
             timeLeft--
-        } else {
-            onRetry()
+        } else if (timeLeft <= 0 && !isExpired) {
+            isExpired = true
         }
     }
     
@@ -353,54 +377,152 @@ private fun WaitingForUserContent(
             
             Spacer(modifier = Modifier.height(32.dp))
             
-            // Timer and instructions with visual progress
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            // Enhanced timer section with better visual hierarchy
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = when {
+                        isExpired -> MaterialTheme.colorScheme.errorContainer
+                        timeLeft < 120 -> MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)
+                        timeLeft < 300 -> MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.5f)
+                        else -> MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+                    }
+                ),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
             ) {
-                CircularProgressIndicator(
-                    progress = timeLeft.toFloat() / deviceCodeInfo.expiresIn,
-                    modifier = Modifier.size(48.dp),
-                    strokeWidth = 4.dp,
-                    color = if (timeLeft < 60) MaterialTheme.colorScheme.error 
-                           else MaterialTheme.colorScheme.primary
-                )
-                
-                Column {
-                    Text(
-                        text = "Code expires in:",
-                        style = MaterialTheme.typography.bodyMedium.copy(fontSize = 16.sp),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Text(
-                        text = formatTime(timeLeft),
-                        style = MaterialTheme.typography.headlineSmall.copy(
-                            fontSize = 24.sp,
-                            fontWeight = FontWeight.Bold
-                        ),
-                        color = if (timeLeft < 60) MaterialTheme.colorScheme.error 
-                               else MaterialTheme.colorScheme.primary
-                    )
+                Column(
+                    modifier = Modifier.padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        // Timer icon that changes based on state
+                        Icon(
+                            imageVector = if (isExpired) Icons.Default.Warning else Icons.Default.Schedule,
+                            contentDescription = if (isExpired) "Expired" else "Timer",
+                            modifier = Modifier.size(32.dp),
+                            tint = when {
+                                isExpired -> MaterialTheme.colorScheme.error
+                                timeLeft < 60 -> MaterialTheme.colorScheme.error
+                                timeLeft < 120 -> MaterialTheme.colorScheme.tertiary
+                                else -> MaterialTheme.colorScheme.primary
+                            }
+                        )
+                        
+                        // Circular progress indicator
+                        CircularProgressIndicator(
+                            progress = { if (isExpired) 0f else timeLeft.toFloat() / deviceCodeInfo.expiresIn },
+                            modifier = Modifier.size(64.dp),
+                            strokeWidth = 6.dp,
+                            color = when {
+                                isExpired -> MaterialTheme.colorScheme.error
+                                timeLeft < 60 -> MaterialTheme.colorScheme.error
+                                timeLeft < 120 -> MaterialTheme.colorScheme.tertiary
+                                else -> MaterialTheme.colorScheme.primary
+                            }
+                        )
+                        
+                        Column {
+                            Text(
+                                text = if (isExpired) "Code Expired" else "Code expires in:",
+                                style = MaterialTheme.typography.bodyLarge.copy(
+                                    fontSize = 18.sp,
+                                    fontWeight = FontWeight.Medium
+                                ),
+                                color = when {
+                                    isExpired -> MaterialTheme.colorScheme.error
+                                    timeLeft < 60 -> MaterialTheme.colorScheme.error
+                                    else -> MaterialTheme.colorScheme.onSurfaceVariant
+                                }
+                            )
+                            Text(
+                                text = if (isExpired) "00:00" else formatTime(timeLeft),
+                                style = MaterialTheme.typography.headlineMedium.copy(
+                                    fontSize = 32.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    letterSpacing = 2.sp
+                                ),
+                                color = when {
+                                    isExpired -> MaterialTheme.colorScheme.error
+                                    timeLeft < 60 -> MaterialTheme.colorScheme.error
+                                    timeLeft < 120 -> MaterialTheme.colorScheme.tertiary
+                                    else -> MaterialTheme.colorScheme.primary
+                                }
+                            )
+                        }
+                    }
+                    
+                    // Status message based on timer state
+                    if (isExpired) {
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = "The authentication code has expired. Click 'Get New Code' to generate a fresh code.",
+                            style = MaterialTheme.typography.bodyMedium.copy(fontSize = 16.sp),
+                            textAlign = TextAlign.Center,
+                            color = MaterialTheme.colorScheme.onErrorContainer
+                        )
+                    } else if (timeLeft < 120) {
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Text(
+                            text = "⚠️ Code expires soon! Please complete authentication quickly.",
+                            style = MaterialTheme.typography.bodyMedium.copy(
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Medium
+                            ),
+                            textAlign = TextAlign.Center,
+                            color = if (timeLeft < 60) MaterialTheme.colorScheme.error 
+                                   else MaterialTheme.colorScheme.tertiary
+                        )
+                    }
                 }
             }
             
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(24.dp))
             
+            // Action buttons section
             Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(16.dp),
-                    strokeWidth = 2.dp,
-                    color = MaterialTheme.colorScheme.primary
-                )
-                Text(
-                    text = "Waiting for authentication...",
-                    style = MaterialTheme.typography.bodyMedium.copy(fontSize = 16.sp),
-                    textAlign = TextAlign.Center,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                if (isExpired) {
+                    Button(
+                        onClick = onRetry,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary
+                        ),
+                        modifier = Modifier.height(48.dp)
+                    ) {
+                        Text(
+                            text = "Get New Code",
+                            style = MaterialTheme.typography.labelLarge.copy(
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        )
+                    }
+                } else {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            strokeWidth = 2.dp,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Text(
+                            text = "Waiting for authentication...",
+                            style = MaterialTheme.typography.bodyLarge.copy(
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Medium
+                            ),
+                            textAlign = TextAlign.Center,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
             }
         }
     }

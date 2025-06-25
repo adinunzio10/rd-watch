@@ -1,5 +1,6 @@
 package com.rdwatch.androidtv.ui.settings
 
+import com.rdwatch.androidtv.auth.AuthRepository
 import com.rdwatch.androidtv.presentation.viewmodel.BaseViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -9,7 +10,9 @@ import javax.inject.Inject
  * Follows MVVM architecture with BaseViewModel pattern
  */
 @HiltViewModel
-class SettingsViewModel @Inject constructor() : BaseViewModel<SettingsUiState>() {
+class SettingsViewModel @Inject constructor(
+    private val authRepository: AuthRepository
+) : BaseViewModel<SettingsUiState>() {
     
     override fun createInitialState(): SettingsUiState {
         return SettingsUiState()
@@ -125,6 +128,17 @@ class SettingsViewModel @Inject constructor() : BaseViewModel<SettingsUiState>()
             kotlinx.coroutines.delay(300)
             
             updateState { copy(isSaving = false) }
+        }
+    }
+    
+    /**
+     * Sign out the current user
+     */
+    fun signOut() {
+        launchSafely {
+            updateState { copy(isLoading = true) }
+            authRepository.logout()
+            updateState { copy(isLoading = false) }
         }
     }
     

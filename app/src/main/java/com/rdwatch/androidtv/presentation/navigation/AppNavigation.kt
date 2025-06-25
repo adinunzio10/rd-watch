@@ -188,9 +188,17 @@ fun AppNavigation(
                 )
             }
         ) {
+            val settingsViewModel: com.rdwatch.androidtv.ui.settings.SettingsViewModel = hiltViewModel()
             SettingsScreen(
                 onBackPressed = {
                     navController.popBackStack()
+                },
+                onSignOut = {
+                    settingsViewModel.signOut()
+                    // Navigate to authentication and clear back stack
+                    navController.navigate(Screen.Authentication) {
+                        popUpTo(0) { inclusive = true }
+                    }
                 }
             )
         }
