@@ -12,17 +12,15 @@ import com.rdwatch.androidtv.data.entities.*
     entities = [
         Movie::class,
         UserEntity::class,
-        SiteEntity::class,
-        ObservationEntity::class,
-        ModelEntity::class,
-        UserSiteCrossRef::class,
-        UserModelCrossRef::class,
         WatchProgressEntity::class,
         LibraryEntity::class,
         ScraperManifestEntity::class,
-        SearchHistoryEntity::class
+        SearchHistoryEntity::class,
+        ContentEntity::class,
+        TorrentEntity::class,
+        DownloadEntity::class
     ],
-    version = 2,
+    version = 3,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -30,16 +28,14 @@ abstract class AppDatabase : RoomDatabase() {
 
     abstract fun movieDao(): MovieDao
     abstract fun userDao(): UserDao
-    abstract fun siteDao(): SiteDao
-    abstract fun observationDao(): ObservationDao
-    abstract fun modelDao(): ModelDao
-    abstract fun userSiteCrossRefDao(): UserSiteCrossRefDao
-    abstract fun userModelCrossRefDao(): UserModelCrossRefDao
     abstract fun watchProgressDao(): WatchProgressDao
     abstract fun libraryDao(): LibraryDao
     abstract fun scraperManifestDao(): ScraperManifestDao
     abstract fun searchHistoryDao(): SearchHistoryDao
     abstract fun relationshipDao(): RelationshipDao
+    abstract fun contentDao(): ContentDao
+    abstract fun torrentDao(): TorrentDao
+    abstract fun downloadDao(): DownloadDao
 
     companion object {
         const val DATABASE_NAME = "rdwatch_database"

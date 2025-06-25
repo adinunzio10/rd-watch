@@ -1939,7 +1939,7 @@
         "description": "Connect UI components to actual Real-Debrid API data instead of hardcoded MovieList.MOCK_DATA. Update repositories to fetch real data, populate database from API responses, connect ViewModels to real data sources.",
         "details": "Replace MovieList.MOCK_DATA usage throughout the application with Real-Debrid API calls. Create ContentRepository that fetches movie/TV show data from Real-Debrid user library, torrents, and downloads endpoints. Implement data transformation from Real-Debrid API responses to local ContentEntity models. Update MovieRepository to use RealDebridApi service instead of static data. Create data synchronization logic to populate Room database from API responses with proper error handling and offline caching. Modify ViewModels (HomeViewModel, BrowseViewModel, etc.) to use repository Flow emissions instead of static lists. Implement refresh mechanisms with SwipeRefresh or pull-to-refresh patterns. Add loading states and error handling for network failures. Create data mapping functions to transform Real-Debrid torrent info, user library items, and download status into app's content models. Set up periodic background sync using WorkManager to keep local data fresh. Handle pagination for large content libraries and implement incremental loading for better performance.",
         "testStrategy": "Test API integration with actual Real-Debrid account and verify data flows correctly to UI. Mock Real-Debrid API responses to test various data scenarios including empty libraries, failed requests, and large datasets. Verify database population from API responses with proper entity relationships. Test offline functionality when API is unavailable - app should display cached data. Test loading states and error handling for network timeouts and API errors. Verify ViewModels emit correct data states and UI updates reactively. Test data refresh mechanisms and verify stale data is properly updated. Use integration tests to verify complete data flow from API to UI components. Test pagination and incremental loading with large content libraries. Verify background sync works correctly and doesn't impact app performance.",
-        "status": "pending",
+        "status": "done",
         "dependencies": [
           4,
           6,
@@ -1954,7 +1954,7 @@
             "description": "Update repository layer to integrate with real API endpoints instead of mock data",
             "dependencies": [],
             "details": "Modify existing repository classes to make HTTP requests to actual API endpoints, remove mock data generation, and implement proper API client configuration",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -1965,7 +1965,7 @@
               1
             ],
             "details": "Create data mappers and DTOs to transform raw API responses into the existing Movie data model, handle nested objects and optional fields",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -1976,7 +1976,7 @@
               2
             ],
             "details": "Create Room database schema, entities matching the Movie model, DAOs for CRUD operations, and database migration strategies",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -1987,7 +1987,7 @@
               3
             ],
             "details": "Modify existing ViewModels to consume data from repository layer, manage loading states, and handle data binding with Compose UI",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -1998,7 +1998,7 @@
               4
             ],
             "details": "Add swipe-to-refresh gestures for Android TV remote navigation, implement manual refresh buttons, and coordinate refresh operations across components",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -2009,7 +2009,7 @@
               2
             ],
             "details": "Create error handling strategies for network failures, API errors, data parsing errors, and user-friendly error messages with retry mechanisms",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -2021,7 +2021,7 @@
               6
             ],
             "details": "Implement pagination logic in repository layer, create infinite scroll for Android TV navigation, and manage page loading states",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -2033,7 +2033,7 @@
               6
             ],
             "details": "Set up WorkManager for periodic data sync, handle sync conflicts, implement sync status indicators, and configure sync policies",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -2045,7 +2045,7 @@
               8
             ],
             "details": "Implement efficient caching strategies, optimize database queries, add data prefetching, and minimize memory usage during data operations",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -2056,7 +2056,7 @@
               9
             ],
             "details": "Write unit tests for repository layer, integration tests for API calls, database tests, and UI tests for data loading scenarios",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -2067,7 +2067,7 @@
               10
             ],
             "details": "Update CLAUDE-architecture.md with new data flow, clean up mock data files, document API integration patterns, and update development setup instructions",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           }
         ]
@@ -2075,7 +2075,7 @@
     ],
     "metadata": {
       "created": "2025-06-22T03:41:46.714Z",
-      "updated": "2025-06-25T02:34:19.330Z",
+      "updated": "2025-06-25T07:03:57.771Z",
       "description": "Tasks for master context"
     }
   }

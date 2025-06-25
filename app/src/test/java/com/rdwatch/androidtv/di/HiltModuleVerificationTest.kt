@@ -9,6 +9,7 @@ import com.rdwatch.androidtv.test.HiltTestBase
 import com.rdwatch.androidtv.test.MainDispatcherRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.flow.firstOrNull
 import okhttp3.OkHttpClient
 import org.junit.Assert.*
 import org.junit.Rule
@@ -66,7 +67,7 @@ class HiltModuleVerificationTest : HiltTestBase() {
     @Test
     fun `verify repository can be used`() = runTest {
         // Test that the injected repository can be called
-        val movies = movieRepository.getAllMovies().first()
+        val movies = movieRepository.getAllMovies().firstOrNull()
         
         // Since we're using the fake repository module, this should work
         assertNotNull("Repository should return movies", movies)

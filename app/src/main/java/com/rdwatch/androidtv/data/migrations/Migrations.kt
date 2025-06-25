@@ -7,7 +7,7 @@ object Migrations {
     
     val MIGRATION_1_2 = object : Migration(1, 2) {
         override fun migrate(database: SupportSQLiteDatabase) {
-            // Create users table
+            // Create users table (simplified for TV/Real-Debrid auth)
             database.execSQL("""
                 CREATE TABLE IF NOT EXISTS `users` (
                     `user_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
@@ -26,120 +26,7 @@ object Migrations {
             database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_users_username` ON `users` (`username`)")
             database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_users_email` ON `users` (`email`)")
             
-            // Create sites table
-            database.execSQL("""
-                CREATE TABLE IF NOT EXISTS `sites` (
-                    `site_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-                    `site_code` TEXT NOT NULL,
-                    `site_name` TEXT NOT NULL,
-                    `latitude` REAL NOT NULL,
-                    `longitude` REAL NOT NULL,
-                    `region_id` TEXT NOT NULL,
-                    `country_code` TEXT NOT NULL,
-                    `time_zone` TEXT NOT NULL,
-                    `created_at` INTEGER NOT NULL,
-                    `updated_at` INTEGER NOT NULL,
-                    `is_active` INTEGER NOT NULL DEFAULT 1,
-                    `description` TEXT,
-                    `elevation_meters` REAL
-                )
-            """.trimIndent())
-            
-            // Create indices for sites
-            database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_sites_site_code` ON `sites` (`site_code`)")
-            database.execSQL("CREATE INDEX IF NOT EXISTS `index_sites_region_id` ON `sites` (`region_id`)")
-            database.execSQL("CREATE INDEX IF NOT EXISTS `index_sites_country_code` ON `sites` (`country_code`)")
-            
-            // Create models table
-            database.execSQL("""
-                CREATE TABLE IF NOT EXISTS `models` (
-                    `model_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-                    `model_name` TEXT NOT NULL,
-                    `model_version` TEXT NOT NULL,
-                    `model_type` TEXT NOT NULL,
-                    `description` TEXT,
-                    `configuration_json` TEXT,
-                    `accuracy_metrics` TEXT,
-                    `training_date` INTEGER,
-                    `created_at` INTEGER NOT NULL,
-                    `updated_at` INTEGER NOT NULL,
-                    `is_active` INTEGER NOT NULL DEFAULT 1,
-                    `author` TEXT,
-                    `model_file_path` TEXT
-                )
-            """.trimIndent())
-            
-            // Create indices for models
-            database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_models_model_name` ON `models` (`model_name`)")
-            database.execSQL("CREATE INDEX IF NOT EXISTS `index_models_model_version` ON `models` (`model_version`)")
-            database.execSQL("CREATE INDEX IF NOT EXISTS `index_models_created_at` ON `models` (`created_at`)")
-            
-            // Create observations table
-            database.execSQL("""
-                CREATE TABLE IF NOT EXISTS `observations` (
-                    `observation_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-                    `site_id` INTEGER NOT NULL,
-                    `model_id` INTEGER,
-                    `observation_date` INTEGER NOT NULL,
-                    `sensor_type` TEXT NOT NULL,
-                    `image_url` TEXT,
-                    `metadata_json` TEXT,
-                    `confidence_score` REAL,
-                    `processing_status` TEXT NOT NULL DEFAULT 'pending',
-                    `created_at` INTEGER NOT NULL,
-                    `updated_at` INTEGER NOT NULL,
-                    `quality_flag` TEXT,
-                    `cloud_cover_percentage` REAL,
-                    FOREIGN KEY(`site_id`) REFERENCES `sites`(`site_id`) ON UPDATE NO ACTION ON DELETE CASCADE,
-                    FOREIGN KEY(`model_id`) REFERENCES `models`(`model_id`) ON UPDATE NO ACTION ON DELETE SET NULL
-                )
-            """.trimIndent())
-            
-            // Create indices for observations
-            database.execSQL("CREATE INDEX IF NOT EXISTS `index_observations_site_id` ON `observations` (`site_id`)")
-            database.execSQL("CREATE INDEX IF NOT EXISTS `index_observations_model_id` ON `observations` (`model_id`)")
-            database.execSQL("CREATE INDEX IF NOT EXISTS `index_observations_observation_date` ON `observations` (`observation_date`)")
-            database.execSQL("CREATE INDEX IF NOT EXISTS `index_observations_created_at` ON `observations` (`created_at`)")
-            
-            // Create user_site_cross_ref table
-            database.execSQL("""
-                CREATE TABLE IF NOT EXISTS `user_site_cross_ref` (
-                    `user_id` INTEGER NOT NULL,
-                    `site_id` INTEGER NOT NULL,
-                    `role` TEXT NOT NULL DEFAULT 'viewer',
-                    `created_at` INTEGER NOT NULL,
-                    `is_active` INTEGER NOT NULL DEFAULT 1,
-                    PRIMARY KEY(`user_id`, `site_id`),
-                    FOREIGN KEY(`user_id`) REFERENCES `users`(`user_id`) ON UPDATE NO ACTION ON DELETE CASCADE,
-                    FOREIGN KEY(`site_id`) REFERENCES `sites`(`site_id`) ON UPDATE NO ACTION ON DELETE CASCADE
-                )
-            """.trimIndent())
-            
-            // Create indices for user_site_cross_ref
-            database.execSQL("CREATE INDEX IF NOT EXISTS `index_user_site_cross_ref_user_id` ON `user_site_cross_ref` (`user_id`)")
-            database.execSQL("CREATE INDEX IF NOT EXISTS `index_user_site_cross_ref_site_id` ON `user_site_cross_ref` (`site_id`)")
-            database.execSQL("CREATE INDEX IF NOT EXISTS `index_user_site_cross_ref_created_at` ON `user_site_cross_ref` (`created_at`)")
-            
-            // Create user_model_cross_ref table
-            database.execSQL("""
-                CREATE TABLE IF NOT EXISTS `user_model_cross_ref` (
-                    `user_id` INTEGER NOT NULL,
-                    `model_id` INTEGER NOT NULL,
-                    `permission_level` TEXT NOT NULL DEFAULT 'read',
-                    `created_at` INTEGER NOT NULL,
-                    `is_active` INTEGER NOT NULL DEFAULT 1,
-                    PRIMARY KEY(`user_id`, `model_id`),
-                    FOREIGN KEY(`user_id`) REFERENCES `users`(`user_id`) ON UPDATE NO ACTION ON DELETE CASCADE,
-                    FOREIGN KEY(`model_id`) REFERENCES `models`(`model_id`) ON UPDATE NO ACTION ON DELETE CASCADE
-                )
-            """.trimIndent())
-            
-            // Create indices for user_model_cross_ref
-            database.execSQL("CREATE INDEX IF NOT EXISTS `index_user_model_cross_ref_user_id` ON `user_model_cross_ref` (`user_id`)")
-            database.execSQL("CREATE INDEX IF NOT EXISTS `index_user_model_cross_ref_model_id` ON `user_model_cross_ref` (`model_id`)")
-            database.execSQL("CREATE INDEX IF NOT EXISTS `index_user_model_cross_ref_created_at` ON `user_model_cross_ref` (`created_at`)")
-            
-            // Create watch_progress table
+            // Create watch_progress table for tracking user viewing progress
             database.execSQL("""
                 CREATE TABLE IF NOT EXISTS `watch_progress` (
                     `progress_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
@@ -162,7 +49,7 @@ object Migrations {
             database.execSQL("CREATE INDEX IF NOT EXISTS `index_watch_progress_updated_at` ON `watch_progress` (`updated_at`)")
             database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_watch_progress_user_id_content_id` ON `watch_progress` (`user_id`, `content_id`)")
             
-            // Create library table
+            // Create library table for user's saved content
             database.execSQL("""
                 CREATE TABLE IF NOT EXISTS `library` (
                     `library_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
@@ -189,7 +76,7 @@ object Migrations {
             database.execSQL("CREATE INDEX IF NOT EXISTS `index_library_is_favorite` ON `library` (`is_favorite`)")
             database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_library_user_id_content_id` ON `library` (`user_id`, `content_id`)")
             
-            // Create scraper_manifests table
+            // Create scraper_manifests table for content scraper configurations
             database.execSQL("""
                 CREATE TABLE IF NOT EXISTS `scraper_manifests` (
                     `manifest_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
@@ -214,7 +101,7 @@ object Migrations {
             database.execSQL("CREATE INDEX IF NOT EXISTS `index_scraper_manifests_is_enabled` ON `scraper_manifests` (`is_enabled`)")
             database.execSQL("CREATE INDEX IF NOT EXISTS `index_scraper_manifests_updated_at` ON `scraper_manifests` (`updated_at`)")
             
-            // Create search_history table
+            // Create search_history table for user search queries
             database.execSQL("""
                 CREATE TABLE IF NOT EXISTS `search_history` (
                     `search_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
@@ -237,8 +124,98 @@ object Migrations {
         }
     }
     
+    val MIGRATION_2_3 = object : Migration(2, 3) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            // Create content table
+            database.execSQL("""
+                CREATE TABLE IF NOT EXISTS `content` (
+                    `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                    `title` TEXT NOT NULL,
+                    `year` INTEGER,
+                    `quality` TEXT,
+                    `source` TEXT NOT NULL,
+                    `realDebridId` TEXT,
+                    `posterUrl` TEXT,
+                    `backdropUrl` TEXT,
+                    `description` TEXT,
+                    `duration` INTEGER,
+                    `rating` REAL,
+                    `genres` TEXT,
+                    `cast` TEXT,
+                    `director` TEXT,
+                    `imdbId` TEXT,
+                    `tmdbId` INTEGER,
+                    `addedDate` INTEGER NOT NULL,
+                    `lastPlayedDate` INTEGER,
+                    `playCount` INTEGER NOT NULL DEFAULT 0,
+                    `isFavorite` INTEGER NOT NULL DEFAULT 0,
+                    `isWatched` INTEGER NOT NULL DEFAULT 0
+                )
+            """.trimIndent())
+            
+            // Create indices for content
+            database.execSQL("CREATE INDEX IF NOT EXISTS `index_content_source` ON `content` (`source`)")
+            database.execSQL("CREATE INDEX IF NOT EXISTS `index_content_title` ON `content` (`title`)")
+            database.execSQL("CREATE INDEX IF NOT EXISTS `index_content_addedDate` ON `content` (`addedDate`)")
+            database.execSQL("CREATE INDEX IF NOT EXISTS `index_content_isFavorite` ON `content` (`isFavorite`)")
+            database.execSQL("CREATE INDEX IF NOT EXISTS `index_content_isWatched` ON `content` (`isWatched`)")
+            
+            // Create torrents table
+            database.execSQL("""
+                CREATE TABLE IF NOT EXISTS `torrents` (
+                    `id` TEXT PRIMARY KEY NOT NULL,
+                    `hash` TEXT NOT NULL,
+                    `filename` TEXT NOT NULL,
+                    `bytes` INTEGER NOT NULL,
+                    `links` TEXT NOT NULL,
+                    `split` INTEGER NOT NULL,
+                    `progress` REAL NOT NULL,
+                    `status` TEXT NOT NULL,
+                    `added` INTEGER NOT NULL,
+                    `speed` INTEGER,
+                    `seeders` INTEGER,
+                    `created` INTEGER,
+                    `ended` INTEGER
+                )
+            """.trimIndent())
+            
+            // Create indices for torrents
+            database.execSQL("CREATE INDEX IF NOT EXISTS `index_torrents_hash` ON `torrents` (`hash`)")
+            database.execSQL("CREATE INDEX IF NOT EXISTS `index_torrents_status` ON `torrents` (`status`)")
+            database.execSQL("CREATE INDEX IF NOT EXISTS `index_torrents_added` ON `torrents` (`added`)")
+            
+            // Create downloads table
+            database.execSQL("""
+                CREATE TABLE IF NOT EXISTS `downloads` (
+                    `id` TEXT PRIMARY KEY NOT NULL,
+                    `filename` TEXT NOT NULL,
+                    `mimeType` TEXT NOT NULL,
+                    `filesize` INTEGER NOT NULL,
+                    `link` TEXT NOT NULL,
+                    `host` TEXT NOT NULL,
+                    `chunks` INTEGER NOT NULL,
+                    `download` TEXT NOT NULL,
+                    `streamable` INTEGER NOT NULL,
+                    `generated` INTEGER NOT NULL,
+                    `type` TEXT,
+                    `alternative` TEXT,
+                    `contentId` INTEGER,
+                    FOREIGN KEY(`contentId`) REFERENCES `content`(`id`) ON UPDATE NO ACTION ON DELETE SET NULL
+                )
+            """.trimIndent())
+            
+            // Create indices for downloads
+            database.execSQL("CREATE INDEX IF NOT EXISTS `index_downloads_filename` ON `downloads` (`filename`)")
+            database.execSQL("CREATE INDEX IF NOT EXISTS `index_downloads_mimeType` ON `downloads` (`mimeType`)")
+            database.execSQL("CREATE INDEX IF NOT EXISTS `index_downloads_streamable` ON `downloads` (`streamable`)")
+            database.execSQL("CREATE INDEX IF NOT EXISTS `index_downloads_generated` ON `downloads` (`generated`)")
+            database.execSQL("CREATE INDEX IF NOT EXISTS `index_downloads_contentId` ON `downloads` (`contentId`)")
+        }
+    }
+    
     // All migrations for this database
     val ALL_MIGRATIONS = arrayOf(
-        MIGRATION_1_2
+        MIGRATION_1_2,
+        MIGRATION_2_3
     )
 }

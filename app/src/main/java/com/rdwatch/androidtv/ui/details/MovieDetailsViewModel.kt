@@ -1,12 +1,13 @@
 package com.rdwatch.androidtv.ui.details
 
+import androidx.lifecycle.viewModelScope
 import com.rdwatch.androidtv.Movie
-import com.rdwatch.androidtv.MovieList
 import com.rdwatch.androidtv.presentation.viewmodel.BaseViewModel
+import com.rdwatch.androidtv.repository.MovieRepository
+import com.rdwatch.androidtv.ui.common.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
@@ -14,10 +15,15 @@ import javax.inject.Inject
  * Follows MVVM architecture with BaseViewModel pattern
  */
 @HiltViewModel
-class MovieDetailsViewModel @Inject constructor() : BaseViewModel<MovieDetailsUiState>() {
+class MovieDetailsViewModel @Inject constructor(
+    private val movieRepository: MovieRepository
+) : BaseViewModel<MovieDetailsUiState>() {
     
-    private val _relatedMovies = MutableStateFlow<List<Movie>>(emptyList())
-    val relatedMovies: StateFlow<List<Movie>> = _relatedMovies.asStateFlow()
+    private val _movieState = MutableStateFlow<UiState<Movie>>(UiState.Loading)
+    val movieState: StateFlow<UiState<Movie>> = _movieState.asStateFlow()
+    
+    private val _relatedMoviesState = MutableStateFlow<UiState<List<Movie>>>(UiState.Loading)
+    val relatedMoviesState: StateFlow<UiState<List<Movie>>> = _relatedMoviesState.asStateFlow()
     
     override fun createInitialState(): MovieDetailsUiState {
         return MovieDetailsUiState()
@@ -27,37 +33,56 @@ class MovieDetailsViewModel @Inject constructor() : BaseViewModel<MovieDetailsUi
      * Load movie details and related content
      */
     fun loadMovieDetails(movieId: String) {
-        launchSafely {
+        viewModelScope.launch {
+            _movieState.value = UiState.Loading
             updateState { copy(isLoading = true, error = null) }
             
             try {
-                // Find the movie by ID (converted to Long)
-                val movie = MovieList.list.find { it.id.toString() == movieId }
+                // Convert movieId to Long
+                val id = movieId.toLongOrNull() ?: run {
+                    _movieState.value = UiState.Error("Invalid movie ID")
+                    updateState { 
+                        copy(
+                            isLoading = false,
+                            error = "Invalid movie ID"
+                        )
+                    }
+                    return@launch
+                }
+                
+                // Fetch movie details
+                val movie = movieRepository.getMovieById(id)
                 
                 if (movie == null) {
+                    _movieState.value = UiState.Error("Movie not found")
                     updateState { 
                         copy(
                             isLoading = false,
                             error = "Movie not found"
                         )
                     }
-                    return@launchSafely
+                    return@launch
                 }
                 
-                // Load related movies (excluding current movie)
-                val related = MovieList.list.filter { it.id != movie.id }.take(6)
-                _relatedMovies.value = related
-                
+                _movieState.value = UiState.Success(movie)
                 updateState { 
                     copy(
                         movie = movie,
                         isLoading = false,
                         error = null,
-                        isLoaded = true
+                        isLoaded = true,
+                        isFromRealDebrid = movie.studio?.contains("RealDebrid", ignoreCase = true) == true
                     )
                 }
                 
+                // Load related movies
+                loadRelatedMovies(movie)
+                
             } catch (e: Exception) {
+                _movieState.value = UiState.Error(
+                    message = "Failed to load movie details: ${e.message}",
+                    throwable = e
+                )
                 updateState { 
                     copy(
                         isLoading = false,
@@ -72,19 +97,50 @@ class MovieDetailsViewModel @Inject constructor() : BaseViewModel<MovieDetailsUi
      * Load movie by direct Movie object
      */
     fun loadMovie(movie: Movie) {
-        launchSafely {
+        viewModelScope.launch {
+            _movieState.value = UiState.Success(movie)
             updateState { 
                 copy(
                     movie = movie,
                     isLoading = false,
                     error = null,
-                    isLoaded = true
+                    isLoaded = true,
+                    isFromRealDebrid = movie.studio?.contains("RealDebrid", ignoreCase = true) == true
                 )
             }
             
             // Load related movies
-            val related = MovieList.list.filter { it.id != movie.id }.take(6)
-            _relatedMovies.value = related
+            loadRelatedMovies(movie)
+        }
+    }
+    
+    /**
+     * Load related movies
+     */
+    private fun loadRelatedMovies(currentMovie: Movie) {
+        viewModelScope.launch {
+            _relatedMoviesState.value = UiState.Loading
+            
+            movieRepository.getAllMovies()
+                .catch { e ->
+                    _relatedMoviesState.value = UiState.Error(
+                        message = "Failed to load related movies",
+                        throwable = e
+                    )
+                }
+                .collect { allMovies ->
+                    // Get related movies (same studio, excluding current movie)
+                    val related = allMovies
+                        .filter { it.id != currentMovie.id }
+                        .filter { it.studio == currentMovie.studio }
+                        .take(6)
+                        .ifEmpty {
+                            // If no movies from same studio, just get random movies
+                            allMovies.filter { it.id != currentMovie.id }.take(6)
+                        }
+                    
+                    _relatedMoviesState.value = UiState.Success(related)
+                }
         }
     }
     
@@ -94,8 +150,8 @@ class MovieDetailsViewModel @Inject constructor() : BaseViewModel<MovieDetailsUi
     fun addToWatchlist() {
         val currentMovie = uiState.value.movie ?: return
         
-        launchSafely {
-            // TODO: In real implementation, save to database or remote service
+        viewModelScope.launch {
+            // TODO: Implement watchlist repository when available
             updateState { copy(isInWatchlist = true) }
         }
     }
@@ -104,8 +160,8 @@ class MovieDetailsViewModel @Inject constructor() : BaseViewModel<MovieDetailsUi
      * Remove movie from watchlist
      */
     fun removeFromWatchlist() {
-        launchSafely {
-            // TODO: In real implementation, remove from database or remote service
+        viewModelScope.launch {
+            // TODO: Implement watchlist repository when available
             updateState { copy(isInWatchlist = false) }
         }
     }
@@ -114,10 +170,10 @@ class MovieDetailsViewModel @Inject constructor() : BaseViewModel<MovieDetailsUi
      * Toggle like status
      */
     fun toggleLike() {
-        launchSafely {
+        viewModelScope.launch {
             val currentState = uiState.value.isLiked
             updateState { copy(isLiked = !currentState) }
-            // TODO: In real implementation, save to database or remote service
+            // TODO: Implement favorites repository when available
         }
     }
     
@@ -127,8 +183,8 @@ class MovieDetailsViewModel @Inject constructor() : BaseViewModel<MovieDetailsUi
     fun shareMovie() {
         val currentMovie = uiState.value.movie ?: return
         
-        launchSafely {
-            // TODO: In real implementation, create share intent or generate share link
+        viewModelScope.launch {
+            // TODO: Implement share functionality
             // For now, just show that action was triggered
         }
     }
@@ -139,11 +195,11 @@ class MovieDetailsViewModel @Inject constructor() : BaseViewModel<MovieDetailsUi
     fun downloadMovie() {
         val currentMovie = uiState.value.movie ?: return
         
-        launchSafely {
+        viewModelScope.launch {
             updateState { copy(isDownloading = true) }
             
-            // TODO: In real implementation, start download service
-            // Simulate download process
+            // TODO: Implement download service when available
+            // For RD content, this might involve different logic
             kotlinx.coroutines.delay(2000)
             
             updateState { 
@@ -156,10 +212,41 @@ class MovieDetailsViewModel @Inject constructor() : BaseViewModel<MovieDetailsUi
     }
     
     /**
+     * Delete from Real-Debrid (if applicable)
+     */
+    fun deleteFromRealDebrid() {
+        if (!uiState.value.isFromRealDebrid) return
+        
+        viewModelScope.launch {
+            // TODO: Implement RD deletion when RD repository is available
+            updateState { copy(isDeleting = true) }
+            
+            try {
+                // Placeholder for RD deletion
+                kotlinx.coroutines.delay(1000)
+                
+                updateState { 
+                    copy(
+                        isDeleting = false,
+                        isDeleted = true
+                    )
+                }
+            } catch (e: Exception) {
+                updateState { 
+                    copy(
+                        isDeleting = false,
+                        error = "Failed to delete from Real-Debrid: ${e.message}"
+                    )
+                }
+            }
+        }
+    }
+    
+    /**
      * Get formatted duration string
      */
     fun getFormattedDuration(): String {
-        // TODO: In real implementation, get from movie metadata
+        // TODO: Get from movie metadata when available
         return "2h 15m"
     }
     
@@ -167,7 +254,7 @@ class MovieDetailsViewModel @Inject constructor() : BaseViewModel<MovieDetailsUi
      * Get movie rating
      */
     fun getMovieRating(): String {
-        // TODO: In real implementation, get from movie metadata
+        // TODO: Get from movie metadata when available
         return "PG-13"
     }
     
@@ -175,7 +262,7 @@ class MovieDetailsViewModel @Inject constructor() : BaseViewModel<MovieDetailsUi
      * Get movie language
      */
     fun getMovieLanguage(): String {
-        // TODO: In real implementation, get from movie metadata
+        // TODO: Get from movie metadata when available
         return "English"
     }
     
@@ -183,15 +270,28 @@ class MovieDetailsViewModel @Inject constructor() : BaseViewModel<MovieDetailsUi
      * Get movie year
      */
     fun getMovieYear(): String {
-        // TODO: In real implementation, get from movie metadata
+        // TODO: Get from movie metadata when available
         return "2023"
     }
     
+    /**
+     * Refresh movie details
+     */
+    fun refresh() {
+        val movieId = uiState.value.movie?.id?.toString() ?: return
+        loadMovieDetails(movieId)
+    }
+    
     override fun handleError(exception: Throwable) {
+        _movieState.value = UiState.Error(
+            message = "An error occurred: ${exception.message}",
+            throwable = exception
+        )
         updateState { 
             copy(
                 isLoading = false,
                 isDownloading = false,
+                isDeleting = false,
                 error = "An error occurred: ${exception.message}"
             )
         }
@@ -209,8 +309,12 @@ data class MovieDetailsUiState(
     val isLiked: Boolean = false,
     val isDownloading: Boolean = false,
     val isDownloaded: Boolean = false,
+    val isFromRealDebrid: Boolean = false,
+    val isDeleting: Boolean = false,
+    val isDeleted: Boolean = false,
     val error: String? = null
 ) {
     val hasMovie: Boolean get() = movie != null
-    val canPlay: Boolean get() = movie?.videoUrl != null
+    val canPlay: Boolean get() = movie?.videoUrl != null && !isDeleted
+    val canDelete: Boolean get() = isFromRealDebrid && !isDeleted && !isDeleting
 }

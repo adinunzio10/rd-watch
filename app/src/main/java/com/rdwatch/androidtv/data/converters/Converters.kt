@@ -1,6 +1,7 @@
 package com.rdwatch.androidtv.data.converters
 
 import androidx.room.TypeConverter
+import com.rdwatch.androidtv.data.entities.ContentSource
 import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.Types
@@ -182,6 +183,22 @@ class Converters {
         } catch (e: Exception) {
             null
         }
+    }
+    
+    @TypeConverter
+    fun fromContentSource(value: String?): ContentSource? {
+        return value?.let {
+            try {
+                ContentSource.valueOf(it)
+            } catch (e: IllegalArgumentException) {
+                null
+            }
+        }
+    }
+    
+    @TypeConverter
+    fun contentSourceToString(source: ContentSource?): String? {
+        return source?.name
     }
 }
 
