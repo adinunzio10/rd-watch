@@ -43,35 +43,6 @@ object DatabaseModule {
         return database.userDao()
     }
 
-    @Provides
-    @Singleton
-    fun provideSiteDao(@MainDatabase database: AppDatabase): SiteDao {
-        return database.siteDao()
-    }
-
-    @Provides
-    @Singleton
-    fun provideObservationDao(@MainDatabase database: AppDatabase): ObservationDao {
-        return database.observationDao()
-    }
-
-    @Provides
-    @Singleton
-    fun provideModelDao(@MainDatabase database: AppDatabase): ModelDao {
-        return database.modelDao()
-    }
-
-    @Provides
-    @Singleton
-    fun provideUserSiteCrossRefDao(@MainDatabase database: AppDatabase): UserSiteCrossRefDao {
-        return database.userSiteCrossRefDao()
-    }
-
-    @Provides
-    @Singleton
-    fun provideUserModelCrossRefDao(@MainDatabase database: AppDatabase): UserModelCrossRefDao {
-        return database.userModelCrossRefDao()
-    }
 
     @Provides
     @Singleton
