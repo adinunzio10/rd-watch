@@ -1,6 +1,7 @@
 package com.rdwatch.androidtv.auth
 
 import android.content.Context
+import android.util.Log
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
@@ -26,6 +27,7 @@ class DataStoreTokenStorage @Inject constructor(
 ) : TokenStorage {
     
     companion object {
+        private const val TAG = "DataStoreTokenStorage"
         private const val DATASTORE_NAME = "auth_tokens"
         private val ACCESS_TOKEN_KEY = stringPreferencesKey("access_token")
         private val REFRESH_TOKEN_KEY = stringPreferencesKey("refresh_token")
@@ -88,31 +90,46 @@ class DataStoreTokenStorage @Inject constructor(
     }
     
     override suspend fun isTokenValid(): Boolean {
+        Log.d(TAG, "isTokenValid() called")
         return try {
-            dataStore.data
+            val result = dataStore.data
                 .map { preferences ->
                     val accessToken = preferences[ACCESS_TOKEN_KEY]
                     val expiryTime = preferences[TOKEN_EXPIRY_KEY] ?: 0L
                     val currentTime = System.currentTimeMillis()
                     
+                    Log.d(TAG, "Token check: accessToken=${accessToken?.take(10)}..., expiryTime=$expiryTime, currentTime=$currentTime")
+                    
                     // Token is valid if it exists and hasn't expired (with buffer)
-                    accessToken != null && expiryTime > (currentTime + TOKEN_EXPIRY_BUFFER_MS)
+                    val isValid = accessToken != null && expiryTime > (currentTime + TOKEN_EXPIRY_BUFFER_MS)
+                    Log.d(TAG, "Token validity result: $isValid")
+                    isValid
                 }
                 .first()
+            Log.d(TAG, "isTokenValid() returning: $result")
+            result
         } catch (e: Exception) {
+            Log.e(TAG, "Error checking token validity: ${e.message}", e)
             // Return false if unable to check token validity
             false
         }
     }
     
     override suspend fun hasRefreshToken(): Boolean {
+        Log.d(TAG, "hasRefreshToken() called")
         return try {
-            dataStore.data
+            val result = dataStore.data
                 .map { preferences -> 
-                    !preferences[REFRESH_TOKEN_KEY].isNullOrEmpty()
+                    val refreshToken = preferences[REFRESH_TOKEN_KEY]
+                    val hasToken = !refreshToken.isNullOrEmpty()
+                    Log.d(TAG, "Refresh token check: token=${refreshToken?.take(10)}..., hasToken=$hasToken")
+                    hasToken
                 }
                 .first()
+            Log.d(TAG, "hasRefreshToken() returning: $result")
+            result
         } catch (e: Exception) {
+            Log.e(TAG, "Error checking refresh token: ${e.message}", e)
             // Return false if unable to check refresh token
             false
         }

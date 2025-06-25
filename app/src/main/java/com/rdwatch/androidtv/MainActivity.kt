@@ -1,6 +1,7 @@
 package com.rdwatch.androidtv
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
@@ -27,6 +28,10 @@ import javax.inject.Inject
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     
+    companion object {
+        private const val TAG = "MainActivity"
+    }
+    
     @Inject
     lateinit var playbackNavigationHelper: PlaybackNavigationHelper
     
@@ -36,22 +41,29 @@ class MainActivity : ComponentActivity() {
     private val mainViewModel: MainViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        Log.d(TAG, "onCreate() called")
         super.onCreate(savedInstanceState)
         
+        Log.d(TAG, "Scheduling playback cleanup")
         // Schedule periodic cleanup of old playback data
         playbackCleanupManager.scheduleCleanup()
         
+        Log.d(TAG, "Setting up Compose content")
         setContent {
             RdwatchTheme {
                 val isReady by mainViewModel.isReady.collectAsStateWithLifecycle(initialValue = false)
                 val startDestination by mainViewModel.startDestination.collectAsStateWithLifecycle(initialValue = Screen.Home)
                 
+                Log.d(TAG, "Compose content - isReady: $isReady, startDestination: $startDestination")
+                
                 if (isReady) {
+                    Log.d(TAG, "App is ready, showing navigation")
                     val navController = rememberNavController()
                     AppNavigation(
                         navController = navController,
                         startDestination = startDestination,
                         onAuthenticationSuccess = {
+                            Log.d(TAG, "Authentication success callback triggered")
                             mainViewModel.onAuthenticationSuccess()
                             // Navigate to home and clear back stack
                             navController.navigate(Screen.Home) {
@@ -60,6 +72,7 @@ class MainActivity : ComponentActivity() {
                         }
                     )
                 } else {
+                    Log.d(TAG, "App not ready, showing loading screen")
                     // Show loading screen while checking authentication
                     Box(
                         modifier = Modifier.fillMaxSize(),
@@ -70,6 +83,7 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+        Log.d(TAG, "onCreate() completed")
     }
     
     override fun onPause() {

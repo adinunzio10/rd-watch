@@ -1,5 +1,6 @@
 package com.rdwatch.androidtv.auth
 
+import android.util.Log
 import com.rdwatch.androidtv.auth.models.AuthState
 import com.rdwatch.androidtv.auth.models.DeviceCodeInfo
 import com.rdwatch.androidtv.network.api.OAuth2ApiService
@@ -22,6 +23,7 @@ class AuthRepository @Inject constructor(
 ) {
     
     companion object {
+        private const val TAG = "AuthRepository"
         private const val CLIENT_ID = "X245A4XAIBGVM"  // Real Debrid client ID
         private const val SCOPE = ""
         private const val POLLING_TIMEOUT_MS = 600_000L  // 10 minutes
@@ -175,13 +177,33 @@ class AuthRepository @Inject constructor(
     }
     
     suspend fun checkAuthState() {
-        if (tokenStorage.isTokenValid()) {
-            _authState.value = AuthState.Authenticated
-        } else if (tokenStorage.hasRefreshToken()) {
-            refreshTokenIfNeeded()
-        } else {
-            _authState.value = AuthState.Initializing
+        Log.d(TAG, "checkAuthState() called")
+        try {
+            Log.d(TAG, "Checking if token is valid...")
+            val isTokenValid = tokenStorage.isTokenValid()
+            Log.d(TAG, "Token valid: $isTokenValid")
+            
+            if (isTokenValid) {
+                Log.d(TAG, "Token is valid, setting state to Authenticated")
+                _authState.value = AuthState.Authenticated
+            } else {
+                Log.d(TAG, "Token not valid, checking for refresh token...")
+                val hasRefreshToken = tokenStorage.hasRefreshToken()
+                Log.d(TAG, "Has refresh token: $hasRefreshToken")
+                
+                if (hasRefreshToken) {
+                    Log.d(TAG, "Has refresh token, attempting refresh...")
+                    refreshTokenIfNeeded()
+                } else {
+                    Log.d(TAG, "No refresh token, setting state to Initializing")
+                    _authState.value = AuthState.Initializing
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error during checkAuthState(): ${e.message}", e)
+            _authState.value = AuthState.Error("Failed to check authentication state: ${e.message}")
         }
+        Log.d(TAG, "checkAuthState() completed, current state: ${_authState.value}")
     }
     
     private fun parseError(errorBody: String?): String {
