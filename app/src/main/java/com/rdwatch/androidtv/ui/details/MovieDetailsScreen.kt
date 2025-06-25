@@ -105,12 +105,12 @@ fun MovieDetailsScreen(
         }
         
         // Related Movies Section
-        when (relatedMoviesState) {
+        when (val currentRelatedMoviesState = relatedMoviesState) {
             is com.rdwatch.androidtv.ui.common.UiState.Success -> {
-                if (relatedMoviesState.data.isNotEmpty()) {
+                if (currentRelatedMoviesState.data.isNotEmpty()) {
                     item {
                         RelatedMoviesSection(
-                            movies = relatedMoviesState.data,
+                            movies = currentRelatedMoviesState.data,
                             onMovieClick = { /* TODO: Navigate to movie details */ },
                             modifier = Modifier.padding(horizontal = overscanMargin)
                         )

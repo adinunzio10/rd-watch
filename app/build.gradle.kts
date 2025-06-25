@@ -72,6 +72,7 @@ dependencies {
     // Hilt dependencies
     implementation(libs.hilt.android)
     implementation(libs.hilt.navigation.compose)
+    implementation(libs.hilt.work)
     ksp(libs.hilt.compiler)
     
     // ViewModel dependencies
@@ -105,6 +106,13 @@ dependencies {
     // DataStore
     implementation(libs.androidx.datastore.preferences)
     
+    // WorkManager
+    implementation(libs.androidx.work.runtime.ktx)
+    
+    // Paging
+    implementation(libs.androidx.paging.runtime)
+    implementation(libs.androidx.paging.compose)
+    
     // Image loading
     implementation(libs.coil.compose)
     
@@ -127,6 +135,7 @@ dependencies {
     testImplementation(libs.hilt.android.testing)
     testImplementation(libs.room.testing)
     testImplementation(libs.okhttp.mockwebserver)
+    testImplementation(libs.androidx.work.testing)
     kspTest(libs.hilt.compiler)
     
     // Android testing dependencies
