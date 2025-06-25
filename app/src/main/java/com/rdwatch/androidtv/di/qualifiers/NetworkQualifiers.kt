@@ -50,3 +50,10 @@ annotation class CachingClient
 @Qualifier
 @Retention(AnnotationRetention.BINARY)
 annotation class RealDebridApi
+
+/**
+ * Qualifier for OAuth API endpoint (different base URL than REST API)
+ */
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class OAuthApi

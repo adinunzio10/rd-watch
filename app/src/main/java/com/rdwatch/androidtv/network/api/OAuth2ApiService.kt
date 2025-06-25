@@ -9,6 +9,10 @@ import retrofit2.http.POST
 
 interface OAuth2ApiService {
     
+    companion object {
+        const val OAUTH_BASE_URL = "https://api.real-debrid.com/"
+    }
+    
     @FormUrlEncoded
     @POST("oauth/v2/device/code")
     suspend fun getDeviceCode(
