@@ -50,7 +50,9 @@
       "WebFetch(domain:docs.gradle.org)",
       "Bash(curl:*)",
       "WebFetch(domain:gradle.org)",
-      "Bash(TASK_ID=*)"
+      "Bash(TASK_ID=*)",
+      "Bash(jq:*)",
+      "Bash(kotlinc:*)"
     ],
     "deny": []
   }

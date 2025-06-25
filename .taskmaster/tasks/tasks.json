@@ -1742,13 +1742,196 @@
         "description": "Connect the completed OAuth system to app startup sequence, add authentication state checks, create sign-in entry points, and implement post-authentication routing to make OAuth actually usable.",
         "details": "Modify MainActivity to check authentication state on startup using AuthViewModel. Add authentication state flow observation to redirect unauthenticated users to sign-in screen. Create sign-in entry points in navigation menu and settings screen. Implement AuthenticationScreen composable that displays OAuth flow UI with device code and QR code. Add authenticated/unauthenticated navigation graph states using Compose Navigation. Create post-authentication routing logic to redirect users to their intended destination or default browse screen. Implement sign-out functionality in settings with token cleanup. Add authentication state persistence across app restarts using stored tokens. Create loading states during token validation on app startup. Handle edge cases: expired tokens during app use, network failures during auth check, interrupted OAuth flow. Add proper error handling with user-friendly messages for authentication failures.",
         "testStrategy": "Test app startup with no stored tokens redirects to sign-in. Verify successful OAuth flow navigates to browse screen. Test token expiration during app use triggers re-authentication. Verify sign-out clears tokens and navigates to sign-in. Test network failures during startup auth check. Verify deep linking works after authentication. Test app restart maintains authentication state. Verify all navigation entry points respect authentication state. Test interrupted OAuth flow recovery.",
-        "status": "pending",
+        "status": "done",
         "dependencies": [
           5,
           28
         ],
         "priority": "high",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create Authentication State Management",
+            "description": "Implement centralized authentication state management with token storage and validation",
+            "dependencies": [],
+            "details": "Create AuthManager or similar class to handle authentication state, token persistence using SharedPreferences or DataStore, and provide methods for checking authentication status",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Design Authentication UI Screen",
+            "description": "Create OAuth authentication screen with TV-optimized UI using Jetpack Compose",
+            "dependencies": [],
+            "details": "Build authentication screen with proper focus handling for TV remote navigation, OAuth login button, loading states, and error display components",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Implement Startup Authentication Check",
+            "description": "Add authentication verification during app startup with appropriate routing",
+            "dependencies": [
+              1
+            ],
+            "details": "Modify MainActivity or create splash screen to check authentication status on startup and route users to appropriate screen based on authentication state",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Create Navigation Graph with Auth States",
+            "description": "Set up navigation system to handle authenticated and unauthenticated user flows",
+            "dependencies": [
+              2,
+              3
+            ],
+            "details": "Configure Jetpack Navigation with conditional navigation graphs, authenticated routes, and unauthenticated routes with proper back stack management",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Implement Token Management System",
+            "description": "Create secure token storage, refresh logic, and expiration handling",
+            "dependencies": [
+              1
+            ],
+            "details": "Build token refresh mechanism, secure storage implementation, automatic token renewal, and token expiration detection with appropriate user notifications",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 6,
+            "title": "Add Sign-Out Functionality",
+            "description": "Create sign-out feature with proper cleanup and navigation",
+            "dependencies": [
+              1,
+              4,
+              5
+            ],
+            "details": "Implement sign-out button in appropriate UI locations, clear stored tokens and user data, reset navigation state to unauthenticated flow",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 7,
+            "title": "Implement Authentication Error Handling",
+            "description": "Create comprehensive error handling for various authentication failure scenarios",
+            "dependencies": [
+              2,
+              5
+            ],
+            "details": "Handle network errors, invalid tokens, expired sessions, OAuth failures, and server errors with appropriate user feedback and recovery options",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 8,
+            "title": "Handle Edge Cases and Testing",
+            "description": "Address edge cases like offline scenarios, concurrent sessions, and app backgrounding",
+            "dependencies": [
+              1,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "details": "Handle app backgrounding during auth flow, offline authentication checks, multiple device sessions, and create comprehensive test coverage for authentication scenarios",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 9,
+            "title": "Implement startup authentication check",
+            "description": "Create authentication state verification on app startup to determine initial navigation flow",
+            "dependencies": [],
+            "details": "Add authentication state check in MainActivity or application startup to verify if user has valid token and determine whether to show auth screen or main content",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 10,
+            "title": "Design authentication UI screen",
+            "description": "Create Compose-based authentication screen for OAuth login flow",
+            "dependencies": [],
+            "details": "Build authentication screen using Jetpack Compose with appropriate styling for Android TV, including OAuth login button and loading states",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 11,
+            "title": "Implement navigation graph states",
+            "description": "Setup navigation graph to handle authenticated and unauthenticated user states",
+            "dependencies": [
+              9,
+              10
+            ],
+            "details": "Configure Compose Navigation to have separate navigation graphs or conditional routing based on authentication state, ensuring proper flow between auth and main screens",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 12,
+            "title": "Implement token management system",
+            "description": "Create secure token storage and management for OAuth authentication",
+            "dependencies": [],
+            "details": "Implement secure storage for OAuth tokens using EncryptedSharedPreferences or similar, including token refresh logic and validation",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 13,
+            "title": "Add sign-out functionality",
+            "description": "Implement user sign-out with proper token cleanup and navigation reset",
+            "dependencies": [
+              11,
+              12
+            ],
+            "details": "Create sign-out functionality that clears stored tokens, resets authentication state, and navigates user back to authentication screen",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 14,
+            "title": "Implement authentication error handling",
+            "description": "Add comprehensive error handling for authentication failures and network issues",
+            "dependencies": [
+              10,
+              12
+            ],
+            "details": "Handle various authentication error scenarios including network failures, invalid tokens, expired sessions, and OAuth provider errors with appropriate user feedback",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 15,
+            "title": "Handle authentication edge cases",
+            "description": "Implement handling for edge cases like token expiration during app use and offline scenarios",
+            "dependencies": [
+              12,
+              13,
+              14
+            ],
+            "details": "Handle edge cases such as token expiration while app is running, network connectivity issues, and graceful degradation when authentication services are unavailable",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 16,
+            "title": "Integrate authentication flow with existing app navigation",
+            "description": "Connect authentication system with existing app navigation and ensure smooth user experience",
+            "dependencies": [
+              11,
+              13,
+              15
+            ],
+            "details": "Ensure authentication flow integrates seamlessly with existing MainActivity and navigation system, maintaining proper state across app lifecycle events",
+            "status": "done",
+            "testStrategy": ""
+          }
+        ]
       },
       {
         "id": 30,
@@ -1892,7 +2075,7 @@
     ],
     "metadata": {
       "created": "2025-06-22T03:41:46.714Z",
-      "updated": "2025-06-25T02:09:51.001Z",
+      "updated": "2025-06-25T02:34:19.330Z",
       "description": "Tasks for master context"
     }
   }
