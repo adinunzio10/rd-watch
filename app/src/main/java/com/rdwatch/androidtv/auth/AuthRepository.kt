@@ -7,8 +7,8 @@ import com.rdwatch.androidtv.network.models.OAuth2ErrorResponse
 import com.rdwatch.androidtv.repository.base.Result
 import com.squareup.moshi.Moshi
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import retrofit2.HttpException
 import javax.inject.Inject
@@ -28,7 +28,12 @@ class AuthRepository @Inject constructor(
     }
     
     private val _authState = MutableStateFlow<AuthState>(AuthState.Initializing)
-    val authState: Flow<AuthState> = _authState.asStateFlow()
+    val authState: StateFlow<AuthState> = _authState.asStateFlow()
+    
+    /**
+     * Get current authentication state value
+     */
+    fun getCurrentAuthState(): AuthState = _authState.value
     
     suspend fun startDeviceFlow(): Result<DeviceCodeInfo> {
         return try {

@@ -43,25 +43,40 @@ class DataStoreTokenStorage @Inject constructor(
     private val dataStore: DataStore<Preferences> = context.authDataStore
     
     override suspend fun saveTokens(accessToken: String, refreshToken: String?, expiresIn: Int) {
-        val expiryTime = System.currentTimeMillis() + (expiresIn * 1000L)
-        
-        dataStore.edit { preferences ->
-            preferences[ACCESS_TOKEN_KEY] = accessToken
-            refreshToken?.let { preferences[REFRESH_TOKEN_KEY] = it }
-            preferences[TOKEN_EXPIRY_KEY] = expiryTime
+        try {
+            val expiryTime = System.currentTimeMillis() + (expiresIn * 1000L)
+            
+            dataStore.edit { preferences ->
+                preferences[ACCESS_TOKEN_KEY] = accessToken
+                refreshToken?.let { preferences[REFRESH_TOKEN_KEY] = it }
+                preferences[TOKEN_EXPIRY_KEY] = expiryTime
+            }
+        } catch (e: Exception) {
+            // Log error but don't crash - fallback to memory-only storage if needed
+            throw Exception("Failed to save tokens: ${e.message}", e)
         }
     }
     
     override suspend fun getAccessToken(): String? {
-        return dataStore.data
-            .map { preferences -> preferences[ACCESS_TOKEN_KEY] }
-            .first()
+        return try {
+            dataStore.data
+                .map { preferences -> preferences[ACCESS_TOKEN_KEY] }
+                .first()
+        } catch (e: Exception) {
+            // Return null if unable to read from DataStore
+            null
+        }
     }
     
     override suspend fun getRefreshToken(): String? {
-        return dataStore.data
-            .map { preferences -> preferences[REFRESH_TOKEN_KEY] }
-            .first()
+        return try {
+            dataStore.data
+                .map { preferences -> preferences[REFRESH_TOKEN_KEY] }
+                .first()
+        } catch (e: Exception) {
+            // Return null if unable to read from DataStore
+            null
+        }
     }
     
     override suspend fun clearTokens() {
@@ -73,24 +88,34 @@ class DataStoreTokenStorage @Inject constructor(
     }
     
     override suspend fun isTokenValid(): Boolean {
-        return dataStore.data
-            .map { preferences ->
-                val accessToken = preferences[ACCESS_TOKEN_KEY]
-                val expiryTime = preferences[TOKEN_EXPIRY_KEY] ?: 0L
-                val currentTime = System.currentTimeMillis()
-                
-                // Token is valid if it exists and hasn't expired (with buffer)
-                accessToken != null && expiryTime > (currentTime + TOKEN_EXPIRY_BUFFER_MS)
-            }
-            .first()
+        return try {
+            dataStore.data
+                .map { preferences ->
+                    val accessToken = preferences[ACCESS_TOKEN_KEY]
+                    val expiryTime = preferences[TOKEN_EXPIRY_KEY] ?: 0L
+                    val currentTime = System.currentTimeMillis()
+                    
+                    // Token is valid if it exists and hasn't expired (with buffer)
+                    accessToken != null && expiryTime > (currentTime + TOKEN_EXPIRY_BUFFER_MS)
+                }
+                .first()
+        } catch (e: Exception) {
+            // Return false if unable to check token validity
+            false
+        }
     }
     
     override suspend fun hasRefreshToken(): Boolean {
-        return dataStore.data
-            .map { preferences -> 
-                !preferences[REFRESH_TOKEN_KEY].isNullOrEmpty()
-            }
-            .first()
+        return try {
+            dataStore.data
+                .map { preferences -> 
+                    !preferences[REFRESH_TOKEN_KEY].isNullOrEmpty()
+                }
+                .first()
+        } catch (e: Exception) {
+            // Return false if unable to check refresh token
+            false
+        }
     }
     
     /**

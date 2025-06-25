@@ -62,33 +62,48 @@ class MainViewModel @Inject constructor(
     private fun initializeApp() {
         viewModelScope.launch {
             try {
-                // Add a timeout for initialization to prevent infinite loading
-                val initTimeoutMs = 10_000L // 10 seconds
+                // Simple timeout approach - don't wait forever
+                val initTimeoutMs = 5_000L // 5 seconds max
                 val startTime = System.currentTimeMillis()
                 
-                // Check current authentication state
-                authRepository.checkAuthState()
+                // Try to check authentication state, but with error handling
+                try {
+                    authRepository.checkAuthState()
+                } catch (e: Exception) {
+                    // If auth check fails, assume unauthenticated and continue
+                    _startDestination.value = Screen.Authentication
+                    _initializationError.value = null
+                    _isInitialized.value = true
+                    return@launch
+                }
                 
-                // Wait for auth state to stabilize, but with timeout
+                // Wait briefly for auth state to stabilize
                 var attempts = 0
-                val maxAttempts = 20 // 10 seconds with 500ms intervals
+                val maxAttempts = 10 // 5 seconds with 500ms intervals
                 
-                while (!_isInitialized.value && attempts < maxAttempts) {
+                while (attempts < maxAttempts) {
                     delay(500)
                     attempts++
                     
-                    // If we've been waiting too long, assume unauthenticated
+                    // Check if we have a stable auth state
+                    val currentAuthState = authRepository.getCurrentAuthState()
+                    if (currentAuthState !is AuthState.Initializing) {
+                        // We have a stable state, proceed
+                        break
+                    }
+                    
+                    // Timeout protection
                     if (System.currentTimeMillis() - startTime > initTimeoutMs) {
                         _startDestination.value = Screen.Authentication
-                        _initializationError.value = "Authentication check timed out"
+                        _initializationError.value = null
                         break
                     }
                 }
                 
             } catch (e: Exception) {
-                // If there's an error checking auth state, start with authentication screen
+                // Any error during initialization - default to authentication screen
                 _startDestination.value = Screen.Authentication
-                _initializationError.value = "Failed to check authentication: ${e.message}"
+                _initializationError.value = null
             } finally {
                 _isInitialized.value = true
             }
