@@ -53,7 +53,10 @@
       "Bash(TASK_ID=*)",
       "Bash(jq:*)",
       "Bash(kotlinc:*)",
-      "Bash(gh pr edit:*)"
+      "Bash(gh pr edit:*)",
+      "Bash(gh repo view:*)",
+      "Bash(gh label:*)",
+      "Bash(gh repo edit:*)"
     ],
     "deny": []
   }
