@@ -1516,13 +1516,79 @@
         "description": "Wire MainActivity to use AppNavigation system instead of bypassing it, replacing direct TVHomeScreen() call with NavHost setup and implementing proper navigation between screens.",
         "details": "Replace the direct TVHomeScreen() call in MainActivity with proper NavHost setup using Compose Navigation. Uncomment and configure navigation destinations in AppNavigation.kt including Home, Search, Library, Downloads, and Settings screens. Implement click handlers in navigation drawer and menu items to actually navigate between screens using NavController. Set up proper navigation graph with startDestination pointing to home screen. Configure navigation animations suitable for TV (slide transitions). Implement back stack management for TV navigation patterns. Add proper focus management when navigating between screens to ensure D-pad navigation works correctly. Create NavigationViewModel to handle navigation state and deep linking. Ensure all navigation actions use the centralized navigation system rather than direct screen calls. Configure proper argument passing between screens for content details navigation.",
         "testStrategy": "Test navigation flow between all screens using D-pad controls. Verify proper focus restoration when returning to previous screens. Test back button navigation and back stack management. Verify navigation drawer opens and closes correctly with menu selections working. Test deep linking to specific screens. Verify no direct screen instantiation bypasses the navigation system. Test navigation state persistence across configuration changes. Verify proper animation transitions between screens on TV devices.",
-        "status": "pending",
+        "status": "in-progress",
         "dependencies": [
           7,
           3
         ],
         "priority": "high",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Set up NavHost in MainActivity",
+            "description": "Configure NavHost with NavController in MainActivity.kt using Jetpack Compose Navigation",
+            "dependencies": [],
+            "details": "Add NavHost composable to MainActivity, initialize NavController, and set up basic navigation container structure",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Configure navigation graph with screens",
+            "description": "Define navigation graph with all app screens and their routes",
+            "dependencies": [
+              1
+            ],
+            "details": "Create navigation graph defining routes for home, movie details, settings, and other screens with proper composable destinations",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Implement navigation handler functions",
+            "description": "Create navigation handler functions for screen transitions and parameter passing",
+            "dependencies": [
+              2
+            ],
+            "details": "Implement navigation handlers for moving between screens, passing movie data, and handling navigation events",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Integrate focus management with navigation",
+            "description": "Set up focus management system to work with navigation transitions",
+            "dependencies": [
+              3
+            ],
+            "details": "Ensure proper focus handling during navigation, focus restoration, and TV remote navigation behavior",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Configure deep linking support",
+            "description": "Set up deep linking for direct navigation to specific screens",
+            "dependencies": [
+              2
+            ],
+            "details": "Implement deep link handling for movie details and other screens with proper URI patterns",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 6,
+            "title": "Configure back stack management",
+            "description": "Set up proper back stack behavior for TV navigation patterns",
+            "dependencies": [
+              4,
+              5
+            ],
+            "details": "Configure back stack behavior, handle back button presses, and implement TV-appropriate navigation patterns",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
       },
       {
         "id": 27,
@@ -1826,7 +1892,7 @@
     ],
     "metadata": {
       "created": "2025-06-22T03:41:46.714Z",
-      "updated": "2025-06-24T05:18:09.920Z",
+      "updated": "2025-06-25T01:29:15.829Z",
       "description": "Tasks for master context"
     }
   }

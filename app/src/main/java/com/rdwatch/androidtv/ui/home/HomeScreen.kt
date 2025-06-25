@@ -1,5 +1,7 @@
 package com.rdwatch.androidtv.ui.home
 
+import android.util.Log
+
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -125,8 +127,14 @@ fun TVHomeScreen(
             TVNavigationDrawer(
                 focusRequester = drawerFocusRequester,
                 onItemSelected = { screen ->
+                    Log.d("TVHomeScreen", "Navigation item selected: $screen")
                     isDrawerOpen = false
-                    onNavigateToScreen?.invoke(screen)
+                    if (onNavigateToScreen != null) {
+                        Log.d("TVHomeScreen", "Calling onNavigateToScreen with: $screen")
+                        onNavigateToScreen.invoke(screen)
+                    } else {
+                        Log.e("TVHomeScreen", "onNavigateToScreen is null!")
+                    }
                 },
                 onBackPressed = { isDrawerOpen = false }
             )
@@ -186,9 +194,9 @@ fun TVNavigationDrawer(
     
     val navigationItems = listOf(
         NavigationItem("Home", Icons.Default.Home, Screen.Home),
-        NavigationItem("Browse", Icons.Default.Search, Screen.Browse),
         NavigationItem("Search", Icons.Default.Search, Screen.Search),
-        NavigationItem("Profile", Icons.Default.Person, Screen.Profile),
+        NavigationItem("Library", Icons.Default.VideoLibrary, Screen.Profile), // Using Profile screen for Library temporarily
+        NavigationItem("Downloads", Icons.Default.Download, Screen.Browse), // Using Browse screen for Downloads temporarily
         NavigationItem("Settings", Icons.Default.Settings, Screen.Settings)
     )
     
@@ -225,6 +233,7 @@ fun TVNavigationDrawer(
                         Modifier
                     },
                     onClick = {
+                        Log.d("TVHomeScreen", "NavigationDrawerItem clicked: ${item.title} -> ${item.destination}")
                         onItemSelected(item.destination)
                     }
                 )
@@ -247,7 +256,16 @@ fun NavigationDrawerItem(
         modifier = modifier
             .fillMaxWidth()
             .onFocusChanged { isFocused = it.isFocused }
-            .focusable(),
+            .focusable()
+            .onKeyEvent { keyEvent ->
+                if (keyEvent.type == KeyEventType.KeyUp && 
+                    (keyEvent.key == Key.DirectionCenter || keyEvent.key == Key.Enter)) {
+                    onClick()
+                    true
+                } else {
+                    false
+                }
+            },
         colors = CardDefaults.cardColors(
             containerColor = if (isFocused) {
                 MaterialTheme.colorScheme.primary
