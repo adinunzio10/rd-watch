@@ -10,14 +10,14 @@ import retrofit2.http.POST
 interface OAuth2ApiService {
     
     @FormUrlEncoded
-    @POST("oauth/device/code")
+    @POST("oauth/v2/device/code")
     suspend fun getDeviceCode(
         @Field("client_id") clientId: String,
         @Field("scope") scope: String = ""
     ): Response<OAuth2DeviceCodeResponse>
     
     @FormUrlEncoded
-    @POST("oauth/device/credentials")
+    @POST("oauth/v2/device/credentials")
     suspend fun getDeviceToken(
         @Field("client_id") clientId: String,
         @Field("device_code") deviceCode: String,
@@ -25,7 +25,7 @@ interface OAuth2ApiService {
     ): Response<OAuth2TokenResponse>
     
     @FormUrlEncoded
-    @POST("oauth/token")
+    @POST("oauth/v2/token")
     suspend fun refreshToken(
         @Field("client_id") clientId: String,
         @Field("refresh_token") refreshToken: String,

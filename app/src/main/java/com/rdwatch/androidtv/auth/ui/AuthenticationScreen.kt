@@ -73,9 +73,6 @@ fun AuthenticationScreen(
         }
     }
     
-    LaunchedEffect(Unit) {
-        viewModel.startAuthentication()
-    }
     
     Box(
         modifier = Modifier
