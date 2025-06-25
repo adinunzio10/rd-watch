@@ -1,7 +1,5 @@
 package com.rdwatch.androidtv.ui.home
 
-import android.util.Log
-
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -127,14 +125,8 @@ fun TVHomeScreen(
             TVNavigationDrawer(
                 focusRequester = drawerFocusRequester,
                 onItemSelected = { screen ->
-                    Log.d("TVHomeScreen", "Navigation item selected: $screen")
                     isDrawerOpen = false
-                    if (onNavigateToScreen != null) {
-                        Log.d("TVHomeScreen", "Calling onNavigateToScreen with: $screen")
-                        onNavigateToScreen.invoke(screen)
-                    } else {
-                        Log.e("TVHomeScreen", "onNavigateToScreen is null!")
-                    }
+                    onNavigateToScreen?.invoke(screen)
                 },
                 onBackPressed = { isDrawerOpen = false }
             )
@@ -233,7 +225,6 @@ fun TVNavigationDrawer(
                         Modifier
                     },
                     onClick = {
-                        Log.d("TVHomeScreen", "NavigationDrawerItem clicked: ${item.title} -> ${item.destination}")
                         onItemSelected(item.destination)
                     }
                 )
