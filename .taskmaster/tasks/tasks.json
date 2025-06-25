@@ -1516,7 +1516,7 @@
         "description": "Wire MainActivity to use AppNavigation system instead of bypassing it, replacing direct TVHomeScreen() call with NavHost setup and implementing proper navigation between screens.",
         "details": "Replace the direct TVHomeScreen() call in MainActivity with proper NavHost setup using Compose Navigation. Uncomment and configure navigation destinations in AppNavigation.kt including Home, Search, Library, Downloads, and Settings screens. Implement click handlers in navigation drawer and menu items to actually navigate between screens using NavController. Set up proper navigation graph with startDestination pointing to home screen. Configure navigation animations suitable for TV (slide transitions). Implement back stack management for TV navigation patterns. Add proper focus management when navigating between screens to ensure D-pad navigation works correctly. Create NavigationViewModel to handle navigation state and deep linking. Ensure all navigation actions use the centralized navigation system rather than direct screen calls. Configure proper argument passing between screens for content details navigation.",
         "testStrategy": "Test navigation flow between all screens using D-pad controls. Verify proper focus restoration when returning to previous screens. Test back button navigation and back stack management. Verify navigation drawer opens and closes correctly with menu selections working. Test deep linking to specific screens. Verify no direct screen instantiation bypasses the navigation system. Test navigation state persistence across configuration changes. Verify proper animation transitions between screens on TV devices.",
-        "status": "in-progress",
+        "status": "done",
         "dependencies": [
           7,
           3
@@ -1892,7 +1892,7 @@
     ],
     "metadata": {
       "created": "2025-06-22T03:41:46.714Z",
-      "updated": "2025-06-25T02:08:50.222Z",
+      "updated": "2025-06-25T02:09:51.001Z",
       "description": "Tasks for master context"
     }
   }
