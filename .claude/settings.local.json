@@ -52,7 +52,8 @@
       "WebFetch(domain:gradle.org)",
       "Bash(TASK_ID=*)",
       "Bash(jq:*)",
-      "Bash(kotlinc:*)"
+      "Bash(kotlinc:*)",
+      "Bash(gh pr edit:*)"
     ],
     "deny": []
   }
