@@ -69,7 +69,7 @@ class TokenAuthenticatorTest {
         val secondRequest = mockWebServer.takeRequest()
         assertEquals("Bearer $newToken", secondRequest.getHeader("Authorization"))
         
-        verify { tokenProvider.refreshToken() }
+        coVerify { tokenProvider.refreshToken() }
     }
     
     @Test
@@ -91,7 +91,7 @@ class TokenAuthenticatorTest {
         
         // Then
         assertEquals(401, response.code)
-        verify { tokenProvider.refreshToken() }
+        coVerify { tokenProvider.refreshToken() }
         verify { tokenProvider.clearTokens() }
     }
     

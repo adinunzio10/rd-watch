@@ -66,7 +66,7 @@ class HiltModuleVerificationTest : HiltTestBase() {
     @Test
     fun `verify repository can be used`() = runTest {
         // Test that the injected repository can be called
-        val movies = movieRepository.getAllMovies().first()
+        val movies = movieRepository.getAllMovies().firstOrNull()
         
         // Since we're using the fake repository module, this should work
         assertNotNull("Repository should return movies", movies)

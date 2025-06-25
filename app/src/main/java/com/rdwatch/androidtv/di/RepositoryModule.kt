@@ -6,6 +6,7 @@ import com.rdwatch.androidtv.repository.MovieRepository
 import com.rdwatch.androidtv.repository.MovieRepositoryImpl
 import com.rdwatch.androidtv.repository.RealDebridContentRepository
 import com.rdwatch.androidtv.repository.RealDebridContentRepositoryImpl
+import com.rdwatch.androidtv.repository.TorrentRepository
 import com.rdwatch.androidtv.repository.base.BaseRepository
 import dagger.Binds
 import dagger.Module

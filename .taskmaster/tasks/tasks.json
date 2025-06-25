@@ -1939,7 +1939,7 @@
         "description": "Connect UI components to actual Real-Debrid API data instead of hardcoded MovieList.MOCK_DATA. Update repositories to fetch real data, populate database from API responses, connect ViewModels to real data sources.",
         "details": "Replace MovieList.MOCK_DATA usage throughout the application with Real-Debrid API calls. Create ContentRepository that fetches movie/TV show data from Real-Debrid user library, torrents, and downloads endpoints. Implement data transformation from Real-Debrid API responses to local ContentEntity models. Update MovieRepository to use RealDebridApi service instead of static data. Create data synchronization logic to populate Room database from API responses with proper error handling and offline caching. Modify ViewModels (HomeViewModel, BrowseViewModel, etc.) to use repository Flow emissions instead of static lists. Implement refresh mechanisms with SwipeRefresh or pull-to-refresh patterns. Add loading states and error handling for network failures. Create data mapping functions to transform Real-Debrid torrent info, user library items, and download status into app's content models. Set up periodic background sync using WorkManager to keep local data fresh. Handle pagination for large content libraries and implement incremental loading for better performance.",
         "testStrategy": "Test API integration with actual Real-Debrid account and verify data flows correctly to UI. Mock Real-Debrid API responses to test various data scenarios including empty libraries, failed requests, and large datasets. Verify database population from API responses with proper entity relationships. Test offline functionality when API is unavailable - app should display cached data. Test loading states and error handling for network timeouts and API errors. Verify ViewModels emit correct data states and UI updates reactively. Test data refresh mechanisms and verify stale data is properly updated. Use integration tests to verify complete data flow from API to UI components. Test pagination and incremental loading with large content libraries. Verify background sync works correctly and doesn't impact app performance.",
-        "status": "pending",
+        "status": "in-progress",
         "dependencies": [
           4,
           6,
@@ -2075,7 +2075,7 @@
     ],
     "metadata": {
       "created": "2025-06-22T03:41:46.714Z",
-      "updated": "2025-06-25T02:34:19.330Z",
+      "updated": "2025-06-25T06:22:13.394Z",
       "description": "Tasks for master context"
     }
   }

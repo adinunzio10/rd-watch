@@ -56,7 +56,9 @@
       "Bash(gh pr edit:*)",
       "Bash(gh repo view:*)",
       "Bash(gh label:*)",
-      "Bash(gh repo edit:*)"
+      "Bash(gh repo edit:*)",
+      "Bash(git reset:*)",
+      "Bash(git restore:*)"
     ],
     "deny": []
   }
