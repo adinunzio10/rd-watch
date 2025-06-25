@@ -17,11 +17,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Login
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -83,6 +87,11 @@ fun AuthenticationScreen(
             is AuthState.Initializing -> {
                 InitializingContent()
             }
+            is AuthState.Unauthenticated -> {
+                UnauthenticatedContent(
+                    onStartAuthentication = { viewModel.startAuthentication() }
+                )
+            }
             is AuthState.WaitingForUser -> {
                 WaitingForUserContent(
                     deviceCodeInfo = state.deviceCodeInfo,
@@ -136,6 +145,71 @@ private fun InitializingContent() {
                 textAlign = TextAlign.Center,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+        }
+    }
+}
+
+@Composable
+private fun UnauthenticatedContent(
+    onStartAuthentication: () -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(0.8f),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(48.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Icon(
+                imageVector = Icons.Default.Lock,
+                contentDescription = "Authentication Required",
+                modifier = Modifier.size(64.dp),
+                tint = MaterialTheme.colorScheme.primary
+            )
+            Spacer(modifier = Modifier.height(24.dp))
+            Text(
+                text = "Authentication Required",
+                style = MaterialTheme.typography.headlineMedium.copy(
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.SemiBold
+                ),
+                textAlign = TextAlign.Center,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = "Please sign in to access Real Debrid features",
+                style = MaterialTheme.typography.bodyLarge.copy(fontSize = 16.sp),
+                textAlign = TextAlign.Center,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(modifier = Modifier.height(32.dp))
+            
+            Button(
+                onClick = onStartAuthentication,
+                modifier = Modifier
+                    .fillMaxWidth(0.6f)
+                    .height(56.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary
+                )
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Login,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(12.dp))
+                Text(
+                    text = "Start Authentication",
+                    style = MaterialTheme.typography.labelLarge.copy(
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                )
+            }
         }
     }
 }

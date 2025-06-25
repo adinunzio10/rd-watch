@@ -173,7 +173,7 @@ class AuthRepository @Inject constructor(
     
     suspend fun logout() {
         tokenStorage.clearTokens()
-        _authState.value = AuthState.Initializing
+        _authState.value = AuthState.Unauthenticated
     }
     
     suspend fun checkAuthState() {
@@ -195,8 +195,8 @@ class AuthRepository @Inject constructor(
                     Log.d(TAG, "Has refresh token, attempting refresh...")
                     refreshTokenIfNeeded()
                 } else {
-                    Log.d(TAG, "No refresh token, setting state to Initializing")
-                    _authState.value = AuthState.Initializing
+                    Log.d(TAG, "No refresh token, user needs to authenticate")
+                    _authState.value = AuthState.Unauthenticated
                 }
             }
         } catch (e: Exception) {

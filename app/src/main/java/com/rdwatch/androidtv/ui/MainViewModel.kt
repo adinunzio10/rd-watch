@@ -47,6 +47,12 @@ class MainViewModel @Inject constructor(
                 Log.d(TAG, "AuthState is Initializing, waiting...")
                 false
             }
+            is AuthState.Unauthenticated -> {
+                Log.d(TAG, "AuthState is Unauthenticated, navigating to Authentication")
+                _startDestination.value = Screen.Authentication
+                _initializationError.value = null
+                true
+            }
             is AuthState.WaitingForUser -> {
                 Log.d(TAG, "AuthState is WaitingForUser, navigating to Authentication")
                 _startDestination.value = Screen.Authentication

@@ -38,6 +38,7 @@ fun AuthGuard(
                 hasTriggeredRedirect = false
                 // Check auth state - this is handled automatically in AuthViewModel init
             }
+            is AuthState.Unauthenticated,
             is AuthState.WaitingForUser,
             is AuthState.Error -> {
                 // Only trigger redirect once to prevent infinite loops
