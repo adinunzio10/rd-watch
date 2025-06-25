@@ -32,6 +32,8 @@ class DataStoreTokenStorage @Inject constructor(
         private val ACCESS_TOKEN_KEY = stringPreferencesKey("access_token")
         private val REFRESH_TOKEN_KEY = stringPreferencesKey("refresh_token")
         private val TOKEN_EXPIRY_KEY = longPreferencesKey("token_expiry")
+        private val CLIENT_ID_KEY = stringPreferencesKey("client_id")
+        private val CLIENT_SECRET_KEY = stringPreferencesKey("client_secret")
         
         // Buffer time in milliseconds (1 minute) before considering token expired
         private const val TOKEN_EXPIRY_BUFFER_MS = 60_000L
@@ -86,6 +88,8 @@ class DataStoreTokenStorage @Inject constructor(
             preferences.remove(ACCESS_TOKEN_KEY)
             preferences.remove(REFRESH_TOKEN_KEY)
             preferences.remove(TOKEN_EXPIRY_KEY)
+            preferences.remove(CLIENT_ID_KEY)
+            preferences.remove(CLIENT_SECRET_KEY)
         }
     }
     
@@ -172,5 +176,43 @@ class DataStoreTokenStorage @Inject constructor(
         val bufferMs = bufferMinutes * 60 * 1000L
         
         return expiryTime <= (currentTime + bufferMs)
+    }
+    
+    override suspend fun saveClientCredentials(clientId: String, clientSecret: String) {
+        try {
+            dataStore.edit { preferences ->
+                preferences[CLIENT_ID_KEY] = clientId
+                preferences[CLIENT_SECRET_KEY] = clientSecret
+            }
+        } catch (e: Exception) {
+            throw Exception("Failed to save client credentials: ${e.message}", e)
+        }
+    }
+    
+    override suspend fun getClientId(): String? {
+        return try {
+            dataStore.data
+                .map { preferences -> preferences[CLIENT_ID_KEY] }
+                .first()
+        } catch (e: Exception) {
+            null
+        }
+    }
+    
+    override suspend fun getClientSecret(): String? {
+        return try {
+            dataStore.data
+                .map { preferences -> preferences[CLIENT_SECRET_KEY] }
+                .first()
+        } catch (e: Exception) {
+            null
+        }
+    }
+    
+    override suspend fun clearClientCredentials() {
+        dataStore.edit { preferences ->
+            preferences.remove(CLIENT_ID_KEY)
+            preferences.remove(CLIENT_SECRET_KEY)
+        }
     }
 }

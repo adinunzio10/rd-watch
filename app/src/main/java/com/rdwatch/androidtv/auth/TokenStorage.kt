@@ -7,4 +7,10 @@ interface TokenStorage {
     suspend fun clearTokens()
     suspend fun isTokenValid(): Boolean
     suspend fun hasRefreshToken(): Boolean
+    
+    // Client credentials storage for Real-Debrid OAuth flow
+    suspend fun saveClientCredentials(clientId: String, clientSecret: String)
+    suspend fun getClientId(): String?
+    suspend fun getClientSecret(): String?
+    suspend fun clearClientCredentials()
 }

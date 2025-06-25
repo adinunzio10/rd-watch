@@ -24,8 +24,7 @@ class AuthRepository @Inject constructor(
     
     companion object {
         private const val TAG = "AuthRepository"
-        private const val CLIENT_ID = "X245A4XAIBGVM"  // Real Debrid client ID
-        private const val SCOPE = ""
+        private const val CLIENT_ID = "X245A4XAIBGVM"  // Real Debrid client ID for open source apps
         private const val POLLING_TIMEOUT_MS = 600_000L  // 10 minutes
     }
     
@@ -41,7 +40,7 @@ class AuthRepository @Inject constructor(
         return try {
             _authState.value = AuthState.Initializing
             
-            val response = oauth2ApiService.getDeviceCode(CLIENT_ID, SCOPE)
+            val response = oauth2ApiService.getDeviceCode(CLIENT_ID)
             
             if (response.isSuccessful) {
                 val deviceCodeResponse = response.body()!!
@@ -72,21 +71,22 @@ class AuthRepository @Inject constructor(
         val startTime = System.currentTimeMillis()
         var currentInterval = interval * 1000L  // Convert to milliseconds
         
+        // Step 2: Poll for credentials (client_id and client_secret)
+        var clientId: String? = null
+        var clientSecret: String? = null
+        
         while (System.currentTimeMillis() - startTime < POLLING_TIMEOUT_MS) {
             try {
-                val response = oauth2ApiService.getDeviceToken(CLIENT_ID, deviceCode)
+                val credentialsResponse = oauth2ApiService.getDeviceCredentials(CLIENT_ID, deviceCode)
                 
-                if (response.isSuccessful) {
-                    val tokenResponse = response.body()!!
-                    tokenStorage.saveTokens(
-                        accessToken = tokenResponse.accessToken,
-                        refreshToken = tokenResponse.refreshToken,
-                        expiresIn = tokenResponse.expiresIn
-                    )
-                    _authState.value = AuthState.Authenticated
-                    return Result.Success(Unit)
+                if (credentialsResponse.isSuccessful) {
+                    val credentials = credentialsResponse.body()!!
+                    clientId = credentials.clientId
+                    clientSecret = credentials.clientSecret
+                    Log.d(TAG, "Received credentials: client_id=$clientId")
+                    break
                 } else {
-                    val errorBody = response.errorBody()?.string()
+                    val errorBody = credentialsResponse.errorBody()?.string()
                     val error = parseError(errorBody)
                     
                     when {
@@ -134,20 +134,56 @@ class AuthRepository @Inject constructor(
             }
         }
         
-        _authState.value = AuthState.Error("Authentication timeout")
-        return Result.Error(Exception("Authentication timeout"))
+        // Check if we got credentials
+        if (clientId == null || clientSecret == null) {
+            _authState.value = AuthState.Error("Authentication timeout - no credentials received")
+            return Result.Error(Exception("Authentication timeout"))
+        }
+        
+        // Step 3: Exchange device code + credentials for access token
+        return try {
+            val tokenResponse = oauth2ApiService.getDeviceToken(clientId, clientSecret, deviceCode)
+            
+            if (tokenResponse.isSuccessful) {
+                val tokens = tokenResponse.body()!!
+                // Store client credentials for future token refresh
+                tokenStorage.saveClientCredentials(clientId, clientSecret)
+                tokenStorage.saveTokens(
+                    accessToken = tokens.accessToken,
+                    refreshToken = tokens.refreshToken,
+                    expiresIn = tokens.expiresIn
+                )
+                _authState.value = AuthState.Authenticated
+                Result.Success(Unit)
+            } else {
+                val errorBody = tokenResponse.errorBody()?.string()
+                val error = parseError(errorBody)
+                _authState.value = AuthState.Error(error)
+                Result.Error(Exception(error))
+            }
+        } catch (e: Exception) {
+            val errorMessage = "Failed to exchange device code for tokens: ${e.message}"
+            _authState.value = AuthState.Error(errorMessage)
+            Result.Error(e)
+        }
     }
     
     suspend fun refreshTokenIfNeeded(): Result<Unit> {
         val refreshToken = tokenStorage.getRefreshToken()
+        val clientId = tokenStorage.getClientId()
         
         if (refreshToken == null) {
             _authState.value = AuthState.Error("No refresh token available")
             return Result.Error(Exception("No refresh token available"))
         }
         
+        if (clientId == null) {
+            _authState.value = AuthState.Error("No client credentials available")
+            return Result.Error(Exception("No client credentials available"))
+        }
+        
         return try {
-            val response = oauth2ApiService.refreshToken(CLIENT_ID, refreshToken)
+            val response = oauth2ApiService.refreshToken(clientId, refreshToken)
             
             if (response.isSuccessful) {
                 val tokenResponse = response.body()!!
