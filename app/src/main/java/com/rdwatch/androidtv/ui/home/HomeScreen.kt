@@ -194,9 +194,9 @@ fun TVNavigationDrawer(
     
     val navigationItems = listOf(
         NavigationItem("Home", Icons.Default.Home, Screen.Home),
+        NavigationItem("Browse", Icons.Default.Search, Screen.Browse),
         NavigationItem("Search", Icons.Default.Search, Screen.Search),
-        NavigationItem("Library", Icons.Default.VideoLibrary, Screen.Profile), // Using Profile screen for Library temporarily
-        NavigationItem("Downloads", Icons.Default.Download, Screen.Browse), // Using Browse screen for Downloads temporarily
+        NavigationItem("Profile", Icons.Default.Person, Screen.Profile),
         NavigationItem("Settings", Icons.Default.Settings, Screen.Settings)
     )
     
