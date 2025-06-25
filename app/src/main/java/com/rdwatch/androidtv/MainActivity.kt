@@ -3,8 +3,10 @@ package com.rdwatch.androidtv
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.navigation.compose.rememberNavController
 import com.rdwatch.androidtv.navigation.PlaybackNavigationHelper
-import com.rdwatch.androidtv.ui.home.TVHomeScreen
+import com.rdwatch.androidtv.presentation.navigation.AppNavigation
+import com.rdwatch.androidtv.presentation.navigation.Screen
 import com.rdwatch.androidtv.ui.theme.RdwatchTheme
 import com.rdwatch.androidtv.util.PlaybackCleanupManager
 import dagger.hilt.android.AndroidEntryPoint
@@ -30,7 +32,11 @@ class MainActivity : ComponentActivity() {
         
         setContent {
             RdwatchTheme {
-                TVHomeScreen()
+                val navController = rememberNavController()
+                AppNavigation(
+                    navController = navController,
+                    startDestination = Screen.Home
+                )
             }
         }
     }

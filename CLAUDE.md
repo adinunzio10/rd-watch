@@ -50,18 +50,6 @@ This project uses modular documentation for optimal context management:
 3. **Use planning mode** for major changes - save plans to `planning-docs/`
 4. **Reference documentation by filename:line** when discussing code locations
 
-## Task Master AI Integration
-
-Primary MCP Tools (prefer over CLI):
-- `mcp__taskmaster-ai__get_tasks` - View all tasks
-- `mcp__taskmaster-ai__next_task` - Get next available task  
-- `mcp__taskmaster-ai__get_task` - View specific task details
-- `mcp__taskmaster-ai__set_task_status` - Update task/subtask status
-- `mcp__taskmaster-ai__add_task` - Add new task
-- `mcp__taskmaster-ai__update_subtask` - Add notes to subtasks
-
-CLI Fallback: `task-master list`, `task-master next`, `task-master set-status --id=<id> --status=done`
-
 ## Key Directories
 
 ```

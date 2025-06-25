@@ -5,11 +5,12 @@
 
 echo "🔍 Running Android Lint..."
 
-# Run lint quietly
-./gradlew lint --quiet > /dev/null 2>&1
+# Run lint and capture output
+LINT_OUTPUT=$(./gradlew lint --quiet 2>&1)
+LINT_EXIT_CODE=$?
 
 # Check if lint passed (note: lint can succeed but still have issues)
-if [ $? -eq 0 ]; then
+if [ $LINT_EXIT_CODE -eq 0 ]; then
     echo "✅ Lint completed"
     
     # Look for XML report first (more detailed)
@@ -75,5 +76,44 @@ if [ $? -eq 0 ]; then
     fi
 else
     echo "❌ Lint failed to run"
+    
+    # Check if it's a compilation error
+    if echo "$LINT_OUTPUT" | grep -q "Compilation error\|compileDebugKotlin\|Unresolved reference"; then
+        echo ""
+        echo "🚨 Compilation errors detected - preventing lint analysis:"
+        echo ""
+        
+        # Show compilation errors in a cleaner format
+        echo "$LINT_OUTPUT" | grep -E "^e: file://" | head -10 | while read -r line; do
+            # Extract file path and error message
+            if [[ $line =~ e:\ file://([^:]+):([0-9]+):([0-9]+)\ (.+) ]]; then
+                file_path="${BASH_REMATCH[1]}"
+                line_num="${BASH_REMATCH[2]}"
+                col_num="${BASH_REMATCH[3]}"
+                error_msg="${BASH_REMATCH[4]}"
+                
+                # Get just the filename
+                filename=$(basename "$file_path")
+                echo "   📁 $filename:$line_num:$col_num"
+                echo "   🔴 $error_msg"
+                echo ""
+            fi
+        done
+        
+        # Count total errors
+        ERROR_COUNT=$(echo "$LINT_OUTPUT" | grep -c "^e: file://")
+        if [ "$ERROR_COUNT" -gt 10 ]; then
+            echo "   ... and $((ERROR_COUNT - 10)) more compilation errors"
+            echo ""
+        fi
+        
+        echo "💡 Fix compilation errors first, then run lint again"
+        echo "   Try: ./gradlew build to see all compilation issues"
+    else
+        echo ""
+        echo "🔍 Lint error details:"
+        echo "$LINT_OUTPUT" | head -10
+    fi
+    
     exit 1
 fi

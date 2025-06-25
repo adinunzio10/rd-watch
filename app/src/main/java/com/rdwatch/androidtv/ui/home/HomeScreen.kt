@@ -40,10 +40,13 @@ import com.rdwatch.androidtv.ui.viewmodel.PlaybackViewModel
 import com.rdwatch.androidtv.ui.components.ResumeDialogOverlay
 import com.rdwatch.androidtv.ui.components.ContinueWatchingManager
 import com.rdwatch.androidtv.navigation.PlaybackNavigationHelper
+import com.rdwatch.androidtv.presentation.navigation.Screen
 
 @Composable
 fun TVHomeScreen(
-    playbackViewModel: PlaybackViewModel = hiltViewModel()
+    playbackViewModel: PlaybackViewModel = hiltViewModel(),
+    onNavigateToScreen: ((Any) -> Unit)? = null,
+    onMovieClick: ((Movie) -> Unit)? = null
 ) {
     var isDrawerOpen by remember { mutableStateOf(false) }
     var showContinueWatchingManager by remember { mutableStateOf(false) }
@@ -102,7 +105,8 @@ fun TVHomeScreen(
             contentFocusRequester = contentFocusRequester,
             onDrawerToggle = { isDrawerOpen = !isDrawerOpen },
             playbackViewModel = playbackViewModel,
-            onShowContinueWatching = { showContinueWatchingManager = true }
+            onShowContinueWatching = { showContinueWatchingManager = true },
+            onMovieClick = onMovieClick
         )
         
         // Navigation drawer
@@ -120,7 +124,10 @@ fun TVHomeScreen(
         ) {
             TVNavigationDrawer(
                 focusRequester = drawerFocusRequester,
-                onItemSelected = { isDrawerOpen = false },
+                onItemSelected = { screen ->
+                    isDrawerOpen = false
+                    onNavigateToScreen?.invoke(screen)
+                },
                 onBackPressed = { isDrawerOpen = false }
             )
         }
@@ -171,18 +178,18 @@ fun TVHomeScreen(
 @Composable
 fun TVNavigationDrawer(
     focusRequester: FocusRequester,
-    onItemSelected: () -> Unit,
+    onItemSelected: (Any) -> Unit,
     onBackPressed: () -> Unit
 ) {
     val configuration = LocalConfiguration.current
     val drawerWidth = (configuration.screenWidthDp * 0.25f).dp.coerceAtLeast(200.dp)
     
     val navigationItems = listOf(
-        NavigationItem("Home", Icons.Default.Home),
-        NavigationItem("Search", Icons.Default.Search),
-        NavigationItem("Library", Icons.Default.PlayArrow), // Using PlayArrow as VideoLibrary alternative
-        NavigationItem("Downloads", Icons.Default.PlayArrow), // Using PlayArrow as Download alternative  
-        NavigationItem("Settings", Icons.Default.Settings)
+        NavigationItem("Home", Icons.Default.Home, Screen.Home),
+        NavigationItem("Browse", Icons.Default.Search, Screen.Browse),
+        NavigationItem("Search", Icons.Default.Search, Screen.Search),
+        NavigationItem("Profile", Icons.Default.Person, Screen.Profile),
+        NavigationItem("Settings", Icons.Default.Settings, Screen.Settings)
     )
     
     Surface(
@@ -218,8 +225,7 @@ fun TVNavigationDrawer(
                         Modifier
                     },
                     onClick = {
-                        onItemSelected()
-                        // TODO: Handle navigation
+                        onItemSelected(item.destination)
                     }
                 )
             }
@@ -285,7 +291,8 @@ fun SafeAreaContent(
     contentFocusRequester: FocusRequester,
     onDrawerToggle: () -> Unit,
     playbackViewModel: PlaybackViewModel,
-    onShowContinueWatching: () -> Unit
+    onShowContinueWatching: () -> Unit,
+    onMovieClick: ((Movie) -> Unit)? = null
 ) {
     val overscanMargin = 32.dp // 5% for most TVs
     
@@ -325,7 +332,8 @@ fun SafeAreaContent(
         // Content rows placeholder
         TVContentGrid(
             playbackViewModel = playbackViewModel,
-            onShowContinueWatching = onShowContinueWatching
+            onShowContinueWatching = onShowContinueWatching,
+            onMovieClick = onMovieClick
         )
     }
 }
@@ -333,7 +341,8 @@ fun SafeAreaContent(
 @Composable
 fun TVContentGrid(
     playbackViewModel: PlaybackViewModel = hiltViewModel(),
-    onShowContinueWatching: () -> Unit = {}
+    onShowContinueWatching: () -> Unit = {},
+    onMovieClick: ((Movie) -> Unit)? = null
 ) {
     val movies = remember { MovieList.list }
     val firstRowFocusRequester = remember { FocusRequester() }
@@ -428,8 +437,7 @@ fun TVContentGrid(
                     { onShowContinueWatching() }
                 } else null,
                 onItemClick = { movie ->
-                    // TODO: Handle item click navigation with proper resume logic
-                    // For now, just show basic functionality
+                    onMovieClick?.invoke(movie)
                 }
             )
         }
@@ -445,5 +453,6 @@ data class ContentRowData(
 
 data class NavigationItem(
     val title: String,
-    val icon: ImageVector
+    val icon: ImageVector,
+    val destination: Any
 )

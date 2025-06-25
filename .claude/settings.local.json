@@ -41,7 +41,15 @@
       "Bash(echo)",
       "Bash(ls:*)",
       "Bash(gh run list:*)",
-      "Bash(gh run view:*)"
+      "Bash(gh run view:*)",
+      "Bash(rg:*)",
+      "Bash(gh workflow:*)",
+      "Bash(gh run watch:*)",
+      "Bash(sha256sum:*)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:docs.gradle.org)",
+      "Bash(curl:*)",
+      "WebFetch(domain:gradle.org)"
     ],
     "deny": []
   }
