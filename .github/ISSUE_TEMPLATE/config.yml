@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: GitHub Discussions
+    url: https://github.com/adinunzio10/rd-watch/discussions
+    about: Ask questions and discuss ideas with the community
+  - name: Documentation
+    url: https://github.com/adinunzio10/rd-watch/blob/main/README.md
+    about: Check the documentation for setup and usage instructions
