@@ -9,7 +9,7 @@ data class OAuth2DeviceCodeResponse(
     val deviceCode: String,
     @Json(name = "user_code")
     val userCode: String,
-    @Json(name = "verification_uri")
+    @Json(name = "verification_url")
     val verificationUri: String,
     @Json(name = "expires_in")
     val expiresIn: Int,
