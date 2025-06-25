@@ -9,6 +9,7 @@ import com.rdwatch.androidtv.test.HiltTestBase
 import com.rdwatch.androidtv.test.MainDispatcherRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.flow.firstOrNull
 import okhttp3.OkHttpClient
 import org.junit.Assert.*
 import org.junit.Rule

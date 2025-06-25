@@ -102,4 +102,22 @@ object DatabaseModule {
     fun provideRelationshipDao(@MainDatabase database: AppDatabase): RelationshipDao {
         return database.relationshipDao()
     }
+
+    @Provides
+    @Singleton
+    fun provideContentDao(@MainDatabase database: AppDatabase): ContentDao {
+        return database.contentDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideTorrentDao(@MainDatabase database: AppDatabase): TorrentDao {
+        return database.torrentDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideDownloadDao(@MainDatabase database: AppDatabase): DownloadDao {
+        return database.downloadDao()
+    }
 }

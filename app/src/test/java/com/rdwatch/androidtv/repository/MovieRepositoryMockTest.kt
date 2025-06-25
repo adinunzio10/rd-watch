@@ -6,6 +6,7 @@ import com.rdwatch.androidtv.test.HiltTestBase
 import com.rdwatch.androidtv.test.MainDispatcherRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.flow.firstOrNull
 import org.junit.Assert.*
 import org.junit.Rule
 import org.junit.Test
@@ -47,7 +48,7 @@ class MovieRepositoryMockTest : HiltTestBase() {
 
         // Assert
         assertNotNull("Movies should not be null", movies)
-        assertEquals("Should return 2 test movies", 2, movies.size)
+        assertEquals("Should return 2 test movies", 2, movies?.size)
     }
 
     @Test
@@ -67,7 +68,7 @@ class MovieRepositoryMockTest : HiltTestBase() {
 
         // Assert
         assertNotNull("Movies should not be null", movies)
-        assertEquals("Should find 1 movie", 1, movies.size)
-        assertEquals("Should find correct movie", "Test Movie 1", movies?.first()?.title)
+        assertEquals("Should find 1 movie", 1, movies?.size)
+        assertEquals("Should find correct movie", "Test Movie 1", movies?.firstOrNull()?.title)
     }
 }

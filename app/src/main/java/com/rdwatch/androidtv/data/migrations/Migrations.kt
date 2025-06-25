@@ -247,6 +247,7 @@ object Migrations {
                     `year` INTEGER,
                     `quality` TEXT,
                     `source` TEXT NOT NULL,
+                    `realDebridId` TEXT,
                     `posterUrl` TEXT,
                     `backdropUrl` TEXT,
                     `description` TEXT,
