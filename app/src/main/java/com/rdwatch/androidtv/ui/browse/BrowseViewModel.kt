@@ -1,12 +1,13 @@
 package com.rdwatch.androidtv.ui.browse
 
+import androidx.lifecycle.viewModelScope
 import com.rdwatch.androidtv.Movie
-import com.rdwatch.androidtv.MovieList
 import com.rdwatch.androidtv.presentation.viewmodel.BaseViewModel
+import com.rdwatch.androidtv.repository.MovieRepository
+import com.rdwatch.androidtv.ui.common.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
@@ -14,10 +15,14 @@ import javax.inject.Inject
  * Follows MVVM architecture with BaseViewModel pattern
  */
 @HiltViewModel
-class BrowseViewModel @Inject constructor() : BaseViewModel<BrowseUiState>() {
+class BrowseViewModel @Inject constructor(
+    private val movieRepository: MovieRepository
+) : BaseViewModel<BrowseUiState>() {
     
-    private val _movies = MutableStateFlow<List<Movie>>(emptyList())
-    val movies: StateFlow<List<Movie>> = _movies.asStateFlow()
+    private val _contentState = MutableStateFlow<UiState<List<Movie>>>(UiState.Loading)
+    val contentState: StateFlow<UiState<List<Movie>>> = _contentState.asStateFlow()
+    
+    private val _allMovies = MutableStateFlow<List<Movie>>(emptyList())
     
     override fun createInitialState(): BrowseUiState {
         return BrowseUiState()
@@ -28,34 +33,39 @@ class BrowseViewModel @Inject constructor() : BaseViewModel<BrowseUiState>() {
     }
     
     /**
-     * Load all movies from the movie list
+     * Load all movies from the repository
      */
     private fun loadMovies() {
-        launchSafely {
-            updateState { copy(isLoading = true, error = null) }
+        viewModelScope.launch {
+            _contentState.value = UiState.Loading
             
-            try {
-                val allMovies = MovieList.list
-                _movies.value = allMovies
-                
-                // Apply current filter
-                val filteredMovies = filterMoviesByCategory(allMovies, uiState.value.selectedCategory)
-                
-                updateState { 
-                    copy(
-                        movies = filteredMovies,
-                        isLoading = false,
-                        error = null
+            movieRepository.getAllMovies()
+                .catch { e ->
+                    _contentState.value = UiState.Error(
+                        message = "Failed to load movies: ${e.message}",
+                        throwable = e
                     )
+                    updateState { 
+                        copy(
+                            movies = emptyList(),
+                            isLoading = false,
+                            error = "Failed to load movies: ${e.message}"
+                        )
+                    }
                 }
-            } catch (e: Exception) {
-                updateState { 
-                    copy(
-                        isLoading = false,
-                        error = "Failed to load movies: ${e.message}"
-                    )
+                .collect { movies ->
+                    _allMovies.value = movies
+                    val filteredMovies = filterMoviesByCategory(movies, uiState.value.selectedCategory)
+                    
+                    _contentState.value = UiState.Success(filteredMovies)
+                    updateState { 
+                        copy(
+                            movies = filteredMovies,
+                            isLoading = false,
+                            error = null
+                        )
+                    }
                 }
-            }
         }
     }
     
@@ -63,9 +73,10 @@ class BrowseViewModel @Inject constructor() : BaseViewModel<BrowseUiState>() {
      * Update selected category filter
      */
     fun selectCategory(category: BrowseCategory) {
-        val allMovies = _movies.value
+        val allMovies = _allMovies.value
         val filteredMovies = filterMoviesByCategory(allMovies, category)
         
+        _contentState.value = UiState.Success(filteredMovies)
         updateState { 
             copy(
                 selectedCategory = category,
@@ -78,25 +89,51 @@ class BrowseViewModel @Inject constructor() : BaseViewModel<BrowseUiState>() {
      * Search movies by query
      */
     fun searchMovies(query: String) {
-        val allMovies = _movies.value
-        val currentCategory = uiState.value.selectedCategory
-        
-        launchSafely {
-            updateState { copy(searchQuery = query) }
+        viewModelScope.launch {
+            updateState { copy(searchQuery = query, isLoading = true) }
             
             if (query.isBlank()) {
                 // Reset to category filter
-                val filteredMovies = filterMoviesByCategory(allMovies, currentCategory)
-                updateState { copy(movies = filteredMovies) }
-            } else {
-                // Apply search filter on top of category filter
-                val categoryFiltered = filterMoviesByCategory(allMovies, currentCategory)
-                val searchFiltered = categoryFiltered.filter { movie ->
-                    movie.title?.contains(query, ignoreCase = true) == true ||
-                    movie.description?.contains(query, ignoreCase = true) == true ||
-                    movie.studio?.contains(query, ignoreCase = true) == true
+                val allMovies = _allMovies.value
+                val filteredMovies = filterMoviesByCategory(allMovies, uiState.value.selectedCategory)
+                _contentState.value = UiState.Success(filteredMovies)
+                updateState { 
+                    copy(
+                        movies = filteredMovies,
+                        isLoading = false
+                    )
                 }
-                updateState { copy(movies = searchFiltered) }
+            } else {
+                movieRepository.searchMovies(query)
+                    .catch { e ->
+                        _contentState.value = UiState.Error(
+                            message = "Search failed: ${e.message}",
+                            throwable = e
+                        )
+                        updateState { 
+                            copy(
+                                isLoading = false,
+                                error = "Search failed: ${e.message}"
+                            )
+                        }
+                    }
+                    .collect { searchResults ->
+                        // Apply category filter to search results
+                        val filteredResults = if (uiState.value.selectedCategory != BrowseCategory.ALL) {
+                            filterMoviesByCategory(searchResults, uiState.value.selectedCategory)
+                        } else {
+                            searchResults
+                        }
+                        
+                        _contentState.value = UiState.Success(filteredResults)
+                        updateState { 
+                            copy(
+                                movies = filteredResults,
+                                isLoading = false,
+                                error = null
+                            )
+                        }
+                    }
             }
         }
     }
@@ -112,7 +149,28 @@ class BrowseViewModel @Inject constructor() : BaseViewModel<BrowseUiState>() {
      * Refresh movie data
      */
     fun refresh() {
-        loadMovies()
+        viewModelScope.launch {
+            updateState { copy(isLoading = true, error = null) }
+            
+            movieRepository.refreshMovies()
+                .fold(
+                    onSuccess = {
+                        loadMovies()
+                    },
+                    onFailure = { e ->
+                        _contentState.value = UiState.Error(
+                            message = "Refresh failed: ${e.message}",
+                            throwable = e
+                        )
+                        updateState { 
+                            copy(
+                                isLoading = false,
+                                error = "Refresh failed: ${e.message}"
+                            )
+                        }
+                    }
+                )
+        }
     }
     
     /**
@@ -145,6 +203,10 @@ class BrowseViewModel @Inject constructor() : BaseViewModel<BrowseUiState>() {
     }
     
     override fun handleError(exception: Throwable) {
+        _contentState.value = UiState.Error(
+            message = "An error occurred: ${exception.message}",
+            throwable = exception
+        )
         updateState { 
             copy(
                 isLoading = false,

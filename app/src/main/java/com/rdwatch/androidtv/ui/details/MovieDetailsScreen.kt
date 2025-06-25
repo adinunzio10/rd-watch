@@ -50,7 +50,7 @@ fun MovieDetailsScreen(
     
     // Observe ViewModel state
     val uiState by viewModel.uiState.collectAsState()
-    val relatedMovies by viewModel.relatedMovies.collectAsState()
+    val relatedMoviesState by viewModel.relatedMoviesState.collectAsState()
     
     // Load movie details when screen is first displayed
     LaunchedEffect(movie.id) {
@@ -105,13 +105,32 @@ fun MovieDetailsScreen(
         }
         
         // Related Movies Section
-        if (relatedMovies.isNotEmpty()) {
-            item {
-                RelatedMoviesSection(
-                    movies = relatedMovies,
-                    onMovieClick = { /* TODO: Navigate to movie details */ },
-                    modifier = Modifier.padding(horizontal = overscanMargin)
-                )
+        when (relatedMoviesState) {
+            is com.rdwatch.androidtv.ui.common.UiState.Success -> {
+                if (relatedMoviesState.data.isNotEmpty()) {
+                    item {
+                        RelatedMoviesSection(
+                            movies = relatedMoviesState.data,
+                            onMovieClick = { /* TODO: Navigate to movie details */ },
+                            modifier = Modifier.padding(horizontal = overscanMargin)
+                        )
+                    }
+                }
+            }
+            is com.rdwatch.androidtv.ui.common.UiState.Loading -> {
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = overscanMargin),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
+                    }
+                }
+            }
+            is com.rdwatch.androidtv.ui.common.UiState.Error -> {
+                // Don't show error for related movies, just skip section
             }
         }
         

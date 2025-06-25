@@ -237,8 +237,97 @@ object Migrations {
         }
     }
     
+    val MIGRATION_2_3 = object : Migration(2, 3) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            // Create content table
+            database.execSQL("""
+                CREATE TABLE IF NOT EXISTS `content` (
+                    `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                    `title` TEXT NOT NULL,
+                    `year` INTEGER,
+                    `quality` TEXT,
+                    `source` TEXT NOT NULL,
+                    `posterUrl` TEXT,
+                    `backdropUrl` TEXT,
+                    `description` TEXT,
+                    `duration` INTEGER,
+                    `rating` REAL,
+                    `genres` TEXT,
+                    `cast` TEXT,
+                    `director` TEXT,
+                    `imdbId` TEXT,
+                    `tmdbId` INTEGER,
+                    `addedDate` INTEGER NOT NULL,
+                    `lastPlayedDate` INTEGER,
+                    `playCount` INTEGER NOT NULL DEFAULT 0,
+                    `isFavorite` INTEGER NOT NULL DEFAULT 0,
+                    `isWatched` INTEGER NOT NULL DEFAULT 0
+                )
+            """.trimIndent())
+            
+            // Create indices for content
+            database.execSQL("CREATE INDEX IF NOT EXISTS `index_content_source` ON `content` (`source`)")
+            database.execSQL("CREATE INDEX IF NOT EXISTS `index_content_title` ON `content` (`title`)")
+            database.execSQL("CREATE INDEX IF NOT EXISTS `index_content_addedDate` ON `content` (`addedDate`)")
+            database.execSQL("CREATE INDEX IF NOT EXISTS `index_content_isFavorite` ON `content` (`isFavorite`)")
+            database.execSQL("CREATE INDEX IF NOT EXISTS `index_content_isWatched` ON `content` (`isWatched`)")
+            
+            // Create torrents table
+            database.execSQL("""
+                CREATE TABLE IF NOT EXISTS `torrents` (
+                    `id` TEXT PRIMARY KEY NOT NULL,
+                    `hash` TEXT NOT NULL,
+                    `filename` TEXT NOT NULL,
+                    `bytes` INTEGER NOT NULL,
+                    `links` TEXT NOT NULL,
+                    `split` INTEGER NOT NULL,
+                    `progress` REAL NOT NULL,
+                    `status` TEXT NOT NULL,
+                    `added` INTEGER NOT NULL,
+                    `speed` INTEGER,
+                    `seeders` INTEGER,
+                    `created` INTEGER,
+                    `ended` INTEGER
+                )
+            """.trimIndent())
+            
+            // Create indices for torrents
+            database.execSQL("CREATE INDEX IF NOT EXISTS `index_torrents_hash` ON `torrents` (`hash`)")
+            database.execSQL("CREATE INDEX IF NOT EXISTS `index_torrents_status` ON `torrents` (`status`)")
+            database.execSQL("CREATE INDEX IF NOT EXISTS `index_torrents_added` ON `torrents` (`added`)")
+            
+            // Create downloads table
+            database.execSQL("""
+                CREATE TABLE IF NOT EXISTS `downloads` (
+                    `id` TEXT PRIMARY KEY NOT NULL,
+                    `filename` TEXT NOT NULL,
+                    `mimeType` TEXT NOT NULL,
+                    `filesize` INTEGER NOT NULL,
+                    `link` TEXT NOT NULL,
+                    `host` TEXT NOT NULL,
+                    `chunks` INTEGER NOT NULL,
+                    `download` TEXT NOT NULL,
+                    `streamable` INTEGER NOT NULL,
+                    `generated` INTEGER NOT NULL,
+                    `type` TEXT,
+                    `alternative` TEXT,
+                    `contentId` INTEGER,
+                    FOREIGN KEY(`contentId`) REFERENCES `content`(`id`) ON UPDATE NO ACTION ON DELETE SET NULL
+                )
+            """.trimIndent())
+            
+            // Create indices for downloads
+            database.execSQL("CREATE INDEX IF NOT EXISTS `index_downloads_filename` ON `downloads` (`filename`)")
+            database.execSQL("CREATE INDEX IF NOT EXISTS `index_downloads_mimeType` ON `downloads` (`mimeType`)")
+            database.execSQL("CREATE INDEX IF NOT EXISTS `index_downloads_streamable` ON `downloads` (`streamable`)")
+            database.execSQL("CREATE INDEX IF NOT EXISTS `index_downloads_generated` ON `downloads` (`generated`)")
+            database.execSQL("CREATE INDEX IF NOT EXISTS `index_downloads_contentId` ON `downloads` (`contentId`)")
+        }
+    }
+    
     // All migrations for this database
     val ALL_MIGRATIONS = arrayOf(
-        MIGRATION_1_2
+        MIGRATION_1_2,
+        MIGRATION_2_3
     )
 }
