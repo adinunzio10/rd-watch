@@ -4,6 +4,8 @@ import com.rdwatch.androidtv.core.error.ErrorHandler
 import com.rdwatch.androidtv.core.reactive.DispatcherProvider
 import com.rdwatch.androidtv.repository.MovieRepository
 import com.rdwatch.androidtv.repository.MovieRepositoryImpl
+import com.rdwatch.androidtv.repository.RealDebridContentRepository
+import com.rdwatch.androidtv.repository.RealDebridContentRepositoryImpl
 import com.rdwatch.androidtv.repository.base.BaseRepository
 import dagger.Binds
 import dagger.Module
@@ -21,6 +23,12 @@ abstract class RepositoryModule {
     abstract fun bindMovieRepository(
         movieRepositoryImpl: MovieRepositoryImpl
     ): MovieRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindRealDebridContentRepository(
+        realDebridContentRepositoryImpl: RealDebridContentRepositoryImpl
+    ): RealDebridContentRepository
 
     companion object {
         @Provides
