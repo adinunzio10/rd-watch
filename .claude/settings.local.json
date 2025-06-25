@@ -49,7 +49,8 @@
       "WebFetch(domain:github.com)",
       "WebFetch(domain:docs.gradle.org)",
       "Bash(curl:*)",
-      "WebFetch(domain:gradle.org)"
+      "WebFetch(domain:gradle.org)",
+      "Bash(TASK_ID=*)"
     ],
     "deny": []
   }

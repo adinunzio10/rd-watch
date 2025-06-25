@@ -186,7 +186,7 @@ fun TVNavigationDrawer(
     
     val navigationItems = listOf(
         NavigationItem("Home", Icons.Default.Home, Screen.Home),
-        NavigationItem("Browse", Icons.Default.Search, Screen.Browse),
+        NavigationItem("Browse", Icons.Default.Apps, Screen.Browse),
         NavigationItem("Search", Icons.Default.Search, Screen.Search),
         NavigationItem("Profile", Icons.Default.Person, Screen.Profile),
         NavigationItem("Settings", Icons.Default.Settings, Screen.Settings)
@@ -247,7 +247,16 @@ fun NavigationDrawerItem(
         modifier = modifier
             .fillMaxWidth()
             .onFocusChanged { isFocused = it.isFocused }
-            .focusable(),
+            .focusable()
+            .onKeyEvent { keyEvent ->
+                if (keyEvent.type == KeyEventType.KeyUp && 
+                    (keyEvent.key == Key.DirectionCenter || keyEvent.key == Key.Enter)) {
+                    onClick()
+                    true
+                } else {
+                    false
+                }
+            },
         colors = CardDefaults.cardColors(
             containerColor = if (isFocused) {
                 MaterialTheme.colorScheme.primary

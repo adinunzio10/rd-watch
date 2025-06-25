@@ -1,5 +1,7 @@
 package com.rdwatch.androidtv.presentation.navigation
 
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
@@ -26,7 +28,32 @@ fun AppNavigation(
         startDestination = startDestination,
         modifier = modifier
     ) {
-        composable<Screen.Home> {
+        composable<Screen.Home>(
+            enterTransition = {
+                slideIntoContainer(
+                    AnimatedContentTransitionScope.SlideDirection.Left,
+                    animationSpec = tween(300)
+                )
+            },
+            exitTransition = {
+                slideOutOfContainer(
+                    AnimatedContentTransitionScope.SlideDirection.Left,
+                    animationSpec = tween(300)
+                )
+            },
+            popEnterTransition = {
+                slideIntoContainer(
+                    AnimatedContentTransitionScope.SlideDirection.Right,
+                    animationSpec = tween(300)
+                )
+            },
+            popExitTransition = {
+                slideOutOfContainer(
+                    AnimatedContentTransitionScope.SlideDirection.Right,
+                    animationSpec = tween(300)
+                )
+            }
+        ) {
             TVHomeScreen(
                 onNavigateToScreen = { screen ->
                     navController.navigate(screen)
@@ -37,7 +64,20 @@ fun AppNavigation(
             )
         }
         
-        composable<Screen.Browse> {
+        composable<Screen.Browse>(
+            enterTransition = {
+                slideIntoContainer(
+                    AnimatedContentTransitionScope.SlideDirection.Left,
+                    animationSpec = tween(300)
+                )
+            },
+            popExitTransition = {
+                slideOutOfContainer(
+                    AnimatedContentTransitionScope.SlideDirection.Right,
+                    animationSpec = tween(300)
+                )
+            }
+        ) {
             BrowseScreen(
                 onMovieClick = { movie ->
                     navController.navigate(Screen.MovieDetails(movie.id.toString()))
@@ -48,7 +88,20 @@ fun AppNavigation(
             )
         }
         
-        composable<Screen.MovieDetails> { backStackEntry ->
+        composable<Screen.MovieDetails>(
+            enterTransition = {
+                slideIntoContainer(
+                    AnimatedContentTransitionScope.SlideDirection.Left,
+                    animationSpec = tween(300)
+                )
+            },
+            popExitTransition = {
+                slideOutOfContainer(
+                    AnimatedContentTransitionScope.SlideDirection.Right,
+                    animationSpec = tween(300)
+                )
+            }
+        ) { backStackEntry ->
             val movieDetails = backStackEntry.toRoute<Screen.MovieDetails>()
             // Find the movie by ID
             val movie = MovieList.list.find { it.id.toString() == movieDetails.movieId }
@@ -89,7 +142,20 @@ fun AppNavigation(
             // )
         }
         
-        composable<Screen.Search> {
+        composable<Screen.Search>(
+            enterTransition = {
+                slideIntoContainer(
+                    AnimatedContentTransitionScope.SlideDirection.Left,
+                    animationSpec = tween(300)
+                )
+            },
+            popExitTransition = {
+                slideOutOfContainer(
+                    AnimatedContentTransitionScope.SlideDirection.Right,
+                    animationSpec = tween(300)
+                )
+            }
+        ) {
             SearchScreen(
                 onNavigateBack = {
                     navController.popBackStack()
@@ -100,7 +166,20 @@ fun AppNavigation(
             )
         }
         
-        composable<Screen.Settings> {
+        composable<Screen.Settings>(
+            enterTransition = {
+                slideIntoContainer(
+                    AnimatedContentTransitionScope.SlideDirection.Left,
+                    animationSpec = tween(300)
+                )
+            },
+            popExitTransition = {
+                slideOutOfContainer(
+                    AnimatedContentTransitionScope.SlideDirection.Right,
+                    animationSpec = tween(300)
+                )
+            }
+        ) {
             SettingsScreen(
                 onBackPressed = {
                     navController.popBackStack()
@@ -108,7 +187,20 @@ fun AppNavigation(
             )
         }
         
-        composable<Screen.Profile> {
+        composable<Screen.Profile>(
+            enterTransition = {
+                slideIntoContainer(
+                    AnimatedContentTransitionScope.SlideDirection.Left,
+                    animationSpec = tween(300)
+                )
+            },
+            popExitTransition = {
+                slideOutOfContainer(
+                    AnimatedContentTransitionScope.SlideDirection.Right,
+                    animationSpec = tween(300)
+                )
+            }
+        ) {
             ProfileScreen(
                 onMovieClick = { movie ->
                     navController.navigate(Screen.MovieDetails(movie.id.toString()))
