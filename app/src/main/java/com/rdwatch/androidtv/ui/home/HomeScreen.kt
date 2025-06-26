@@ -29,7 +29,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.rdwatch.androidtv.Movie
-import com.rdwatch.androidtv.MovieList
+import com.rdwatch.androidtv.ui.common.UiState
 import com.rdwatch.androidtv.ui.components.PreloadImagesEffect
 import com.rdwatch.androidtv.ui.components.ImagePriority
 import com.rdwatch.androidtv.ui.focus.TVSpatialNavigation
@@ -45,6 +45,7 @@ import com.rdwatch.androidtv.presentation.navigation.Screen
 @Composable
 fun TVHomeScreen(
     playbackViewModel: PlaybackViewModel = hiltViewModel(),
+    homeViewModel: HomeViewModel = hiltViewModel(),
     onNavigateToScreen: ((Any) -> Unit)? = null,
     onMovieClick: ((Movie) -> Unit)? = null
 ) {
@@ -57,7 +58,10 @@ fun TVHomeScreen(
     val playbackUiState by playbackViewModel.uiState.collectAsState()
     val playerState by playbackViewModel.playerState.collectAsState()
     val inProgressContent by playbackViewModel.inProgressContent.collectAsState()
-    val movies = remember { MovieList.list }
+    
+    // Observe content from HomeViewModel
+    val homeContentState by homeViewModel.contentState.collectAsState()
+    val homeUiState by homeViewModel.uiState.collectAsState()
     
     // Enhanced key event handler for TV navigation
     val keyEventHandler = rememberTVKeyEventHandler().apply {
@@ -105,6 +109,9 @@ fun TVHomeScreen(
             contentFocusRequester = contentFocusRequester,
             onDrawerToggle = { isDrawerOpen = !isDrawerOpen },
             playbackViewModel = playbackViewModel,
+            homeViewModel = homeViewModel,
+            homeContentState = homeContentState,
+            homeUiState = homeUiState,
             onShowContinueWatching = { showContinueWatchingManager = true },
             onMovieClick = onMovieClick
         )
@@ -159,6 +166,13 @@ fun TVHomeScreen(
         
         // Continue Watching Manager
         if (showContinueWatchingManager) {
+            // Get movies from current content state for continue watching
+            val currentContentState = homeContentState
+            val movies = when (currentContentState) {
+                is UiState.Success -> currentContentState.data.allContent
+                else -> emptyList()
+            }
+            
             ContinueWatchingManager(
                 inProgressContent = inProgressContent,
                 movies = movies,
@@ -300,6 +314,9 @@ fun SafeAreaContent(
     contentFocusRequester: FocusRequester,
     onDrawerToggle: () -> Unit,
     playbackViewModel: PlaybackViewModel,
+    homeViewModel: HomeViewModel,
+    homeContentState: UiState<HomeContent>,
+    homeUiState: HomeUiState,
     onShowContinueWatching: () -> Unit,
     onMovieClick: ((Movie) -> Unit)? = null
 ) {
@@ -341,6 +358,8 @@ fun SafeAreaContent(
         // Content rows placeholder
         TVContentGrid(
             playbackViewModel = playbackViewModel,
+            homeContentState = homeContentState,
+            homeUiState = homeUiState,
             onShowContinueWatching = onShowContinueWatching,
             onMovieClick = onMovieClick
         )
@@ -350,10 +369,11 @@ fun SafeAreaContent(
 @Composable
 fun TVContentGrid(
     playbackViewModel: PlaybackViewModel = hiltViewModel(),
+    homeContentState: UiState<HomeContent>,
+    homeUiState: HomeUiState,
     onShowContinueWatching: () -> Unit = {},
     onMovieClick: ((Movie) -> Unit)? = null
 ) {
-    val movies = remember { MovieList.list }
     val firstRowFocusRequester = remember { FocusRequester() }
     
     // Observe playback state
@@ -366,59 +386,90 @@ fun TVContentGrid(
     }
     
     // Create different content categories with varying layouts
-    val contentRows = remember(inProgressContent) {
-        buildList {
-            // Only show Continue Watching if there's content in progress
-            if (inProgressContent.isNotEmpty()) {
-                val continueWatchingMovies = inProgressContent.mapNotNull { progress ->
-                    // Map content IDs back to movies - in a real app this would be more sophisticated
-                    movies.find { it.videoUrl == progress.contentId }
-                }.take(10)
-                
-                if (continueWatchingMovies.isNotEmpty()) {
-                    add(
-                        ContentRowData(
-                            title = "Continue Watching",
-                            movies = continueWatchingMovies,
-                            type = ContentRowType.CONTINUE_WATCHING,
-                            showViewAll = continueWatchingMovies.size > 3
+    val contentRows = remember(inProgressContent, homeContentState) {
+        when (homeContentState) {
+            is UiState.Success -> {
+                val homeContent = homeContentState.data
+                buildList {
+                    // Only show Continue Watching if there's content in progress
+                    if (inProgressContent.isNotEmpty()) {
+                        val continueWatchingMovies = inProgressContent.mapNotNull { progress ->
+                            // Map content IDs back to movies - in a real app this would be more sophisticated
+                            homeContent.allContent.find { it.videoUrl == progress.contentId }
+                        }.take(10)
+                        
+                        if (continueWatchingMovies.isNotEmpty()) {
+                            add(
+                                ContentRowData(
+                                    title = "Continue Watching",
+                                    movies = continueWatchingMovies,
+                                    type = ContentRowType.CONTINUE_WATCHING,
+                                    showViewAll = continueWatchingMovies.size > 3
+                                )
+                            )
+                        }
+                    }
+                    
+                    // Add content rows from HomeContent
+                    if (homeContent.hasFeatured) {
+                        add(
+                            ContentRowData(
+                                title = "Featured",
+                                movies = homeContent.featured,
+                                type = ContentRowType.FEATURED
+                            )
                         )
-                    )
+                    }
+                    
+                    if (homeContent.hasRecentlyAdded) {
+                        add(
+                            ContentRowData(
+                                title = "Recently Added",
+                                movies = homeContent.recentlyAdded,
+                                type = ContentRowType.STANDARD
+                            )
+                        )
+                    }
+                    
+                    // Add genre-based rows
+                    homeContent.byGenre.forEach { (genre, movies) ->
+                        if (movies.isNotEmpty()) {
+                            add(
+                                ContentRowData(
+                                    title = genre,
+                                    movies = movies,
+                                    type = ContentRowType.STANDARD
+                                )
+                            )
+                        }
+                    }
+                    
+                    // Fallback: show all content if no specific categories
+                    if (isEmpty() && homeContent.hasContent) {
+                        add(
+                            ContentRowData(
+                                title = "My Library",
+                                movies = homeContent.allContent,
+                                type = ContentRowType.STANDARD
+                            )
+                        )
+                    }
                 }
             }
-            
-            // Add other content rows
-            addAll(
-                listOf(
-                    ContentRowData(
-                        title = "Featured",
-                        movies = movies.take(4),
-                        type = ContentRowType.FEATURED
-                    ),
-                    ContentRowData(
-                        title = "Recently Added",
-                        movies = movies,
-                        type = ContentRowType.STANDARD
-                    ),
-                    ContentRowData(
-                        title = "My Library",
-                        movies = movies.reversed(),
-                        type = ContentRowType.STANDARD
-                    ),
-                    ContentRowData(
-                        title = "Popular Movies",
-                        movies = movies.shuffled().take(6),
-                        type = ContentRowType.STANDARD
-                    )
-                )
-            )
+            else -> emptyList()
         }
     }
     
     // Preload images for smooth scrolling
-    val allImageUrls = remember(movies) {
-        movies.mapNotNull { it.cardImageUrl } + 
-        movies.mapNotNull { it.backgroundImageUrl }
+    val allImageUrls = remember(homeContentState) {
+        when (homeContentState) {
+            is UiState.Success -> {
+                val movies = homeContentState.data.allContent
+                movies.mapNotNull { it.cardImageUrl } + 
+                movies.mapNotNull { it.backgroundImageUrl }
+            }
+            else -> emptyList()
+        }
     }
     
     PreloadImagesEffect(
@@ -430,25 +481,87 @@ fun TVContentGrid(
         firstRowFocusRequester.requestFocus()
     }
     
-    LazyColumn(
-        verticalArrangement = Arrangement.spacedBy(32.dp)
-    ) {
-        items(contentRows.size) { index ->
-            val row = contentRows[index]
-            TVContentRow(
-                title = row.title,
-                items = row.movies,
-                contentType = row.type,
-                firstItemFocusRequester = if (index == 0) firstRowFocusRequester else null,
-                playbackViewModel = playbackViewModel,
-                showViewAll = row.showViewAll,
-                onViewAllClick = if (row.type == ContentRowType.CONTINUE_WATCHING) {
-                    { onShowContinueWatching() }
-                } else null,
-                onItemClick = { movie ->
-                    onMovieClick?.invoke(movie)
+    when (homeContentState) {
+        is UiState.Loading -> {
+            // Show loading state
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    CircularProgressIndicator(
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Text(
+                        text = "Loading content...",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
                 }
-            )
+            }
+        }
+        is UiState.Error -> {
+            // Show error state
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Text(
+                        text = "Failed to load content",
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                    Text(
+                        text = homeContentState.message ?: "Unknown error",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+                }
+            }
+        }
+        is UiState.Success -> {
+            if (contentRows.isEmpty()) {
+                // Show empty state
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "No content available",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+                }
+            } else {
+                LazyColumn(
+                    verticalArrangement = Arrangement.spacedBy(32.dp)
+                ) {
+                    items(contentRows.size) { index ->
+                        val row = contentRows[index]
+                        TVContentRow(
+                            title = row.title,
+                            items = row.movies,
+                            contentType = row.type,
+                            firstItemFocusRequester = if (index == 0) firstRowFocusRequester else null,
+                            playbackViewModel = playbackViewModel,
+                            showViewAll = row.showViewAll,
+                            onViewAllClick = if (row.type == ContentRowType.CONTINUE_WATCHING) {
+                                { onShowContinueWatching() }
+                            } else null,
+                            onItemClick = { movie ->
+                                onMovieClick?.invoke(movie)
+                            }
+                        )
+                    }
+                }
+            }
         }
     }
 }

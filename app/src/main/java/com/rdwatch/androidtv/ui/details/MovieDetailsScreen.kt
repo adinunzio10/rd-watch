@@ -25,7 +25,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.rdwatch.androidtv.Movie
-import com.rdwatch.androidtv.MovieList
+import com.rdwatch.androidtv.ui.common.UiState
 import com.rdwatch.androidtv.ui.components.SmartTVImageLoader
 import com.rdwatch.androidtv.ui.components.ImagePriority
 import com.rdwatch.androidtv.ui.focus.tvFocusable
@@ -38,7 +38,7 @@ import com.rdwatch.androidtv.ui.viewmodel.PlaybackViewModel
  */
 @Composable
 fun MovieDetailsScreen(
-    movie: Movie,
+    movieId: String,
     modifier: Modifier = Modifier,
     onPlayClick: (Movie) -> Unit = {},
     onBackPressed: () -> Unit = {},
@@ -50,29 +50,113 @@ fun MovieDetailsScreen(
     
     // Observe ViewModel state
     val uiState by viewModel.uiState.collectAsState()
+    val movieState by viewModel.movieState.collectAsState()
     val relatedMoviesState by viewModel.relatedMoviesState.collectAsState()
     
     // Load movie details when screen is first displayed
-    LaunchedEffect(movie.id) {
-        viewModel.loadMovie(movie)
+    LaunchedEffect(movieId) {
+        viewModel.loadMovieDetails(movieId)
     }
+    
+    // Get the movie from the ViewModel state
+    val movie = uiState.movie
     
     // Get playback progress
     val contentProgress by playbackViewModel.inProgressContent.collectAsState()
-    val currentMovieProgress = contentProgress.find { it.contentId == movie.videoUrl }
+    val currentMovieProgress = movie?.let { contentProgress.find { it.contentId == movie.videoUrl } }
     val watchProgress = currentMovieProgress?.watchPercentage ?: 0f
-    val isCompleted = playbackViewModel.isContentCompleted(movie.videoUrl ?: "")
+    val isCompleted = movie?.let { playbackViewModel.isContentCompleted(it.videoUrl ?: "") } ?: false
     
     LaunchedEffect(Unit) {
         firstFocusRequester.requestFocus()
     }
     
-    LazyColumn(
-        modifier = modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background),
-        verticalArrangement = Arrangement.spacedBy(24.dp)
-    ) {
+    when (movieState) {
+        is UiState.Loading -> {
+            Box(
+                modifier = modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.background),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    CircularProgressIndicator(
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Text(
+                        text = "Loading movie details...",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+                }
+            }
+        }
+        is UiState.Error -> {
+            Box(
+                modifier = modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.background),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Text(
+                        text = "Failed to load movie",
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                    val currentMovieState = movieState
+                    Text(
+                        text = if (currentMovieState is UiState.Error) currentMovieState.message ?: "Unknown error" else "Unknown error",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+                    Button(
+                        onClick = onBackPressed,
+                        modifier = Modifier.focusRequester(firstFocusRequester)
+                    ) {
+                        Text("Go Back")
+                    }
+                }
+            }
+        }
+        is UiState.Success -> {
+            if (movie == null) {
+                Box(
+                    modifier = modifier
+                        .fillMaxSize()
+                        .background(MaterialTheme.colorScheme.background),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        Text(
+                            text = "Movie not found",
+                            style = MaterialTheme.typography.headlineSmall,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                        Button(
+                            onClick = onBackPressed,
+                            modifier = Modifier.focusRequester(firstFocusRequester)
+                        ) {
+                            Text("Go Back")
+                        }
+                    }
+                }
+            } else {
+                LazyColumn(
+                    modifier = modifier
+                        .fillMaxSize()
+                        .background(MaterialTheme.colorScheme.background),
+                    verticalArrangement = Arrangement.spacedBy(24.dp)
+                ) {
         // Hero Section
         item {
             MovieHeroSection(
@@ -134,9 +218,12 @@ fun MovieDetailsScreen(
             }
         }
         
-        // Bottom spacing for TV overscan
-        item {
-            Spacer(modifier = Modifier.height(overscanMargin))
+                    // Bottom spacing for TV overscan
+                    item {
+                        Spacer(modifier = Modifier.height(overscanMargin))
+                    }
+                }
+            }
         }
     }
 }

@@ -24,7 +24,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.rdwatch.androidtv.Movie
-import com.rdwatch.androidtv.MovieList
 import com.rdwatch.androidtv.ui.components.SmartTVImageLoader
 import com.rdwatch.androidtv.ui.components.ImagePriority
 import com.rdwatch.androidtv.ui.focus.tvFocusable
@@ -55,10 +54,11 @@ fun ProfileScreen(
     val inProgressContent by playbackViewModel.inProgressContent.collectAsState()
     
     // Get watched movies from progress data
-    val movies = remember { MovieList.list }
-    val watchedMovies = remember(inProgressContent) {
+    val watchedMovies = remember(inProgressContent, favoriteMovies, watchHistory) {
+        // Combine all available movies from favorites and history to find matches
+        val allAvailableMovies = (favoriteMovies + watchHistory).distinctBy { it.id }
         inProgressContent.mapNotNull { progress ->
-            movies.find { it.videoUrl == progress.contentId }
+            allAvailableMovies.find { it.videoUrl == progress.contentId }
         }.take(10)
     }
     

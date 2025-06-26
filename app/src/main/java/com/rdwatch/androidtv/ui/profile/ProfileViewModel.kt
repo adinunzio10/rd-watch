@@ -1,12 +1,15 @@
 package com.rdwatch.androidtv.ui.profile
 
 import com.rdwatch.androidtv.Movie
-import com.rdwatch.androidtv.MovieList
 import com.rdwatch.androidtv.presentation.viewmodel.BaseViewModel
+import com.rdwatch.androidtv.repository.RealDebridContentRepository
+import com.rdwatch.androidtv.repository.base.Result
+import com.rdwatch.androidtv.data.mappers.ContentEntityToMovieMapper.toMovies
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import javax.inject.Inject
 
 /**
@@ -14,7 +17,9 @@ import javax.inject.Inject
  * Follows MVVM architecture with BaseViewModel pattern
  */
 @HiltViewModel
-class ProfileViewModel @Inject constructor() : BaseViewModel<ProfileUiState>() {
+class ProfileViewModel @Inject constructor(
+    private val realDebridContentRepository: RealDebridContentRepository
+) : BaseViewModel<ProfileUiState>() {
     
     private val _favoriteMovies = MutableStateFlow<List<Movie>>(emptyList())
     val favoriteMovies: StateFlow<List<Movie>> = _favoriteMovies.asStateFlow()
@@ -54,13 +59,29 @@ class ProfileViewModel @Inject constructor() : BaseViewModel<ProfileUiState>() {
                     totalMinutesWatched = 9360 // 156 hours
                 )
                 
-                // Load favorite movies
-                val favorites = MovieList.list.shuffled().take(8)
-                _favoriteMovies.value = favorites
-                
-                // Load watch history
-                val history = MovieList.list.shuffled().take(10)
-                _watchHistory.value = history
+                // Load favorite movies and watch history from Real-Debrid content
+                val contentResult = realDebridContentRepository.getAllContent().first()
+                when (contentResult) {
+                    is Result.Success -> {
+                        val allMovies = contentResult.data.toMovies()
+                        
+                        // For now, simulate favorites and history by taking random content
+                        // In a real implementation, this would come from user preferences/database
+                        val favorites = allMovies.shuffled().take(8)
+                        _favoriteMovies.value = favorites
+                        
+                        val history = allMovies.shuffled().take(10)
+                        _watchHistory.value = history
+                    }
+                    is Result.Error -> {
+                        // Handle error case - keep empty lists
+                        _favoriteMovies.value = emptyList()
+                        _watchHistory.value = emptyList()
+                    }
+                    is Result.Loading -> {
+                        // Keep loading state
+                    }
+                }
                 
                 updateState { 
                     copy(
