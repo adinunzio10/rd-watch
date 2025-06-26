@@ -1,5 +1,6 @@
 package com.rdwatch.androidtv.data.entities
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import java.util.Date
@@ -28,8 +29,11 @@ data class ContentEntity(
     val tmdbId: Int? = null,
     val addedDate: Date = Date(),
     val lastPlayedDate: Date? = null,
+    @ColumnInfo(defaultValue = "0")
     val playCount: Int = 0,
+    @ColumnInfo(defaultValue = "0")
     val isFavorite: Boolean = false,
+    @ColumnInfo(defaultValue = "0")
     val isWatched: Boolean = false
 )
 
