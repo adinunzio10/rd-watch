@@ -1,6 +1,7 @@
 package com.rdwatch.androidtv.data.entities
 
 import androidx.room.Entity
+import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import java.util.Date
@@ -16,6 +17,14 @@ import java.util.Date
         Index(value = ["streamable"]),
         Index(value = ["generated"]),
         Index(value = ["contentId"])
+    ],
+    foreignKeys = [
+        ForeignKey(
+            entity = ContentEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["contentId"],
+            onDelete = ForeignKey.SET_NULL
+        )
     ]
 )
 data class DownloadEntity(
