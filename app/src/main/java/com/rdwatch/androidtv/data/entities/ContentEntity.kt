@@ -1,13 +1,24 @@
 package com.rdwatch.androidtv.data.entities
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 import java.util.Date
 
 /**
  * Entity representing content that can be from local or Real-Debrid sources
  */
-@Entity(tableName = "content")
+@Entity(
+    tableName = "content",
+    indices = [
+        Index(value = ["source"]),
+        Index(value = ["title"]),
+        Index(value = ["addedDate"]),
+        Index(value = ["isFavorite"]),
+        Index(value = ["isWatched"])
+    ]
+)
 data class ContentEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
@@ -28,8 +39,11 @@ data class ContentEntity(
     val tmdbId: Int? = null,
     val addedDate: Date = Date(),
     val lastPlayedDate: Date? = null,
+    @ColumnInfo(defaultValue = "0")
     val playCount: Int = 0,
+    @ColumnInfo(defaultValue = "0")
     val isFavorite: Boolean = false,
+    @ColumnInfo(defaultValue = "0")
     val isWatched: Boolean = false
 )
 
