@@ -3,7 +3,10 @@ package com.rdwatch.androidtv.ui.details
 import androidx.lifecycle.viewModelScope
 import com.rdwatch.androidtv.Movie
 import com.rdwatch.androidtv.presentation.viewmodel.BaseViewModel
-import com.rdwatch.androidtv.repository.MovieRepository
+import com.rdwatch.androidtv.repository.RealDebridContentRepository
+import com.rdwatch.androidtv.repository.base.Result
+import com.rdwatch.androidtv.data.mappers.ContentEntityToMovieMapper.toMovies
+import com.rdwatch.androidtv.data.mappers.ContentEntityToMovieMapper.findMovieById
 import com.rdwatch.androidtv.ui.common.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
@@ -16,7 +19,7 @@ import javax.inject.Inject
  */
 @HiltViewModel
 class MovieDetailsViewModel @Inject constructor(
-    private val movieRepository: MovieRepository
+    private val realDebridContentRepository: RealDebridContentRepository
 ) : BaseViewModel<MovieDetailsUiState>() {
     
     private val _movieState = MutableStateFlow<UiState<Movie>>(UiState.Loading)
@@ -50,33 +53,56 @@ class MovieDetailsViewModel @Inject constructor(
                     return@launch
                 }
                 
-                // Fetch movie details
-                val movie = movieRepository.getMovieById(id)
-                
-                if (movie == null) {
-                    _movieState.value = UiState.Error("Movie not found")
-                    updateState { 
-                        copy(
-                            isLoading = false,
-                            error = "Movie not found"
-                        )
+                // Fetch all content and find the movie
+                realDebridContentRepository.getAllContent()
+                    .take(1) // Just take the first emission
+                    .collect { result ->
+                        when (result) {
+                            is Result.Success -> {
+                                val movie = result.data.findMovieById(id)
+                                
+                                if (movie == null) {
+                                    _movieState.value = UiState.Error("Movie not found")
+                                    updateState { 
+                                        copy(
+                                            isLoading = false,
+                                            error = "Movie not found"
+                                        )
+                                    }
+                                    return@collect
+                                }
+                                
+                                _movieState.value = UiState.Success(movie)
+                                updateState { 
+                                    copy(
+                                        movie = movie,
+                                        isLoading = false,
+                                        error = null,
+                                        isLoaded = true,
+                                        isFromRealDebrid = movie.studio?.contains("RealDebrid", ignoreCase = true) == true
+                                    )
+                                }
+                                
+                                // Load related movies
+                                loadRelatedMovies(movie)
+                            }
+                            is Result.Error -> {
+                                _movieState.value = UiState.Error(
+                                    message = "Failed to load movie details: ${result.exception.message}",
+                                    throwable = result.exception
+                                )
+                                updateState { 
+                                    copy(
+                                        isLoading = false,
+                                        error = "Failed to load movie details: ${result.exception.message}"
+                                    )
+                                }
+                            }
+                            is Result.Loading -> {
+                                // Keep loading state
+                            }
+                        }
                     }
-                    return@launch
-                }
-                
-                _movieState.value = UiState.Success(movie)
-                updateState { 
-                    copy(
-                        movie = movie,
-                        isLoading = false,
-                        error = null,
-                        isLoaded = true,
-                        isFromRealDebrid = movie.studio?.contains("RealDebrid", ignoreCase = true) == true
-                    )
-                }
-                
-                // Load related movies
-                loadRelatedMovies(movie)
                 
             } catch (e: Exception) {
                 _movieState.value = UiState.Error(
@@ -121,25 +147,41 @@ class MovieDetailsViewModel @Inject constructor(
         viewModelScope.launch {
             _relatedMoviesState.value = UiState.Loading
             
-            movieRepository.getAllMovies()
+            realDebridContentRepository.getAllContent()
                 .catch { e ->
                     _relatedMoviesState.value = UiState.Error(
                         message = "Failed to load related movies",
                         throwable = e
                     )
                 }
-                .collect { allMovies ->
-                    // Get related movies (same studio, excluding current movie)
-                    val related = allMovies
-                        .filter { it.id != currentMovie.id }
-                        .filter { it.studio == currentMovie.studio }
-                        .take(6)
-                        .ifEmpty {
-                            // If no movies from same studio, just get random movies
-                            allMovies.filter { it.id != currentMovie.id }.take(6)
+                .take(1) // Just take the first emission
+                .collect { result ->
+                    when (result) {
+                        is Result.Success -> {
+                            val allMovies = result.data.toMovies()
+                            
+                            // Get related movies (same studio, excluding current movie)
+                            val related = allMovies
+                                .filter { it.id != currentMovie.id }
+                                .filter { it.studio == currentMovie.studio }
+                                .take(6)
+                                .ifEmpty {
+                                    // If no movies from same studio, just get random movies
+                                    allMovies.filter { it.id != currentMovie.id }.take(6)
+                                }
+                            
+                            _relatedMoviesState.value = UiState.Success(related)
                         }
-                    
-                    _relatedMoviesState.value = UiState.Success(related)
+                        is Result.Error -> {
+                            _relatedMoviesState.value = UiState.Error(
+                                message = "Failed to load related movies",
+                                throwable = result.exception
+                            )
+                        }
+                        is Result.Loading -> {
+                            // Keep loading state
+                        }
+                    }
                 }
         }
     }
