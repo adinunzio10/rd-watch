@@ -477,8 +477,16 @@ fun TVContentGrid(
         priority = ImagePriority.LOW
     )
     
-    LaunchedEffect(Unit) {
-        firstRowFocusRequester.requestFocus()
+    LaunchedEffect(homeContentState, contentRows.size) {
+        // Only request focus when content is successfully loaded and there are content rows
+        if (homeContentState is UiState.Success && contentRows.isNotEmpty()) {
+            try {
+                firstRowFocusRequester.requestFocus()
+            } catch (e: IllegalStateException) {
+                // Handle case where FocusRequester isn't attached yet
+                // This can happen during rapid state changes
+            }
+        }
     }
     
     when (homeContentState) {
