@@ -1,13 +1,23 @@
 package com.rdwatch.androidtv.data.entities
 
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 import java.util.Date
 
 /**
  * Entity representing Real-Debrid download information
  */
-@Entity(tableName = "downloads")
+@Entity(
+    tableName = "downloads",
+    indices = [
+        Index(value = ["filename"]),
+        Index(value = ["mimeType"]),
+        Index(value = ["streamable"]),
+        Index(value = ["generated"]),
+        Index(value = ["contentId"])
+    ]
+)
 data class DownloadEntity(
     @PrimaryKey
     val id: String,
