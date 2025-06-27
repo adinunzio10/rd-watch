@@ -1242,8 +1242,156 @@
         "dependencies": [
           12
         ],
-        "status": "pending",
-        "subtasks": []
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Hash Calculation System Implementation",
+            "description": "Implement file hash calculation system for subtitle matching using OpenSubtitles hash algorithm",
+            "dependencies": [],
+            "details": "Create utility functions to calculate file hashes for movies, implement OpenSubtitles hash algorithm, add hash caching mechanism",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Subdl API Integration",
+            "description": "Integrate Subdl API for subtitle search and download functionality",
+            "dependencies": [
+              1
+            ],
+            "details": "Implement API client for Subdl service, handle authentication, create search methods for hash-based and name-based queries",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "SubDB API Integration",
+            "description": "Integrate SubDB API for subtitle search and download functionality",
+            "dependencies": [
+              1
+            ],
+            "details": "Implement API client for SubDB service, handle API rate limiting, create hash-based subtitle search methods",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Podnapisi API Integration",
+            "description": "Integrate Podnapisi API for subtitle search and download functionality",
+            "dependencies": [
+              1
+            ],
+            "details": "Implement API client for Podnapisi service, handle authentication tokens, create search methods for multiple subtitle formats",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Hash-based Search Implementation",
+            "description": "Implement hash-based subtitle search across all integrated APIs",
+            "dependencies": [
+              2,
+              3,
+              4
+            ],
+            "details": "Create unified search interface using file hashes, implement priority-based API selection, handle search result aggregation",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 6,
+            "title": "Name-based Search Implementation",
+            "description": "Implement name-based subtitle search as fallback when hash search fails",
+            "dependencies": [
+              2,
+              3,
+              4
+            ],
+            "details": "Create search methods using movie titles and metadata, implement fuzzy matching, handle year and quality filters",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 7,
+            "title": "Subtitle Download Management",
+            "description": "Implement subtitle download system with progress tracking and error handling",
+            "dependencies": [
+              5,
+              6
+            ],
+            "details": "Create download manager with retry logic, implement download progress callbacks, handle compressed subtitle files",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 8,
+            "title": "Subtitle Cache System",
+            "description": "Implement local caching system for downloaded subtitles",
+            "dependencies": [
+              7
+            ],
+            "details": "Create cache storage mechanism, implement cache cleanup policies, add cache validation and expiration logic",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 9,
+            "title": "Subtitle Format Parsing",
+            "description": "Implement parsers for various subtitle formats (SRT, VTT, ASS, SSA)",
+            "dependencies": [
+              8
+            ],
+            "details": "Create format detection logic, implement parsers for each format, handle encoding detection and conversion",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 10,
+            "title": "Playback Sync Controls",
+            "description": "Implement subtitle synchronization controls for playback",
+            "dependencies": [
+              9
+            ],
+            "details": "Create sync adjustment UI controls, implement time offset calculations, add real-time sync preview",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 11,
+            "title": "Subtitle Styling System",
+            "description": "Implement customizable subtitle styling and positioning",
+            "dependencies": [
+              10
+            ],
+            "details": "Create style configuration UI, implement font size and color customization, add positioning controls for TV screens",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 12,
+            "title": "Manual File Handling",
+            "description": "Implement manual subtitle file selection and loading functionality",
+            "dependencies": [
+              9
+            ],
+            "details": "Create file browser for subtitle selection, implement drag-and-drop support, add manual file validation",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 13,
+            "title": "Error Handling and Recovery",
+            "description": "Implement comprehensive error handling and recovery mechanisms across all subtitle features",
+            "dependencies": [
+              11,
+              12
+            ],
+            "details": "Add error logging and reporting, implement graceful fallbacks, create user-friendly error messages and recovery options",
+            "status": "done",
+            "testStrategy": ""
+          }
+        ]
       },
       {
         "id": 18,
@@ -2075,7 +2223,7 @@
     ],
     "metadata": {
       "created": "2025-06-22T03:41:46.714Z",
-      "updated": "2025-06-25T07:03:57.771Z",
+      "updated": "2025-06-27T05:49:03.573Z",
       "description": "Tasks for master context"
     }
   }

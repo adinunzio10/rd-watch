@@ -213,9 +213,32 @@ object Migrations {
         }
     }
     
+    val MIGRATION_3_4 = object : Migration(3, 4) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            // Create file_hashes table for caching OpenSubtitles hash calculations
+            database.execSQL("""
+                CREATE TABLE IF NOT EXISTS `file_hashes` (
+                    `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                    `file_path` TEXT NOT NULL,
+                    `hash_value` TEXT NOT NULL,
+                    `file_size` INTEGER NOT NULL,
+                    `last_modified` INTEGER NOT NULL,
+                    `created_at` INTEGER NOT NULL,
+                    `updated_at` INTEGER NOT NULL
+                )
+            """.trimIndent())
+            
+            // Create indices for file_hashes
+            database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_file_hashes_file_path` ON `file_hashes` (`file_path`)")
+            database.execSQL("CREATE INDEX IF NOT EXISTS `index_file_hashes_hash_value` ON `file_hashes` (`hash_value`)")
+            database.execSQL("CREATE INDEX IF NOT EXISTS `index_file_hashes_last_modified_file_size` ON `file_hashes` (`last_modified`, `file_size`)")
+        }
+    }
+    
     // All migrations for this database
     val ALL_MIGRATIONS = arrayOf(
         MIGRATION_1_2,
-        MIGRATION_2_3
+        MIGRATION_2_3,
+        MIGRATION_3_4
     )
 }
