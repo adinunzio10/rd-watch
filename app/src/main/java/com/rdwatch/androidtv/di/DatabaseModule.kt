@@ -91,4 +91,10 @@ object DatabaseModule {
     fun provideDownloadDao(@MainDatabase database: AppDatabase): DownloadDao {
         return database.downloadDao()
     }
+
+    @Provides
+    @Singleton
+    fun provideFileHashDao(@MainDatabase database: AppDatabase): FileHashDao {
+        return database.fileHashDao()
+    }
 }

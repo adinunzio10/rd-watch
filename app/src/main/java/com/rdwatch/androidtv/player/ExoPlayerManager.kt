@@ -9,6 +9,7 @@ import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
 import com.rdwatch.androidtv.player.state.PlaybackStateRepository
 import com.rdwatch.androidtv.player.state.PlaybackSession
 import com.rdwatch.androidtv.player.error.PlayerErrorHandler
+import com.rdwatch.androidtv.player.subtitle.SubtitleManager
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -27,7 +28,8 @@ class ExoPlayerManager @Inject constructor(
     @ApplicationContext private val context: Context,
     private val mediaSourceFactory: MediaSourceFactory,
     private val stateRepository: PlaybackStateRepository,
-    private val errorHandler: PlayerErrorHandler
+    private val errorHandler: PlayerErrorHandler,
+    private val subtitleManager: SubtitleManager
 ) {
     private var _exoPlayer: ExoPlayer? = null
     val exoPlayer: ExoPlayer get() = _exoPlayer ?: createPlayer()
@@ -106,6 +108,9 @@ class ExoPlayerManager @Inject constructor(
             .also { player ->
                 player.addListener(playerListener)
                 _exoPlayer = player
+                
+                // Initialize subtitle manager with the player
+                subtitleManager.initialize(player)
             }
     }
     
@@ -197,9 +202,93 @@ class ExoPlayerManager @Inject constructor(
         updatePlayerState { copy(playbackSpeed = speed) }
     }
     
+    // Subtitle Management Methods
+    
+    /**
+     * Load external subtitle tracks
+     */
+    fun loadExternalSubtitles(subtitleConfigs: List<com.rdwatch.androidtv.player.subtitle.parser.SubtitleLoadConfig>) {
+        subtitleManager.loadExternalSubtitles(subtitleConfigs)
+    }
+    
+    /**
+     * Load a single external subtitle
+     */
+    suspend fun loadExternalSubtitle(config: com.rdwatch.androidtv.player.subtitle.parser.SubtitleLoadConfig): Boolean {
+        return subtitleManager.loadExternalSubtitle(config)
+    }
+    
+    /**
+     * Get available subtitle tracks
+     */
+    fun getAvailableSubtitles() = subtitleManager.availableSubtitles
+    
+    /**
+     * Get currently selected subtitle
+     */
+    fun getSelectedSubtitle() = subtitleManager.selectedSubtitle
+    
+    /**
+     * Select a subtitle track
+     */
+    fun selectSubtitle(subtitle: com.rdwatch.androidtv.player.subtitle.AvailableSubtitle?) {
+        subtitleManager.selectSubtitle(subtitle)
+    }
+    
+    /**
+     * Get subtitle loading state
+     */
+    fun getSubtitleLoadingState() = subtitleManager.loadingState
+    
+    /**
+     * Set subtitle timing offset
+     */
+    fun setSubtitleOffset(offsetMs: Long) {
+        subtitleManager.setSubtitleOffset(offsetMs)
+    }
+    
+    /**
+     * Get current subtitle timing offset
+     */
+    fun getSubtitleOffset(): Long {
+        return subtitleManager.getSubtitleOffset()
+    }
+    
+    /**
+     * Get subtitle styling options
+     */
+    fun getSubtitleStyle() = subtitleManager.subtitleStyle
+    
+    /**
+     * Update subtitle styling
+     */
+    fun updateSubtitleStyle(style: com.rdwatch.androidtv.player.subtitle.SubtitleStyle) {
+        subtitleManager.updateSubtitleStyle(style)
+    }
+    
+    /**
+     * Clear all loaded subtitles
+     */
+    fun clearSubtitles() {
+        subtitleManager.clearAllSubtitles()
+    }
+    
+    /**
+     * Get supported subtitle formats
+     */
+    fun getSupportedSubtitleFormats() = subtitleManager.getSupportedFormats()
+    
+    /**
+     * Check if subtitle format is supported
+     */
+    fun isSubtitleFormatSupported(format: com.rdwatch.androidtv.player.subtitle.SubtitleFormat): Boolean {
+        return subtitleManager.isFormatSupported(format)
+    }
+    
     fun release() {
         stopAutoSave()
         saveCurrentPosition() // Save final position before release
+        subtitleManager.dispose() // Clean up subtitle resources
         _exoPlayer?.removeListener(playerListener)
         _exoPlayer?.release()
         _exoPlayer = null
