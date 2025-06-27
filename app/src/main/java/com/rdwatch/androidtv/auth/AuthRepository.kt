@@ -85,6 +85,10 @@ class AuthRepository @Inject constructor(
                     clientId = credentials.clientId
                     clientSecret = credentials.clientSecret
                     Log.d(TAG, "Received credentials: client_id=$clientId")
+                    
+                    // Save the credentials
+                    tokenProvider.saveClientCredentials(clientId, clientSecret)
+                    
                     break
                 } else {
                     val errorBody = credentialsResponse.errorBody()?.string()
@@ -137,6 +141,9 @@ class AuthRepository @Inject constructor(
             return Result.Error(Exception("Authentication timeout"))
         }
         
+        // Save client credentials
+        tokenProvider.saveClientCredentials(clientId, clientSecret)
+        
         // Step 3: Exchange device code + credentials for access token
         return try {
             val tokenResponse = oauth2ApiService.getDeviceToken(clientId, clientSecret, deviceCode)
@@ -164,14 +171,16 @@ class AuthRepository @Inject constructor(
     
     suspend fun refreshTokenIfNeeded(): Result<Unit> {
         val refreshToken = tokenProvider.getRefreshToken()
-        
-        if (refreshToken == null) {
-            _authState.value = AuthState.Error("No refresh token available")
-            return Result.Error(Exception("No refresh token available"))
+        val clientId = tokenProvider.getClientId()
+        val clientSecret = tokenProvider.getClientSecret()
+
+        if (refreshToken == null || clientId == null || clientSecret == null) {
+            _authState.value = AuthState.Error("Missing credentials for refresh")
+            return Result.Error(Exception("Missing credentials for refresh"))
         }
         
         return try {
-            val response = oauth2ApiService.refreshToken("dummy_client_id", refreshToken) // client id is not used
+            val response = oauth2ApiService.refreshToken(clientId, clientSecret, refreshToken)
             
             if (response.isSuccessful) {
                 val tokenResponse = response.body()!!
