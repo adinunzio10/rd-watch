@@ -17,3 +17,4 @@ node_modules
 .vscode/tasks.json
 .kotlin/errors
 build/reports/problems/problems-report.html
+.vscode/settings.json
