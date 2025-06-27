@@ -4,6 +4,7 @@ import android.util.Log
 import com.rdwatch.androidtv.auth.models.AuthState
 import com.rdwatch.androidtv.auth.models.DeviceCodeInfo
 import com.rdwatch.androidtv.network.api.OAuth2ApiService
+import com.rdwatch.androidtv.network.interceptors.TokenProvider
 import com.rdwatch.androidtv.network.models.OAuth2ErrorResponse
 import com.rdwatch.androidtv.repository.base.Result
 import com.squareup.moshi.Moshi
@@ -18,7 +19,7 @@ import javax.inject.Singleton
 @Singleton
 class AuthRepository @Inject constructor(
     private val oauth2ApiService: OAuth2ApiService,
-    private val tokenStorage: TokenStorage,
+    private val tokenProvider: TokenProvider,
     private val moshi: Moshi
 ) {
     
@@ -142,12 +143,9 @@ class AuthRepository @Inject constructor(
             
             if (tokenResponse.isSuccessful) {
                 val tokens = tokenResponse.body()!!
-                // Store client credentials for future token refresh
-                tokenStorage.saveClientCredentials(clientId, clientSecret)
-                tokenStorage.saveTokens(
+                tokenProvider.saveTokens(
                     accessToken = tokens.accessToken,
-                    refreshToken = tokens.refreshToken,
-                    expiresIn = tokens.expiresIn
+                    refreshToken = tokens.refreshToken
                 )
                 _authState.value = AuthState.Authenticated
                 Result.Success(Unit)
@@ -165,28 +163,21 @@ class AuthRepository @Inject constructor(
     }
     
     suspend fun refreshTokenIfNeeded(): Result<Unit> {
-        val refreshToken = tokenStorage.getRefreshToken()
-        val clientId = tokenStorage.getClientId()
+        val refreshToken = tokenProvider.getRefreshToken()
         
         if (refreshToken == null) {
             _authState.value = AuthState.Error("No refresh token available")
             return Result.Error(Exception("No refresh token available"))
         }
         
-        if (clientId == null) {
-            _authState.value = AuthState.Error("No client credentials available")
-            return Result.Error(Exception("No client credentials available"))
-        }
-        
         return try {
-            val response = oauth2ApiService.refreshToken(clientId, refreshToken)
+            val response = oauth2ApiService.refreshToken("dummy_client_id", refreshToken) // client id is not used
             
             if (response.isSuccessful) {
                 val tokenResponse = response.body()!!
-                tokenStorage.saveTokens(
+                tokenProvider.saveTokens(
                     accessToken = tokenResponse.accessToken,
-                    refreshToken = tokenResponse.refreshToken ?: refreshToken,
-                    expiresIn = tokenResponse.expiresIn
+                    refreshToken = tokenResponse.refreshToken ?: refreshToken
                 )
                 _authState.value = AuthState.Authenticated
                 Result.Success(Unit)
@@ -204,7 +195,7 @@ class AuthRepository @Inject constructor(
     }
     
     suspend fun logout() {
-        tokenStorage.clearTokens()
+        tokenProvider.clearTokens()
         _authState.value = AuthState.Unauthenticated
     }
     
@@ -220,18 +211,16 @@ class AuthRepository @Inject constructor(
         
         try {
             Log.d(TAG, "Checking if token is valid...")
-            val isTokenValid = tokenStorage.isTokenValid()
-            Log.d(TAG, "Token valid: $isTokenValid")
+            val accessToken = tokenProvider.getAccessToken()
             
-            if (isTokenValid) {
+            if (accessToken != null) {
                 Log.d(TAG, "Token is valid, setting state to Authenticated")
                 _authState.value = AuthState.Authenticated
             } else {
                 Log.d(TAG, "Token not valid, checking for refresh token...")
-                val hasRefreshToken = tokenStorage.hasRefreshToken()
-                Log.d(TAG, "Has refresh token: $hasRefreshToken")
+                val refreshToken = tokenProvider.getRefreshToken()
                 
-                if (hasRefreshToken) {
+                if (refreshToken != null) {
                     Log.d(TAG, "Has refresh token, attempting refresh...")
                     refreshTokenIfNeeded()
                 } else {
