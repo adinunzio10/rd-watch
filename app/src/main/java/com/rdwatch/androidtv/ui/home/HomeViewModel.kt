@@ -3,7 +3,10 @@ package com.rdwatch.androidtv.ui.home
 import androidx.lifecycle.viewModelScope
 import com.rdwatch.androidtv.Movie
 import com.rdwatch.androidtv.presentation.viewmodel.BaseViewModel
-import com.rdwatch.androidtv.repository.MovieRepository
+import com.rdwatch.androidtv.repository.RealDebridContentRepository
+import com.rdwatch.androidtv.repository.base.Result
+import com.rdwatch.androidtv.data.mappers.ContentEntityToMovieMapper.toMovies
+import com.rdwatch.androidtv.data.mappers.ContentEntityToMovieMapper.findMovieById
 import com.rdwatch.androidtv.ui.common.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
@@ -16,7 +19,7 @@ import javax.inject.Inject
  */
 @HiltViewModel
 class HomeViewModel @Inject constructor(
-    private val movieRepository: MovieRepository
+    private val realDebridContentRepository: RealDebridContentRepository
 ) : BaseViewModel<HomeUiState>() {
     
     private val _contentState = MutableStateFlow<UiState<HomeContent>>(UiState.Loading)
@@ -40,7 +43,7 @@ class HomeViewModel @Inject constructor(
             _contentState.value = UiState.Loading
             updateState { copy(isLoading = true, error = null) }
             
-            movieRepository.getAllMovies()
+            realDebridContentRepository.getAllContent()
                 .catch { e ->
                     _contentState.value = UiState.Error(
                         message = "Failed to load content: ${e.message}",
@@ -53,16 +56,36 @@ class HomeViewModel @Inject constructor(
                         )
                     }
                 }
-                .collect { movies ->
-                    _allMovies.value = movies
-                    val filteredContent = filterContent(movies, uiState.value.contentFilter)
-                    
-                    _contentState.value = UiState.Success(filteredContent)
-                    updateState { 
-                        copy(
-                            isLoading = false,
-                            error = null
-                        )
+                .collect { result ->
+                    when (result) {
+                        is Result.Success -> {
+                            val movies = result.data.toMovies()
+                            _allMovies.value = movies
+                            val filteredContent = filterContent(movies, uiState.value.contentFilter)
+                            
+                            _contentState.value = UiState.Success(filteredContent)
+                            updateState { 
+                                copy(
+                                    isLoading = false,
+                                    error = null
+                                )
+                            }
+                        }
+                        is Result.Error -> {
+                            _contentState.value = UiState.Error(
+                                message = "Failed to load content: ${result.exception.message}",
+                                throwable = result.exception
+                            )
+                            updateState { 
+                                copy(
+                                    isLoading = false,
+                                    error = "Failed to load content: ${result.exception.message}"
+                                )
+                            }
+                        }
+                        is Result.Loading -> {
+                            // Keep loading state
+                        }
                     }
                 }
         }
@@ -94,7 +117,7 @@ class HomeViewModel @Inject constructor(
                 _contentState.value = UiState.Success(filteredContent)
                 updateState { copy(isLoading = false) }
             } else {
-                movieRepository.searchMovies(query)
+                realDebridContentRepository.searchContent(query)
                     .catch { e ->
                         _contentState.value = UiState.Error(
                             message = "Search failed: ${e.message}",
@@ -107,10 +130,30 @@ class HomeViewModel @Inject constructor(
                             )
                         }
                     }
-                    .collect { searchResults ->
-                        val filteredResults = filterContent(searchResults, uiState.value.contentFilter)
-                        _contentState.value = UiState.Success(filteredResults)
-                        updateState { copy(isLoading = false, error = null) }
+                    .collect { result ->
+                        when (result) {
+                            is Result.Success -> {
+                                val movies = result.data.toMovies()
+                                val filteredResults = filterContent(movies, uiState.value.contentFilter)
+                                _contentState.value = UiState.Success(filteredResults)
+                                updateState { copy(isLoading = false, error = null) }
+                            }
+                            is Result.Error -> {
+                                _contentState.value = UiState.Error(
+                                    message = "Search failed: ${result.exception.message}",
+                                    throwable = result.exception
+                                )
+                                updateState { 
+                                    copy(
+                                        isLoading = false,
+                                        error = "Search failed: ${result.exception.message}"
+                                    )
+                                }
+                            }
+                            is Result.Loading -> {
+                                // Keep loading state
+                            }
+                        }
                     }
             }
         }
@@ -130,25 +173,27 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch {
             updateState { copy(isRefreshing = true, error = null) }
             
-            movieRepository.refreshMovies()
-                .fold(
-                    onSuccess = {
-                        loadContent()
-                        updateState { copy(isRefreshing = false) }
-                    },
-                    onFailure = { e ->
-                        _contentState.value = UiState.Error(
-                            message = "Refresh failed: ${e.message}",
-                            throwable = e
+            when (val result = realDebridContentRepository.syncContent()) {
+                is Result.Success -> {
+                    loadContent()
+                    updateState { copy(isRefreshing = false) }
+                }
+                is Result.Error -> {
+                    _contentState.value = UiState.Error(
+                        message = "Refresh failed: ${result.exception.message}",
+                        throwable = result.exception
+                    )
+                    updateState { 
+                        copy(
+                            isRefreshing = false,
+                            error = "Refresh failed: ${result.exception.message}"
                         )
-                        updateState { 
-                            copy(
-                                isRefreshing = false,
-                                error = "Refresh failed: ${e.message}"
-                            )
-                        }
                     }
-                )
+                }
+                is Result.Loading -> {
+                    // Keep refreshing state
+                }
+            }
         }
     }
     
@@ -196,6 +241,13 @@ class HomeViewModel @Inject constructor(
         }
         
         return genres.mapValues { it.value.take(10) } // Limit to 10 per genre
+    }
+    
+    /**
+     * Find a movie by ID for navigation purposes
+     */
+    fun findMovieById(movieId: Long): Movie? {
+        return _allMovies.value.find { it.id == movieId }
     }
     
     override fun handleError(exception: Throwable) {

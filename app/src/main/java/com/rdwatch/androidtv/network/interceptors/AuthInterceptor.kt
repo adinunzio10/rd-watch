@@ -16,8 +16,13 @@ class AuthInterceptor @Inject constructor(
         // Get the current token
         val token = tokenProvider.getAccessToken()
         
-        // If no token, proceed with original request
-        if (token.isNullOrBlank()) {
+        // Check for the @NoAuth annotation
+        val noAuth = original.tag(retrofit2.Invocation::class.java)
+            ?.method()
+            ?.isAnnotationPresent(NoAuth::class.java) ?: false
+
+        // If no token or @NoAuth is present, proceed with original request
+        if (token.isNullOrBlank() || noAuth) {
             return chain.proceed(original)
         }
         
@@ -36,4 +41,7 @@ interface TokenProvider {
     suspend fun refreshToken(): Boolean
     fun clearTokens()
     fun saveTokens(accessToken: String, refreshToken: String?)
+    fun saveClientCredentials(clientId: String, clientSecret: String)
+    fun getClientId(): String?
+    fun getClientSecret(): String?
 }

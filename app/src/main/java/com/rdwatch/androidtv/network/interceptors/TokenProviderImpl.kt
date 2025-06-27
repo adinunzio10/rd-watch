@@ -16,6 +16,8 @@ class TokenProviderImpl @Inject constructor(
         private const val PREFS_NAME = "secure_auth_prefs"
         private const val KEY_ACCESS_TOKEN = "access_token"
         private const val KEY_REFRESH_TOKEN = "refresh_token"
+        private const val KEY_CLIENT_ID = "client_id"
+        private const val KEY_CLIENT_SECRET = "client_secret"
     }
     
     private val masterKey = MasterKey.Builder(context)
@@ -68,5 +70,20 @@ class TokenProviderImpl @Inject constructor(
         }
         
         editor.apply()
+    }
+
+    override fun saveClientCredentials(clientId: String, clientSecret: String) {
+        securePrefs.edit()
+            .putString(KEY_CLIENT_ID, clientId)
+            .putString(KEY_CLIENT_SECRET, clientSecret)
+            .apply()
+    }
+
+    override fun getClientId(): String? {
+        return securePrefs.getString(KEY_CLIENT_ID, null)
+    }
+
+    override fun getClientSecret(): String? {
+        return securePrefs.getString(KEY_CLIENT_SECRET, null)
     }
 }

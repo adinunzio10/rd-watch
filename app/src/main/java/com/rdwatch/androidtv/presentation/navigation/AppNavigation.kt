@@ -13,10 +13,10 @@ import com.rdwatch.androidtv.auth.ui.AuthenticationScreen
 import com.rdwatch.androidtv.ui.browse.BrowseScreen
 import com.rdwatch.androidtv.ui.settings.SettingsScreen
 import com.rdwatch.androidtv.ui.details.MovieDetailsScreen
+import com.rdwatch.androidtv.ui.details.MovieDetailsViewModel
 import com.rdwatch.androidtv.ui.profile.ProfileScreen
 import com.rdwatch.androidtv.ui.home.TVHomeScreen
 import com.rdwatch.androidtv.ui.search.SearchScreen
-import com.rdwatch.androidtv.MovieList
 
 @Composable
 fun AppNavigation(
@@ -111,33 +111,24 @@ fun AppNavigation(
             }
         ) { backStackEntry ->
             val movieDetails = backStackEntry.toRoute<Screen.MovieDetails>()
-            // Find the movie by ID
-            val movie = MovieList.list.find { it.id.toString() == movieDetails.movieId }
+            val viewModel: MovieDetailsViewModel = hiltViewModel()
             
-            if (movie != null) {
-                MovieDetailsScreen(
-                    movie = movie,
-                    onPlayClick = { selectedMovie ->
-                        navController.navigate(
-                            Screen.VideoPlayer(
-                                videoUrl = selectedMovie.videoUrl ?: "",
-                                title = selectedMovie.title ?: ""
-                            )
+            // Load movie details using the ViewModel
+            MovieDetailsScreen(
+                movieId = movieDetails.movieId,
+                viewModel = viewModel,
+                onPlayClick = { selectedMovie ->
+                    navController.navigate(
+                        Screen.VideoPlayer(
+                            videoUrl = selectedMovie.videoUrl ?: "",
+                            title = selectedMovie.title ?: ""
                         )
-                    },
-                    onBackPressed = {
-                        navController.popBackStack()
-                    }
-                )
-            } else {
-                // Handle movie not found - navigate to error screen
-                navController.navigate(
-                    Screen.Error(
-                        message = "Movie not found",
-                        canRetry = true
                     )
-                )
-            }
+                },
+                onBackPressed = {
+                    navController.popBackStack()
+                }
+            )
         }
         
         composable<Screen.VideoPlayer> { backStackEntry ->
