@@ -1,0 +1,18 @@
+{
+  "folders": [
+    {
+      "name": "Main",
+      "path": "/home/alfredo/dev/rd-watch"
+    },
+    {
+      "name": "Claude",
+      "path": "/home/alfredo/dev/project-claude"
+    },
+    {
+      "name": "Gemini",
+      "path": "/home/alfredo/dev/project-gemini"
+    }
+  ],
+  "settings": {},
+  "launch": {}
+}
