@@ -2,6 +2,7 @@ package com.rdwatch.androidtv.ui.search
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.rdwatch.androidtv.data.repository.UserRepository
 import com.rdwatch.androidtv.ui.search.VoiceSearchState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
@@ -17,7 +18,8 @@ class SearchViewModel @Inject constructor(
     private val searchOrchestrationService: SearchOrchestrationService,
     private val searchHistoryManager: SearchHistoryManager,
     private val voiceSearchManager: VoiceSearchManager,
-    private val resultAggregator: SearchResultAggregator
+    private val resultAggregator: SearchResultAggregator,
+    private val userRepository: UserRepository
 ) : ViewModel() {
     
     private val _uiState = MutableStateFlow(SearchUiState())
@@ -29,18 +31,35 @@ class SearchViewModel @Inject constructor(
     private var currentSearchJob: Job? = null
     private var currentSearchId: String? = null
     
-    // Default user ID (in real app, this would come from auth)
-    private val currentUserId = 1L
+    // User ID - will be initialized from UserRepository
+    private var currentUserId = UserRepository.DEFAULT_USER_ID
     
     init {
-        // Load search history
-        loadSearchHistory()
+        // Initialize user and load search history
+        initializeUser()
         
         // Initialize voice search availability
         updateVoiceSearchAvailability()
         
         // Observe voice search state
         observeVoiceSearchState()
+    }
+    
+    /**
+     * Initialize user and load search history
+     */
+    private fun initializeUser() {
+        viewModelScope.launch {
+            try {
+                currentUserId = userRepository.getDefaultUserId()
+                loadSearchHistory()
+            } catch (e: Exception) {
+                // If user initialization fails, continue with default ID
+                // The database initializer should have created the user already
+                android.util.Log.e("SearchViewModel", "Failed to initialize user", e)
+                loadSearchHistory()
+            }
+        }
     }
     
     /**
@@ -70,12 +89,19 @@ class SearchViewModel @Inject constructor(
                     )
                 }
                 
-                // Add to search history
-                searchHistoryManager.addSearchQuery(
-                    userId = currentUserId,
-                    query = currentState.searchQuery,
-                    filtersJson = serializeFilters(currentState.searchFilters)
-                )
+                // Ensure user exists and add to search history
+                try {
+                    val userId = userRepository.getDefaultUserId()
+                    currentUserId = userId
+                    searchHistoryManager.addSearchQuery(
+                        userId = userId,
+                        query = currentState.searchQuery,
+                        filtersJson = serializeFilters(currentState.searchFilters)
+                    )
+                } catch (e: Exception) {
+                    // Log error but continue with search
+                    android.util.Log.e("SearchViewModel", "Failed to add to search history", e)
+                }
                 
                 // Perform orchestrated search
                 searchOrchestrationService.performSearch(
@@ -142,12 +168,18 @@ class SearchViewModel @Inject constructor(
                 }
                 
                 // Update search history with results count
-                searchHistoryManager.addSearchQuery(
-                    userId = currentUserId,
-                    query = _uiState.value.searchQuery,
-                    resultsCount = result.results.size,
-                    filtersJson = serializeFilters(_uiState.value.searchFilters)
-                )
+                try {
+                    val userId = userRepository.getDefaultUserId()
+                    searchHistoryManager.addSearchQuery(
+                        userId = userId,
+                        query = _uiState.value.searchQuery,
+                        resultsCount = result.results.size,
+                        filtersJson = serializeFilters(_uiState.value.searchFilters)
+                    )
+                } catch (e: Exception) {
+                    // Log error but don't crash
+                    android.util.Log.e("SearchViewModel", "Failed to update search history", e)
+                }
             }
             
             is SearchOrchestrationResult.Error -> {
@@ -229,8 +261,13 @@ class SearchViewModel @Inject constructor(
      */
     fun deleteSearchHistoryItem(query: String) {
         viewModelScope.launch {
-            searchHistoryManager.deleteSearchQuery(currentUserId, query)
-            loadSearchHistory()
+            try {
+                val userId = userRepository.getDefaultUserId()
+                searchHistoryManager.deleteSearchQuery(userId, query)
+                loadSearchHistory()
+            } catch (e: Exception) {
+                android.util.Log.e("SearchViewModel", "Failed to delete search history", e)
+            }
         }
     }
     
@@ -238,7 +275,13 @@ class SearchViewModel @Inject constructor(
      * Get search suggestions
      */
     suspend fun getSearchSuggestions(partialQuery: String): List<String> {
-        return searchHistoryManager.getSearchSuggestions(currentUserId, partialQuery)
+        return try {
+            val userId = userRepository.getDefaultUserId()
+            searchHistoryManager.getSearchSuggestions(userId, partialQuery)
+        } catch (e: Exception) {
+            android.util.Log.e("SearchViewModel", "Failed to get search suggestions", e)
+            emptyList()
+        }
     }
     
     /**
@@ -246,10 +289,16 @@ class SearchViewModel @Inject constructor(
      */
     private fun loadSearchHistory() {
         viewModelScope.launch {
-            searchHistoryManager.getRecentSearchHistory(currentUserId)
-                .collect { history ->
-                    _searchHistory.value = history
-                }
+            try {
+                val userId = userRepository.getDefaultUserId()
+                searchHistoryManager.getRecentSearchHistory(userId)
+                    .collect { history ->
+                        _searchHistory.value = history
+                    }
+            } catch (e: Exception) {
+                android.util.Log.e("SearchViewModel", "Failed to load search history", e)
+                _searchHistory.value = emptyList()
+            }
         }
     }
     
