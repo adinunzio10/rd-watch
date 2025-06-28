@@ -1,4 +1,4 @@
 <resources>
 
-    <style name="Theme.Rdwatch" parent="@style/Theme.Leanback" />
+    <style name="Theme.Rdwatch" parent="@android:style/Theme.DeviceDefault" />
 </resources>
