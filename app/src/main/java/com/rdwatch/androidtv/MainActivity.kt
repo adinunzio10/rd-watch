@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.rememberNavController
 import com.rdwatch.androidtv.navigation.PlaybackNavigationHelper
+import com.rdwatch.androidtv.data.repository.SettingsRepository
 import com.rdwatch.androidtv.presentation.navigation.AppNavigation
 import com.rdwatch.androidtv.presentation.navigation.Screen
 import com.rdwatch.androidtv.ui.MainViewModel
@@ -38,6 +39,9 @@ class MainActivity : ComponentActivity() {
     @Inject
     lateinit var playbackCleanupManager: PlaybackCleanupManager
     
+    @Inject
+    lateinit var settingsRepository: SettingsRepository
+    
     private val mainViewModel: MainViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -50,7 +54,8 @@ class MainActivity : ComponentActivity() {
         
         Log.d(TAG, "Setting up Compose content")
         setContent {
-            RdwatchTheme {
+            // Use the theme composable that observes settings
+            RdwatchTheme(settingsRepository = settingsRepository) {
                 val isReady by mainViewModel.isReady.collectAsStateWithLifecycle(initialValue = false)
                 val startDestination by mainViewModel.startDestination.collectAsStateWithLifecycle(initialValue = Screen.Home)
                 

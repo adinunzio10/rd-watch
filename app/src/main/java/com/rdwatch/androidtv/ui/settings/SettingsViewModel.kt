@@ -1,8 +1,14 @@
 package com.rdwatch.androidtv.ui.settings
 
+import androidx.lifecycle.viewModelScope
 import com.rdwatch.androidtv.auth.AuthRepository
+import com.rdwatch.androidtv.data.preferences.models.*
+import com.rdwatch.androidtv.data.repository.SettingsRepository
 import com.rdwatch.androidtv.presentation.viewmodel.BaseViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
@@ -11,7 +17,8 @@ import javax.inject.Inject
  */
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    private val settingsRepository: SettingsRepository
 ) : BaseViewModel<SettingsUiState>() {
     
     override fun createInitialState(): SettingsUiState {
@@ -20,6 +27,7 @@ class SettingsViewModel @Inject constructor(
     
     init {
         loadSettings()
+        observeSettingsChanges()
     }
     
     /**
@@ -27,8 +35,9 @@ class SettingsViewModel @Inject constructor(
      */
     private fun loadSettings() {
         launchSafely {
-            // TODO: In real implementation, load from SharedPreferences or DataStore
-            // For now, using default values
+            updateState { copy(isLoading = true) }
+            
+            // Initial load will happen through the Flow observers
             updateState { 
                 copy(
                     isLoading = false,
@@ -39,97 +48,150 @@ class SettingsViewModel @Inject constructor(
     }
     
     /**
+     * Observe settings changes from repository
+     */
+    private fun observeSettingsChanges() {
+        // Observe video quality
+        settingsRepository.videoQuality
+            .onEach { quality ->
+                updateState { copy(videoQuality = quality.toUiModel()) }
+            }
+            .launchIn(viewModelScope)
+            
+        // Observe playback speed
+        settingsRepository.playbackSpeed
+            .onEach { speed ->
+                updateState { copy(playbackSpeed = speed.toUiModel()) }
+            }
+            .launchIn(viewModelScope)
+            
+        // Observe subtitles enabled
+        settingsRepository.subtitlesEnabled
+            .onEach { enabled ->
+                updateState { copy(subtitlesEnabled = enabled) }
+            }
+            .launchIn(viewModelScope)
+            
+        // Observe auto play
+        settingsRepository.autoPlay
+            .onEach { enabled ->
+                updateState { copy(autoPlay = enabled) }
+            }
+            .launchIn(viewModelScope)
+            
+        // Observe theme mode
+        settingsRepository.themeMode
+            .onEach { mode ->
+                updateState { copy(darkMode = mode == ThemeMode.DARK) }
+            }
+            .launchIn(viewModelScope)
+            
+        // Observe parental controls
+        settingsRepository.parentalControlsEnabled
+            .onEach { enabled ->
+                updateState { copy(parentalControlsEnabled = enabled) }
+            }
+            .launchIn(viewModelScope)
+            
+        // Observe notifications
+        settingsRepository.notificationsEnabled
+            .onEach { enabled ->
+                updateState { copy(notificationsEnabled = enabled) }
+            }
+            .launchIn(viewModelScope)
+            
+        // Observe bandwidth limit
+        settingsRepository.bandwidthLimit
+            .onEach { limit ->
+                updateState { copy(dataUsageLimit = limit.toUiModel()) }
+            }
+            .launchIn(viewModelScope)
+    }
+    
+    /**
      * Update video quality setting
      */
     fun updateVideoQuality(quality: VideoQuality) {
-        updateState { copy(videoQuality = quality) }
-        saveSettings()
+        launchSafely {
+            settingsRepository.updateVideoQuality(quality.toPreferenceModel())
+        }
     }
     
     /**
      * Update playback speed setting
      */
     fun updatePlaybackSpeed(speed: PlaybackSpeed) {
-        updateState { copy(playbackSpeed = speed) }
-        saveSettings()
+        launchSafely {
+            settingsRepository.updatePlaybackSpeed(speed.toPreferenceModel())
+        }
     }
     
     /**
      * Toggle subtitles setting
      */
     fun toggleSubtitles(enabled: Boolean) {
-        updateState { copy(subtitlesEnabled = enabled) }
-        saveSettings()
+        launchSafely {
+            settingsRepository.updateSubtitlesEnabled(enabled)
+        }
     }
     
     /**
      * Toggle auto play setting
      */
     fun toggleAutoPlay(enabled: Boolean) {
-        updateState { copy(autoPlay = enabled) }
-        saveSettings()
+        launchSafely {
+            settingsRepository.updateAutoPlay(enabled)
+        }
     }
     
     /**
      * Toggle dark mode setting
      */
     fun toggleDarkMode(enabled: Boolean) {
-        updateState { copy(darkMode = enabled) }
-        saveSettings()
+        launchSafely {
+            val newMode = if (enabled) ThemeMode.DARK else ThemeMode.LIGHT
+            settingsRepository.updateThemeMode(newMode)
+        }
     }
     
     /**
      * Toggle parental controls setting
      */
     fun toggleParentalControls(enabled: Boolean) {
-        updateState { copy(parentalControlsEnabled = enabled) }
-        saveSettings()
+        launchSafely {
+            settingsRepository.updateParentalControlsEnabled(enabled)
+        }
     }
     
     /**
      * Toggle notifications setting
      */
     fun toggleNotifications(enabled: Boolean) {
-        updateState { copy(notificationsEnabled = enabled) }
-        saveSettings()
+        launchSafely {
+            settingsRepository.updateNotificationsEnabled(enabled)
+        }
     }
     
     /**
      * Update data usage limit setting
      */
     fun updateDataUsageLimit(limit: DataUsageLimit) {
-        updateState { copy(dataUsageLimit = limit) }
-        saveSettings()
+        launchSafely {
+            settingsRepository.updateBandwidthLimit(limit.toPreferenceModel())
+        }
     }
     
     /**
      * Reset all settings to defaults
      */
     fun resetToDefaults() {
-        updateState { 
-            SettingsUiState(
-                isLoading = false,
-                isLoaded = true
-            )
+        launchSafely {
+            updateState { copy(isLoading = true) }
+            settingsRepository.resetToDefaults()
+            updateState { copy(isLoading = false) }
         }
-        saveSettings()
     }
     
-    /**
-     * Save settings to persistent storage
-     */
-    private fun saveSettings() {
-        launchSafely {
-            // TODO: In real implementation, save to SharedPreferences or DataStore
-            // For now, just update state to indicate saving
-            updateState { copy(isSaving = true) }
-            
-            // Simulate save delay
-            kotlinx.coroutines.delay(300)
-            
-            updateState { copy(isSaving = false) }
-        }
-    }
     
     /**
      * Sign out the current user
@@ -137,6 +199,7 @@ class SettingsViewModel @Inject constructor(
     fun signOut() {
         launchSafely {
             updateState { copy(isLoading = true) }
+            settingsRepository.resetForSignOut()
             authRepository.logout()
             updateState { copy(isLoading = false) }
         }
@@ -194,4 +257,53 @@ enum class DataUsageLimit(val displayName: String) {
     HIGH("High (5GB/month)"),
     MEDIUM("Medium (2GB/month)"),
     LOW("Low (1GB/month)")
+}
+
+// Extension functions to convert between UI models and preference models
+
+private fun VideoQualityPreference.toUiModel(): VideoQuality = when (this) {
+    VideoQualityPreference.AUTO -> VideoQuality.AUTO
+    VideoQualityPreference.FHD_1080P -> VideoQuality.HD_1080P
+    VideoQualityPreference.HD_720P -> VideoQuality.HD_720P
+    VideoQualityPreference.SD_480P -> VideoQuality.SD_480P
+    else -> VideoQuality.AUTO
+}
+
+private fun VideoQuality.toPreferenceModel(): VideoQualityPreference = when (this) {
+    VideoQuality.AUTO -> VideoQualityPreference.AUTO
+    VideoQuality.HD_1080P -> VideoQualityPreference.FHD_1080P
+    VideoQuality.HD_720P -> VideoQualityPreference.HD_720P
+    VideoQuality.SD_480P -> VideoQualityPreference.SD_480P
+}
+
+private fun PlaybackSpeedPreference.toUiModel(): PlaybackSpeed = when (this) {
+    PlaybackSpeedPreference.SPEED_0_75X -> PlaybackSpeed.SLOW
+    PlaybackSpeedPreference.SPEED_1X -> PlaybackSpeed.NORMAL
+    PlaybackSpeedPreference.SPEED_1_25X -> PlaybackSpeed.FAST
+    PlaybackSpeedPreference.SPEED_1_5X -> PlaybackSpeed.FASTER
+    PlaybackSpeedPreference.SPEED_2X -> PlaybackSpeed.FASTEST
+    else -> PlaybackSpeed.NORMAL
+}
+
+private fun PlaybackSpeed.toPreferenceModel(): PlaybackSpeedPreference = when (this) {
+    PlaybackSpeed.SLOW -> PlaybackSpeedPreference.SPEED_0_75X
+    PlaybackSpeed.NORMAL -> PlaybackSpeedPreference.SPEED_1X
+    PlaybackSpeed.FAST -> PlaybackSpeedPreference.SPEED_1_25X
+    PlaybackSpeed.FASTER -> PlaybackSpeedPreference.SPEED_1_5X
+    PlaybackSpeed.FASTEST -> PlaybackSpeedPreference.SPEED_2X
+}
+
+private fun BandwidthLimit.toUiModel(): DataUsageLimit = when (this.mbps) {
+    0 -> DataUsageLimit.UNLIMITED
+    100 -> DataUsageLimit.HIGH
+    50 -> DataUsageLimit.MEDIUM
+    25 -> DataUsageLimit.LOW
+    else -> DataUsageLimit.UNLIMITED
+}
+
+private fun DataUsageLimit.toPreferenceModel(): BandwidthLimit = when (this) {
+    DataUsageLimit.UNLIMITED -> BandwidthLimit.UNLIMITED
+    DataUsageLimit.HIGH -> BandwidthLimit.LIMIT_100
+    DataUsageLimit.MEDIUM -> BandwidthLimit.LIMIT_50
+    DataUsageLimit.LOW -> BandwidthLimit.LIMIT_25
 }

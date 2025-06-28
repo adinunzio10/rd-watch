@@ -16,6 +16,8 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.rdwatch.androidtv.ui.focus.TVFocusIndicator
 import com.rdwatch.androidtv.ui.focus.tvFocusable
 
@@ -25,6 +27,7 @@ import com.rdwatch.androidtv.ui.focus.tvFocusable
  */
 @Composable
 fun SettingsScreen(
+    viewModel: SettingsViewModel = hiltViewModel(),
     modifier: Modifier = Modifier, 
     onBackPressed: () -> Unit = {},
     onSignOut: () -> Unit = {}
@@ -33,15 +36,8 @@ fun SettingsScreen(
     val firstFocusRequester = remember { FocusRequester() }
     val listState = rememberLazyListState()
 
-    // Settings state management
-    var videoQuality by remember { mutableStateOf(VideoQuality.AUTO) }
-    var playbackSpeed by remember { mutableStateOf(PlaybackSpeed.NORMAL) }
-    var subtitlesEnabled by remember { mutableStateOf(true) }
-    var autoPlay by remember { mutableStateOf(true) }
-    var darkMode by remember { mutableStateOf(true) }
-    var parentalControlsEnabled by remember { mutableStateOf(false) }
-    var notificationsEnabled by remember { mutableStateOf(true) }
-    var dataUsageLimit by remember { mutableStateOf(DataUsageLimit.UNLIMITED) }
+    // Observe settings state from ViewModel
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) { firstFocusRequester.requestFocus() }
 
@@ -70,14 +66,13 @@ fun SettingsScreen(
                                 title = "Video Quality",
                                 subtitle = "Choose default video quality",
                                 icon = Icons.Default.HighQuality,
-                                currentValue = videoQuality.displayName,
+                                currentValue = uiState.videoQuality.displayName,
                                 options = VideoQuality.values().map { it.displayName },
                                 onValueSelected = { selected ->
-                                    videoQuality =
-                                            VideoQuality.values().find {
-                                                it.displayName == selected
-                                            }
-                                                    ?: VideoQuality.AUTO
+                                    val quality = VideoQuality.values().find {
+                                        it.displayName == selected
+                                    } ?: VideoQuality.AUTO
+                                    viewModel.updateVideoQuality(quality)
                                 }
                         )
 
@@ -86,14 +81,13 @@ fun SettingsScreen(
                                 title = "Playback Speed",
                                 subtitle = "Adjust video playback speed",
                                 icon = Icons.Default.Speed,
-                                currentValue = playbackSpeed.displayName,
+                                currentValue = uiState.playbackSpeed.displayName,
                                 options = PlaybackSpeed.values().map { it.displayName },
                                 onValueSelected = { selected ->
-                                    playbackSpeed =
-                                            PlaybackSpeed.values().find {
-                                                it.displayName == selected
-                                            }
-                                                    ?: PlaybackSpeed.NORMAL
+                                    val speed = PlaybackSpeed.values().find {
+                                        it.displayName == selected
+                                    } ?: PlaybackSpeed.NORMAL
+                                    viewModel.updatePlaybackSpeed(speed)
                                 }
                         )
 
@@ -102,8 +96,8 @@ fun SettingsScreen(
                                 title = "Auto Play",
                                 subtitle = "Automatically play next episode",
                                 icon = Icons.Default.PlayArrow,
-                                checked = autoPlay,
-                                onCheckedChange = { autoPlay = it }
+                                checked = uiState.autoPlay,
+                                onCheckedChange = { viewModel.toggleAutoPlay(it) }
                         )
 
                         // Subtitles
@@ -111,8 +105,8 @@ fun SettingsScreen(
                                 title = "Subtitles",
                                 subtitle = "Enable subtitles by default",
                                 icon = Icons.Default.Subtitles,
-                                checked = subtitlesEnabled,
-                                onCheckedChange = { subtitlesEnabled = it }
+                                checked = uiState.subtitlesEnabled,
+                                onCheckedChange = { viewModel.toggleSubtitles(it) }
                         )
                     }
                 }
@@ -127,8 +121,8 @@ fun SettingsScreen(
                                 title = "Dark Mode",
                                 subtitle = "Use dark theme",
                                 icon = Icons.Default.DarkMode,
-                                checked = darkMode,
-                                onCheckedChange = { darkMode = it }
+                                checked = uiState.darkMode,
+                                onCheckedChange = { viewModel.toggleDarkMode(it) }
                         )
                     }
                 }
@@ -143,8 +137,8 @@ fun SettingsScreen(
                                 title = "Parental Controls",
                                 subtitle = "Restrict content based on ratings",
                                 icon = Icons.Default.ChildCare,
-                                checked = parentalControlsEnabled,
-                                onCheckedChange = { parentalControlsEnabled = it }
+                                checked = uiState.parentalControlsEnabled,
+                                onCheckedChange = { viewModel.toggleParentalControls(it) }
                         )
 
                         // Notifications
@@ -152,8 +146,8 @@ fun SettingsScreen(
                                 title = "Notifications",
                                 subtitle = "Receive app notifications",
                                 icon = Icons.Default.Notifications,
-                                checked = notificationsEnabled,
-                                onCheckedChange = { notificationsEnabled = it }
+                                checked = uiState.notificationsEnabled,
+                                onCheckedChange = { viewModel.toggleNotifications(it) }
                         )
                     }
                 }
@@ -166,12 +160,12 @@ fun SettingsScreen(
                             title = "Data Usage Limit",
                             subtitle = "Control data consumption",
                             icon = Icons.Default.DataUsage,
-                            currentValue = dataUsageLimit.displayName,
+                            currentValue = uiState.dataUsageLimit.displayName,
                             options = DataUsageLimit.values().map { it.displayName },
                             onValueSelected = { selected ->
-                                dataUsageLimit =
-                                        DataUsageLimit.values().find { it.displayName == selected }
-                                                ?: DataUsageLimit.UNLIMITED
+                                val limit = DataUsageLimit.values().find { it.displayName == selected }
+                                        ?: DataUsageLimit.UNLIMITED
+                                viewModel.updateDataUsageLimit(limit)
                             }
                     )
                 }

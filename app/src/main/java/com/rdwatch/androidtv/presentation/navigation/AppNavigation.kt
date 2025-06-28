@@ -181,6 +181,7 @@ fun AppNavigation(
         ) {
             val settingsViewModel: com.rdwatch.androidtv.ui.settings.SettingsViewModel = hiltViewModel()
             SettingsScreen(
+                viewModel = settingsViewModel,
                 onBackPressed = {
                     navController.popBackStack()
                 },

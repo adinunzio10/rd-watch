@@ -5,7 +5,14 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import com.rdwatch.androidtv.data.preferences.models.ThemeMode
+import com.rdwatch.androidtv.data.repository.SettingsRepository
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
 
 private val DarkColorScheme = darkColorScheme(
     primary = Color(0xFF2196F3),
@@ -33,11 +40,36 @@ private val LightColorScheme = lightColorScheme(
     onSurface = Color(0xFF1C1B1F),
 )
 
+/**
+ * Main theme composable with dynamic theme switching support
+ * @param themeMode Optional theme mode override. If not provided, will use system preference
+ * @param dynamicTheme If true, theme will automatically update based on user preferences
+ * @param content The content to display with this theme
+ */
 @Composable
 fun RdwatchTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
+    themeMode: ThemeMode? = null,
+    dynamicTheme: Boolean = true,
     content: @Composable () -> Unit
 ) {
+    val isSystemDarkTheme = isSystemInDarkTheme()
+    
+    // Determine if dark theme should be used
+    val darkTheme = when {
+        themeMode != null -> {
+            // Use provided theme mode
+            when (themeMode) {
+                ThemeMode.LIGHT -> false
+                ThemeMode.DARK -> true
+                ThemeMode.SYSTEM -> isSystemDarkTheme
+            }
+        }
+        else -> {
+            // Default to system theme
+            isSystemDarkTheme
+        }
+    }
+    
     val colorScheme = when {
         darkTheme -> DarkColorScheme
         else -> LightColorScheme
@@ -46,6 +78,24 @@ fun RdwatchTheme(
     MaterialTheme(
         colorScheme = colorScheme,
         typography = Typography,
+        content = content
+    )
+}
+
+/**
+ * Theme composable that observes theme preferences from SettingsRepository
+ * This version is used when you want the theme to react to preference changes
+ */
+@Composable
+fun RdwatchTheme(
+    settingsRepository: SettingsRepository,
+    content: @Composable () -> Unit
+) {
+    val themeMode by settingsRepository.themeMode.collectAsState(initial = ThemeMode.SYSTEM)
+    
+    RdwatchTheme(
+        themeMode = themeMode,
+        dynamicTheme = true,
         content = content
     )
 }
