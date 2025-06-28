@@ -177,7 +177,13 @@ fun TVHomeScreen(
                 inProgressContent = inProgressContent,
                 movies = movies,
                 onPlayClick = { movie ->
-                    // TODO: Navigate to player with movie
+                    // Navigate to video player screen
+                    onNavigateToScreen?.invoke(
+                        Screen.VideoPlayer(
+                            videoUrl = movie.videoUrl ?: "",
+                            title = movie.title ?: ""
+                        )
+                    )
                     showContinueWatchingManager = false
                 },
                 onRemoveClick = { contentId ->

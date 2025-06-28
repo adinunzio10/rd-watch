@@ -16,6 +16,11 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import android.content.Intent
+import android.net.Uri
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.rdwatch.androidtv.ui.focus.TVFocusIndicator
@@ -35,6 +40,7 @@ fun SettingsScreen(
     val overscanMargin = 32.dp
     val firstFocusRequester = remember { FocusRequester() }
     val listState = rememberLazyListState()
+    val context = LocalContext.current
 
     // Observe settings state from ViewModel
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -191,14 +197,20 @@ fun SettingsScreen(
                                 title = "Privacy Policy",
                                 subtitle = "View our privacy policy",
                                 icon = Icons.Default.Policy,
-                                onClick = { /* TODO: Open privacy policy */}
+                                onClick = { 
+                                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://real-debrid.com/privacy"))
+                                    context.startActivity(intent)
+                                }
                         )
 
                         ActionSetting(
                                 title = "Terms of Service",
                                 subtitle = "View terms of service",
                                 icon = Icons.Default.Description,
-                                onClick = { /* TODO: Open terms */}
+                                onClick = { 
+                                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://real-debrid.com/terms"))
+                                    context.startActivity(intent)
+                                }
                         )
 
                         ActionSetting(
@@ -499,10 +511,14 @@ private fun InfoSetting(title: String, subtitle: String, icon: ImageVector) {
 @Composable
 private fun ActionSetting(title: String, subtitle: String, icon: ImageVector, onClick: () -> Unit) {
     var isFocused by remember { mutableStateOf(false) }
+    val hapticFeedback = LocalHapticFeedback.current
 
     TVFocusIndicator(isFocused = isFocused) {
         Card(
-                onClick = onClick,
+                onClick = {
+                    hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onClick()
+                },
                 modifier =
                         Modifier.fillMaxWidth()
                                 .tvFocusable(onFocusChanged = { isFocused = it.isFocused }),

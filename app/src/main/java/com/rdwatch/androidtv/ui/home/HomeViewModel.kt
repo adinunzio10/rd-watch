@@ -8,6 +8,7 @@ import com.rdwatch.androidtv.repository.base.Result
 import com.rdwatch.androidtv.data.mappers.ContentEntityToMovieMapper.toMovies
 import com.rdwatch.androidtv.data.mappers.ContentEntityToMovieMapper.findMovieById
 import com.rdwatch.androidtv.ui.common.UiState
+import com.rdwatch.androidtv.data.repository.PlaybackProgressRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -19,7 +20,8 @@ import javax.inject.Inject
  */
 @HiltViewModel
 class HomeViewModel @Inject constructor(
-    private val realDebridContentRepository: RealDebridContentRepository
+    private val realDebridContentRepository: RealDebridContentRepository,
+    private val playbackProgressRepository: PlaybackProgressRepository
 ) : BaseViewModel<HomeUiState>() {
     
     private val _contentState = MutableStateFlow<UiState<HomeContent>>(UiState.Loading)
@@ -97,10 +99,12 @@ class HomeViewModel @Inject constructor(
     fun updateContentFilter(filter: ContentFilter) {
         updateState { copy(contentFilter = filter) }
         
-        val allMovies = _allMovies.value
-        val filteredContent = filterContent(allMovies, filter)
-        
-        _contentState.value = UiState.Success(filteredContent)
+        viewModelScope.launch {
+            val allMovies = _allMovies.value
+            val filteredContent = filterContent(allMovies, filter)
+            
+            _contentState.value = UiState.Success(filteredContent)
+        }
     }
     
     /**
@@ -200,7 +204,7 @@ class HomeViewModel @Inject constructor(
     /**
      * Filter content based on source
      */
-    private fun filterContent(movies: List<Movie>, filter: ContentFilter): HomeContent {
+    private suspend fun filterContent(movies: List<Movie>, filter: ContentFilter): HomeContent {
         val filteredMovies = when (filter) {
             ContentFilter.ALL -> movies
             ContentFilter.LOCAL -> movies.filter { 
@@ -211,10 +215,26 @@ class HomeViewModel @Inject constructor(
             }
         }
         
+        // Get continue watching content from playback progress
+        val continueWatchingMovies = try {
+            val currentUserId = 1L // Default user ID for now
+            val inProgressContent = playbackProgressRepository.getInProgressContent(currentUserId).first()
+            
+            // Map progress entities to movies that exist in our content
+            inProgressContent.mapNotNull { progressEntity ->
+                filteredMovies.find { movie ->
+                    movie.videoUrl == progressEntity.contentId || 
+                    movie.title == progressEntity.contentId
+                }
+            }.take(10) // Limit to 10 continue watching items
+        } catch (e: Exception) {
+            emptyList() // Fallback to empty list if progress data unavailable
+        }
+        
         return HomeContent(
             featured = filteredMovies.take(5),
             recentlyAdded = filteredMovies.sortedByDescending { it.id }.take(10),
-            continueWatching = emptyList(), // TODO: Implement when playback progress is available
+            continueWatching = continueWatchingMovies,
             byGenre = organizeByGenre(filteredMovies),
             allContent = filteredMovies
         )
