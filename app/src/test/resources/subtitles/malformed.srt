@@ -1,0 +1,15 @@
+1
+invalid timing format here
+This subtitle has malformed timing
+
+2
+00:00:04,000 --> 00:00:06,000
+This subtitle should work fine
+
+3
+00:00:08,000 --> 00:00:05,000
+This subtitle has end time before start time
+
+not_a_number
+00:00:10,000 --> 00:00:12,000
+This subtitle has invalid index

@@ -1,0 +1,20 @@
+1
+00:00:01,000 --> 00:00:03,500
+This is the first subtitle
+
+2
+00:00:04,000 --> 00:00:07,000
+This is the second subtitle
+with multiple lines
+
+3
+00:00:08,500 --> 00:00:12,000
+This subtitle has <b>bold</b> and <i>italic</i> formatting
+
+4
+00:00:13,000 --> 00:00:16,500
+Special characters: áéíóú ñ ¿¡ 中文 日本語
+
+5
+00:00:18,000 --> 00:00:21,000
+<font color="red">Colored text</font> example
