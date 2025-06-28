@@ -22,14 +22,14 @@ git checkout -b task/2.3-add-video-player-controls
 #### 1. Starting a New Task
 
 ```bash
-# Get next task from Task Master (use MCP tool)
-# Use: mcp__taskmaster-ai__next_task
+# Get next task from Task Master
+task-master next
 
 # Create and switch to new branch for the task
 git checkout -b task/[task-id]-[short-description]
 
-# Mark task as in progress (use MCP tool)
-# Use: mcp__taskmaster-ai__set_task_status with id=[task-id] and status=in-progress
+# Mark task as in progress
+task-master set-status --id=[task-id] --status=in-progress
 ```
 
 #### 2. Working on Subtasks
@@ -46,11 +46,11 @@ Implements [brief description of what was done]
 Task: [task-id]
 Subtask: [subtask-id]"
 
-# Mark subtask as complete (use MCP tool)
-# Use: mcp__taskmaster-ai__set_task_status with id=[task-id].[subtask-id] and status=done
+# Mark subtask as complete
+task-master set-status --id=[task-id].[subtask-id] --status=done
 
-# Update subtask with implementation notes (use MCP tool)
-# Use: mcp__taskmaster-ai__update_subtask with id=[task-id].[subtask-id] and prompt="Completed: [what was implemented and any important notes]"
+# Update subtask with implementation notes
+task-master update-subtask --id=[task-id].[subtask-id] --prompt="Completed: [what was implemented and any important notes]"
 ```
 
 #### 3. Completing a Task
@@ -69,8 +69,8 @@ All subtasks completed:
 
 Task: [task-id]"
 
-# Mark task as complete (use MCP tool)
-# Use: mcp__taskmaster-ai__set_task_status with id=[task-id] and status=done
+# Mark task as complete
+task-master set-status --id=[task-id] --status=done
 
 # Push branch to remote
 git push -u origin task/[task-id]-[short-description]
@@ -222,8 +222,8 @@ Before each commit, ensure:
 # Code is properly formatted (if using ktlint)
 ./gradlew ktlintFormat
 
-# Update Task Master with progress (use MCP tool)
-# Use: mcp__taskmaster-ai__update_subtask with id=[subtask-id] and prompt="[implementation notes]"
+# Update Task Master with progress
+task-master update-subtask --id=[subtask-id] --prompt="[implementation notes]"
 ```
 
 ## Branch Management

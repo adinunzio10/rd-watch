@@ -34,6 +34,7 @@ This project uses modular documentation for optimal context management:
 
 - **[CLAUDE-architecture.md](CLAUDE-architecture.md)**: Application structure, technology stack, development patterns
 - **[claude-workflows.md](claude-workflows.md)**: Git/GitHub workflows, branching strategy, commit conventions
+- **[claude-taskmaster.md](claude-taskmaster.md)**: Task-Master CLI integration, commands, and workflow patterns
 - **[claude-tests.md](claude-tests.md)**: Testing strategy, test commands, and test maintenance
 - **[claude-development.md](claude-development.md)**: Debugging tips, common tasks, troubleshooting
 - **[planning-docs/](planning-docs/)**: Planning mode outputs for major changes
