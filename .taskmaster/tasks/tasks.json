@@ -1417,8 +1417,126 @@
         "dependencies": [
           7
         ],
-        "status": "pending",
-        "subtasks": []
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create preference data models and categories",
+            "description": "Define data classes for all preference categories (Account, Playback, Display, Network, Storage, Scrapers) with appropriate default values",
+            "dependencies": [],
+            "details": "Create sealed classes or enums for preference categories and data classes for each category's settings with proper serialization support",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Implement DataStore repository layer",
+            "description": "Set up DataStore Preference API repository with type-safe preference keys and CRUD operations for all preference categories",
+            "dependencies": [
+              1
+            ],
+            "details": "Create PreferencesRepository with methods to read/write preferences using DataStore, handle serialization, and provide reactive data flows",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Build theme system with dynamic switching",
+            "description": "Implement comprehensive theme system supporting light/dark modes, custom colors, and runtime theme switching with DataStore persistence",
+            "dependencies": [
+              2
+            ],
+            "details": "Create ThemeManager, update Compose theme configuration, implement theme preview functionality, and ensure proper state management",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Create settings UI navigation structure",
+            "description": "Build navigation framework for settings screens with category-based organization and Android TV remote control support",
+            "dependencies": [
+              1
+            ],
+            "details": "Implement nested navigation graph for settings, create category overview screen, and ensure proper focus management for TV interface",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Implement Account preferences screen",
+            "description": "Build Account settings UI with login/logout functionality, profile management, and sync preferences",
+            "dependencies": [
+              2,
+              4
+            ],
+            "details": "Create Compose UI for account settings, integrate with authentication system, handle credential storage securely using DataStore",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 6,
+            "title": "Implement Playback and Display preferences",
+            "description": "Create Playback settings (quality, subtitles, audio) and Display settings (resolution, refresh rate) with player integration",
+            "dependencies": [
+              2,
+              4
+            ],
+            "details": "Build preference screens for media playback controls, display configuration, integrate with video player, and handle TV-specific display options",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 7,
+            "title": "Build Network and Storage preferences",
+            "description": "Implement Network settings (connection, proxy, bandwidth) and Storage settings (cache, downloads) with validation",
+            "dependencies": [
+              2,
+              4
+            ],
+            "details": "Create network configuration UI, storage management interface, implement validation for network settings, and storage cleanup functionality",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 8,
+            "title": "Implement Scrapers preferences and parental controls",
+            "description": "Build Scrapers configuration screen and comprehensive parental controls with PIN protection and content filtering",
+            "dependencies": [
+              2,
+              4
+            ],
+            "details": "Create scraper management UI, implement parental control PIN system, content rating filters, and secure storage for parental settings",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 9,
+            "title": "Implement backup and restore functionality",
+            "description": "Create comprehensive backup/restore system for all preferences with export/import capabilities and cloud sync support",
+            "dependencies": [
+              2
+            ],
+            "details": "Build backup manager, implement JSON export/import, create restore UI with selective restoration, and integrate with cloud storage options",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 10,
+            "title": "Add preference migration and testing",
+            "description": "Implement preference migration system for app updates and create comprehensive testing suite for all preference functionality",
+            "dependencies": [
+              3,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "details": "Create migration framework for preference schema changes, implement unit tests for DataStore operations, UI tests for settings screens, and integration tests for theme switching",
+            "status": "done",
+            "testStrategy": ""
+          }
+        ]
       },
       {
         "id": 20,
@@ -2223,7 +2341,7 @@
     ],
     "metadata": {
       "created": "2025-06-22T03:41:46.714Z",
-      "updated": "2025-06-27T05:49:03.573Z",
+      "updated": "2025-06-28T18:21:12.521Z",
       "description": "Tasks for master context"
     }
   }

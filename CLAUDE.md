@@ -61,6 +61,10 @@ app/src/main/java/com/rdwatch/androidtv/
 └── [legacy leanback files]      # Transitioning away from these
 ```
 
+## Linting Notes
+
+- Remember to lint using `lint-summary.sh`. `lint-check.sh` no longer exists
+
 ---
 
 *This streamlined CLAUDE.md reduces context overhead by 90%. Detailed information is available in specialized documentation files listed above.*
