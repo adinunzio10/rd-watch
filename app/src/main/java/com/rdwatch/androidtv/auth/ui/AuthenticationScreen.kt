@@ -395,8 +395,9 @@ private fun WaitingForUserContent(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Row(
+                        modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                        horizontalArrangement = Arrangement.Center
                     ) {
                         // Timer icon that changes based on state
                         Icon(
@@ -410,7 +411,9 @@ private fun WaitingForUserContent(
                                 else -> MaterialTheme.colorScheme.primary
                             }
                         )
-                        
+
+                        Spacer(modifier = Modifier.width(16.dp))
+
                         // Circular progress indicator
                         CircularProgressIndicator(
                             progress = { if (isExpired) 0f else timeLeft.toFloat() / deviceCodeInfo.expiresIn },
@@ -423,6 +426,8 @@ private fun WaitingForUserContent(
                                 else -> MaterialTheme.colorScheme.primary
                             }
                         )
+
+                        Spacer(modifier = Modifier.width(16.dp))
                         
                         Column {
                             Text(
