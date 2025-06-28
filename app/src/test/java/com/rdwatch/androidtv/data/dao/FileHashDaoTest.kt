@@ -1,7 +1,5 @@
 package com.rdwatch.androidtv.data.dao
 
-import androidx.arch.core.executor.testing.InstantTaskExecutorRule
-import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.rdwatch.androidtv.data.entities.FileHashEntity
 import com.rdwatch.androidtv.test.HiltTestBase
 import dagger.hilt.android.testing.HiltAndroidTest
@@ -14,11 +12,7 @@ import org.junit.runner.RunWith
 import javax.inject.Inject
 
 @HiltAndroidTest
-@RunWith(AndroidJUnit4::class)
 class FileHashDaoTest : HiltTestBase() {
-
-    @get:Rule
-    val instantTaskExecutorRule = InstantTaskExecutorRule()
 
     @Inject
     lateinit var fileHashDao: FileHashDao

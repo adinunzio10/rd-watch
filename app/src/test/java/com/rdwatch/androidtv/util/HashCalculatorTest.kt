@@ -1,7 +1,6 @@
 package com.rdwatch.androidtv.util
 
 import android.content.Context
-import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import com.rdwatch.androidtv.data.dao.FileHashDao
 import com.rdwatch.androidtv.data.entities.FileHashEntity
 import com.rdwatch.androidtv.test.HiltTestBase
@@ -12,19 +11,12 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.Assert.*
 import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
-import org.robolectric.annotation.Config
 import java.io.File
 import java.io.FileOutputStream
 import javax.inject.Inject
 
 @HiltAndroidTest
-@RunWith(RobolectricTestRunner::class)
-@Config(sdk = [28])
 class HashCalculatorTest : HiltTestBase() {
-
-    @get:Rule
-    val instantTaskExecutorRule = InstantTaskExecutorRule()
 
     @Inject
     lateinit var context: Context
@@ -37,7 +29,7 @@ class HashCalculatorTest : HiltTestBase() {
 
     @Before
     fun setup() {
-        super.setupTest()
+        super.setUp()
         hashCalculator = HashCalculator(context, fileHashDao)
         
         // Create a test file for hash calculation
