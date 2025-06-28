@@ -19,9 +19,9 @@ A modern Android TV application built with Jetpack Compose, designed for 10-foot
 - **Dependency Injection**: Hilt (Dagger)
 - **Database**: Room with SQLite
 - **Networking**: Retrofit + OkHttp + Moshi
-- **Image Loading**: Glide
+- **Image Loading**: Coil
 - **Language**: Kotlin
-- **Min SDK**: 21 (Android 5.0)
+- **Min SDK**: 23 (Android 6.0)
 - **Target SDK**: 35 (Android 15)
 
 ### Project Structure
@@ -37,7 +37,7 @@ app/src/main/java/com/rdwatch/androidtv/
 │   └── repository/              # Repository implementations
 ├── di/                          # Hilt dependency injection modules
 ├── ui/theme/                    # Material3 theme configuration
-└── [legacy leanback files]      # Transitional Leanback components
+└── presentation/               # Compose UI screens and navigation
 ```
 
 ## 🚀 Getting Started
@@ -45,7 +45,7 @@ app/src/main/java/com/rdwatch/androidtv/
 ### Prerequisites
 
 - Android Studio Arctic Fox or later
-- Android SDK with API level 21+
+- Android SDK with API level 23+
 - Android TV emulator or physical Android TV device
 - Java 11+
 
@@ -72,7 +72,7 @@ cd rd-watch
 ### Development Setup
 
 1. **Android TV Emulator**:
-   - Create an Android TV emulator with API 21+
+   - Create an Android TV emulator with API 23+
    - Enable developer options
    - Use ADB for debugging: `adb connect <tv-ip>:5555`
 
@@ -98,25 +98,23 @@ cd rd-watch
 - **Layout**: Overscan-safe design with proper margins
 - **Colors**: High contrast for TV displays
 
-### Leanback Integration
+### Android TV Integration
 - `LEANBACK_LAUNCHER` intent filter for Android TV launcher
 - `android.software.leanback` feature requirement
 - Internet permissions for streaming content
+- Compose-based TV navigation and focus management
 
 ## 📱 Current Implementation
 
-### Compose UI (Active Development)
+### Pure Compose UI
 - **MainActivity.kt**: Modern Jetpack Compose implementation
 - Material3 design system with TV-specific adaptations
+- Complete navigation system with Compose Navigation
 - Proper focus management and D-pad navigation
 - Horizontal scrolling content categories
+- Multiple screens: Home, Browse, Details, Search, Settings, Profile
 
-### Legacy Components (Transitional)
-- Traditional Android Leanback activities (DetailsActivity, PlaybackActivity)
-- BrowseSupportFragment implementation
-- Leanback presenters and adapters
-
-*Note: The app is transitioning from Leanback to full Compose implementation.*
+*Note: This app is built entirely with Jetpack Compose - no legacy Leanback components.*
 
 ## 🔧 Development Commands
 
@@ -158,7 +156,7 @@ Recommended test structure:
 - **Unit Tests**: Data models and business logic
 - **Compose Tests**: UI component testing with focus simulation
 - **Integration Tests**: Navigation flows and D-pad interaction
-- **TV-Specific Tests**: Leanback compatibility and remote control simulation
+- **TV-Specific Tests**: Focus navigation and remote control simulation
 
 ```bash
 # Future test commands
@@ -208,7 +206,7 @@ Recommended test structure:
 4. Test focus navigation
 
 #### Modifying UI Components
-1. Locate Compose components in `MainActivity.kt`
+1. Locate Compose screens in `presentation/` directory
 2. Follow Material3 design guidelines
 3. Ensure TV accessibility (focus, sizing, contrast)
 4. Test on actual TV device or emulator
@@ -216,7 +214,7 @@ Recommended test structure:
 ## 🚧 Roadmap
 
 ### Immediate Opportunities
-- [ ] Complete migration from Leanback to Compose
+- [x] Complete migration from Leanback to Compose
 - [ ] Implement comprehensive testing infrastructure
 - [ ] Add dynamic content loading via APIs
 - [ ] Implement proper screen navigation

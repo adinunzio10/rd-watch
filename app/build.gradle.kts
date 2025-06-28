@@ -52,8 +52,6 @@ android {
 dependencies {
     // Core Android dependencies
     implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.leanback)
-    implementation(libs.glide)
     
     // Compose BOM
     implementation(platform(libs.androidx.compose.bom))
