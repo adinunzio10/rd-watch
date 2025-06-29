@@ -2337,6 +2337,75 @@
             "testStrategy": ""
           }
         ]
+      },
+      {
+        "id": 31,
+        "title": "Integrate Scraper System with Settings UI",
+        "description": "Connect the existing scraper implementation to the user interface by adding a comprehensive scraper settings section to the Settings screen with configuration and management capabilities.",
+        "details": "Create ScraperSettingsScreen composable within the Settings navigation flow. Build ScraperSettingsViewModel to manage scraper state and user interactions. Implement scraper list display showing active scrapers with status indicators (enabled/disabled, last updated, error states). Add scraper management actions: enable/disable toggle, remove scraper, refresh manifest. Create AddScraperDialog for adding new scrapers via URL input with validation. Implement scraper configuration UI for each scraper's specific settings (quality filters, providers, sorting preferences). Add ScraperStatusCard component showing scraper health, response times, and available content count. Create scraper preferences section: default quality selection, preferred providers, auto-refresh settings. Integrate with existing ScraperRepository and ScraperManifestEntity from the database layer. Handle loading states, error messages, and success confirmations with proper TV navigation focus management. Add confirmation dialogs for destructive actions like removing scrapers. Implement settings persistence and real-time updates when scraper configurations change.",
+        "testStrategy": "Test scraper list display with various scraper states (active, disabled, error). Verify add scraper flow with valid and invalid URLs. Test scraper removal with confirmation dialog. Verify configuration changes persist correctly. Test enable/disable toggle functionality. Mock scraper repository responses for different scenarios. Test navigation focus flow between settings components. Verify loading states during manifest refresh operations. Test error handling for network failures and invalid manifests. Test settings screen integration with main navigation flow.",
+        "status": "pending",
+        "dependencies": [
+          8,
+          6,
+          2
+        ],
+        "priority": "high",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create ScraperSettingsScreen and Navigation",
+            "description": "Build the main ScraperSettingsScreen composable and integrate it into the Settings navigation flow with proper TV focus handling",
+            "dependencies": [],
+            "details": "Create ScraperSettingsScreen.kt in app/src/main/java/com/rdwatch/androidtv/ui/settings/scraper/. Add navigation route in SettingsNavigation.kt. Implement basic screen layout with LazyColumn for TV, proper focus management using TvLazyColumn, and back navigation handling. Set up screen state management and loading indicators.",
+            "status": "pending",
+            "testStrategy": "Create UI tests to verify navigation to scraper settings, focus traversal with D-pad, and back button functionality"
+          },
+          {
+            "id": 2,
+            "title": "Implement ScraperSettingsViewModel",
+            "description": "Create ViewModel to manage scraper state, handle user interactions, and communicate with ScraperRepository",
+            "dependencies": [],
+            "details": "Create ScraperSettingsViewModel.kt extending ViewModel. Implement StateFlow for UI state management including scraper list, loading states, and error messages. Add functions for scraper operations: enableScraper(), disableScraper(), removeScraper(), refreshManifest(), addScraper(). Inject ScraperRepository dependency and handle coroutine scopes for async operations. Implement proper error handling and state updates.",
+            "status": "pending",
+            "testStrategy": "Write unit tests for all ViewModel functions, verify state updates, test error scenarios, and mock ScraperRepository interactions"
+          },
+          {
+            "id": 3,
+            "title": "Build Scraper List Display Components",
+            "description": "Create UI components for displaying scrapers with status indicators and management actions",
+            "dependencies": [
+              1,
+              2
+            ],
+            "details": "Create ScraperListItem.kt composable showing scraper name, enabled/disabled status with Switch, last updated timestamp, and error state indicators. Implement ScraperStatusCard.kt displaying health metrics, response times, and content count. Add proper TV focus states, clickable actions, and visual feedback. Use Card components with appropriate elevation and colors for TV UI. Handle empty states when no scrapers are configured.",
+            "status": "pending",
+            "testStrategy": "Create snapshot tests for different scraper states, test focus behavior on list items, verify action callbacks"
+          },
+          {
+            "id": 4,
+            "title": "Create Add/Configure Scraper Dialogs",
+            "description": "Implement dialogs for adding new scrapers and configuring existing ones with TV-optimized input",
+            "dependencies": [
+              2
+            ],
+            "details": "Create AddScraperDialog.kt with URL input field, validation logic, and TV-friendly keyboard input. Build ScraperConfigDialog.kt for editing scraper-specific settings including quality filters (480p/720p/1080p/4K), provider selection checkboxes, and sorting preferences. Implement confirmation dialogs for destructive actions. Use TvAlertDialog components with proper focus management and D-pad navigation between form fields.",
+            "status": "pending",
+            "testStrategy": "Test dialog display/dismiss, input validation, form submission, and focus navigation between fields"
+          },
+          {
+            "id": 5,
+            "title": "Integrate Settings Persistence and Real-time Updates",
+            "description": "Connect UI to database layer and implement real-time configuration updates",
+            "dependencies": [
+              3,
+              4
+            ],
+            "details": "Wire up ViewModel functions to ScraperRepository methods for CRUD operations. Implement Flow collection in UI to observe database changes and update display in real-time. Add preference storage for default quality selection and auto-refresh settings using DataStore. Handle loading states with progress indicators and success/error messages with SnackBar. Ensure all configuration changes persist to ScraperManifestEntity and related tables. Test integration with existing database schema.",
+            "status": "pending",
+            "testStrategy": "Write integration tests verifying database updates, test real-time UI updates when data changes, verify preferences persistence"
+          }
+        ]
       }
     ],
     "metadata": {
