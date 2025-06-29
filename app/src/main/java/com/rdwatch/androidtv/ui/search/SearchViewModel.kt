@@ -9,6 +9,8 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import android.Manifest
+import androidx.annotation.RequiresPermission
 
 /**
  * ViewModel for search functionality coordinating all search components
@@ -220,6 +222,7 @@ class SearchViewModel @Inject constructor(
     /**
      * Start voice search
      */
+    @RequiresPermission(Manifest.permission.RECORD_AUDIO)
     fun startVoiceSearch() {
         if (!_uiState.value.isVoiceSearchAvailable) return
         

@@ -12,6 +12,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.rdwatch.androidtv.auth.ui.AuthenticationScreen
 import com.rdwatch.androidtv.ui.browse.BrowseScreen
 import com.rdwatch.androidtv.ui.settings.SettingsScreen
+import com.rdwatch.androidtv.ui.settings.scrapers.ScraperSettingsScreen
 import com.rdwatch.androidtv.ui.details.MovieDetailsScreen
 import com.rdwatch.androidtv.ui.details.MovieDetailsViewModel
 import com.rdwatch.androidtv.ui.profile.ProfileScreen
@@ -194,6 +195,30 @@ fun AppNavigation(
                     navController.navigate(Screen.Authentication) {
                         popUpTo(0) { inclusive = true }
                     }
+                },
+                onNavigateToScreen = { screen ->
+                    navController.navigate(screen)
+                }
+            )
+        }
+        
+        composable<Screen.ScraperSettings>(
+            enterTransition = {
+                slideIntoContainer(
+                    AnimatedContentTransitionScope.SlideDirection.Left,
+                    animationSpec = tween(300)
+                )
+            },
+            popExitTransition = {
+                slideOutOfContainer(
+                    AnimatedContentTransitionScope.SlideDirection.Right,
+                    animationSpec = tween(300)
+                )
+            }
+        ) {
+            ScraperSettingsScreen(
+                onBackPressed = {
+                    navController.popBackStack()
                 }
             )
         }

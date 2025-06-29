@@ -15,7 +15,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import androidx.media3.common.util.UnstableApi
 
+@UnstableApi
 @HiltViewModel
 class PlaybackViewModel @Inject constructor(
     private val exoPlayerManager: ExoPlayerManager,

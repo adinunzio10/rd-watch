@@ -23,6 +23,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.rdwatch.androidtv.presentation.navigation.Screen
 import com.rdwatch.androidtv.ui.focus.TVFocusIndicator
 import com.rdwatch.androidtv.ui.focus.tvFocusable
 
@@ -35,7 +36,8 @@ fun SettingsScreen(
     viewModel: SettingsViewModel = hiltViewModel(),
     modifier: Modifier = Modifier, 
     onBackPressed: () -> Unit = {},
-    onSignOut: () -> Unit = {}
+    onSignOut: () -> Unit = {},
+    onNavigateToScreen: (Screen) -> Unit = {}
 ) {
     val overscanMargin = 32.dp
     val firstFocusRequester = remember { FocusRequester() }
@@ -131,6 +133,18 @@ fun SettingsScreen(
                                 onCheckedChange = { viewModel.toggleDarkMode(it) }
                         )
                     }
+                }
+            }
+
+            // Scrapers Section
+            item {
+                SettingsSection(title = "Content Sources") {
+                    ActionSetting(
+                            title = "Scrapers",
+                            subtitle = "Manage content scrapers and sources",
+                            icon = Icons.Default.Search,
+                            onClick = { onNavigateToScreen(Screen.ScraperSettings) }
+                    )
                 }
             }
 

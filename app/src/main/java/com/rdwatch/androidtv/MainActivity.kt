@@ -22,10 +22,12 @@ import com.rdwatch.androidtv.ui.theme.RdwatchTheme
 import com.rdwatch.androidtv.util.PlaybackCleanupManager
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
+import androidx.media3.common.util.UnstableApi
 
 /**
  * Main Activity using Jetpack Compose for TV interface
  */
+@UnstableApi
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     
