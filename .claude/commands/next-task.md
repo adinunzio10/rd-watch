@@ -1,97 +1,124 @@
 What is our next task?
 
-**Step 1: Get Next Task from Task Master**
+**Step 1: Check Context & Get Next Task**
 ```bash
+# Check current tag context and available tags
+task-master tags
+
+# Get next task from current active tag
 task-master next
+
+# Or get next task from specific tag context
+task-master next --tag=[tag-name]
 ```
 
 **Step 2: Get Detailed Task Information**
 ```bash
 task-master show <id>
+# Or show task from specific tag:
+task-master show <id> --tag=[tag-name]
 ```
 
-**Step 3: Check and Handle Complexity Analysis**
-- If complexity shows "N/A", run complexity analysis:
-  ```bash
-  task-master analyze-complexity --research
-  task-master complexity-report
-  ```
-
-**Step 4: Handle Task Expansion (if needed)**
-- **If NO subtasks exist:** Expand task based on complexity level:
-  ```bash
-  task-master expand --id=<id> --num=<appropriate-number> --research
-  ```
-- **If subtasks exist:** Verify subtask count matches complexity:
-  - Complexity 1-3: 2-4 subtasks expected
-  - Complexity 4-6: 4-8 subtasks expected  
-  - Complexity 7-9: 6+ subtasks expected
-- **If setup already complete:** Proceed to implementation
-
-**Step 5: Mark Task as In-Progress**
+**Step 3: Analyze Task Complexity**
 ```bash
-task-master set-status --id=<id> --status=in-progress
+# If complexity shows "N/A", run complexity analysis
+task-master analyze-complexity --research
+task-master complexity-report
+# Tag-specific complexity reports are automatically generated
+# For specific tag: task-complexity-report_[tag-name].json will be created
 ```
 
-**Analyze Complexity & Strategy:**
-Based on final Task Master complexity score:
+**Step 4: Evaluate Implementation Approach**
 
-- **Complexity 1-3**: Core team (Implementation + Testing + Documentation agents)
-- **Complexity 4-6**: Extended team (Core team + 1-2 domain specialists)  
-- **Complexity 7-9**: Full swarm (Core team + multiple domain specialists + Integration agent)
+**Complexity-Based Recommendations:**
 
-**Mandatory Agent Assignment (All Tasks):**
-- **Testing Agent**: Always create/update tests for implemented features
-- **Documentation Agent**: Always update relevant documentation (architecture, API, user-facing)
+**Complexity 1-3 (Simple Tasks):**
+- **Recommendation**: Single-agent approach
+- **Reason**: Straightforward implementation, minimal coordination needed
+- **Suggested command**: `/single-agent`
 
-**Additional Specialist Role Assignment:**
-Based on task content and dependencies:
-- **Architecture Agent**: Data models, DI patterns, MVVM foundation
-- **Frontend Agent**: UI/Compose components, TV focus management
-- **Backend Agent**: API integration, networking, data persistence
-- **Integration Agent**: Coordination and conflict resolution (complexity 6+)
+**Complexity 4-5 (Moderate Tasks):**
+- **Recommendation**: Consider multi-agent for parallel development
+- **Core team**: Frontend + Backend + Testing agents
+- **Suggested commands**: `/single-agent` or `/multi-agent` based on preference
 
-**Risk Assessment:**
-- **Security**: Authentication, data exposure, permissions
-- **Breaking Changes**: API modifications, schema changes, dependency updates
-- **Performance**: Memory usage, TV focus management, lazy loading
-- **Integration**: Dependencies on completed tasks (check task.dependencies array)
+**Complexity 6-7 (Complex Tasks):**
+- **Recommendation**: Multi-agent approach preferred
+- **Extended team**: Core team + Documentation + Architecture agents
+- **Reason**: Benefits from parallel specialized development
+- **Suggested command**: `/multi-agent`
 
-**Implementation Plan:**
+**Complexity 8-9 (Very Complex Tasks):**
+- **Recommendation**: Multi-agent approach required
+- **Full team**: Extended team + Domain specialists + Integration agent
+- **Reason**: Too complex for single-agent coordination
+- **Suggested command**: `/multi-agent`
 
-Based on the task complexity and analysis above, create a detailed plan that includes:
+**Step 5: Check Dependencies and Readiness**
+```bash
+# Verify task dependencies are complete
+task-master list --status=done  # Check completed dependencies
+task-master show <id>           # Review task dependencies
 
-1. **Agent Assignment & Coordination:**
-   - List specific agents needed (always include Testing + Documentation agents)
-   - Define clear responsibilities for each agent
-   - Specify handoff points between agents
-   - Include coordination strategy for parallel work
+# Check if task is ready to start
+task-master next                # Confirms this is the recommended next task
+```
 
-2. **Implementation Sequence:**
-   - Break down the task into agent-specific work phases  
-   - Define dependencies between agent deliverables
-   - Include testing and documentation integration points
+**Step 6: Implementation Decision**
 
-3. **Quality Gates:**
-   - Specify what each agent must deliver
-   - Define acceptance criteria for each phase
-   - Include integration testing requirements
+**Based on complexity analysis and recommendations above:**
 
-4. **Agent Coordination Details:**
-   - How agents will communicate progress
-   - Conflict resolution approach for overlapping work
-   - Final integration and validation process
+**For Simple to Moderate Tasks (Complexity 1-5):**
+- Use `/single-agent` for traditional coordinated development in single context
+- All agents work together with structured handoffs
+- Proven approach for most development tasks
 
-The plan must be detailed enough that during implementation, the multi-agent approach is clearly followed rather than defaulting to single-agent work.
+**For Complex Tasks (Complexity 6+):**
+- Use `/multi-agent` for parallel development in isolated tag contexts
+- Each agent works independently to prevent conflicts
+- Integration agent coordinates final delivery
+- Better scaling for complex implementations
 
-**During Implementation:**
-- Use `task-master update-subtask --id=<subtask-id> --prompt="progress notes"` to log progress
-- Mark subtasks complete: `task-master set-status --id=<subtask-id> --status=done`
-- Reference `claude-taskmaster.md` for detailed command usage and patterns
+**Task Summary Output Format:**
+```
+Task: [ID] - [Title]
+Complexity: [Score] (Analysis: [brief-description])
+Dependencies: [IDs] ([status])
+Priority: [level]
+Recommendation: [single-agent/multi-agent] approach
+Reason: [complexity-justification]
+Ready to start: [Yes/No]
+```
 
-**After Implementation:**
-- Mark main task complete: `task-master set-status --id=<main-id> --status=done`
-- Create a branch for the work you did. Commit/push your work and create a pull request using github cli.
+**Next Steps:**
+- Choose implementation approach based on complexity and preference
+- Use `/single-agent` for coordinated single-context development
+- Use `/multi-agent` for parallel multi-context development
+
+**Context Switching Examples:**
+
+**Working in Feature Context:**
+```bash
+task-master use-tag feature-auth
+task-master next  # Get next task in feature context
+# ... analyze complexity and choose approach ...
+```
+
+**Cross-Context Task Planning:**
+```bash
+task-master next --tag=master           # Check main development
+task-master next --tag=feature-search   # Check feature work
+task-master next --tag=experiment       # Check experimental work
+# Choose context and task based on priority
+```
 
 **Task-Master Reference:**
-Follow the patterns in `claude-taskmaster.md` for proper command usage and workflow integration.
+Follow the patterns in `claude-taskmaster.md` for detailed command usage and Tagged Lists best practices.
+
+**Expected Outcome:**
+- Clear identification of next prioritized task
+- Complexity-based implementation recommendations  
+- Dependency verification and readiness assessment
+- Informed decision between single-agent and multi-agent approaches
+
+Arguments: $ARGUMENTS (optional tag context)

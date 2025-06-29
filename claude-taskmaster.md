@@ -135,21 +135,46 @@ task-master set-status --id=<id> --status=done
 - **Subtask breakdown**: If subtasks exist
 - **Action suggestions**: Next steps for the task
 
+## Claude Code Command Integration
+
+### Tagged Lists Workflow Commands
+
+The `.claude/commands/` directory contains tag-aware workflow commands that leverage Tagged Lists capabilities:
+
+**Core Development Workflow:**
+- **`/next-task`**: Task identification, complexity analysis, and implementation approach recommendations
+- **`/single-agent`**: Traditional coordinated development in single context with structured agent handoffs
+- **`/multi-agent`**: Parallel agent development using isolated tag contexts for complex tasks
+
+**Specialized Workflows:**
+- **`/add-task`**: Enhanced with tag support for cross-context task creation
+- **`/feature-branch`**: Create feature-specific tag contexts for isolated development
+- **`/experiment-context`**: Safe experimentation workflows without affecting main development
+- **`/team-collaboration`**: Multi-developer task management using tagged contexts  
+- **`/release-planning`**: Version-specific task organization and release management
+
+**Development Flow:**
+1. Use `/next-task` to identify task and get complexity-based recommendations
+2. Choose `/single-agent` for coordinated development or `/multi-agent` for parallel development
+3. Leverage specialized workflows for feature development, experimentation, or team coordination
+
+These commands provide structured workflows that make full use of Tagged Lists multi-context capabilities, including both traditional coordinated development and true parallel agent development without conflicts.
+
 ## Integration with Claude Code Workflows
 
 ### 1. Session Start Pattern
 ```bash
-# Check current project status
+# Check current project status and context
 task-master list
+task-master tags
 
-# Find next task
-task-master next
+# Identify next task and get recommendations
+/next-task
 
-# Get detailed task info
-task-master show <id>
-
-# Mark as in-progress
-task-master set-status --id=<id> --status=in-progress
+# Choose implementation approach based on complexity
+/single-agent    # For traditional coordinated development
+# OR
+/multi-agent     # For parallel development in isolated contexts
 ```
 
 ### 2. Implementation Pattern
@@ -192,8 +217,159 @@ task-master next
 
 ## Advanced Features
 
-### Tag Management
-Use `--tag=<tag>` with commands to work within specific project contexts or feature branches.
+### Tagged Lists - Multi-Context Task Management
+
+**Tagged Lists transforms task-master into a multi-context powerhouse**, enabling parallel development workflows, team collaboration, and project experimentation without conflicts.
+
+#### Core Tag Architecture
+
+- **Legacy Format**: `{ "tasks": [...] }`
+- **New Tagged Format**: `{ "master": { "tasks": [...], "metadata": {...} }, "feature-xyz": { "tasks": [...], "metadata": {...} } }`
+- **Automatic Migration**: Existing projects migrate seamlessly to tagged format with zero intervention
+- **State Management**: `.taskmaster/state.json` tracks current tag, last switched time, migration status
+
+#### Tag Management Commands
+
+**List and View Tags:**
+```bash
+task-master tags                    # List all tags with task counts and completion stats
+task-master tags --show-metadata    # Include creation dates and descriptions
+```
+
+**Create and Manage Tags:**
+```bash
+task-master add-tag <name>                    # Create empty tag
+task-master add-tag <name> --copy-from-current # Copy tasks from active tag
+task-master add-tag <name> --copy-from=<tag>   # Copy from specific tag
+task-master add-tag <name> --from-branch       # Create tag using git branch name
+task-master add-tag <name> --description="Feature work" # Add custom description
+```
+
+**Switch and Navigate Tags:**
+```bash
+task-master use-tag <name>          # Switch contexts and see next available task
+task-master rename-tag <old> <new>  # Rename tags with automatic reference updates
+task-master copy-tag <source> <target> # Duplicate tag contexts for experimentation
+task-master delete-tag <name>       # Delete tags (with confirmation protection)
+```
+
+#### Universal --tag Flag Support
+
+**Every task operation supports tag-specific execution:**
+```bash
+# Task management with tags
+task-master list --tag=feature-branch      # View tasks in specific context
+task-master next --tag=experiment          # Get next task from specific tag
+task-master add-task --tag=v2-redesign --prompt="..." # Create tasks in specific tag
+task-master set-status --tag=hotfix --id=5 --status=done # Update tasks in specific contexts
+task-master expand --tag=research --id=3   # Break down tasks within tag contexts
+task-master show --tag=feature-auth --id=1 # View task details in specific context
+```
+
+**Analysis and Reports:**
+```bash
+task-master analyze-complexity --tag=performance-work  # Tag-specific complexity analysis
+task-master complexity-report --tag=feature-xyz        # Generate tag-specific reports
+# Reports saved as: task-complexity-report_tagname.json
+# Master tag uses default filename: task-complexity-report.json
+```
+
+#### Multi-Context Workflow Patterns
+
+**Feature Development Workflow:**
+```bash
+# 1. Create feature-specific context
+task-master add-tag feature-search --copy-from-current
+task-master use-tag feature-search
+
+# 2. Add feature-specific tasks
+task-master add-task --prompt="Implement search UI" --priority=high
+task-master add-task --prompt="Add search backend" --priority=high
+
+# 3. Work in isolated context
+task-master next    # Shows next task in feature context
+# ... implement tasks ...
+
+# 4. Switch back to main development
+task-master use-tag master
+```
+
+**Parallel Development:**
+```bash
+# Main development in master
+task-master use-tag master
+task-master next
+
+# Quick experiment in parallel
+task-master add-tag experiment --description="Performance testing"
+task-master add-task --tag=experiment --prompt="Test lazy loading optimization"
+task-master use-tag experiment
+task-master next    # Work on experimental task
+
+# Switch between contexts as needed
+task-master use-tag master      # Back to main work
+task-master use-tag experiment  # Back to experiments
+```
+
+**Team Collaboration:**
+```bash
+# Create teammate-specific contexts
+task-master add-tag alice --copy-from-current --description="Alice's work context"
+task-master add-tag bob --copy-from=master --description="Bob's tasks"
+
+# Assign work to specific contexts
+task-master add-task --tag=alice --prompt="Frontend components" --priority=high
+task-master add-task --tag=bob --prompt="Backend API" --priority=high
+
+# Team members switch to their contexts
+task-master use-tag alice   # Alice's workflow
+task-master use-tag bob     # Bob's workflow
+```
+
+**Release Management:**
+```bash
+# Version-specific planning
+task-master add-tag v2.0 --description="Next major release"
+task-master parse-prd release-spec.txt --tag=v2.0
+
+# Release branch preparation
+task-master copy-tag master v2.1
+task-master use-tag v2.1
+
+# Emergency fixes
+task-master add-tag hotfix --description="Critical fixes"
+task-master use-tag hotfix
+```
+
+#### State Management & File Organization
+
+**Automatic State Tracking:**
+- Current active tag persists across terminal sessions
+- Last switched time tracking for context awareness  
+- Branch-tag mapping foundation for Git integration
+- Migration status tracking
+
+**File Isolation:**
+- Tag-specific complexity reports: `task-complexity-report_tagname.json`
+- Master tag uses default filenames: `task-complexity-report.json`
+- Automatic file isolation prevents cross-tag contamination
+- Clean separation of tag data and internal state
+
+#### Best Practices for Tagged Lists
+
+**Tag Naming Conventions:**
+- **Features**: `feature-auth`, `feature-search`, `feature-payments`
+- **Experiments**: `experiment`, `experiment-ui`, `experiment-perf`
+- **Versions**: `v2.0`, `v2.1`, `next-release`
+- **Team**: `alice`, `bob`, `frontend-team`, `backend-team`
+- **Phases**: `research`, `implementation`, `testing`, `deployment`
+
+**Workflow Recommendations:**
+1. **Keep master clean**: Use master for stable, validated tasks
+2. **Feature isolation**: Create feature-specific tags for major work
+3. **Experiment safely**: Use experiment tags for risky changes
+4. **Team coordination**: Use personal tags for individual work contexts
+5. **Version planning**: Use version tags for release planning
 
 ### Research Mode
 Add `--research` flag to commands for AI-enhanced task creation and expansion using external research.
@@ -210,12 +386,35 @@ Use `task-master list` to understand dependency bottlenecks and priority blockin
 
 ## Best Practices for Claude Code
 
+### Core Task Management
 1. **Always check next task**: Use `task-master next` to get AI-recommended priority
 2. **Log progress frequently**: Use `update-subtask` to maintain context across sessions
 3. **Complete incrementally**: Mark subtasks done as you complete them
 4. **Expand complex tasks**: Don't implement large tasks without subtask breakdown
 5. **Update status promptly**: Keep status current for accurate dependency tracking
 6. **Use detailed prompts**: Provide context when updating or creating tasks
+
+### Tagged Lists Workflows
+7. **Check context first**: Always run `task-master tags` to understand available contexts
+8. **Isolate feature work**: Create feature-specific tags for major development work
+9. **Experiment safely**: Use experiment tags for risky changes that might not work
+10. **Switch contexts deliberately**: Use `task-master use-tag` to focus on specific work
+11. **Tag task operations**: Use `--tag=<name>` for cross-context task management
+12. **Clean tag management**: Delete completed feature tags to reduce clutter
+
+### Multi-Context Development
+13. **Master stays stable**: Keep master tag for validated, stable tasks
+14. **Feature branches align**: Create tags that match feature branch names
+15. **Parallel work**: Use separate tags for parallel development streams
+16. **Team coordination**: Use personal tags for individual work contexts
+17. **Version planning**: Use version tags for release-specific task organization
+
+### Multi-Agent Development
+18. **Use `/multi-agent` for complexity 4+**: Leverage parallel agent development for complex tasks
+19. **Agent context isolation**: Each agent works in dedicated tag context to prevent conflicts
+20. **Integration agent coordination**: Use integration agent to manage cross-agent dependencies
+21. **Systematic agent cleanup**: Archive and delete agent contexts after task completion
+22. **Cross-agent dependency tracking**: Use task dependencies between agent contexts for proper sequencing
 
 ---
 
