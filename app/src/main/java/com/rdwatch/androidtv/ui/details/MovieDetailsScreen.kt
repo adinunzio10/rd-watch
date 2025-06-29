@@ -70,9 +70,6 @@ fun MovieDetailsScreen(
     val watchProgress = currentMovieProgress?.watchPercentage ?: 0f
     val isCompleted = movie?.let { playbackViewModel.isContentCompleted(it.videoUrl ?: "") } ?: false
     
-    LaunchedEffect(Unit) {
-        firstFocusRequester.requestFocus()
-    }
     
     when (movieState) {
         is UiState.Loading -> {
@@ -98,6 +95,10 @@ fun MovieDetailsScreen(
             }
         }
         is UiState.Error -> {
+            LaunchedEffect(Unit) {
+                firstFocusRequester.requestFocus()
+            }
+            
             Box(
                 modifier = modifier
                     .fillMaxSize()
@@ -130,6 +131,10 @@ fun MovieDetailsScreen(
         }
         is UiState.Success -> {
             if (movie == null) {
+                LaunchedEffect(Unit) {
+                    firstFocusRequester.requestFocus()
+                }
+                
                 Box(
                     modifier = modifier
                         .fillMaxSize()
@@ -154,6 +159,10 @@ fun MovieDetailsScreen(
                     }
                 }
             } else {
+                LaunchedEffect(Unit) {
+                    firstFocusRequester.requestFocus()
+                }
+                
                 LazyColumn(
                     modifier = modifier
                         .fillMaxSize()

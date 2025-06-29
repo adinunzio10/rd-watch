@@ -106,7 +106,7 @@ class SearchOrchestrationService @Inject constructor(
         scrapers: List<ScraperManifest>,
         filters: SearchFilters,
         config: SearchConfig
-    ): Flow<SearchOrchestrationResult> = flow {
+    ): Flow<SearchOrchestrationResult> = channelFlow {
         
         val searchJob = searchScope.launch {
             val results = ConcurrentHashMap<String, ScraperSearchResult>()
@@ -149,7 +149,7 @@ class SearchOrchestrationService @Inject constructor(
             // Process results as they arrive
             launch {
                 for (progress in progressChannel) {
-                    emit(SearchOrchestrationResult.Progress(searchId, progress.scraperId, progress.status))
+                    trySend(SearchOrchestrationResult.Progress(searchId, progress.scraperId, progress.status))
                 }
             }
             
@@ -160,7 +160,7 @@ class SearchOrchestrationService @Inject constructor(
                     
                     // Emit partial results
                     val allResults = results.values.flatMap { it.items }
-                    emit(SearchOrchestrationResult.PartialResults(
+                    trySend(SearchOrchestrationResult.PartialResults(
                         searchId = searchId,
                         results = allResults,
                         completedScrapers = completedSearches,
@@ -182,7 +182,7 @@ class SearchOrchestrationService @Inject constructor(
                     errors[error.scraperId] = error.message
                     completedSearches++
                     
-                    emit(SearchOrchestrationResult.ScraperError(searchId, error.scraperId, error.message))
+                    trySend(SearchOrchestrationResult.ScraperError(searchId, error.scraperId, error.message))
                 }
             }
             
@@ -196,7 +196,7 @@ class SearchOrchestrationService @Inject constructor(
             
             // Emit final results
             val finalResults = results.values.flatMap { it.items }
-            emit(SearchOrchestrationResult.Completed(
+            trySend(SearchOrchestrationResult.Completed(
                 searchId = searchId,
                 results = finalResults,
                 successfulScrapers = results.size,
