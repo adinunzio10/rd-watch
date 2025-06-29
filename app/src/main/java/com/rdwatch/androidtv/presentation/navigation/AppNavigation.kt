@@ -125,6 +125,9 @@ fun AppNavigation(
                         )
                     )
                 },
+                onMovieClick = { movie ->
+                    navController.navigate(Screen.MovieDetails(movie.id.toString()))
+                },
                 onBackPressed = {
                     navController.popBackStack()
                 }
@@ -212,6 +215,9 @@ fun AppNavigation(
             ProfileScreen(
                 onMovieClick = { movie ->
                     navController.navigate(Screen.MovieDetails(movie.id.toString()))
+                },
+                onNavigateToScreen = { screen ->
+                    navController.navigate(screen)
                 },
                 onBackPressed = {
                     navController.popBackStack()

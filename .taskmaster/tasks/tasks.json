@@ -1862,7 +1862,7 @@
         "description": "Replace all TODO click handlers in HomeScreen, ContentRow, and other UI components with actual navigation and functionality to enable basic user interaction.",
         "details": "Replace placeholder click handlers throughout the UI components. In HomeScreen.kt, implement movie card click navigation to detail screen using NavController. In ContentRow.kt, add movie selection logic that updates selected state and triggers detail view. Implement resume dialog navigation from continue watching cards - check playback state and show resume/restart options. Add focus handling for TV remote navigation using Modifier.focusable() and onFocusChanged. Create MovieDetailViewModel to handle movie selection state. Implement deep-link handling for recommendations and external navigation. Add haptic feedback for button presses using LocalHapticFeedback. Handle loading states during navigation transitions. Implement back navigation handling and proper fragment/screen stack management. Add click animations and visual feedback for better UX. Create proper error handling for failed navigation attempts.",
         "testStrategy": "Test all click handlers respond correctly on Android TV emulator with remote. Verify movie cards navigate to detail screen with correct movie data. Test resume dialog shows when clicking continue watching items. Test focus navigation works properly with D-pad controls. Verify back button navigation maintains proper screen stack. Test deep-link handling from Android TV launcher recommendations. Test loading states during navigation transitions. Verify error handling for network failures during navigation. Test with physical Android TV remote control. Test accessibility navigation with TalkBack enabled.",
-        "status": "pending",
+        "status": "done",
         "dependencies": [
           13,
           19
@@ -2341,7 +2341,7 @@
     ],
     "metadata": {
       "created": "2025-06-22T03:41:46.714Z",
-      "updated": "2025-06-28T18:21:12.521Z",
+      "updated": "2025-06-28T21:20:55.309Z",
       "description": "Tasks for master context"
     }
   }

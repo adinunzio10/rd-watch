@@ -29,6 +29,7 @@ import com.rdwatch.androidtv.ui.components.ImagePriority
 import com.rdwatch.androidtv.ui.focus.tvFocusable
 import com.rdwatch.androidtv.ui.focus.TVFocusIndicator
 import com.rdwatch.androidtv.ui.viewmodel.PlaybackViewModel
+import com.rdwatch.androidtv.presentation.navigation.Screen
 
 /**
  * Profile Screen with user preferences and watch history
@@ -39,6 +40,7 @@ fun ProfileScreen(
     modifier: Modifier = Modifier,
     onBackPressed: () -> Unit = {},
     onMovieClick: (Movie) -> Unit = {},
+    onNavigateToScreen: ((Any) -> Unit)? = null,
     playbackViewModel: PlaybackViewModel = hiltViewModel(),
     viewModel: ProfileViewModel = hiltViewModel()
 ) {
@@ -100,6 +102,7 @@ fun ProfileScreen(
                 ContinueWatchingSection(
                     movies = watchedMovies,
                     onMovieClick = onMovieClick,
+                    onNavigateToScreen = onNavigateToScreen,
                     playbackViewModel = playbackViewModel
                 )
             }
@@ -117,7 +120,8 @@ fun ProfileScreen(
         // Profile actions section
         item {
             ProfileActionsSection(
-                viewModel = viewModel
+                viewModel = viewModel,
+                onNavigateToScreen = onNavigateToScreen
             )
         }
         
@@ -339,6 +343,7 @@ private fun StatisticCard(
 private fun ContinueWatchingSection(
     movies: List<Movie>,
     onMovieClick: (Movie) -> Unit,
+    onNavigateToScreen: ((Any) -> Unit)?,
     playbackViewModel: PlaybackViewModel
 ) {
     Column(
@@ -357,7 +362,10 @@ private fun ContinueWatchingSection(
             )
             
             // View all button
-            TextButton(onClick = { /* TODO: Navigate to full continue watching list */ }) {
+            TextButton(onClick = { 
+                // Navigate to Browse screen to see all content
+                onNavigateToScreen?.invoke(Screen.Browse)
+            }) {
                 Text(
                     text = "View All",
                     style = MaterialTheme.typography.labelLarge,
@@ -510,7 +518,8 @@ private fun ProfileMovieCard(
 
 @Composable
 private fun ProfileActionsSection(
-    viewModel: ProfileViewModel
+    viewModel: ProfileViewModel,
+    onNavigateToScreen: ((Any) -> Unit)?
 ) {
     Column(
         verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -528,10 +537,22 @@ private fun ProfileActionsSection(
         ) {
             items(
                 listOf(
-                    ProfileAction("Edit Profile", Icons.Default.Edit) { /* TODO: Navigate to edit profile */ },
-                    ProfileAction("Privacy Settings", Icons.Default.Security) { /* TODO: Navigate to privacy settings */ },
-                    ProfileAction("Notifications", Icons.Default.Notifications) { /* TODO: Navigate to notifications */ },
-                    ProfileAction("Help & Support", Icons.Default.Help) { /* TODO: Navigate to help */ },
+                    ProfileAction("Edit Profile", Icons.Default.Edit) { 
+                        // Navigate to Settings screen for profile editing
+                        onNavigateToScreen?.invoke(Screen.Settings)
+                    },
+                    ProfileAction("Privacy Settings", Icons.Default.Security) { 
+                        // Navigate to Settings screen for privacy options
+                        onNavigateToScreen?.invoke(Screen.Settings)
+                    },
+                    ProfileAction("Notifications", Icons.Default.Notifications) { 
+                        // Navigate to Settings screen for notification preferences
+                        onNavigateToScreen?.invoke(Screen.Settings)
+                    },
+                    ProfileAction("Help & Support", Icons.Default.Help) { 
+                        // Navigate to Settings screen for help options
+                        onNavigateToScreen?.invoke(Screen.Settings)
+                    },
                     ProfileAction("Sign Out", Icons.Default.ExitToApp) { viewModel.signOut() }
                 )
             ) { action ->

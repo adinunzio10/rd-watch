@@ -19,7 +19,9 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -41,6 +43,7 @@ fun MovieDetailsScreen(
     movieId: String,
     modifier: Modifier = Modifier,
     onPlayClick: (Movie) -> Unit = {},
+    onMovieClick: (Movie) -> Unit = {},
     onBackPressed: () -> Unit = {},
     playbackViewModel: PlaybackViewModel = hiltViewModel(),
     viewModel: MovieDetailsViewModel = hiltViewModel()
@@ -195,7 +198,7 @@ fun MovieDetailsScreen(
                     item {
                         RelatedMoviesSection(
                             movies = currentRelatedMoviesState.data,
-                            onMovieClick = { /* TODO: Navigate to movie details */ },
+                            onMovieClick = onMovieClick,
                             modifier = Modifier.padding(horizontal = overscanMargin)
                         )
                     }
@@ -553,10 +556,14 @@ private fun ActionButtonItem(
     onClick: () -> Unit
 ) {
     var isFocused by remember { mutableStateOf(false) }
+    val hapticFeedback = LocalHapticFeedback.current
     
     TVFocusIndicator(isFocused = isFocused) {
         OutlinedCard(
-            onClick = onClick,
+            onClick = {
+                hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                onClick()
+            },
             modifier = Modifier
                 .width(140.dp)
                 .tvFocusable(
