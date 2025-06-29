@@ -23,6 +23,9 @@ sealed class Screen {
     data object Settings : Screen()
     
     @Serializable
+    data object ScraperSettings : Screen()
+    
+    @Serializable
     data object Profile : Screen()
     
     @Serializable
@@ -39,6 +42,7 @@ object Routes {
     const val VIDEO_PLAYER = "video_player/{videoUrl}/{title}"
     const val SEARCH = "search"
     const val SETTINGS = "settings"
+    const val SCRAPER_SETTINGS = "scraper_settings"
     const val PROFILE = "profile"
     const val AUTHENTICATION = "authentication"
     const val ERROR = "error/{message}/{canRetry}"

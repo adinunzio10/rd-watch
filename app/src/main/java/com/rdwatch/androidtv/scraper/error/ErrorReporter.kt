@@ -211,11 +211,11 @@ class ManifestErrorReporter @Inject constructor(
         }
         
         // Update counters
-        errorCounts.merge(report.category, 1) { old, new -> old + new }
+        errorCounts[report.category] = (errorCounts[report.category] ?: 0) + 1
         
         // Track by manifest if available
         report.context?.manifestId?.let { manifestId ->
-            errorsByManifest.computeIfAbsent(manifestId) { mutableListOf() }.add(report)
+            errorsByManifest.getOrPut(manifestId) { mutableListOf() }.add(report)
         }
     }
     

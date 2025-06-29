@@ -6,7 +6,9 @@ import com.rdwatch.androidtv.player.MediaMetadata
 import com.rdwatch.androidtv.player.state.PlaybackStateRepository
 import javax.inject.Inject
 import javax.inject.Singleton
+import androidx.media3.common.util.UnstableApi
 
+@UnstableApi
 @Singleton
 class PlaybackNavigationHelper @Inject constructor(
     private val exoPlayerManager: ExoPlayerManager,
