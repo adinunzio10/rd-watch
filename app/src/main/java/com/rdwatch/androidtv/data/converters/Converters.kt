@@ -2,6 +2,8 @@ package com.rdwatch.androidtv.data.converters
 
 import androidx.room.TypeConverter
 import com.rdwatch.androidtv.data.entities.ContentSource
+import com.rdwatch.androidtv.ui.filebrowser.models.FileSource
+import com.rdwatch.androidtv.ui.filebrowser.models.FileTypeCategory
 import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.Types
@@ -199,6 +201,38 @@ class Converters {
     @TypeConverter
     fun contentSourceToString(source: ContentSource?): String? {
         return source?.name
+    }
+    
+    @TypeConverter
+    fun fromFileSource(value: String?): FileSource? {
+        return value?.let {
+            try {
+                FileSource.valueOf(it)
+            } catch (e: IllegalArgumentException) {
+                null
+            }
+        }
+    }
+    
+    @TypeConverter
+    fun fileSourceToString(source: FileSource?): String? {
+        return source?.name
+    }
+    
+    @TypeConverter
+    fun fromFileTypeCategory(value: String?): FileTypeCategory? {
+        return value?.let {
+            try {
+                FileTypeCategory.valueOf(it)
+            } catch (e: IllegalArgumentException) {
+                null
+            }
+        }
+    }
+    
+    @TypeConverter
+    fun fileTypeCategoryToString(category: FileTypeCategory?): String? {
+        return category?.name
     }
 }
 

@@ -235,10 +235,181 @@ object Migrations {
         }
     }
     
+    val MIGRATION_4_5 = object : Migration(4, 5) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            // Create subtitle-related tables
+            database.execSQL("""
+                CREATE TABLE IF NOT EXISTS `subtitle_cache` (
+                    `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                    `file_hash` TEXT NOT NULL,
+                    `file_size` INTEGER NOT NULL,
+                    `imdb_id` TEXT,
+                    `language` TEXT NOT NULL,
+                    `provider_name` TEXT NOT NULL,
+                    `subtitle_id` TEXT NOT NULL,
+                    `download_url` TEXT NOT NULL,
+                    `file_content` TEXT,
+                    `movie_title` TEXT,
+                    `movie_year` INTEGER,
+                    `cached_at` INTEGER NOT NULL,
+                    `expires_at` INTEGER NOT NULL,
+                    `download_count` INTEGER NOT NULL DEFAULT 0,
+                    `rating` REAL,
+                    `encoding` TEXT
+                )
+            """.trimIndent())
+            
+            database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_subtitle_cache_hash_size_lang_provider` ON `subtitle_cache` (`file_hash`, `file_size`, `language`, `provider_name`)")
+            database.execSQL("CREATE INDEX IF NOT EXISTS `index_subtitle_cache_expires_at` ON `subtitle_cache` (`expires_at`)")
+            database.execSQL("CREATE INDEX IF NOT EXISTS `index_subtitle_cache_imdb_id` ON `subtitle_cache` (`imdb_id`)")
+            
+            database.execSQL("""
+                CREATE TABLE IF NOT EXISTS `subtitle_results` (
+                    `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                    `subtitle_id` TEXT NOT NULL,
+                    `provider_name` TEXT NOT NULL,
+                    `language` TEXT NOT NULL,
+                    `download_url` TEXT NOT NULL,
+                    `movie_title` TEXT,
+                    `movie_year` INTEGER,
+                    `rating` REAL,
+                    `download_count` INTEGER NOT NULL DEFAULT 0,
+                    `encoding` TEXT,
+                    `file_size` INTEGER,
+                    `created_at` INTEGER NOT NULL
+                )
+            """.trimIndent())
+            
+            database.execSQL("CREATE INDEX IF NOT EXISTS `index_subtitle_results_provider_language` ON `subtitle_results` (`provider_name`, `language`)")
+            database.execSQL("CREATE INDEX IF NOT EXISTS `index_subtitle_results_subtitle_id` ON `subtitle_results` (`subtitle_id`)")
+            
+            database.execSQL("""
+                CREATE TABLE IF NOT EXISTS `subtitle_files` (
+                    `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                    `file_path` TEXT NOT NULL,
+                    `subtitle_content` TEXT NOT NULL,
+                    `language` TEXT NOT NULL,
+                    `encoding` TEXT NOT NULL,
+                    `file_size` INTEGER NOT NULL,
+                    `checksum` TEXT NOT NULL,
+                    `created_at` INTEGER NOT NULL,
+                    `last_accessed` INTEGER NOT NULL
+                )
+            """.trimIndent())
+            
+            database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_subtitle_files_file_path` ON `subtitle_files` (`file_path`)")
+            database.execSQL("CREATE INDEX IF NOT EXISTS `index_subtitle_files_language` ON `subtitle_files` (`language`)")
+            
+            database.execSQL("""
+                CREATE TABLE IF NOT EXISTS `subtitle_provider_stats` (
+                    `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                    `provider_name` TEXT NOT NULL,
+                    `language` TEXT NOT NULL,
+                    `total_requests` INTEGER NOT NULL DEFAULT 0,
+                    `successful_requests` INTEGER NOT NULL DEFAULT 0,
+                    `failed_requests` INTEGER NOT NULL DEFAULT 0,
+                    `avg_response_time_ms` INTEGER NOT NULL DEFAULT 0,
+                    `last_request_at` INTEGER,
+                    `last_success_at` INTEGER,
+                    `last_failure_at` INTEGER,
+                    `consecutive_failures` INTEGER NOT NULL DEFAULT 0,
+                    `is_rate_limited` INTEGER NOT NULL DEFAULT 0,
+                    `rate_limit_reset_at` INTEGER
+                )
+            """.trimIndent())
+            
+            database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_subtitle_provider_stats_provider_lang` ON `subtitle_provider_stats` (`provider_name`, `language`)")
+        }
+    }
+    
+    val MIGRATION_5_6 = object : Migration(5, 6) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            // Create account_files table for File Browser caching
+            database.execSQL("""
+                CREATE TABLE IF NOT EXISTS `account_files` (
+                    `id` TEXT PRIMARY KEY NOT NULL,
+                    `filename` TEXT NOT NULL,
+                    `filesize` INTEGER NOT NULL,
+                    `source` TEXT NOT NULL,
+                    `mimeType` TEXT,
+                    `downloadUrl` TEXT,
+                    `streamUrl` TEXT,
+                    `host` TEXT,
+                    `dateAdded` INTEGER NOT NULL,
+                    `isStreamable` INTEGER NOT NULL DEFAULT 0,
+                    `parentTorrentId` TEXT,
+                    `parentTorrentName` TEXT,
+                    `torrentProgress` REAL,
+                    `torrentStatus` TEXT,
+                    `fileTypeCategory` TEXT NOT NULL,
+                    `fileExtension` TEXT NOT NULL,
+                    `lastUpdated` INTEGER NOT NULL,
+                    `alternativeUrls` TEXT NOT NULL
+                )
+            """.trimIndent())
+            
+            // Create indices for account_files
+            database.execSQL("CREATE INDEX IF NOT EXISTS `index_account_files_filename` ON `account_files` (`filename`)")
+            database.execSQL("CREATE INDEX IF NOT EXISTS `index_account_files_fileTypeCategory` ON `account_files` (`fileTypeCategory`)")
+            database.execSQL("CREATE INDEX IF NOT EXISTS `index_account_files_source` ON `account_files` (`source`)")
+            database.execSQL("CREATE INDEX IF NOT EXISTS `index_account_files_dateAdded` ON `account_files` (`dateAdded`)")
+            database.execSQL("CREATE INDEX IF NOT EXISTS `index_account_files_filesize` ON `account_files` (`filesize`)")
+            database.execSQL("CREATE INDEX IF NOT EXISTS `index_account_files_isStreamable` ON `account_files` (`isStreamable`)")
+            database.execSQL("CREATE INDEX IF NOT EXISTS `index_account_files_parentTorrentId` ON `account_files` (`parentTorrentId`)")
+            
+            // Create storage_usage table
+            database.execSQL("""
+                CREATE TABLE IF NOT EXISTS `storage_usage` (
+                    `id` TEXT PRIMARY KEY NOT NULL,
+                    `totalSpaceBytes` INTEGER NOT NULL DEFAULT 0,
+                    `usedSpaceBytes` INTEGER NOT NULL DEFAULT 0,
+                    `freeSpaceBytes` INTEGER NOT NULL DEFAULT 0,
+                    `fileCount` INTEGER NOT NULL DEFAULT 0,
+                    `torrentCount` INTEGER NOT NULL DEFAULT 0,
+                    `downloadCount` INTEGER NOT NULL DEFAULT 0,
+                    `lastUpdated` INTEGER NOT NULL
+                )
+            """.trimIndent())
+            
+            database.execSQL("CREATE INDEX IF NOT EXISTS `index_storage_usage_lastUpdated` ON `storage_usage` (`lastUpdated`)")
+            
+            // Create file_type_stats table
+            database.execSQL("""
+                CREATE TABLE IF NOT EXISTS `file_type_stats` (
+                    `id` TEXT PRIMARY KEY NOT NULL,
+                    `fileType` TEXT NOT NULL,
+                    `fileCount` INTEGER NOT NULL DEFAULT 0,
+                    `totalSizeBytes` INTEGER NOT NULL DEFAULT 0,
+                    `lastUpdated` INTEGER NOT NULL
+                )
+            """.trimIndent())
+            
+            database.execSQL("CREATE INDEX IF NOT EXISTS `index_file_type_stats_fileType` ON `file_type_stats` (`fileType`)")
+            
+            // Create file_browser_preferences table
+            database.execSQL("""
+                CREATE TABLE IF NOT EXISTS `file_browser_preferences` (
+                    `userId` TEXT PRIMARY KEY NOT NULL,
+                    `defaultSortOption` TEXT NOT NULL DEFAULT 'DATE_DESC',
+                    `defaultViewMode` TEXT NOT NULL DEFAULT 'GRID',
+                    `showHiddenFiles` INTEGER NOT NULL DEFAULT 0,
+                    `autoRefreshInterval` INTEGER NOT NULL DEFAULT 300,
+                    `defaultFilterTypes` TEXT NOT NULL,
+                    `favoriteFileIds` TEXT NOT NULL,
+                    `lastUpdated` INTEGER NOT NULL
+                )
+            """.trimIndent())
+            
+            database.execSQL("CREATE INDEX IF NOT EXISTS `index_file_browser_preferences_userId` ON `file_browser_preferences` (`userId`)")
+        }
+    }
+    
     // All migrations for this database
     val ALL_MIGRATIONS = arrayOf(
         MIGRATION_1_2,
         MIGRATION_2_3,
-        MIGRATION_3_4
+        MIGRATION_3_4,
+        MIGRATION_4_5,
+        MIGRATION_5_6
     )
 }

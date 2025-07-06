@@ -32,6 +32,9 @@ sealed class Screen {
     data object Authentication : Screen()
     
     @Serializable
+    data object FileBrowser : Screen()
+    
+    @Serializable
     data class Error(val message: String, val canRetry: Boolean = true) : Screen()
 }
 
@@ -45,6 +48,7 @@ object Routes {
     const val SCRAPER_SETTINGS = "scraper_settings"
     const val PROFILE = "profile"
     const val AUTHENTICATION = "authentication"
+    const val FILE_BROWSER = "file_browser"
     const val ERROR = "error/{message}/{canRetry}"
     
     object Args {

@@ -4,7 +4,7 @@ This file contains testing strategy, commands, and maintenance procedures for th
 
 ## Current Testing Status
 
-**Status**: No tests currently configured - this represents a development opportunity
+**Status**: Comprehensive test suite implemented with focus on Real Debrid integration
 
 **Target Test Coverage**: 
 - Unit Tests: 80%+ for business logic and data models
@@ -29,9 +29,14 @@ This file contains testing strategy, commands, and maintenance procedures for th
 - **Considerations**: TV-specific focus behavior, D-pad navigation
 
 ### TV-Specific Tests
-- **Target**: Leanback compatibility, remote control simulation
+- **Target**: Leanback compatibility, remote control simulation, Real Debrid account file browser
 - **Framework**: Espresso with TV extensions
-- **Considerations**: 10-foot UI, overscan, focus traversal
+- **Considerations**: 10-foot UI, overscan, focus traversal, file list navigation
+
+### Real Debrid Integration Tests
+- **Target**: API integration, authentication flow, file operations
+- **Framework**: MockWebServer, Hilt testing
+- **Considerations**: Network mocking, cache behavior, pagination
 
 ## Standard Android Test Commands
 
@@ -62,18 +67,34 @@ app/src/test/java/com/rdwatch/androidtv/
 │   └── MovieListTest.kt             # Data provider tests
 ├── ui/
 │   ├── MainActivityTest.kt          # Main UI tests
+│   ├── browse/
+│   │   ├── BrowseAccountViewModelTest.kt # Account browser tests
+│   │   └── FileFilterTest.kt        # File filtering tests
 │   └── theme/
 │       ├── ThemeTest.kt             # Theme configuration tests
 │       └── TypeTest.kt              # Typography tests
+├── network/
+│   ├── RealDebridApiServiceTest.kt  # API service tests
+│   └── interceptors/
+│       ├── AuthInterceptorTest.kt   # Authentication tests
+│       └── TokenAuthenticatorTest.kt # Token refresh tests
+├── repository/
+│   ├── AccountFileRepositoryTest.kt # Repository tests
+│   └── AuthRepositoryTest.kt        # Authentication repository tests
 └── utils/                           # Utility function tests
 
 app/src/androidTest/java/com/rdwatch/androidtv/
 ├── integration/
 │   ├── NavigationFlowTest.kt        # Navigation integration tests
-│   └── FocusManagementTest.kt       # Focus behavior tests
+│   ├── FocusManagementTest.kt       # Focus behavior tests
+│   ├── AuthenticationFlowTest.kt    # OAuth2 flow tests
+│   └── AccountBrowserFlowTest.kt    # Account browser integration tests
 ├── ui/
 │   ├── ComposeUITest.kt             # Compose UI integration tests
-│   └── TVSpecificTest.kt            # TV-specific UI tests
+│   ├── TVSpecificTest.kt            # TV-specific UI tests
+│   └── browse/
+│       ├── BrowseAccountScreenTest.kt # Account browser UI tests
+│       └── FileSelectionTest.kt     # File selection tests
 └── leanback/                        # Legacy leanback tests
 ```
 
@@ -132,6 +153,96 @@ fun `should handle dpad navigation correctly`() {
     // Setup TV emulator or device
     // Test D-pad navigation between focusable elements
     // Verify focus traversal follows expected pattern
+}
+```
+
+### Writing Real Debrid Integration Tests
+
+```kotlin
+// Example API integration test
+@Test
+fun `should fetch account files successfully`() = runTest {
+    // Given
+    val mockResponse = TorrentsResponse(
+        torrents = listOf(
+            TorrentInfo(
+                id = "1",
+                filename = "Test Movie.mp4",
+                bytes = 1000000,
+                status = "downloaded"
+            )
+        ),
+        total = 1,
+        offset = 0,
+        limit = 50
+    )
+    
+    mockWebServer.enqueue(
+        MockResponse()
+            .setBody(gson.toJson(mockResponse))
+            .setResponseCode(200)
+    )
+    
+    // When
+    val result = realDebridApi.getTorrents(0, 50)
+    
+    // Then
+    assertTrue(result is Result.Success)
+    assertEquals(1, result.data.torrents.size)
+}
+
+// Example authentication test
+@Test
+fun `should refresh token when expired`() = runTest {
+    // Given
+    val expiredToken = "expired_token"
+    val newToken = "new_token"
+    
+    tokenStorage.saveToken(expiredToken, isExpired = true)
+    
+    // Mock refresh token endpoint
+    mockWebServer.enqueue(
+        MockResponse()
+            .setBody("""{"access_token": "$newToken", "expires_in": 3600}""")
+            .setResponseCode(200)
+    )
+    
+    // When
+    val result = authRepository.refreshToken()
+    
+    // Then
+    assertTrue(result is Result.Success)
+    assertEquals(newToken, tokenStorage.getToken())
+}
+
+// Example file browser UI test
+@Test
+fun `should display files in correct order when sorted`() {
+    composeTestRule.setContent {
+        BrowseAccountScreen(
+            viewModel = testViewModel,
+            onNavigateToPlayer = { },
+            onNavigateBack = { }
+        )
+    }
+    
+    // Wait for files to load
+    composeTestRule.waitForIdle()
+    
+    // Apply sorting
+    composeTestRule
+        .onNodeWithText("Sort")
+        .performClick()
+    
+    composeTestRule
+        .onNodeWithText("Name (A-Z)")
+        .performClick()
+    
+    // Verify files are sorted correctly
+    composeTestRule
+        .onAllNodesWithTag("file_item")
+        .onFirst()
+        .assertTextContains("A Movie.mp4")
 }
 ```
 
@@ -253,12 +364,24 @@ jobs:
 
 ## Current Test Inventory
 
-*No tests currently exist - this section will be auto-updated as tests are added*
+*Auto-updated by Claude Code as tests are added*
 
-**Unit Tests**: 0
-**Integration Tests**: 0  
-**UI Tests**: 0
-**TV-Specific Tests**: 0
+**Unit Tests**: 4
+- RealDebridPagingSourceTest.kt - Comprehensive pagination testing
+- TorrentDaoTest.kt - Room DAO operations for torrents
+- ContentDaoTest.kt - Room DAO operations for content
+- FileBrowserDatabaseIntegrationTest.kt - Database integration scenarios
+
+**Integration Tests**: 1  
+- FileBrowserDatabaseIntegrationTest.kt - Cross-DAO operations and performance
+
+**UI Tests**: 0 (Pending implementation)
+**TV-Specific Tests**: 0 (Pending implementation)
+
+**Test Utilities**:
+- TestDataFactory.kt - Comprehensive test data creation
+- MockUtilities.kt - API and repository mocking utilities  
+- FileBrowserTestBase.kt - Base class for file browser tests
 
 ---
 

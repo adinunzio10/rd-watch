@@ -18,6 +18,7 @@ import com.rdwatch.androidtv.ui.details.MovieDetailsViewModel
 import com.rdwatch.androidtv.ui.profile.ProfileScreen
 import com.rdwatch.androidtv.ui.home.TVHomeScreen
 import com.rdwatch.androidtv.ui.search.SearchScreen
+import com.rdwatch.androidtv.ui.filebrowser.FileBrowserScreen
 
 @Composable
 fun AppNavigation(
@@ -250,6 +251,53 @@ fun AppNavigation(
             )
         }
         
+        composable<Screen.FileBrowser>(
+            enterTransition = {
+                slideIntoContainer(
+                    AnimatedContentTransitionScope.SlideDirection.Left,
+                    animationSpec = tween(300)
+                )
+            },
+            popExitTransition = {
+                slideOutOfContainer(
+                    AnimatedContentTransitionScope.SlideDirection.Right,
+                    animationSpec = tween(300)
+                )
+            }
+        ) {
+            FileBrowserScreen(
+                onBackPressed = {
+                    navController.popBackStack()
+                },
+                onFileSelected = { file ->
+                    // Handle file selection - could navigate to player or show details
+                    if (file.isStreamable) {
+                        navController.navigate(
+                            Screen.VideoPlayer(
+                                videoUrl = file.streamUrl ?: file.downloadUrl,
+                                title = file.filename
+                            )
+                        )
+                    }
+                },
+                onPlayFile = { file ->
+                    if (file.isStreamable) {
+                        navController.navigate(
+                            Screen.VideoPlayer(
+                                videoUrl = file.streamUrl ?: file.downloadUrl,
+                                title = file.filename
+                            )
+                        )
+                    }
+                },
+                onDeleteFile = { file ->
+                    // Handle file deletion - this is handled by the ViewModel
+                },
+                onRefresh = {
+                    // Handle refresh - this is handled by the ViewModel
+                }
+            )
+        }
         
         composable<Screen.Error> { backStackEntry ->
             val error = backStackEntry.toRoute<Screen.Error>()

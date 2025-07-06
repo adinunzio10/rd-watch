@@ -68,6 +68,10 @@ class DeepLinkHandler {
                         navController.navigate(Screen.Authentication)
                         true
                     }
+                    "files" -> {
+                        navController.navigate(Screen.FileBrowser)
+                        true
+                    }
                     else -> false
                 }
             }
@@ -90,6 +94,7 @@ class DeepLinkHandler {
             is Screen.ScraperSettings -> "$SCHEME://$HOST/scrapers"
             is Screen.Profile -> "$SCHEME://$HOST/profile"
             is Screen.Authentication -> "$SCHEME://$HOST/auth"
+            is Screen.FileBrowser -> "$SCHEME://$HOST/files"
             is Screen.Error -> "$SCHEME://$HOST/error?message=${Uri.encode(screen.message)}&canRetry=${screen.canRetry}"
         }
     }
