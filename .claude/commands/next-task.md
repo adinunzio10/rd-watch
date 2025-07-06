@@ -74,9 +74,9 @@ task-master next                # Confirms this is the recommended next task
 - Proven approach for most development tasks
 
 **For Complex Tasks (Complexity 6+):**
-- Use `/multi-agent` for parallel development in isolated tag contexts
+- Use `/multi-agent` for automated parallel development setup
+- Zero-token setup via `scripts/ultra-fast-multi-agent.sh`
 - Each agent works independently to prevent conflicts
-- Integration agent coordinates final delivery
 - Better scaling for complex implementations
 
 **Task Summary Output Format:**
