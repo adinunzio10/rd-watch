@@ -18,6 +18,7 @@ import com.rdwatch.androidtv.ui.details.MovieDetailsViewModel
 import com.rdwatch.androidtv.ui.profile.ProfileScreen
 import com.rdwatch.androidtv.ui.home.TVHomeScreen
 import com.rdwatch.androidtv.ui.search.SearchScreen
+import com.rdwatch.androidtv.ui.filebrowser.AccountFileBrowserScreen
 
 @Composable
 fun AppNavigation(
@@ -250,6 +251,45 @@ fun AppNavigation(
             )
         }
         
+        composable<Screen.AccountFileBrowser>(
+            enterTransition = {
+                slideIntoContainer(
+                    AnimatedContentTransitionScope.SlideDirection.Left,
+                    animationSpec = tween(300)
+                )
+            },
+            popExitTransition = {
+                slideOutOfContainer(
+                    AnimatedContentTransitionScope.SlideDirection.Right,
+                    animationSpec = tween(300)
+                )
+            }
+        ) { backStackEntry ->
+            val accountFileBrowser = backStackEntry.toRoute<Screen.AccountFileBrowser>()
+            AccountFileBrowserScreen(
+                onFileClick = { file ->
+                    // Navigate to video player if it's a playable file
+                    if (file.isPlayable && file.streamUrl != null) {
+                        navController.navigate(
+                            Screen.VideoPlayer(
+                                videoUrl = file.streamUrl,
+                                title = file.name
+                            )
+                        )
+                    }
+                },
+                onFolderClick = { folder ->
+                    // Handle folder navigation if needed
+                },
+                onTorrentClick = { torrent ->
+                    // Handle torrent navigation - this would show torrent files
+                    // For now, this is handled within the screen itself
+                },
+                onBackPressed = {
+                    navController.popBackStack()
+                }
+            )
+        }
         
         composable<Screen.Error> { backStackEntry ->
             val error = backStackEntry.toRoute<Screen.Error>()

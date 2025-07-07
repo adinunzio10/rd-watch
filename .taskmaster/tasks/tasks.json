@@ -1009,8 +1009,99 @@
           4,
           7
         ],
-        "status": "pending",
-        "subtasks": []
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Design File Browser UI Components",
+            "description": "Create Jetpack Compose TV UI components for file listing with remote control navigation",
+            "dependencies": [],
+            "details": "Build reusable composables for file items, folder navigation, breadcrumb trail, and grid/list view toggles optimized for Android TV's 10-foot interface",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Implement Real Debrid API Client",
+            "description": "Create API client for Real Debrid file operations endpoints",
+            "dependencies": [],
+            "details": "Implement Retrofit services for /torrents, /downloads endpoints with proper authentication, error handling, and response models",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Build Caching Layer",
+            "description": "Implement Room database caching for file listings and metadata",
+            "dependencies": [
+              2
+            ],
+            "details": "Create entities, DAOs, and repository pattern for offline-first file browsing with cache invalidation strategies",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Add Pagination Support",
+            "description": "Implement pagination for large file lists using Paging 3 library",
+            "dependencies": [
+              1,
+              2,
+              3
+            ],
+            "details": "Configure PagingSource, RemoteMediator for API pagination, and integrate with LazyColumn for smooth scrolling",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Create Sorting and Filtering System",
+            "description": "Build sorting options (name, date, size) and filtering capabilities",
+            "dependencies": [
+              1,
+              4
+            ],
+            "details": "Implement ViewModel logic for sort/filter state, UI controls for TV remotes, and efficient data transformation",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 6,
+            "title": "Implement Bulk Selection Mode",
+            "description": "Add multi-select functionality for bulk file operations",
+            "dependencies": [
+              1,
+              5
+            ],
+            "details": "Create selection state management, visual indicators, action mode toolbar, and keyboard shortcuts for TV remotes",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 7,
+            "title": "Build Bulk Operations Handler",
+            "description": "Implement bulk delete, download, and unrestrict operations",
+            "dependencies": [
+              2,
+              6
+            ],
+            "details": "Create coroutine-based batch processing with progress tracking, error aggregation, and partial failure handling",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 8,
+            "title": "Add File Preview and Details",
+            "description": "Create file detail view with preview capabilities and action buttons",
+            "dependencies": [
+              1,
+              2
+            ],
+            "details": "Build detail screen with file metadata, thumbnail previews, and quick actions (play, download, delete) optimized for TV navigation",
+            "status": "done",
+            "testStrategy": ""
+          }
+        ]
       },
       {
         "id": 11,
@@ -2410,7 +2501,7 @@
     ],
     "metadata": {
       "created": "2025-06-22T03:41:46.714Z",
-      "updated": "2025-06-29T02:19:13.034Z",
+      "updated": "2025-07-06T23:32:01.068Z",
       "description": "Tasks for master context"
     }
   }

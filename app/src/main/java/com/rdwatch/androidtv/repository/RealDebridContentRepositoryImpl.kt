@@ -5,11 +5,14 @@ import com.rdwatch.androidtv.data.entities.ContentEntity
 import com.rdwatch.androidtv.data.mappers.RealDebridMappers.toContentEntity
 import com.rdwatch.androidtv.data.mappers.RealDebridMappers.toContentEntityFromDownload
 import com.rdwatch.androidtv.network.api.RealDebridApiService
+import com.rdwatch.androidtv.network.models.UserInfo
 import com.rdwatch.androidtv.repository.base.Result
 import com.rdwatch.androidtv.repository.base.safeCall
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -39,6 +42,11 @@ class RealDebridContentRepositoryImpl @Inject constructor(
     
     // Cache duration in milliseconds (5 minutes)
     private val cacheExpirationMs = TimeUnit.MINUTES.toMillis(5)
+    
+    // Background refresh mechanism
+    private val backgroundRefreshInterval = TimeUnit.MINUTES.toMillis(3) // 3 minutes
+    private val refreshMutex = Mutex()
+    private var lastBackgroundRefresh = 0L
     
     override fun getTorrents(): Flow<Result<List<ContentEntity>>> = flow {
         emit(Result.Loading)
@@ -272,6 +280,133 @@ class RealDebridContentRepositoryImpl @Inject constructor(
         }
         
         result
+    }
+    
+    override suspend fun getTorrentsPaginated(offset: Int?, limit: Int?): Result<List<ContentEntity>> = 
+        withContext(dispatcherProvider.io) {
+            safeCall {
+                val response = apiService.getTorrents(offset = offset, limit = limit)
+                if (response.isSuccessful) {
+                    response.body()?.map { it.toContentEntity() } ?: emptyList()
+                } else {
+                    throw Exception("Failed to fetch torrents: ${response.code()}")
+                }
+            }
+        }
+    
+    override suspend fun deleteTorrents(ids: List<String>): Result<Unit> = withContext(dispatcherProvider.io) {
+        val result = safeCall {
+            // The API expects a comma-separated string of hashes
+            val hashes = ids.joinToString(",")
+            val response = apiService.deleteTorrents(hashes)
+            if (response.isSuccessful) {
+                Unit
+            } else {
+                throw Exception("Failed to delete torrents: ${response.code()}")
+            }
+        }
+        
+        // Invalidate cache on successful deletion
+        if (result is Result.Success) {
+            // Clear caches to force refresh
+            torrentsCache.value = CachedData.empty()
+            // Remove deleted items from individual cache
+            ids.forEach { id ->
+                individualContentCache.remove(id)
+            }
+        }
+        
+        result
+    }
+    
+    override suspend fun getUserInfo(): Result<UserInfo> = withContext(dispatcherProvider.io) {
+        safeCall {
+            val response = apiService.getUserInfo()
+            if (response.isSuccessful) {
+                response.body() ?: throw Exception("No user info in response")
+            } else {
+                throw Exception("Failed to fetch user info: ${response.code()}")
+            }
+        }
+    }
+    
+    override suspend fun getDownloadsPaginated(offset: Int?, limit: Int?): Result<List<ContentEntity>> = 
+        withContext(dispatcherProvider.io) {
+            safeCall {
+                val response = apiService.getDownloads(offset = offset, limit = limit)
+                if (response.isSuccessful) {
+                    response.body()?.map { it.toContentEntityFromDownload() } ?: emptyList()
+                } else {
+                    throw Exception("Failed to fetch downloads: ${response.code()}")
+                }
+            }
+        }
+    
+    override suspend fun deleteDownloads(ids: List<String>): Result<Unit> = withContext(dispatcherProvider.io) {
+        val result = safeCall {
+            // The API expects a comma-separated string of IDs
+            val idsString = ids.joinToString(",")
+            val response = apiService.deleteDownloads(idsString)
+            if (response.isSuccessful) {
+                Unit
+            } else {
+                throw Exception("Failed to delete downloads: ${response.code()}")
+            }
+        }
+        
+        // Invalidate cache on successful deletion
+        if (result is Result.Success) {
+            // Clear caches to force refresh
+            downloadsCache.value = CachedData.empty()
+            // Remove deleted items from individual cache
+            ids.forEach { id ->
+                individualContentCache.remove(id)
+            }
+        }
+        
+        result
+    }
+    
+    /**
+     * Triggers a background refresh if enough time has passed since the last refresh
+     * This is called automatically when accessing cached data
+     */
+    private suspend fun triggerBackgroundRefreshIfNeeded() {
+        val currentTime = System.currentTimeMillis()
+        if (currentTime - lastBackgroundRefresh > backgroundRefreshInterval) {
+            refreshMutex.withLock {
+                // Double-check after acquiring lock
+                if (currentTime - lastBackgroundRefresh > backgroundRefreshInterval) {
+                    lastBackgroundRefresh = currentTime
+                    // Trigger background refresh without blocking the caller
+                    kotlinx.coroutines.CoroutineScope(dispatcherProvider.io).launch {
+                        try {
+                            syncContent()
+                        } catch (e: Exception) {
+                            // Log error but don't throw - background refresh failures shouldn't affect UI
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    /**
+     * Enhanced cache validation that also triggers background refresh
+     */
+    private suspend fun getCachedDataWithBackgroundRefresh(): CachedData<List<ContentEntity>> {
+        val cachedTorrents = torrentsCache.value
+        val cachedDownloads = downloadsCache.value
+        
+        // Trigger background refresh if data is getting stale
+        triggerBackgroundRefreshIfNeeded()
+        
+        return if (cachedTorrents.isValid(cacheExpirationMs) && cachedDownloads.isValid(cacheExpirationMs)) {
+            CachedData(cachedTorrents.data + cachedDownloads.data, 
+                       minOf(cachedTorrents.timestamp, cachedDownloads.timestamp))
+        } else {
+            CachedData.empty()
+        }
     }
 }
 

@@ -51,6 +51,12 @@ interface RealDebridApiService {
     @DELETE("downloads/delete/{id}")
     suspend fun deleteDownload(@Path("id") id: String): Response<Unit>
     
+    @DELETE("downloads/delete")
+    @FormUrlEncoded
+    suspend fun deleteDownloads(
+        @Field("ids") ids: String
+    ): Response<Unit>
+    
     // Torrents endpoints
     @GET("torrents")
     suspend fun getTorrents(
@@ -91,6 +97,12 @@ interface RealDebridApiService {
     
     @DELETE("torrents/delete/{id}")
     suspend fun deleteTorrent(@Path("id") id: String): Response<Unit>
+    
+    @DELETE("torrents/delete")
+    @FormUrlEncoded
+    suspend fun deleteTorrents(
+        @Field("hashes") hashes: String
+    ): Response<Unit>
     
     // Hosts endpoints
     @GET("hosts")

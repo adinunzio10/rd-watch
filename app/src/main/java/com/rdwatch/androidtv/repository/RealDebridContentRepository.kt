@@ -1,6 +1,7 @@
 package com.rdwatch.androidtv.repository
 
 import com.rdwatch.androidtv.data.entities.ContentEntity
+import com.rdwatch.androidtv.network.models.UserInfo
 import com.rdwatch.androidtv.repository.base.Result
 import kotlinx.coroutines.flow.Flow
 
@@ -67,4 +68,40 @@ interface RealDebridContentRepository {
      * @return Result indicating success or failure
      */
     suspend fun deleteDownload(id: String): Result<Unit>
+    
+    /**
+     * Get torrents with pagination support
+     * @param offset The offset for pagination (optional)
+     * @param limit The number of items to return (optional, max 100)
+     * @return Result containing list of ContentEntity
+     */
+    suspend fun getTorrentsPaginated(offset: Int? = null, limit: Int? = null): Result<List<ContentEntity>>
+    
+    /**
+     * Delete multiple torrents from Real-Debrid
+     * @param ids List of torrent IDs to delete
+     * @return Result indicating success or failure
+     */
+    suspend fun deleteTorrents(ids: List<String>): Result<Unit>
+    
+    /**
+     * Get user information including storage usage
+     * @return Result containing UserInfo data
+     */
+    suspend fun getUserInfo(): Result<UserInfo>
+    
+    /**
+     * Get downloads with pagination support
+     * @param offset The offset for pagination (optional)
+     * @param limit The number of items to return (optional, max 100)
+     * @return Result containing list of ContentEntity
+     */
+    suspend fun getDownloadsPaginated(offset: Int? = null, limit: Int? = null): Result<List<ContentEntity>>
+    
+    /**
+     * Delete multiple downloads from Real-Debrid
+     * @param ids List of download IDs to delete
+     * @return Result indicating success or failure
+     */
+    suspend fun deleteDownloads(ids: List<String>): Result<Unit>
 }
