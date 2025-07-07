@@ -41,21 +41,27 @@ class AuthRepository @Inject constructor(
 
     suspend fun authenticateWithApiKey(apiKey: String): Result<Unit> {
         return try {
+            Log.d(TAG, "authenticateWithApiKey() called with API key length: ${apiKey.length}")
             _authState.value = AuthState.Initializing
             
             // Save the API key temporarily to test it
             val originalApiKey = tokenProvider.getApiKey()
+            Log.d(TAG, "Saving API key for validation...")
             tokenProvider.saveApiKey(apiKey)
             
             // Test the API key by making a request to the user endpoint
+            Log.d(TAG, "Making request to getUserInfo() to validate API key...")
             val response = realDebridApiService.getUserInfo()
             
             if (response.isSuccessful) {
+                Log.d(TAG, "API key validation successful! Setting state to Authenticated")
                 // API key is valid, clear any existing OAuth tokens and keep the API key
                 tokenProvider.clearTokens()
                 _authState.value = AuthState.Authenticated
+                Log.d(TAG, "AuthState set to Authenticated, current state: ${_authState.value}")
                 Result.Success(Unit)
             } else {
+                Log.e(TAG, "API key validation failed: ${response.code()} ${response.message()}")
                 // API key is invalid, restore original key (if any) and show error
                 if (originalApiKey != null) {
                     tokenProvider.saveApiKey(originalApiKey)
@@ -67,6 +73,7 @@ class AuthRepository @Inject constructor(
                 Result.Error(Exception(errorMessage))
             }
         } catch (e: Exception) {
+            Log.e(TAG, "Exception during API key authentication: ${e.message}", e)
             val errorMessage = "Failed to validate API key: ${e.message}"
             _authState.value = AuthState.Error(errorMessage)
             Result.Error(e)
