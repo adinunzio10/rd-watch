@@ -799,6 +799,13 @@ private fun ApiKeyInputContent(
                 textAlign = TextAlign.Center,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+            Spacer(modifier = Modifier.height(12.dp))
+            Text(
+                text = "API keys are typically 32-52 characters long (letters and numbers only)",
+                style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp),
+                textAlign = TextAlign.Center,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
+            )
             Spacer(modifier = Modifier.height(32.dp))
             
             OutlinedTextField(

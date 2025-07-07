@@ -71,6 +71,32 @@ class AuthRepository @Inject constructor(
                 return Result.Error(Exception(errorMessage))
             }
             
+            // Validate API key length (Real-Debrid API keys are typically 32-52 characters)
+            if (sanitizedApiKey.length < 10) {
+                Log.e(TAG, "API key too short: ${sanitizedApiKey.length} characters")
+                val errorMessage = "API key is too short (${sanitizedApiKey.length} characters). Real-Debrid API keys are typically 32-52 characters long."
+                _authState.value = AuthState.Error(errorMessage)
+                return Result.Error(Exception(errorMessage))
+            }
+            
+            if (sanitizedApiKey.length > 100) {
+                Log.e(TAG, "API key too long: ${sanitizedApiKey.length} characters")
+                val errorMessage = "API key is too long (${sanitizedApiKey.length} characters). Real-Debrid API keys are typically 32-52 characters long. Please check that you copied only the API key, not log text or other content."
+                _authState.value = AuthState.Error(errorMessage)
+                return Result.Error(Exception(errorMessage))
+            }
+            
+            // Check for common mistakes (log text, URLs, etc.)
+            if (sanitizedApiKey.contains("AuthRepository") || 
+                sanitizedApiKey.contains("AuthViewModel") ||
+                sanitizedApiKey.contains("10778-10778") ||
+                sanitizedApiKey.contains("2025-")) {
+                Log.e(TAG, "API key appears to contain log text or other invalid content")
+                val errorMessage = "The text you entered appears to be log output, not an API key. Please copy only your Real-Debrid API key from your account settings."
+                _authState.value = AuthState.Error(errorMessage)
+                return Result.Error(Exception(errorMessage))
+            }
+            
             // Save the API key temporarily to test it
             val originalApiKey = tokenProvider.getApiKey()
             Log.d(TAG, "Saving sanitized API key for validation...")
@@ -78,10 +104,13 @@ class AuthRepository @Inject constructor(
             
             // Test the API key by making a request to the user endpoint
             Log.d(TAG, "Making request to getUserInfo() to validate API key...")
-            Log.d(TAG, "About to call realDebridApiService.getUserInfo() with 30s timeout...")
+            Log.d(TAG, "About to call realDebridApiService.getUserInfo() with 10s timeout...")
             
-            val response = withTimeout(30_000L) { // 30 second timeout
-                realDebridApiService.getUserInfo()
+            val response = withTimeout(10_000L) { // 10 second timeout - API calls should be fast
+                Log.d(TAG, "API call in progress...")
+                val result = realDebridApiService.getUserInfo()
+                Log.d(TAG, "API call completed, processing response...")
+                result
             }
             
             Log.d(TAG, "API response received!")
