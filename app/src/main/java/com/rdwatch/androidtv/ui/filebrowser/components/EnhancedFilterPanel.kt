@@ -252,74 +252,90 @@ private fun FilterPanelContent(
         currentFilters = filterOptions
     }
     
-    Column(
+    LazyRow(
         modifier = modifier
             .fillMaxWidth()
             .padding(12.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+        contentPadding = PaddingValues(horizontal = 4.dp)
     ) {
         // Search filter
-        SearchFilterSection(
-            searchQuery = currentFilters.searchQuery,
-            onSearchChange = { query ->
-                currentFilters = currentFilters.copy(searchQuery = query)
-                onFilterChange(currentFilters)
-            }
-        )
+        item {
+            SearchFilterSection(
+                searchQuery = currentFilters.searchQuery,
+                onSearchChange = { query ->
+                    currentFilters = currentFilters.copy(searchQuery = query)
+                    onFilterChange(currentFilters)
+                },
+                modifier = Modifier.width(280.dp)
+            )
+        }
         
         // Quick filters (toggles)
-        QuickFiltersSection(
-            showOnlyPlayable = currentFilters.showOnlyPlayable,
-            showOnlyDownloaded = currentFilters.showOnlyDownloaded,
-            onPlayableToggle = { 
-                currentFilters = currentFilters.copy(showOnlyPlayable = it)
-                onFilterChange(currentFilters)
-            },
-            onDownloadedToggle = { 
-                currentFilters = currentFilters.copy(showOnlyDownloaded = it)
-                onFilterChange(currentFilters)
-            }
-        )
+        item {
+            QuickFiltersSection(
+                showOnlyPlayable = currentFilters.showOnlyPlayable,
+                showOnlyDownloaded = currentFilters.showOnlyDownloaded,
+                onPlayableToggle = { 
+                    currentFilters = currentFilters.copy(showOnlyPlayable = it)
+                    onFilterChange(currentFilters)
+                },
+                onDownloadedToggle = { 
+                    currentFilters = currentFilters.copy(showOnlyDownloaded = it)
+                    onFilterChange(currentFilters)
+                },
+                modifier = Modifier.width(240.dp)
+            )
+        }
         
         // File type filters
-        FileTypeFiltersSection(
-            selectedTypes = currentFilters.fileTypeFilter,
-            onTypeToggle = { fileType ->
-                val newFilter = if (currentFilters.fileTypeFilter.contains(fileType)) {
-                    currentFilters.fileTypeFilter - fileType
-                } else {
-                    currentFilters.fileTypeFilter + fileType
-                }
-                currentFilters = currentFilters.copy(fileTypeFilter = newFilter)
-                onFilterChange(currentFilters)
-            }
-        )
+        item {
+            FileTypeFiltersSection(
+                selectedTypes = currentFilters.fileTypeFilter,
+                onTypeToggle = { fileType ->
+                    val newFilter = if (currentFilters.fileTypeFilter.contains(fileType)) {
+                        currentFilters.fileTypeFilter - fileType
+                    } else {
+                        currentFilters.fileTypeFilter + fileType
+                    }
+                    currentFilters = currentFilters.copy(fileTypeFilter = newFilter)
+                    onFilterChange(currentFilters)
+                },
+                modifier = Modifier.width(320.dp)
+            )
+        }
         
         // Status filters
-        StatusFiltersSection(
-            selectedStatuses = currentFilters.statusFilter,
-            onStatusToggle = { status ->
-                val newFilter = if (currentFilters.statusFilter.contains(status)) {
-                    currentFilters.statusFilter - status
-                } else {
-                    currentFilters.statusFilter + status
-                }
-                currentFilters = currentFilters.copy(statusFilter = newFilter)
-                onFilterChange(currentFilters)
-            }
-        )
+        item {
+            StatusFiltersSection(
+                selectedStatuses = currentFilters.statusFilter,
+                onStatusToggle = { status ->
+                    val newFilter = if (currentFilters.statusFilter.contains(status)) {
+                        currentFilters.statusFilter - status
+                    } else {
+                        currentFilters.statusFilter + status
+                    }
+                    currentFilters = currentFilters.copy(statusFilter = newFilter)
+                    onFilterChange(currentFilters)
+                },
+                modifier = Modifier.width(280.dp)
+            )
+        }
         
         // Action buttons
-        FilterActionButtons(
-            hasActiveFilters = getActiveFilterCount(currentFilters) > 0,
-            onReset = {
-                currentFilters = FilterOptions()
-                onFilterChange(currentFilters)
-            },
-            onApply = {
-                onFilterChange(currentFilters)
-            }
-        )
+        item {
+            FilterActionButtons(
+                hasActiveFilters = getActiveFilterCount(currentFilters) > 0,
+                onReset = {
+                    currentFilters = FilterOptions()
+                    onFilterChange(currentFilters)
+                },
+                onApply = {
+                    onFilterChange(currentFilters)
+                },
+                modifier = Modifier.width(200.dp)
+            )
+        }
     }
 }
 
