@@ -119,4 +119,24 @@ class AuthViewModel @Inject constructor(
             authRepository.checkAuthState()
         }
     }
+    
+    fun startApiKeyAuthentication() {
+        authRepository.startApiKeyAuthentication()
+    }
+    
+    fun authenticateWithApiKey(apiKey: String) {
+        viewModelScope.launch {
+            when (val result = authRepository.authenticateWithApiKey(apiKey)) {
+                is Result.Success -> {
+                    // State will be updated through the repository flow
+                }
+                is Result.Error -> {
+                    _authState.value = AuthState.Error("API key authentication failed: ${result.exception.message}")
+                }
+                is Result.Loading -> {
+                    _authState.value = AuthState.Initializing
+                }
+            }
+        }
+    }
 }

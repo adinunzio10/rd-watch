@@ -13,22 +13,30 @@ class AuthInterceptor @Inject constructor(
     override fun intercept(chain: Interceptor.Chain): Response {
         val original = chain.request()
         
-        // Get the current token
-        val token = tokenProvider.getAccessToken()
-        
         // Check for the @NoAuth annotation
         val noAuth = original.tag(retrofit2.Invocation::class.java)
             ?.method()
             ?.isAnnotationPresent(NoAuth::class.java) ?: false
 
-        // If no token or @NoAuth is present, proceed with original request
-        if (token.isNullOrBlank() || noAuth) {
+        // If @NoAuth is present, proceed with original request
+        if (noAuth) {
+            return chain.proceed(original)
+        }
+        
+        // Get authentication credentials (priority: OAuth token, then API key)
+        val token = tokenProvider.getAccessToken()
+        val apiKey = tokenProvider.getApiKey()
+        
+        val authToken = token ?: apiKey
+        
+        // If no authentication credentials, proceed with original request
+        if (authToken.isNullOrBlank()) {
             return chain.proceed(original)
         }
         
         // Add authorization header
         val request = original.newBuilder()
-            .header("Authorization", "Bearer $token")
+            .header("Authorization", "Bearer $authToken")
             .build()
         
         return chain.proceed(request)
@@ -44,4 +52,7 @@ interface TokenProvider {
     fun saveClientCredentials(clientId: String, clientSecret: String)
     fun getClientId(): String?
     fun getClientSecret(): String?
+    fun saveApiKey(apiKey: String)
+    fun getApiKey(): String?
+    fun clearApiKey()
 }

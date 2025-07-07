@@ -18,6 +18,7 @@ class TokenProviderImpl @Inject constructor(
         private const val KEY_REFRESH_TOKEN = "refresh_token"
         private const val KEY_CLIENT_ID = "client_id"
         private const val KEY_CLIENT_SECRET = "client_secret"
+        private const val KEY_API_KEY = "api_key"
     }
     
     private val masterKey = MasterKey.Builder(context)
@@ -85,5 +86,21 @@ class TokenProviderImpl @Inject constructor(
 
     override fun getClientSecret(): String? {
         return securePrefs.getString(KEY_CLIENT_SECRET, null)
+    }
+
+    override fun saveApiKey(apiKey: String) {
+        securePrefs.edit()
+            .putString(KEY_API_KEY, apiKey)
+            .apply()
+    }
+
+    override fun getApiKey(): String? {
+        return securePrefs.getString(KEY_API_KEY, null)
+    }
+
+    override fun clearApiKey() {
+        securePrefs.edit()
+            .remove(KEY_API_KEY)
+            .apply()
     }
 }

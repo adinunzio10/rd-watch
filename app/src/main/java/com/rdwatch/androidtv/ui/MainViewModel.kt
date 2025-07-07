@@ -59,6 +59,12 @@ class MainViewModel @Inject constructor(
                 _initializationError.value = null
                 true
             }
+            is AuthState.ApiKeyEntry -> {
+                Log.d(TAG, "AuthState is ApiKeyEntry, navigating to Authentication")
+                _startDestination.value = Screen.Authentication
+                _initializationError.value = null
+                true
+            }
             is AuthState.Authenticated -> {
                 Log.d(TAG, "AuthState is Authenticated, navigating to Home")
                 _startDestination.value = Screen.Home

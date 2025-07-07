@@ -4,6 +4,7 @@ import android.util.Log
 import com.rdwatch.androidtv.auth.models.AuthState
 import com.rdwatch.androidtv.auth.models.DeviceCodeInfo
 import com.rdwatch.androidtv.network.api.OAuth2ApiService
+import com.rdwatch.androidtv.network.api.RealDebridApiService
 import com.rdwatch.androidtv.network.interceptors.TokenProvider
 import com.rdwatch.androidtv.network.models.OAuth2ErrorResponse
 import com.rdwatch.androidtv.repository.base.Result
@@ -19,6 +20,7 @@ import javax.inject.Singleton
 @Singleton
 class AuthRepository @Inject constructor(
     private val oauth2ApiService: OAuth2ApiService,
+    private val realDebridApiService: RealDebridApiService,
     private val tokenProvider: TokenProvider,
     private val moshi: Moshi
 ) {
@@ -36,6 +38,44 @@ class AuthRepository @Inject constructor(
      * Get current authentication state value
      */
     fun getCurrentAuthState(): AuthState = _authState.value
+
+    suspend fun authenticateWithApiKey(apiKey: String): Result<Unit> {
+        return try {
+            _authState.value = AuthState.Initializing
+            
+            // Save the API key temporarily to test it
+            val originalApiKey = tokenProvider.getApiKey()
+            tokenProvider.saveApiKey(apiKey)
+            
+            // Test the API key by making a request to the user endpoint
+            val response = realDebridApiService.getUserInfo()
+            
+            if (response.isSuccessful) {
+                // API key is valid, clear any existing OAuth tokens and keep the API key
+                tokenProvider.clearTokens()
+                _authState.value = AuthState.Authenticated
+                Result.Success(Unit)
+            } else {
+                // API key is invalid, restore original key (if any) and show error
+                if (originalApiKey != null) {
+                    tokenProvider.saveApiKey(originalApiKey)
+                } else {
+                    tokenProvider.clearApiKey()
+                }
+                val errorMessage = "Invalid API key: ${response.code()} ${response.message()}"
+                _authState.value = AuthState.Error(errorMessage)
+                Result.Error(Exception(errorMessage))
+            }
+        } catch (e: Exception) {
+            val errorMessage = "Failed to validate API key: ${e.message}"
+            _authState.value = AuthState.Error(errorMessage)
+            Result.Error(e)
+        }
+    }
+    
+    fun startApiKeyAuthentication() {
+        _authState.value = AuthState.ApiKeyEntry
+    }
     
     suspend fun startDeviceFlow(): Result<DeviceCodeInfo> {
         return try {
@@ -205,6 +245,7 @@ class AuthRepository @Inject constructor(
     
     suspend fun logout() {
         tokenProvider.clearTokens()
+        tokenProvider.clearApiKey()
         _authState.value = AuthState.Unauthenticated
     }
     
@@ -221,19 +262,37 @@ class AuthRepository @Inject constructor(
         try {
             Log.d(TAG, "Checking if token is valid...")
             val accessToken = tokenProvider.getAccessToken()
+            val apiKey = tokenProvider.getApiKey()
             
             if (accessToken != null) {
-                Log.d(TAG, "Token is valid, setting state to Authenticated")
+                Log.d(TAG, "OAuth token is valid, setting state to Authenticated")
                 _authState.value = AuthState.Authenticated
+            } else if (apiKey != null) {
+                Log.d(TAG, "API key found, validating...")
+                // Validate API key by making a test request
+                try {
+                    val response = realDebridApiService.getUserInfo()
+                    if (response.isSuccessful) {
+                        Log.d(TAG, "API key is valid, setting state to Authenticated")
+                        _authState.value = AuthState.Authenticated
+                    } else {
+                        Log.d(TAG, "API key is invalid, clearing and requiring authentication")
+                        tokenProvider.clearApiKey()
+                        _authState.value = AuthState.Unauthenticated
+                    }
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error validating API key: ${e.message}")
+                    _authState.value = AuthState.Unauthenticated
+                }
             } else {
-                Log.d(TAG, "Token not valid, checking for refresh token...")
+                Log.d(TAG, "No access token or API key, checking for refresh token...")
                 val refreshToken = tokenProvider.getRefreshToken()
                 
                 if (refreshToken != null) {
                     Log.d(TAG, "Has refresh token, attempting refresh...")
                     refreshTokenIfNeeded()
                 } else {
-                    Log.d(TAG, "No refresh token, user needs to authenticate")
+                    Log.d(TAG, "No credentials found, user needs to authenticate")
                     _authState.value = AuthState.Unauthenticated
                 }
             }
