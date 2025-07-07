@@ -207,14 +207,14 @@ private fun UnauthenticatedContent(
             )
             Spacer(modifier = Modifier.height(32.dp))
             
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(24.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Button(
                     onClick = onStartAuthentication,
                     modifier = Modifier
-                        .fillMaxWidth(0.6f)
+                        .weight(1f)
                         .height(56.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.primary
@@ -225,7 +225,7 @@ private fun UnauthenticatedContent(
                         contentDescription = null,
                         modifier = Modifier.size(20.dp)
                     )
-                    Spacer(modifier = Modifier.width(12.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = "OAuth2 Authentication",
                         style = MaterialTheme.typography.labelLarge.copy(
@@ -247,7 +247,7 @@ private fun UnauthenticatedContent(
                 Button(
                     onClick = onStartApiKeyAuthentication,
                     modifier = Modifier
-                        .fillMaxWidth(0.6f)
+                        .weight(1f)
                         .height(56.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.secondary
@@ -258,7 +258,7 @@ private fun UnauthenticatedContent(
                         contentDescription = null,
                         modifier = Modifier.size(20.dp)
                     )
-                    Spacer(modifier = Modifier.width(12.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = "Enter API Key",
                         style = MaterialTheme.typography.labelLarge.copy(
