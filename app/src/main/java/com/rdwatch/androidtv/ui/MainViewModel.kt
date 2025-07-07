@@ -37,11 +37,6 @@ class MainViewModel @Inject constructor(
     ) { initialized, authState ->
         Log.d(TAG, "isReady combine: initialized=$initialized, authState=$authState")
         
-        if (!initialized) {
-            Log.d(TAG, "Not yet initialized, returning false")
-            return@combine false
-        }
-        
         when (authState) {
             is AuthState.Initializing -> {
                 Log.d(TAG, "AuthState is Initializing, waiting...")
@@ -51,30 +46,55 @@ class MainViewModel @Inject constructor(
                 Log.d(TAG, "AuthState is Unauthenticated, navigating to Authentication")
                 _startDestination.value = Screen.Authentication
                 _initializationError.value = null
+                // Mark as initialized since we have a stable auth state
+                if (!initialized) {
+                    Log.d(TAG, "Setting initialized=true due to stable auth state")
+                    _isInitialized.value = true
+                }
                 true
             }
             is AuthState.WaitingForUser -> {
                 Log.d(TAG, "AuthState is WaitingForUser, navigating to Authentication")
                 _startDestination.value = Screen.Authentication
                 _initializationError.value = null
+                // Mark as initialized since we have a stable auth state
+                if (!initialized) {
+                    Log.d(TAG, "Setting initialized=true due to stable auth state")
+                    _isInitialized.value = true
+                }
                 true
             }
             is AuthState.ApiKeyEntry -> {
                 Log.d(TAG, "AuthState is ApiKeyEntry, navigating to Authentication")
                 _startDestination.value = Screen.Authentication
                 _initializationError.value = null
+                // Mark as initialized since we have a stable auth state
+                if (!initialized) {
+                    Log.d(TAG, "Setting initialized=true due to stable auth state")
+                    _isInitialized.value = true
+                }
                 true
             }
             is AuthState.Authenticated -> {
                 Log.d(TAG, "AuthState is Authenticated, navigating to Home")
                 _startDestination.value = Screen.Home
                 _initializationError.value = null
+                // Mark as initialized since we have a stable auth state
+                if (!initialized) {
+                    Log.d(TAG, "Setting initialized=true due to stable auth state")
+                    _isInitialized.value = true
+                }
                 true
             }
             is AuthState.Error -> {
                 Log.d(TAG, "AuthState is Error: ${authState.message}, navigating to Authentication")
                 _startDestination.value = Screen.Authentication
                 _initializationError.value = null
+                // Mark as initialized since we have a stable auth state
+                if (!initialized) {
+                    Log.d(TAG, "Setting initialized=true due to stable auth state")
+                    _isInitialized.value = true
+                }
                 true
             }
         }
