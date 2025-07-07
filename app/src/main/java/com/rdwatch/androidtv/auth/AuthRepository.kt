@@ -13,8 +13,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.withTimeout
-import kotlinx.coroutines.TimeoutCancellationException
 import retrofit2.HttpException
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -97,110 +95,26 @@ class AuthRepository @Inject constructor(
                 return Result.Error(Exception(errorMessage))
             }
             
-            // Save the API key temporarily to test it
-            val originalApiKey = tokenProvider.getApiKey()
-            Log.d(TAG, "Saving sanitized API key for validation...")
+            // API key is valid format - save it and authenticate immediately
+            // Note: API keys don't need validation - they ARE the authentication
+            Log.d(TAG, "API key format is valid, saving and authenticating...")
+            
+            // Clear any existing OAuth tokens and save the API key
+            tokenProvider.clearTokens()
             tokenProvider.saveApiKey(sanitizedApiKey)
+            Log.d(TAG, "Saved API key and cleared OAuth tokens")
             
-            // Test the API key by making a request to the user endpoint
-            Log.d(TAG, "Making request to getUserInfo() to validate API key...")
-            Log.d(TAG, "About to call realDebridApiService.getUserInfo() with 10s timeout...")
+            // Immediately set authenticated state - no validation needed for API keys
+            _authState.value = AuthState.Authenticated
+            Log.d(TAG, "AuthState set to Authenticated immediately (API keys don't need validation)")
+            Log.d(TAG, "API key authentication completed successfully")
             
-            val response = withTimeout(10_000L) { // 10 second timeout - API calls should be fast
-                Log.d(TAG, "API call in progress...")
-                val result = realDebridApiService.getUserInfo()
-                Log.d(TAG, "API call completed, processing response...")
-                result
-            }
+            Result.Success(Unit)
             
-            Log.d(TAG, "API response received!")
-            Log.d(TAG, "Response code: ${response.code()}")
-            Log.d(TAG, "Response successful: ${response.isSuccessful}")
-            Log.d(TAG, "Response message: ${response.message()}")
-            Log.d(TAG, "Response headers: ${response.headers()}")
-            
-            if (response.isSuccessful) {
-                Log.d(TAG, "API key validation successful! Setting state to Authenticated")
-                val responseBody = response.body()
-                Log.d(TAG, "Response body: $responseBody")
-                
-                // API key is valid, clear any existing OAuth tokens and keep the API key
-                tokenProvider.clearTokens()
-                Log.d(TAG, "Cleared existing OAuth tokens")
-                
-                _authState.value = AuthState.Authenticated
-                Log.d(TAG, "AuthState set to Authenticated, current state: ${_authState.value}")
-                Log.d(TAG, "Returning Success result")
-                Result.Success(Unit)
-            } else {
-                Log.e(TAG, "API key validation failed: ${response.code()} ${response.message()}")
-                val errorBody = response.errorBody()?.string()
-                Log.e(TAG, "Error response body: $errorBody")
-                
-                // API key is invalid, restore original key (if any) and show error
-                if (originalApiKey != null) {
-                    Log.d(TAG, "Restoring original API key")
-                    tokenProvider.saveApiKey(originalApiKey)
-                } else {
-                    Log.d(TAG, "Clearing API key (no original to restore)")
-                    tokenProvider.clearApiKey()
-                }
-                val errorMessage = "Invalid API key: ${response.code()} ${response.message()}"
-                _authState.value = AuthState.Error(errorMessage)
-                Log.d(TAG, "AuthState set to Error, current state: ${_authState.value}")
-                Log.d(TAG, "Returning Error result")
-                Result.Error(Exception(errorMessage))
-            }
-        } catch (e: TimeoutCancellationException) {
-            Log.e(TAG, "API request timeout: ${e.message}", e)
-            val errorMessage = "Request timed out. Please check your internet connection and try again."
-            _authState.value = AuthState.Error(errorMessage)
-            Log.d(TAG, "AuthState set to Error (timeout), current state: ${_authState.value}")
-            Result.Error(e)
-        } catch (e: HttpException) {
-            Log.e(TAG, "HTTP error during API key validation: ${e.code()} ${e.message()}", e)
-            val errorBody = e.response()?.errorBody()?.string()
-            Log.e(TAG, "HTTP error body: $errorBody")
-            val errorMessage = when (e.code()) {
-                401 -> "Invalid API key. Please check your API key and try again."
-                403 -> "API key access denied. Please verify your API key permissions."
-                429 -> "Too many requests. Please wait a moment and try again."
-                500, 502, 503, 504 -> "Real-Debrid server error. Please try again later."
-                else -> "Network error (${e.code()}): ${e.message()}"
-            }
-            _authState.value = AuthState.Error(errorMessage)
-            Log.d(TAG, "AuthState set to Error (HTTP), current state: ${_authState.value}")
-            Result.Error(e)
-        } catch (e: IllegalArgumentException) {
-            Log.e(TAG, "Invalid API key format: ${e.message}", e)
-            val errorMessage = when {
-                e.message?.contains("Authorization value") == true -> {
-                    // Extract character code if possible for better error message
-                    val charCodeMatch = Regex("char 0x([0-9a-fA-F]+)").find(e.message ?: "")
-                    if (charCodeMatch != null) {
-                        val charCode = charCodeMatch.groupValues[1].toIntOrNull(16)
-                        val charDescription = when (charCode) {
-                            in 0x2000..0x2FFF -> "special punctuation or symbol"
-                            in 0x1F000..0x1FFFF -> "emoji or pictograph"
-                            else -> "non-ASCII character"
-                        }
-                        "API key contains invalid $charDescription (Unicode 0x${charCodeMatch.groupValues[1]}). Please use only letters, numbers, and basic symbols."
-                    } else {
-                        "API key contains invalid characters. Please use only standard ASCII characters (letters, numbers, and basic symbols)."
-                    }
-                }
-                else -> "Invalid API key format: ${e.message}"
-            }
-            _authState.value = AuthState.Error(errorMessage)
-            Log.d(TAG, "AuthState set to Error (format), current state: ${_authState.value}")
-            Result.Error(e)
         } catch (e: Exception) {
-            Log.e(TAG, "Unexpected exception during API key authentication: ${e.message}", e)
-            Log.e(TAG, "Exception type: ${e::class.java.simpleName}")
-            Log.e(TAG, "Stack trace: ${e.stackTraceToString()}")
-            val errorMessage = "Failed to validate API key: ${e.message}"
+            Log.e(TAG, "Exception during API key authentication: ${e.message}", e)
+            val errorMessage = "Failed to save API key: ${e.message}"
             _authState.value = AuthState.Error(errorMessage)
-            Log.d(TAG, "AuthState set to Error (unexpected), current state: ${_authState.value}")
             Result.Error(e)
         }
     }
