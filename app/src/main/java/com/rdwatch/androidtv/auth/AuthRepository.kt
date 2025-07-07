@@ -44,10 +44,22 @@ class AuthRepository @Inject constructor(
             Log.d(TAG, "authenticateWithApiKey() called with API key length: ${apiKey.length}")
             _authState.value = AuthState.Initializing
             
+            // Sanitize the API key to prevent HTTP header issues
+            val sanitizedApiKey = apiKey.trim().replace("\n", "").replace("\r", "")
+            Log.d(TAG, "Sanitized API key length: ${sanitizedApiKey.length}")
+            
+            // Validate API key format
+            if (sanitizedApiKey.isEmpty()) {
+                Log.e(TAG, "API key is empty after sanitization")
+                val errorMessage = "API key cannot be empty"
+                _authState.value = AuthState.Error(errorMessage)
+                return Result.Error(Exception(errorMessage))
+            }
+            
             // Save the API key temporarily to test it
             val originalApiKey = tokenProvider.getApiKey()
-            Log.d(TAG, "Saving API key for validation...")
-            tokenProvider.saveApiKey(apiKey)
+            Log.d(TAG, "Saving sanitized API key for validation...")
+            tokenProvider.saveApiKey(sanitizedApiKey)
             
             // Test the API key by making a request to the user endpoint
             Log.d(TAG, "Making request to getUserInfo() to validate API key...")
@@ -72,6 +84,15 @@ class AuthRepository @Inject constructor(
                 _authState.value = AuthState.Error(errorMessage)
                 Result.Error(Exception(errorMessage))
             }
+        } catch (e: IllegalArgumentException) {
+            Log.e(TAG, "Invalid API key format: ${e.message}", e)
+            val errorMessage = if (e.message?.contains("Authorization value") == true) {
+                "API key contains invalid characters. Please check your API key format."
+            } else {
+                "Invalid API key format: ${e.message}"
+            }
+            _authState.value = AuthState.Error(errorMessage)
+            Result.Error(e)
         } catch (e: Exception) {
             Log.e(TAG, "Exception during API key authentication: ${e.message}", e)
             val errorMessage = "Failed to validate API key: ${e.message}"

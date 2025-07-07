@@ -803,7 +803,10 @@ private fun ApiKeyInputContent(
             
             OutlinedTextField(
                 value = apiKey,
-                onValueChange = { apiKey = it },
+                onValueChange = { newValue -> 
+                    // Filter out newlines and carriage returns to prevent HTTP header issues
+                    apiKey = newValue.replace("\n", "").replace("\r", "")
+                },
                 label = { Text("Real-Debrid API Key") },
                 singleLine = true,
                 visualTransformation = if (isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
@@ -820,9 +823,9 @@ private fun ApiKeyInputContent(
                     .onKeyEvent { keyEvent ->
                         if (keyEvent.type == KeyEventType.KeyUp && 
                             (keyEvent.key == Key.DirectionCenter || keyEvent.key == Key.Enter) &&
-                            apiKey.isNotBlank()
+                            apiKey.trim().isNotBlank()
                         ) {
-                            onApiKeySubmit(apiKey)
+                            onApiKeySubmit(apiKey.trim())
                             true
                         } else {
                             false
@@ -870,11 +873,11 @@ private fun ApiKeyInputContent(
                 
                 Button(
                     onClick = { 
-                        if (apiKey.isNotBlank()) {
-                            onApiKeySubmit(apiKey)
+                        if (apiKey.trim().isNotBlank()) {
+                            onApiKeySubmit(apiKey.trim())
                         }
                     },
-                    enabled = apiKey.isNotBlank(),
+                    enabled = apiKey.trim().isNotBlank(),
                     modifier = Modifier
                         .focusRequester(submitFocusRequester)
                         .onFocusChanged { submitHasFocus = it.hasFocus }
