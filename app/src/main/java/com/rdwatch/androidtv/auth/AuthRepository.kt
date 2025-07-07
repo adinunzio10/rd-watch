@@ -45,8 +45,21 @@ class AuthRepository @Inject constructor(
             _authState.value = AuthState.Initializing
             
             // Sanitize the API key to prevent HTTP header issues
-            val sanitizedApiKey = apiKey.trim().replace("\n", "").replace("\r", "")
+            // HTTP headers only support ASCII printable characters (0x20-0x7E)
+            val trimmedApiKey = apiKey.trim()
+            val sanitizedApiKey = trimmedApiKey.filter { it.code in 0x20..0x7E }
+            
+            Log.d(TAG, "Original API key length: ${trimmedApiKey.length}")
             Log.d(TAG, "Sanitized API key length: ${sanitizedApiKey.length}")
+            
+            // Check if sanitization removed any characters
+            if (sanitizedApiKey.length != trimmedApiKey.length) {
+                Log.w(TAG, "API key contained invalid characters that were removed")
+                val removedCount = trimmedApiKey.length - sanitizedApiKey.length
+                val errorMessage = "API key contains $removedCount invalid character(s). Please use only standard ASCII characters (letters, numbers, and basic symbols)."
+                _authState.value = AuthState.Error(errorMessage)
+                return Result.Error(Exception(errorMessage))
+            }
             
             // Validate API key format
             if (sanitizedApiKey.isEmpty()) {
@@ -86,10 +99,23 @@ class AuthRepository @Inject constructor(
             }
         } catch (e: IllegalArgumentException) {
             Log.e(TAG, "Invalid API key format: ${e.message}", e)
-            val errorMessage = if (e.message?.contains("Authorization value") == true) {
-                "API key contains invalid characters. Please check your API key format."
-            } else {
-                "Invalid API key format: ${e.message}"
+            val errorMessage = when {
+                e.message?.contains("Authorization value") == true -> {
+                    // Extract character code if possible for better error message
+                    val charCodeMatch = Regex("char 0x([0-9a-fA-F]+)").find(e.message ?: "")
+                    if (charCodeMatch != null) {
+                        val charCode = charCodeMatch.groupValues[1].toIntOrNull(16)
+                        val charDescription = when (charCode) {
+                            in 0x2000..0x2FFF -> "special punctuation or symbol"
+                            in 0x1F000..0x1FFFF -> "emoji or pictograph"
+                            else -> "non-ASCII character"
+                        }
+                        "API key contains invalid $charDescription (Unicode 0x${charCodeMatch.groupValues[1]}). Please use only letters, numbers, and basic symbols."
+                    } else {
+                        "API key contains invalid characters. Please use only standard ASCII characters (letters, numbers, and basic symbols)."
+                    }
+                }
+                else -> "Invalid API key format: ${e.message}"
             }
             _authState.value = AuthState.Error(errorMessage)
             Result.Error(e)

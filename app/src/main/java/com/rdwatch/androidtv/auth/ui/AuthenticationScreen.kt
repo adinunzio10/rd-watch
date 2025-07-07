@@ -804,8 +804,9 @@ private fun ApiKeyInputContent(
             OutlinedTextField(
                 value = apiKey,
                 onValueChange = { newValue -> 
-                    // Filter out newlines and carriage returns to prevent HTTP header issues
-                    apiKey = newValue.replace("\n", "").replace("\r", "")
+                    // Filter to only ASCII printable characters (0x20-0x7E) to prevent HTTP header issues
+                    // This prevents emojis, Unicode symbols, newlines, and other invalid characters
+                    apiKey = newValue.filter { it.code in 0x20..0x7E }
                 },
                 label = { Text("Real-Debrid API Key") },
                 singleLine = true,
