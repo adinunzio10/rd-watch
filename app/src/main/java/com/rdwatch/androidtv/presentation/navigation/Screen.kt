@@ -33,6 +33,9 @@ sealed class Screen {
     
     @Serializable
     data class Error(val message: String, val canRetry: Boolean = true) : Screen()
+    
+    @Serializable
+    data class AccountFileBrowser(val accountType: String = "realdebrid") : Screen()
 }
 
 object Routes {
@@ -46,6 +49,7 @@ object Routes {
     const val PROFILE = "profile"
     const val AUTHENTICATION = "authentication"
     const val ERROR = "error/{message}/{canRetry}"
+    const val ACCOUNT_FILE_BROWSER = "account_file_browser/{accountType}"
     
     object Args {
         const val MOVIE_ID = "movieId"
@@ -53,5 +57,6 @@ object Routes {
         const val TITLE = "title"
         const val MESSAGE = "message"
         const val CAN_RETRY = "canRetry"
+        const val ACCOUNT_TYPE = "accountType"
     }
 }

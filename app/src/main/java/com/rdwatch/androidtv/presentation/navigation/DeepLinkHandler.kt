@@ -91,6 +91,7 @@ class DeepLinkHandler {
             is Screen.Profile -> "$SCHEME://$HOST/profile"
             is Screen.Authentication -> "$SCHEME://$HOST/auth"
             is Screen.Error -> "$SCHEME://$HOST/error?message=${Uri.encode(screen.message)}&canRetry=${screen.canRetry}"
+            is Screen.AccountFileBrowser -> "$SCHEME://$HOST/account_file_browser/${screen.accountType}"
         }
     }
 }

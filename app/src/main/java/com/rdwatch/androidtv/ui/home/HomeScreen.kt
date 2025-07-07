@@ -208,6 +208,7 @@ fun TVNavigationDrawer(
         NavigationItem("Home", Icons.Default.Home, Screen.Home),
         NavigationItem("Browse", Icons.Default.Apps, Screen.Browse),
         NavigationItem("Search", Icons.Default.Search, Screen.Search),
+        NavigationItem("My Files", Icons.Default.Folder, Screen.AccountFileBrowser()),
         NavigationItem("Profile", Icons.Default.Person, Screen.Profile),
         NavigationItem("Settings", Icons.Default.Settings, Screen.Settings)
     )
