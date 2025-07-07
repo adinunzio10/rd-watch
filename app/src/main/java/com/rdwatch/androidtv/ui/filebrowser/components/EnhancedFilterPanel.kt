@@ -127,8 +127,8 @@ private fun FilterPanelHeader(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    .padding(horizontal = 12.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 // Filter icon
@@ -185,8 +185,8 @@ private fun FilterPanelHeader(
                 // Active filters preview
                 if (activeFilterCount > 0 && !isExpanded) {
                     LazyRow(
-                        horizontalArrangement = Arrangement.spacedBy(4.dp),
-                        modifier = Modifier.width(120.dp)
+                        horizontalArrangement = Arrangement.spacedBy(2.dp),
+                        modifier = Modifier.width(150.dp)
                     ) {
                         items(getActiveFilterTags(filterOptions).take(3)) { tag ->
                             Surface(
@@ -196,7 +196,7 @@ private fun FilterPanelHeader(
                                 Text(
                                     text = tag,
                                     style = MaterialTheme.typography.bodySmall,
-                                    fontSize = 10.sp,
+                                    fontSize = 9.sp,
                                     modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                                     color = MaterialTheme.colorScheme.primary
                                 )
@@ -212,7 +212,7 @@ private fun FilterPanelHeader(
                                     Text(
                                         text = "+${activeFilterCount - 3}",
                                         style = MaterialTheme.typography.bodySmall,
-                                        fontSize = 10.sp,
+                                        fontSize = 9.sp,
                                         modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                                         color = MaterialTheme.colorScheme.primary
                                     )
@@ -255,8 +255,8 @@ private fun FilterPanelContent(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(20.dp)
+            .padding(12.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         // Search filter
         SearchFilterSection(
@@ -536,8 +536,8 @@ private fun FilterToggleChip(
             } else null
         ) {
             Row(
-                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(

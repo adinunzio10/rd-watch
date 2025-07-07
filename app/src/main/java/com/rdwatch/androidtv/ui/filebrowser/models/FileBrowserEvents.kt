@@ -26,6 +26,7 @@ sealed class FileBrowserEvent {
     data class RefreshFailed(val error: String) : FileBrowserEvent()
     data class RecoveryStarted(val operationType: BulkOperationType) : FileBrowserEvent()
     data class RecoveryCompleted(val recoveredCount: Int) : FileBrowserEvent()
+    data class ViewModeChanged(val viewMode: ViewMode) : FileBrowserEvent()
 }
 
 /**
