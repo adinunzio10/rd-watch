@@ -131,6 +131,9 @@ class AuthRepository @Inject constructor(
             
             if (response.isSuccessful) {
                 val deviceCodeResponse = response.body()!!
+                Log.d(TAG, "Device code response received: $deviceCodeResponse")
+                Log.d(TAG, "Verification URI: ${deviceCodeResponse.verificationUri}")
+                
                 val deviceCodeInfo = DeviceCodeInfo(
                     deviceCode = deviceCodeResponse.deviceCode,
                     userCode = deviceCodeResponse.userCode,
@@ -138,6 +141,9 @@ class AuthRepository @Inject constructor(
                     expiresIn = deviceCodeResponse.expiresIn,
                     interval = deviceCodeResponse.interval
                 )
+                
+                Log.d(TAG, "DeviceCodeInfo created: $deviceCodeInfo")
+                Log.d(TAG, "Complete verification URI: ${deviceCodeInfo.verificationUriComplete}")
                 
                 _authState.value = AuthState.WaitingForUser(deviceCodeInfo)
                 Result.Success(deviceCodeInfo)

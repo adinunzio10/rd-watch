@@ -72,10 +72,20 @@ class AuthViewModel @Inject constructor(
     
     private fun generateQRCode(deviceCodeInfo: DeviceCodeInfo) {
         viewModelScope.launch {
-            val bitmap = qrCodeGenerator.generateTVOptimizedQRCode(
-                text = deviceCodeInfo.verificationUriComplete
-            )
-            _qrCodeBitmap.value = bitmap
+            try {
+                Log.d(TAG, "Generating QR code for: ${deviceCodeInfo.verificationUriComplete}")
+                val bitmap = qrCodeGenerator.generateTVOptimizedQRCode(
+                    text = deviceCodeInfo.verificationUriComplete
+                )
+                if (bitmap != null) {
+                    Log.d(TAG, "QR code generated successfully")
+                    _qrCodeBitmap.value = bitmap
+                } else {
+                    Log.e(TAG, "QR code generation failed - bitmap is null")
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error generating QR code", e)
+            }
         }
     }
     
