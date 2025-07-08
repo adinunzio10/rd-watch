@@ -1,6 +1,7 @@
 package com.rdwatch.androidtv.auth.ui
 
 import android.graphics.Bitmap
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.rdwatch.androidtv.auth.AuthRepository
@@ -21,6 +22,10 @@ class AuthViewModel @Inject constructor(
     private val qrCodeGenerator: QRCodeGenerator
 ) : ViewModel() {
     
+    companion object {
+        private const val TAG = "AuthViewModel"
+    }
+    
     private val _authState = MutableStateFlow<AuthState>(AuthState.Initializing)
     val authState: StateFlow<AuthState> = _authState.asStateFlow()
     
@@ -31,7 +36,9 @@ class AuthViewModel @Inject constructor(
         // Observe auth state from repository
         viewModelScope.launch {
             authRepository.authState.collect { state ->
+                Log.d(TAG, "Repository auth state changed to: $state")
                 _authState.value = state
+                Log.d(TAG, "ViewModel auth state updated to: ${_authState.value}")
                 
                 // Generate QR code when waiting for user
                 if (state is AuthState.WaitingForUser) {
@@ -117,6 +124,21 @@ class AuthViewModel @Inject constructor(
     fun checkAuthenticationState() {
         viewModelScope.launch {
             authRepository.checkAuthState()
+        }
+    }
+    
+    fun startApiKeyAuthentication() {
+        authRepository.startApiKeyAuthentication()
+    }
+    
+    fun authenticateWithApiKey(apiKey: String) {
+        Log.d(TAG, "authenticateWithApiKey() called")
+        viewModelScope.launch {
+            Log.d(TAG, "Calling repository.authenticateWithApiKey()")
+            val result = authRepository.authenticateWithApiKey(apiKey)
+            Log.d(TAG, "Repository authenticateWithApiKey() returned: $result")
+            // Don't override the state here - let the repository's authState flow handle it
+            // The repository will set the appropriate state (Authenticated, Error, etc.)
         }
     }
 }

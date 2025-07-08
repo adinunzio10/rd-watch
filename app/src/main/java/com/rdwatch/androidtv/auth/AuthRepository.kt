@@ -4,6 +4,7 @@ import android.util.Log
 import com.rdwatch.androidtv.auth.models.AuthState
 import com.rdwatch.androidtv.auth.models.DeviceCodeInfo
 import com.rdwatch.androidtv.network.api.OAuth2ApiService
+import com.rdwatch.androidtv.network.api.RealDebridApiService
 import com.rdwatch.androidtv.network.interceptors.TokenProvider
 import com.rdwatch.androidtv.network.models.OAuth2ErrorResponse
 import com.rdwatch.androidtv.repository.base.Result
@@ -19,6 +20,7 @@ import javax.inject.Singleton
 @Singleton
 class AuthRepository @Inject constructor(
     private val oauth2ApiService: OAuth2ApiService,
+    private val realDebridApiService: RealDebridApiService,
     private val tokenProvider: TokenProvider,
     private val moshi: Moshi
 ) {
@@ -36,6 +38,90 @@ class AuthRepository @Inject constructor(
      * Get current authentication state value
      */
     fun getCurrentAuthState(): AuthState = _authState.value
+
+    suspend fun authenticateWithApiKey(apiKey: String): Result<Unit> {
+        return try {
+            Log.d(TAG, "authenticateWithApiKey() called with API key length: ${apiKey.length}")
+            _authState.value = AuthState.Initializing
+            
+            // Sanitize the API key to prevent HTTP header issues
+            // HTTP headers only support ASCII printable characters (0x20-0x7E)
+            val trimmedApiKey = apiKey.trim()
+            val sanitizedApiKey = trimmedApiKey.filter { it.code in 0x20..0x7E }
+            
+            Log.d(TAG, "Original API key length: ${trimmedApiKey.length}")
+            Log.d(TAG, "Sanitized API key length: ${sanitizedApiKey.length}")
+            
+            // Check if sanitization removed any characters
+            if (sanitizedApiKey.length != trimmedApiKey.length) {
+                Log.w(TAG, "API key contained invalid characters that were removed")
+                val removedCount = trimmedApiKey.length - sanitizedApiKey.length
+                val errorMessage = "API key contains $removedCount invalid character(s). Please use only standard ASCII characters (letters, numbers, and basic symbols)."
+                _authState.value = AuthState.Error(errorMessage)
+                return Result.Error(Exception(errorMessage))
+            }
+            
+            // Validate API key format
+            if (sanitizedApiKey.isEmpty()) {
+                Log.e(TAG, "API key is empty after sanitization")
+                val errorMessage = "API key cannot be empty"
+                _authState.value = AuthState.Error(errorMessage)
+                return Result.Error(Exception(errorMessage))
+            }
+            
+            // Validate API key length (Real-Debrid API keys are typically 32-52 characters)
+            if (sanitizedApiKey.length < 10) {
+                Log.e(TAG, "API key too short: ${sanitizedApiKey.length} characters")
+                val errorMessage = "API key is too short (${sanitizedApiKey.length} characters). Real-Debrid API keys are typically 32-52 characters long."
+                _authState.value = AuthState.Error(errorMessage)
+                return Result.Error(Exception(errorMessage))
+            }
+            
+            if (sanitizedApiKey.length > 100) {
+                Log.e(TAG, "API key too long: ${sanitizedApiKey.length} characters")
+                val errorMessage = "API key is too long (${sanitizedApiKey.length} characters). Real-Debrid API keys are typically 32-52 characters long. Please check that you copied only the API key, not log text or other content."
+                _authState.value = AuthState.Error(errorMessage)
+                return Result.Error(Exception(errorMessage))
+            }
+            
+            // Check for common mistakes (log text, URLs, etc.)
+            if (sanitizedApiKey.contains("AuthRepository") || 
+                sanitizedApiKey.contains("AuthViewModel") ||
+                sanitizedApiKey.contains("10778-10778") ||
+                sanitizedApiKey.contains("2025-")) {
+                Log.e(TAG, "API key appears to contain log text or other invalid content")
+                val errorMessage = "The text you entered appears to be log output, not an API key. Please copy only your Real-Debrid API key from your account settings."
+                _authState.value = AuthState.Error(errorMessage)
+                return Result.Error(Exception(errorMessage))
+            }
+            
+            // API key is valid format - save it and authenticate immediately
+            // Note: API keys don't need validation - they ARE the authentication
+            Log.d(TAG, "API key format is valid, saving and authenticating...")
+            
+            // Clear any existing OAuth tokens and save the API key
+            tokenProvider.clearTokens()
+            tokenProvider.saveApiKey(sanitizedApiKey)
+            Log.d(TAG, "Saved API key and cleared OAuth tokens")
+            
+            // Immediately set authenticated state - no validation needed for API keys
+            _authState.value = AuthState.Authenticated
+            Log.d(TAG, "AuthState set to Authenticated immediately (API keys don't need validation)")
+            Log.d(TAG, "API key authentication completed successfully")
+            
+            Result.Success(Unit)
+            
+        } catch (e: Exception) {
+            Log.e(TAG, "Exception during API key authentication: ${e.message}", e)
+            val errorMessage = "Failed to save API key: ${e.message}"
+            _authState.value = AuthState.Error(errorMessage)
+            Result.Error(e)
+        }
+    }
+    
+    fun startApiKeyAuthentication() {
+        _authState.value = AuthState.ApiKeyEntry
+    }
     
     suspend fun startDeviceFlow(): Result<DeviceCodeInfo> {
         return try {
@@ -205,6 +291,7 @@ class AuthRepository @Inject constructor(
     
     suspend fun logout() {
         tokenProvider.clearTokens()
+        tokenProvider.clearApiKey()
         _authState.value = AuthState.Unauthenticated
     }
     
@@ -221,19 +308,37 @@ class AuthRepository @Inject constructor(
         try {
             Log.d(TAG, "Checking if token is valid...")
             val accessToken = tokenProvider.getAccessToken()
+            val apiKey = tokenProvider.getApiKey()
             
             if (accessToken != null) {
-                Log.d(TAG, "Token is valid, setting state to Authenticated")
+                Log.d(TAG, "OAuth token is valid, setting state to Authenticated")
                 _authState.value = AuthState.Authenticated
+            } else if (apiKey != null) {
+                Log.d(TAG, "API key found, validating...")
+                // Validate API key by making a test request
+                try {
+                    val response = realDebridApiService.getUserInfo()
+                    if (response.isSuccessful) {
+                        Log.d(TAG, "API key is valid, setting state to Authenticated")
+                        _authState.value = AuthState.Authenticated
+                    } else {
+                        Log.d(TAG, "API key is invalid, clearing and requiring authentication")
+                        tokenProvider.clearApiKey()
+                        _authState.value = AuthState.Unauthenticated
+                    }
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error validating API key: ${e.message}")
+                    _authState.value = AuthState.Unauthenticated
+                }
             } else {
-                Log.d(TAG, "Token not valid, checking for refresh token...")
+                Log.d(TAG, "No access token or API key, checking for refresh token...")
                 val refreshToken = tokenProvider.getRefreshToken()
                 
                 if (refreshToken != null) {
                     Log.d(TAG, "Has refresh token, attempting refresh...")
                     refreshTokenIfNeeded()
                 } else {
-                    Log.d(TAG, "No refresh token, user needs to authenticate")
+                    Log.d(TAG, "No credentials found, user needs to authenticate")
                     _authState.value = AuthState.Unauthenticated
                 }
             }

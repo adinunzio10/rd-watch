@@ -40,6 +40,7 @@ fun AuthGuard(
             }
             is AuthState.Unauthenticated,
             is AuthState.WaitingForUser,
+            is AuthState.ApiKeyEntry,
             is AuthState.Error -> {
                 // Only trigger redirect once to prevent infinite loops
                 if (!hasTriggeredRedirect) {

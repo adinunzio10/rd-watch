@@ -17,18 +17,21 @@ interface OAuth2ApiService {
         const val OAUTH_BASE_URL = "https://api.real-debrid.com/"
     }
     
+    @NoAuth
     @GET("oauth/v2/device/code")
     suspend fun getDeviceCode(
         @Query("client_id") clientId: String,
         @Query("new_credentials") newCredentials: String = "yes"
     ): Response<OAuth2DeviceCodeResponse>
     
+    @NoAuth
     @GET("oauth/v2/device/credentials")
     suspend fun getDeviceCredentials(
         @Query("client_id") clientId: String,
         @Query("code") deviceCode: String
     ): Response<OAuth2CredentialsResponse>
     
+    @NoAuth
     @FormUrlEncoded
     @POST("oauth/v2/token")
     suspend fun getDeviceToken(

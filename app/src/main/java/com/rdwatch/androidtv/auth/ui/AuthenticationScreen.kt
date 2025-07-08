@@ -18,9 +18,13 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Login
+import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -28,8 +32,11 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -48,6 +55,8 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEvent
 import androidx.compose.ui.input.key.KeyEventType
@@ -92,7 +101,8 @@ fun AuthenticationScreen(
             }
             is AuthState.Unauthenticated -> {
                 UnauthenticatedContent(
-                    onStartAuthentication = { viewModel.startAuthentication() }
+                    onStartAuthentication = { viewModel.startAuthentication() },
+                    onStartApiKeyAuthentication = { viewModel.startApiKeyAuthentication() }
                 )
             }
             is AuthState.WaitingForUser -> {
@@ -100,6 +110,12 @@ fun AuthenticationScreen(
                     deviceCodeInfo = state.deviceCodeInfo,
                     qrCodeBitmap = qrCodeBitmap,
                     onRetry = { viewModel.startAuthentication() }
+                )
+            }
+            is AuthState.ApiKeyEntry -> {
+                ApiKeyInputContent(
+                    onApiKeySubmit = { apiKey -> viewModel.authenticateWithApiKey(apiKey) },
+                    onBack = { viewModel.checkAuthenticationState() }
                 )
             }
             is AuthState.Authenticated -> {
@@ -154,7 +170,8 @@ private fun InitializingContent() {
 
 @Composable
 private fun UnauthenticatedContent(
-    onStartAuthentication: () -> Unit
+    onStartAuthentication: () -> Unit,
+    onStartApiKeyAuthentication: () -> Unit
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(0.8f),
@@ -190,28 +207,66 @@ private fun UnauthenticatedContent(
             )
             Spacer(modifier = Modifier.height(32.dp))
             
-            Button(
-                onClick = onStartAuthentication,
-                modifier = Modifier
-                    .fillMaxWidth(0.6f)
-                    .height(56.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary
-                )
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(24.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.Login,
-                    contentDescription = null,
-                    modifier = Modifier.size(20.dp)
-                )
-                Spacer(modifier = Modifier.width(12.dp))
-                Text(
-                    text = "Start Authentication",
-                    style = MaterialTheme.typography.labelLarge.copy(
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.SemiBold
+                Button(
+                    onClick = onStartAuthentication,
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(56.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary
                     )
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.Login,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "OAuth2 Authentication",
+                        style = MaterialTheme.typography.labelLarge.copy(
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    )
+                }
+                
+                Text(
+                    text = "OR",
+                    style = MaterialTheme.typography.bodyLarge.copy(
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Medium
+                    ),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+                
+                Button(
+                    onClick = onStartApiKeyAuthentication,
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(56.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.secondary
+                    )
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Key,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Enter API Key",
+                        style = MaterialTheme.typography.labelLarge.copy(
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    )
+                }
             }
         }
     }
@@ -693,5 +748,172 @@ private fun getErrorDescription(message: String): String {
         message.contains("invalid", ignoreCase = true) -> 
             "There was an error with the authentication request."
         else -> "An unexpected error occurred during authentication. Please try again."
+    }
+}
+
+@Composable
+private fun ApiKeyInputContent(
+    onApiKeySubmit: (String) -> Unit,
+    onBack: () -> Unit
+) {
+    var apiKey by remember { mutableStateOf("") }
+    var isPasswordVisible by remember { mutableStateOf(false) }
+    val submitFocusRequester = remember { FocusRequester() }
+    val backFocusRequester = remember { FocusRequester() }
+    var submitHasFocus by remember { mutableStateOf(false) }
+    var backHasFocus by remember { mutableStateOf(false) }
+    
+    LaunchedEffect(Unit) {
+        submitFocusRequester.requestFocus()
+    }
+    
+    Card(
+        modifier = Modifier.fillMaxWidth(0.8f),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(48.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Icon(
+                imageVector = Icons.Default.Key,
+                contentDescription = "API Key Entry",
+                modifier = Modifier.size(64.dp),
+                tint = MaterialTheme.colorScheme.primary
+            )
+            Spacer(modifier = Modifier.height(24.dp))
+            Text(
+                text = "Enter API Key",
+                style = MaterialTheme.typography.headlineMedium.copy(
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.SemiBold
+                ),
+                textAlign = TextAlign.Center,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = "Find your API key in Real-Debrid settings under 'API Key'",
+                style = MaterialTheme.typography.bodyLarge.copy(fontSize = 16.sp),
+                textAlign = TextAlign.Center,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            Text(
+                text = "API keys are typically 32-52 characters long (letters and numbers only)",
+                style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp),
+                textAlign = TextAlign.Center,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
+            )
+            Spacer(modifier = Modifier.height(32.dp))
+            
+            OutlinedTextField(
+                value = apiKey,
+                onValueChange = { newValue -> 
+                    // Filter to only ASCII printable characters (0x20-0x7E) to prevent HTTP header issues
+                    // This prevents emojis, Unicode symbols, newlines, and other invalid characters
+                    apiKey = newValue.filter { it.code in 0x20..0x7E }
+                },
+                label = { Text("Real-Debrid API Key") },
+                singleLine = true,
+                visualTransformation = if (isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                trailingIcon = {
+                    IconButton(onClick = { isPasswordVisible = !isPasswordVisible }) {
+                        Icon(
+                            imageVector = if (isPasswordVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
+                            contentDescription = if (isPasswordVisible) "Hide API key" else "Show API key"
+                        )
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth(0.8f)
+                    .onKeyEvent { keyEvent ->
+                        if (keyEvent.type == KeyEventType.KeyUp && 
+                            (keyEvent.key == Key.DirectionCenter || keyEvent.key == Key.Enter) &&
+                            apiKey.trim().isNotBlank()
+                        ) {
+                            onApiKeySubmit(apiKey.trim())
+                            true
+                        } else {
+                            false
+                        }
+                    },
+                colors = TextFieldDefaults.colors()
+            )
+            
+            Spacer(modifier = Modifier.height(32.dp))
+            
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Button(
+                    onClick = onBack,
+                    modifier = Modifier
+                        .focusRequester(backFocusRequester)
+                        .onFocusChanged { backHasFocus = it.hasFocus }
+                        .border(
+                            width = if (backHasFocus) 3.dp else 0.dp,
+                            color = if (backHasFocus) MaterialTheme.colorScheme.primary else Color.Transparent,
+                            shape = RoundedCornerShape(8.dp)
+                        )
+                        .height(56.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.surface,
+                        contentColor = MaterialTheme.colorScheme.onSurface
+                    )
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Back",
+                        style = MaterialTheme.typography.labelLarge.copy(
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    )
+                }
+                
+                Button(
+                    onClick = { 
+                        if (apiKey.trim().isNotBlank()) {
+                            onApiKeySubmit(apiKey.trim())
+                        }
+                    },
+                    enabled = apiKey.trim().isNotBlank(),
+                    modifier = Modifier
+                        .focusRequester(submitFocusRequester)
+                        .onFocusChanged { submitHasFocus = it.hasFocus }
+                        .border(
+                            width = if (submitHasFocus) 3.dp else 0.dp,
+                            color = if (submitHasFocus) MaterialTheme.colorScheme.primary else Color.Transparent,
+                            shape = RoundedCornerShape(8.dp)
+                        )
+                        .height(56.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary
+                    )
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.Login,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Sign In",
+                        style = MaterialTheme.typography.labelLarge.copy(
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    )
+                }
+            }
+        }
     }
 }
