@@ -10,7 +10,7 @@ data class FileBrowserPreferences(
     val showHiddenFiles: Boolean = false,
     val rememberLastPath: Boolean = true,
     val lastVisitedPath: String = "/",
-    val defaultViewMode: ViewMode = ViewMode.GRID,
+    val defaultViewMode: ViewMode = ViewMode.LIST,
     val gridColumnCount: Int = 4,
     val showFileSize: Boolean = true,
     val showModifiedDate: Boolean = true,
@@ -20,14 +20,6 @@ data class FileBrowserPreferences(
     val defaultFileTypeFilter: Set<FileType> = emptySet()
 )
 
-/**
- * View modes for displaying files
- */
-enum class ViewMode {
-    GRID,
-    LIST,
-    COMPACT
-}
 
 /**
  * Preference keys for DataStore

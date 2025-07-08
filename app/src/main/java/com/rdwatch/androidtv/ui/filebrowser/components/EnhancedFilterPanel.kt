@@ -127,8 +127,8 @@ private fun FilterPanelHeader(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    .padding(horizontal = 12.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 // Filter icon
@@ -185,8 +185,8 @@ private fun FilterPanelHeader(
                 // Active filters preview
                 if (activeFilterCount > 0 && !isExpanded) {
                     LazyRow(
-                        horizontalArrangement = Arrangement.spacedBy(4.dp),
-                        modifier = Modifier.width(120.dp)
+                        horizontalArrangement = Arrangement.spacedBy(2.dp),
+                        modifier = Modifier.width(150.dp)
                     ) {
                         items(getActiveFilterTags(filterOptions).take(3)) { tag ->
                             Surface(
@@ -196,7 +196,7 @@ private fun FilterPanelHeader(
                                 Text(
                                     text = tag,
                                     style = MaterialTheme.typography.bodySmall,
-                                    fontSize = 10.sp,
+                                    fontSize = 9.sp,
                                     modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                                     color = MaterialTheme.colorScheme.primary
                                 )
@@ -212,7 +212,7 @@ private fun FilterPanelHeader(
                                     Text(
                                         text = "+${activeFilterCount - 3}",
                                         style = MaterialTheme.typography.bodySmall,
-                                        fontSize = 10.sp,
+                                        fontSize = 9.sp,
                                         modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                                         color = MaterialTheme.colorScheme.primary
                                     )
@@ -252,74 +252,90 @@ private fun FilterPanelContent(
         currentFilters = filterOptions
     }
     
-    Column(
+    LazyRow(
         modifier = modifier
             .fillMaxWidth()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(20.dp)
+            .padding(12.dp),
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+        contentPadding = PaddingValues(horizontal = 4.dp)
     ) {
         // Search filter
-        SearchFilterSection(
-            searchQuery = currentFilters.searchQuery,
-            onSearchChange = { query ->
-                currentFilters = currentFilters.copy(searchQuery = query)
-                onFilterChange(currentFilters)
-            }
-        )
+        item {
+            SearchFilterSection(
+                searchQuery = currentFilters.searchQuery,
+                onSearchChange = { query ->
+                    currentFilters = currentFilters.copy(searchQuery = query)
+                    onFilterChange(currentFilters)
+                },
+                modifier = Modifier.width(280.dp)
+            )
+        }
         
         // Quick filters (toggles)
-        QuickFiltersSection(
-            showOnlyPlayable = currentFilters.showOnlyPlayable,
-            showOnlyDownloaded = currentFilters.showOnlyDownloaded,
-            onPlayableToggle = { 
-                currentFilters = currentFilters.copy(showOnlyPlayable = it)
-                onFilterChange(currentFilters)
-            },
-            onDownloadedToggle = { 
-                currentFilters = currentFilters.copy(showOnlyDownloaded = it)
-                onFilterChange(currentFilters)
-            }
-        )
+        item {
+            QuickFiltersSection(
+                showOnlyPlayable = currentFilters.showOnlyPlayable,
+                showOnlyDownloaded = currentFilters.showOnlyDownloaded,
+                onPlayableToggle = { 
+                    currentFilters = currentFilters.copy(showOnlyPlayable = it)
+                    onFilterChange(currentFilters)
+                },
+                onDownloadedToggle = { 
+                    currentFilters = currentFilters.copy(showOnlyDownloaded = it)
+                    onFilterChange(currentFilters)
+                },
+                modifier = Modifier.width(240.dp)
+            )
+        }
         
         // File type filters
-        FileTypeFiltersSection(
-            selectedTypes = currentFilters.fileTypeFilter,
-            onTypeToggle = { fileType ->
-                val newFilter = if (currentFilters.fileTypeFilter.contains(fileType)) {
-                    currentFilters.fileTypeFilter - fileType
-                } else {
-                    currentFilters.fileTypeFilter + fileType
-                }
-                currentFilters = currentFilters.copy(fileTypeFilter = newFilter)
-                onFilterChange(currentFilters)
-            }
-        )
+        item {
+            FileTypeFiltersSection(
+                selectedTypes = currentFilters.fileTypeFilter,
+                onTypeToggle = { fileType ->
+                    val newFilter = if (currentFilters.fileTypeFilter.contains(fileType)) {
+                        currentFilters.fileTypeFilter - fileType
+                    } else {
+                        currentFilters.fileTypeFilter + fileType
+                    }
+                    currentFilters = currentFilters.copy(fileTypeFilter = newFilter)
+                    onFilterChange(currentFilters)
+                },
+                modifier = Modifier.width(320.dp)
+            )
+        }
         
         // Status filters
-        StatusFiltersSection(
-            selectedStatuses = currentFilters.statusFilter,
-            onStatusToggle = { status ->
-                val newFilter = if (currentFilters.statusFilter.contains(status)) {
-                    currentFilters.statusFilter - status
-                } else {
-                    currentFilters.statusFilter + status
-                }
-                currentFilters = currentFilters.copy(statusFilter = newFilter)
-                onFilterChange(currentFilters)
-            }
-        )
+        item {
+            StatusFiltersSection(
+                selectedStatuses = currentFilters.statusFilter,
+                onStatusToggle = { status ->
+                    val newFilter = if (currentFilters.statusFilter.contains(status)) {
+                        currentFilters.statusFilter - status
+                    } else {
+                        currentFilters.statusFilter + status
+                    }
+                    currentFilters = currentFilters.copy(statusFilter = newFilter)
+                    onFilterChange(currentFilters)
+                },
+                modifier = Modifier.width(280.dp)
+            )
+        }
         
         // Action buttons
-        FilterActionButtons(
-            hasActiveFilters = getActiveFilterCount(currentFilters) > 0,
-            onReset = {
-                currentFilters = FilterOptions()
-                onFilterChange(currentFilters)
-            },
-            onApply = {
-                onFilterChange(currentFilters)
-            }
-        )
+        item {
+            FilterActionButtons(
+                hasActiveFilters = getActiveFilterCount(currentFilters) > 0,
+                onReset = {
+                    currentFilters = FilterOptions()
+                    onFilterChange(currentFilters)
+                },
+                onApply = {
+                    onFilterChange(currentFilters)
+                },
+                modifier = Modifier.width(200.dp)
+            )
+        }
     }
 }
 
@@ -536,8 +552,8 @@ private fun FilterToggleChip(
             } else null
         ) {
             Row(
-                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(

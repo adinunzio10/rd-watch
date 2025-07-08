@@ -195,6 +195,18 @@ class AccountFileBrowserViewModel @Inject constructor(
     }
     
     /**
+     * Change view mode
+     */
+    fun changeViewMode(viewMode: ViewMode) {
+        updateState { copy(viewMode = viewMode) }
+        
+        // Emit view mode change event if needed
+        launchSafely {
+            _events.emit(FileBrowserEvent.ViewModeChanged(viewMode))
+        }
+    }
+    
+    /**
      * Update filter options
      */
     fun updateFilter(filterOptions: FilterOptions) {

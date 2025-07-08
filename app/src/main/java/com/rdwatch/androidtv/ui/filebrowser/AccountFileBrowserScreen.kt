@@ -5,6 +5,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -39,7 +43,7 @@ fun AccountFileBrowserScreen(
     onBackPressed: () -> Unit = {},
     viewModel: AccountFileBrowserViewModel = hiltViewModel()
 ) {
-    val overscanMargin = 32.dp
+    val overscanMargin = 24.dp
     val firstFocusRequester = remember { FocusRequester() }
     val listState = rememberLazyListState()
     
@@ -74,6 +78,9 @@ fun AccountFileBrowserScreen(
                 is FileBrowserEvent.ShowConfirmDialog -> {
                     // Handle confirmation dialog - you can implement this based on your needs
                 }
+                is FileBrowserEvent.ViewModeChanged -> {
+                    // View mode changed - UI will update automatically via state
+                }
                 else -> {
                     // Handle other events as needed
                 }
@@ -90,7 +97,7 @@ fun AccountFileBrowserScreen(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
             .padding(overscanMargin),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         // Header with navigation and account info
         FileBrowserHeader(
@@ -113,10 +120,10 @@ fun AccountFileBrowserScreen(
             onPlaySelected = { viewModel.playSelectedFiles() }
         )
         
-        // Enhanced sorting controls
+        // Enhanced sorting controls, view mode selector, and multi-select in single compact row
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Enhanced Sorting UI
@@ -127,6 +134,12 @@ fun AccountFileBrowserScreen(
                 modifier = Modifier.weight(1f)
             )
             
+            // View mode selector
+            ViewModeSelector(
+                currentViewMode = uiState.viewMode,
+                onViewModeChange = { viewModel.changeViewMode(it) }
+            )
+            
             // Multi-select toggle button
             if (!uiState.isMultiSelectMode) {
                 var multiSelectFocused by remember { mutableStateOf(false) }
@@ -134,13 +147,16 @@ fun AccountFileBrowserScreen(
                 TVFocusIndicator(isFocused = multiSelectFocused) {
                     IconButton(
                         onClick = { viewModel.toggleMultiSelect() },
-                        modifier = Modifier.tvFocusable(
-                            onFocusChanged = { multiSelectFocused = it.isFocused }
-                        )
+                        modifier = Modifier
+                            .size(36.dp)
+                            .tvFocusable(
+                                onFocusChanged = { multiSelectFocused = it.isFocused }
+                            )
                     ) {
                         Icon(
                             imageVector = Icons.Default.CheckBox,
                             contentDescription = "Enable multi-select",
+                            modifier = Modifier.size(20.dp),
                             tint = if (multiSelectFocused) {
                                 MaterialTheme.colorScheme.primary
                             } else {
@@ -166,6 +182,7 @@ fun AccountFileBrowserScreen(
             selectedItems = uiState.selectedItems,
             isMultiSelectMode = uiState.isMultiSelectMode,
             paginationState = uiState.paginationState,
+            viewMode = uiState.viewMode,
             onFileClick = onFileClick,
             onFolderClick = onFolderClick,
             onTorrentClick = onTorrentClick,
@@ -220,7 +237,7 @@ private fun FileBrowserHeader(
     firstFocusRequester: FocusRequester
 ) {
     Column(
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         // Top row with back button and account type
         Row(
@@ -259,8 +276,8 @@ private fun FileBrowserHeader(
                 color = MaterialTheme.colorScheme.primaryContainer
             ) {
                 Row(
-                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
@@ -337,6 +354,7 @@ private fun FileBrowserContent(
     selectedItems: Set<String>,
     isMultiSelectMode: Boolean,
     paginationState: PaginationState,
+    viewMode: ViewMode,
     onFileClick: (FileItem.File) -> Unit,
     onFolderClick: (FileItem.Folder) -> Unit,
     onTorrentClick: (FileItem.Torrent) -> Unit,
@@ -433,52 +451,163 @@ private fun FileBrowserContent(
                     }
                 }
             } else {
-                LazyColumn(
-                    state = listState,
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                    contentPadding = PaddingValues(vertical = 8.dp)
-                ) {
-                    items(contentState.data) { item ->
-                        SelectableFileItem(
-                            item = item,
-                            isSelected = selectedItems.contains(item.id),
-                            isMultiSelectMode = isMultiSelectMode,
-                            onSelect = { onItemSelect(it) },
-                            onLongPress = { onItemLongClick(it) },
-                            onClick = { clickedItem ->
-                                when (clickedItem) {
-                                    is FileItem.File -> onFileClick(clickedItem)
-                                    is FileItem.Folder -> onFolderClick(clickedItem)
-                                    is FileItem.Torrent -> onTorrentClick(clickedItem)
+                when (viewMode) {
+                    ViewMode.LIST -> {
+                        LazyColumn(
+                            state = listState,
+                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                            contentPadding = PaddingValues(vertical = 8.dp)
+                        ) {
+                            items(contentState.data) { item ->
+                                SelectableFileItem(
+                                    item = item,
+                                    isSelected = selectedItems.contains(item.id),
+                                    isMultiSelectMode = isMultiSelectMode,
+                                    onSelect = { onItemSelect(it) },
+                                    onLongPress = { onItemLongClick(it) },
+                                    onClick = { clickedItem ->
+                                        when (clickedItem) {
+                                            is FileItem.File -> onFileClick(clickedItem)
+                                            is FileItem.Folder -> onFolderClick(clickedItem)
+                                            is FileItem.Torrent -> onTorrentClick(clickedItem)
+                                        }
+                                    }
+                                )
+                            }
+                            
+                            // Pagination loading item
+                            if (paginationState.hasMore || paginationState.isLoadingMore) {
+                                item {
+                                    LoadMoreItem(
+                                        isLoading = paginationState.isLoadingMore,
+                                        hasMore = paginationState.hasMore,
+                                        onLoadMore = onLoadMore
+                                    )
                                 }
                             }
-                        )
+                        }
+                        
+                        // Auto-trigger load more for list view
+                        LaunchedEffect(listState) {
+                            snapshotFlow { listState.layoutInfo.visibleItemsInfo }
+                                .collect { visibleItems ->
+                                    val totalItems = listState.layoutInfo.totalItemsCount
+                                    val lastVisibleIndex = visibleItems.lastOrNull()?.index ?: 0
+                                    
+                                    if (totalItems > 0 && lastVisibleIndex >= totalItems - 5 && paginationState.hasMore && !paginationState.isLoadingMore) {
+                                        onLoadMore()
+                                    }
+                                }
+                        }
                     }
                     
-                    // Pagination loading item and trigger
-                    if (paginationState.hasMore || paginationState.isLoadingMore) {
-                        item {
-                            LoadMoreItem(
-                                isLoading = paginationState.isLoadingMore,
-                                hasMore = paginationState.hasMore,
-                                onLoadMore = onLoadMore
-                            )
-                        }
-                    }
-                }
-                
-                // Auto-trigger load more when approaching end
-                LaunchedEffect(listState) {
-                    snapshotFlow { listState.layoutInfo.visibleItemsInfo }
-                        .collect { visibleItems ->
-                            val totalItems = listState.layoutInfo.totalItemsCount
-                            val lastVisibleIndex = visibleItems.lastOrNull()?.index ?: 0
+                    ViewMode.TILES -> {
+                        val gridState = rememberLazyGridState()
+                        
+                        LazyVerticalGrid(
+                            columns = GridCells.Adaptive(minSize = 180.dp),
+                            state = gridState,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp),
+                            contentPadding = PaddingValues(vertical = 8.dp)
+                        ) {
+                            items(contentState.data) { item ->
+                                TileViewItem(
+                                    item = item,
+                                    isSelected = selectedItems.contains(item.id),
+                                    isMultiSelectMode = isMultiSelectMode,
+                                    onSelect = { onItemSelect(it) },
+                                    onLongPress = { onItemLongClick(it) },
+                                    onClick = { clickedItem ->
+                                        when (clickedItem) {
+                                            is FileItem.File -> onFileClick(clickedItem)
+                                            is FileItem.Folder -> onFolderClick(clickedItem)
+                                            is FileItem.Torrent -> onTorrentClick(clickedItem)
+                                        }
+                                    }
+                                )
+                            }
                             
-                            // Trigger load more when user is near the end (within 5 items)
-                            if (totalItems > 0 && lastVisibleIndex >= totalItems - 5 && paginationState.hasMore && !paginationState.isLoadingMore) {
-                                onLoadMore()
+                            // Pagination loading item for tiles
+                            if (paginationState.hasMore || paginationState.isLoadingMore) {
+                                item {
+                                    LoadMoreItem(
+                                        isLoading = paginationState.isLoadingMore,
+                                        hasMore = paginationState.hasMore,
+                                        onLoadMore = onLoadMore,
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
+                                }
                             }
                         }
+                        
+                        // Auto-trigger load more for tiles view
+                        LaunchedEffect(gridState) {
+                            snapshotFlow { gridState.layoutInfo.visibleItemsInfo }
+                                .collect { visibleItems ->
+                                    val totalItems = gridState.layoutInfo.totalItemsCount
+                                    val lastVisibleIndex = visibleItems.lastOrNull()?.index ?: 0
+                                    
+                                    if (totalItems > 0 && lastVisibleIndex >= totalItems - 10 && paginationState.hasMore && !paginationState.isLoadingMore) {
+                                        onLoadMore()
+                                    }
+                                }
+                        }
+                    }
+                    
+                    ViewMode.GRID -> {
+                        val gridState = rememberLazyGridState()
+                        
+                        LazyVerticalGrid(
+                            columns = GridCells.Adaptive(minSize = 120.dp),
+                            state = gridState,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                            contentPadding = PaddingValues(vertical = 8.dp)
+                        ) {
+                            items(contentState.data) { item ->
+                                GridViewItem(
+                                    item = item,
+                                    isSelected = selectedItems.contains(item.id),
+                                    isMultiSelectMode = isMultiSelectMode,
+                                    onSelect = { onItemSelect(it) },
+                                    onLongPress = { onItemLongClick(it) },
+                                    onClick = { clickedItem ->
+                                        when (clickedItem) {
+                                            is FileItem.File -> onFileClick(clickedItem)
+                                            is FileItem.Folder -> onFolderClick(clickedItem)
+                                            is FileItem.Torrent -> onTorrentClick(clickedItem)
+                                        }
+                                    }
+                                )
+                            }
+                            
+                            // Pagination loading item for grid
+                            if (paginationState.hasMore || paginationState.isLoadingMore) {
+                                item {
+                                    LoadMoreItem(
+                                        isLoading = paginationState.isLoadingMore,
+                                        hasMore = paginationState.hasMore,
+                                        onLoadMore = onLoadMore,
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
+                                }
+                            }
+                        }
+                        
+                        // Auto-trigger load more for grid view
+                        LaunchedEffect(gridState) {
+                            snapshotFlow { gridState.layoutInfo.visibleItemsInfo }
+                                .collect { visibleItems ->
+                                    val totalItems = gridState.layoutInfo.totalItemsCount
+                                    val lastVisibleIndex = visibleItems.lastOrNull()?.index ?: 0
+                                    
+                                    if (totalItems > 0 && lastVisibleIndex >= totalItems - 15 && paginationState.hasMore && !paginationState.isLoadingMore) {
+                                        onLoadMore()
+                                    }
+                                }
+                        }
+                    }
                 }
             }
         }

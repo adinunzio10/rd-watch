@@ -16,6 +16,7 @@ data class FileBrowserState(
     val navigationHistory: List<String> = listOf("/"),
     val accountType: AccountType = AccountType.REAL_DEBRID,
     val paginationState: PaginationState = PaginationState(),
+    val viewMode: ViewMode = ViewMode.LIST,
     val bulkOperationState: BulkOperationState? = null,
     val refreshState: RefreshState? = null,
     val errorRecoveryState: RecoveryState? = null
@@ -175,6 +176,15 @@ enum class FileType(val displayName: String, val extensions: Set<String>) {
 }
 
 /**
+ * View modes for displaying file items
+ */
+enum class ViewMode(val displayName: String) {
+    LIST("List View"),
+    TILES("Tiles View"),
+    GRID("Grid View")
+}
+
+/**
  * Actions that can be performed on file items
  */
 sealed class FileBrowserAction {
@@ -198,6 +208,7 @@ sealed class FileBrowserAction {
     object Refresh : FileBrowserAction()
     object PullToRefresh : FileBrowserAction()
     object ClearCache : FileBrowserAction()
+    data class ChangeViewMode(val viewMode: ViewMode) : FileBrowserAction()
 }
 
 /**
