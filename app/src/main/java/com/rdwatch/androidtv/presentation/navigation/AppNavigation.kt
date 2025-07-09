@@ -16,6 +16,8 @@ import com.rdwatch.androidtv.ui.settings.SettingsScreen
 import com.rdwatch.androidtv.ui.settings.scrapers.ScraperSettingsScreen
 import com.rdwatch.androidtv.ui.details.MovieDetailsScreen
 import com.rdwatch.androidtv.ui.details.MovieDetailsViewModel
+import com.rdwatch.androidtv.ui.details.TVDetailsScreen
+import com.rdwatch.androidtv.ui.details.TVDetailsViewModel
 import com.rdwatch.androidtv.ui.profile.ProfileScreen
 import com.rdwatch.androidtv.ui.home.TVHomeScreen
 import com.rdwatch.androidtv.ui.search.SearchScreen
@@ -150,6 +152,43 @@ fun AppNavigation(
                 },
                 onMovieClick = { movie ->
                     navController.navigate(Screen.MovieDetails(movie.id.toString()))
+                },
+                onBackPressed = {
+                    navController.popBackStack()
+                }
+            )
+        }
+        
+        composable<Screen.TVDetails>(
+            enterTransition = {
+                slideIntoContainer(
+                    AnimatedContentTransitionScope.SlideDirection.Left,
+                    animationSpec = tween(300)
+                )
+            },
+            popExitTransition = {
+                slideOutOfContainer(
+                    AnimatedContentTransitionScope.SlideDirection.Right,
+                    animationSpec = tween(300)
+                )
+            }
+        ) { backStackEntry ->
+            val tvDetails = backStackEntry.toRoute<Screen.TVDetails>()
+            val viewModel: TVDetailsViewModel = hiltViewModel()
+            
+            TVDetailsScreen(
+                tvShowId = tvDetails.tvShowId,
+                viewModel = viewModel,
+                onPlayClick = { selectedEpisode ->
+                    navController.navigate(
+                        Screen.VideoPlayer(
+                            videoUrl = selectedEpisode.videoUrl ?: "",
+                            title = selectedEpisode.title
+                        )
+                    )
+                },
+                onEpisodeClick = { episode ->
+                    // Handle episode click if needed
                 },
                 onBackPressed = {
                     navController.popBackStack()

@@ -133,20 +133,20 @@ sealed class MetadataChip(val text: String, val icon: String? = null) {
  * Actions that can be performed on content
  */
 sealed class ContentAction(val title: String, val icon: String) {
-    class Play(isResume: Boolean = false) : ContentAction(
+    class Play(val isResume: Boolean = false) : ContentAction(
         title = if (isResume) "Resume" else "Play",
         icon = "play_arrow"
     )
-    class AddToWatchlist(isInWatchlist: Boolean = false) : ContentAction(
+    class AddToWatchlist(val isInWatchlist: Boolean = false) : ContentAction(
         title = if (isInWatchlist) "Remove from Watchlist" else "Add to Watchlist",
         icon = if (isInWatchlist) "remove" else "add"
     )
-    class Like(isLiked: Boolean = false) : ContentAction(
+    class Like(val isLiked: Boolean = false) : ContentAction(
         title = if (isLiked) "Unlike" else "Like",
         icon = if (isLiked) "favorite" else "thumb_up"
     )
     class Share : ContentAction("Share", "share")
-    class Download(isDownloaded: Boolean = false, isDownloading: Boolean = false) : ContentAction(
+    class Download(val isDownloaded: Boolean = false, val isDownloading: Boolean = false) : ContentAction(
         title = when {
             isDownloaded -> "Downloaded"
             isDownloading -> "Downloading..."

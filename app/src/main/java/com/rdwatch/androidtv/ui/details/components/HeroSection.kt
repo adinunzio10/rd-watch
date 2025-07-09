@@ -24,6 +24,7 @@ import com.rdwatch.androidtv.ui.components.SmartTVImageLoader
 import com.rdwatch.androidtv.ui.components.ImagePriority
 import com.rdwatch.androidtv.ui.details.models.*
 import com.rdwatch.androidtv.presentation.components.tvFocusable
+import com.rdwatch.androidtv.ui.focus.TVFocusIndicator
 
 /**
  * Hero section component for content detail screens

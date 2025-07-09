@@ -33,6 +33,8 @@ import com.rdwatch.androidtv.ui.components.ImagePriority
 import com.rdwatch.androidtv.ui.focus.tvFocusable
 import com.rdwatch.androidtv.ui.focus.TVFocusIndicator
 import com.rdwatch.androidtv.ui.viewmodel.PlaybackViewModel
+import com.rdwatch.androidtv.ui.details.components.ActionSection
+import com.rdwatch.androidtv.ui.details.models.*
 
 /**
  * Movie Details Screen with hero layout and metadata
@@ -192,10 +194,52 @@ fun MovieDetailsScreen(
         
         // Action Buttons Section
         item {
-            ActionButtonsSection(
+            val movieContentDetail = MovieContentDetail(
                 movie = movie,
-                uiState = uiState,
-                viewModel = viewModel,
+                progress = ContentProgress(
+                    watchPercentage = watchProgress,
+                    isCompleted = isCompleted
+                ),
+                isInWatchlist = uiState.isInWatchlist,
+                isLiked = uiState.isLiked,
+                isDownloaded = uiState.isDownloaded,
+                isDownloading = uiState.isDownloading,
+                isFromRealDebrid = uiState.isFromRealDebrid
+            )
+            
+            ActionSection(
+                content = movieContentDetail,
+                onActionClick = { action ->
+                    when (action) {
+                        is ContentAction.Play -> {
+                            onPlayClick(movie)
+                        }
+                        is ContentAction.AddToWatchlist -> {
+                            if (action.isInWatchlist) {
+                                viewModel.removeFromWatchlist()
+                            } else {
+                                viewModel.addToWatchlist()
+                            }
+                        }
+                        is ContentAction.Like -> {
+                            viewModel.toggleLike()
+                        }
+                        is ContentAction.Share -> {
+                            viewModel.shareMovie()
+                        }
+                        is ContentAction.Download -> {
+                            if (!action.isDownloaded && !action.isDownloading) {
+                                viewModel.downloadMovie()
+                            }
+                        }
+                        is ContentAction.Delete -> {
+                            viewModel.deleteFromRealDebrid()
+                        }
+                        else -> {
+                            // Handle other actions
+                        }
+                    }
+                },
                 modifier = Modifier.padding(horizontal = overscanMargin)
             )
         }
@@ -502,134 +546,6 @@ private fun InfoItem(
     }
 }
 
-@Composable
-private fun ActionButtonsSection(
-    movie: Movie,
-    uiState: MovieDetailsUiState,
-    viewModel: MovieDetailsViewModel,
-    modifier: Modifier = Modifier
-) {
-    LazyRow(
-        modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
-        contentPadding = PaddingValues(horizontal = 4.dp)
-    ) {
-        items(
-            listOf(
-                ActionButton(
-                    title = if (uiState.isInWatchlist) "Remove from Watchlist" else "Add to Watchlist",
-                    icon = if (uiState.isInWatchlist) Icons.Default.Remove else Icons.Default.Add,
-                    onClick = { 
-                        if (uiState.isInWatchlist) {
-                            viewModel.removeFromWatchlist()
-                        } else {
-                            viewModel.addToWatchlist()
-                        }
-                    }
-                ),
-                ActionButton(
-                    title = if (uiState.isLiked) "Unlike" else "Like",
-                    icon = if (uiState.isLiked) Icons.Default.Favorite else Icons.Default.ThumbUp,
-                    onClick = { viewModel.toggleLike() }
-                ),
-                ActionButton(
-                    title = "Share",
-                    icon = Icons.Default.Share,
-                    onClick = { viewModel.shareMovie() }
-                ),
-                ActionButton(
-                    title = if (uiState.isDownloaded) "Downloaded" else if (uiState.isDownloading) "Downloading..." else "Download",
-                    icon = if (uiState.isDownloaded) Icons.Default.CloudDone else Icons.Default.Download,
-                    onClick = { 
-                        if (!uiState.isDownloaded && !uiState.isDownloading) {
-                            viewModel.downloadMovie()
-                        }
-                    }
-                )
-            )
-        ) { actionButton ->
-            ActionButtonItem(
-                title = actionButton.title,
-                icon = actionButton.icon,
-                onClick = actionButton.onClick
-            )
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun ActionButtonItem(
-    title: String,
-    icon: ImageVector,
-    onClick: () -> Unit
-) {
-    var isFocused by remember { mutableStateOf(false) }
-    val hapticFeedback = LocalHapticFeedback.current
-    
-    TVFocusIndicator(isFocused = isFocused) {
-        OutlinedCard(
-            onClick = {
-                hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-                onClick()
-            },
-            modifier = Modifier
-                .width(140.dp)
-                .tvFocusable(
-                    onFocusChanged = { isFocused = it.isFocused }
-                ),
-            colors = CardDefaults.outlinedCardColors(
-                containerColor = if (isFocused) {
-                    MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
-                } else {
-                    MaterialTheme.colorScheme.surface
-                }
-            ),
-            border = if (isFocused) {
-                CardDefaults.outlinedCardBorder().copy(
-                    brush = Brush.linearGradient(
-                        colors = listOf(
-                            MaterialTheme.colorScheme.primary,
-                            MaterialTheme.colorScheme.primary
-                        )
-                    ),
-                    width = 2.dp
-                )
-            } else {
-                CardDefaults.outlinedCardBorder()
-            }
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    tint = if (isFocused) {
-                        MaterialTheme.colorScheme.primary
-                    } else {
-                        MaterialTheme.colorScheme.onSurface
-                    },
-                    modifier = Modifier.size(24.dp)
-                )
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.labelLarge,
-                    color = if (isFocused) {
-                        MaterialTheme.colorScheme.primary
-                    } else {
-                        MaterialTheme.colorScheme.onSurface
-                    },
-                    fontWeight = FontWeight.Medium
-                )
-            }
-        }
-    }
-}
 
 @Composable
 private fun RelatedMoviesSection(
@@ -720,8 +636,3 @@ private fun RelatedMovieCard(
     }
 }
 
-private data class ActionButton(
-    val title: String,
-    val icon: ImageVector,
-    val onClick: () -> Unit
-)
