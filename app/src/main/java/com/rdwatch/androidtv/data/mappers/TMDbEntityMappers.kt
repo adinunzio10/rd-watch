@@ -352,6 +352,16 @@ fun TMDbRecommendationEntity.toSearchResponse(): TMDbSearchResponse {
     )
 }
 
+// TMDbSearchResultEntity to SearchResponse conversion
+fun TMDbSearchResultEntity.toSearchResponse(): TMDbSearchResponse {
+    return TMDbSearchResponse(
+        page = page,
+        totalPages = totalPages,
+        totalResults = totalResults,
+        results = results.map { it.toSearchItemResponse() }
+    )
+}
+
 fun TMDbSearchItemEntity.toSearchItemResponse(): TMDbSearchItemResponse {
     return TMDbSearchItemResponse(
         id = id,

@@ -18,7 +18,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rdwatch.androidtv.R
 import com.rdwatch.androidtv.ui.details.models.*
-import com.rdwatch.androidtv.ui.theme.RDWatchTheme
+import com.rdwatch.androidtv.ui.theme.RdwatchTheme
 
 /**
  * Main episode grid section component that combines season selector and episode grid
@@ -346,7 +346,7 @@ private fun TVShowDetail.hasMultipleSeasons(): Boolean = numberOfSeasons > 1
 @Preview(showBackground = true)
 @Composable
 fun EpisodeGridSectionPreview() {
-    RDWatchTheme {
+    RdwatchTheme {
         val sampleEpisodes = listOf(
             TVEpisode(
                 id = "1",
@@ -357,6 +357,7 @@ fun EpisodeGridSectionPreview() {
                 thumbnailUrl = null,
                 airDate = "2023-01-01",
                 runtime = 45,
+                stillPath = null,
                 voteAverage = 8.5f,
                 isWatched = true,
                 watchProgress = 1.0f
@@ -370,6 +371,7 @@ fun EpisodeGridSectionPreview() {
                 thumbnailUrl = null,
                 airDate = "2023-01-08",
                 runtime = 42,
+                stillPath = null,
                 voteAverage = 8.2f,
                 isWatched = false,
                 watchProgress = 0.3f
@@ -383,6 +385,7 @@ fun EpisodeGridSectionPreview() {
                 thumbnailUrl = null,
                 airDate = "2023-01-15",
                 runtime = 48,
+                stillPath = null,
                 voteAverage = 8.8f,
                 isWatched = false,
                 watchProgress = 0.0f
@@ -403,11 +406,14 @@ fun EpisodeGridSectionPreview() {
         val sampleTVShow = TVShowDetail(
             id = "demo-show",
             title = "Demo TV Show",
+            originalTitle = "Demo TV Show",
             overview = "This is a demo TV show for preview purposes",
             posterPath = null,
             backdropPath = null,
             firstAirDate = "2023-01-01",
+            lastAirDate = null,
             status = "Returning Series",
+            type = "Scripted",
             genres = listOf("Drama", "Mystery"),
             numberOfSeasons = 2,
             numberOfEpisodes = 20,
@@ -437,7 +443,7 @@ fun EpisodeGridSectionPreview() {
 @Preview(showBackground = true)
 @Composable
 fun CompactEpisodeGridSectionPreview() {
-    RDWatchTheme {
+    RdwatchTheme {
         val sampleEpisodes = listOf(
             TVEpisode(
                 id = "1",
@@ -448,6 +454,7 @@ fun CompactEpisodeGridSectionPreview() {
                 thumbnailUrl = null,
                 airDate = "2023-01-01",
                 runtime = 45,
+                stillPath = null,
                 voteAverage = 8.5f,
                 isWatched = true,
                 watchProgress = 1.0f
@@ -461,6 +468,7 @@ fun CompactEpisodeGridSectionPreview() {
                 thumbnailUrl = null,
                 airDate = "2023-01-08",
                 runtime = 42,
+                stillPath = null,
                 voteAverage = 8.2f,
                 isWatched = false,
                 watchProgress = 0.3f
@@ -481,11 +489,14 @@ fun CompactEpisodeGridSectionPreview() {
         val sampleTVShow = TVShowDetail(
             id = "demo-show",
             title = "Demo TV Show",
+            originalTitle = "Demo TV Show",
             overview = "This is a demo TV show",
             posterPath = null,
             backdropPath = null,
             firstAirDate = "2023-01-01",
+            lastAirDate = null,
             status = "Returning Series",
+            type = "Scripted",
             genres = listOf("Drama"),
             numberOfSeasons = 1,
             numberOfEpisodes = 10,
@@ -515,7 +526,7 @@ fun CompactEpisodeGridSectionPreview() {
 @Preview(showBackground = true)
 @Composable
 fun EpisodeGridSectionWithStatsPreview() {
-    RDWatchTheme {
+    RdwatchTheme {
         val sampleEpisodes = listOf(
             TVEpisode(
                 id = "1",
@@ -526,6 +537,7 @@ fun EpisodeGridSectionWithStatsPreview() {
                 thumbnailUrl = null,
                 airDate = "2023-01-01",
                 runtime = 45,
+                stillPath = null,
                 voteAverage = 8.5f,
                 isWatched = true,
                 watchProgress = 1.0f
@@ -539,6 +551,7 @@ fun EpisodeGridSectionWithStatsPreview() {
                 thumbnailUrl = null,
                 airDate = "2023-01-08",
                 runtime = 42,
+                stillPath = null,
                 voteAverage = 8.2f,
                 isWatched = false,
                 watchProgress = 0.3f
@@ -559,11 +572,14 @@ fun EpisodeGridSectionWithStatsPreview() {
         val sampleTVShow = TVShowDetail(
             id = "demo-show",
             title = "Demo TV Show",
+            originalTitle = "Demo TV Show",
             overview = "This is a demo TV show",
             posterPath = null,
             backdropPath = null,
             firstAirDate = "2023-01-01",
+            lastAirDate = null,
             status = "Returning Series",
+            type = "Scripted",
             genres = listOf("Drama"),
             numberOfSeasons = 2,
             numberOfEpisodes = 20,

@@ -1,5 +1,6 @@
 package com.rdwatch.androidtv.ui.details.components
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.*
 import androidx.compose.foundation.rememberScrollState
@@ -25,7 +26,7 @@ import com.rdwatch.androidtv.presentation.components.rememberTvFocusRequester
 import com.rdwatch.androidtv.presentation.components.tvFocusRequester
 import com.rdwatch.androidtv.ui.details.models.TVEpisode
 import com.rdwatch.androidtv.ui.details.models.EpisodePaginationState
-import com.rdwatch.androidtv.ui.theme.RDWatchTheme
+import com.rdwatch.androidtv.ui.theme.RdwatchTheme
 
 /**
  * Episode grid layout modes
@@ -576,7 +577,7 @@ private fun Modifier.shimmerEffect(): Modifier = this.background(
 @Preview(showBackground = true)
 @Composable
 fun EpisodeGridPreview() {
-    RDWatchTheme {
+    RdwatchTheme {
         val sampleEpisodes = listOf(
             TVEpisode(
                 id = "1",
@@ -587,6 +588,7 @@ fun EpisodeGridPreview() {
                 thumbnailUrl = null,
                 airDate = "2023-01-01",
                 runtime = 45,
+                stillPath = null,
                 voteAverage = 8.5f,
                 isWatched = true,
                 watchProgress = 1.0f
@@ -600,6 +602,7 @@ fun EpisodeGridPreview() {
                 thumbnailUrl = null,
                 airDate = "2023-01-08",
                 runtime = 42,
+                stillPath = null,
                 voteAverage = 8.2f,
                 isWatched = false,
                 watchProgress = 0.3f
@@ -617,7 +620,7 @@ fun EpisodeGridPreview() {
 @Preview(showBackground = true)
 @Composable
 fun EpisodeGridEmptyStatePreview() {
-    RDWatchTheme {
+    RdwatchTheme {
         EpisodeGridEmptyState()
     }
 }
@@ -625,7 +628,7 @@ fun EpisodeGridEmptyStatePreview() {
 @Preview(showBackground = true)
 @Composable
 fun EpisodeGridErrorStatePreview() {
-    RDWatchTheme {
+    RdwatchTheme {
         EpisodeGridErrorState(
             message = "Failed to load episodes",
             onRetry = {}

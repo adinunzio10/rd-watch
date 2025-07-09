@@ -27,7 +27,7 @@ import com.rdwatch.androidtv.R
 import com.rdwatch.androidtv.presentation.components.tvCardFocus
 import com.rdwatch.androidtv.presentation.components.tvFocusable
 import com.rdwatch.androidtv.ui.details.models.TVEpisode
-import com.rdwatch.androidtv.ui.theme.RDWatchTheme
+import com.rdwatch.androidtv.ui.theme.RdwatchTheme
 
 /**
  * Episode card component for displaying individual TV show episodes
@@ -317,7 +317,7 @@ fun CompactEpisodeCard(
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
-                                painter = painterResource(R.drawable.ic_check),
+                                imageVector = Icons.Default.Check,
                                 contentDescription = "Watched",
                                 tint = MaterialTheme.colorScheme.onPrimary,
                                 modifier = Modifier.size(12.dp)
@@ -437,7 +437,7 @@ fun ListEpisodeCard(
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
-                                painter = painterResource(R.drawable.ic_check),
+                                imageVector = Icons.Default.Check,
                                 contentDescription = "Watched",
                                 tint = MaterialTheme.colorScheme.onPrimary,
                                 modifier = Modifier.size(10.dp)
@@ -516,7 +516,7 @@ fun ListEpisodeCard(
 @Preview(showBackground = true)
 @Composable
 fun EpisodeCardPreview() {
-    RDWatchTheme {
+    RdwatchTheme {
         val sampleEpisode = TVEpisode(
             id = "1",
             seasonNumber = 1,
@@ -526,6 +526,7 @@ fun EpisodeCardPreview() {
             thumbnailUrl = null,
             airDate = "2023-01-01",
             runtime = 45,
+            stillPath = null,
             voteAverage = 8.5f,
             isWatched = false,
             watchProgress = 0.3f
@@ -541,7 +542,7 @@ fun EpisodeCardPreview() {
 @Preview(showBackground = true)
 @Composable
 fun CompactEpisodeCardPreview() {
-    RDWatchTheme {
+    RdwatchTheme {
         val sampleEpisode = TVEpisode(
             id = "1",
             seasonNumber = 1,
@@ -551,6 +552,7 @@ fun CompactEpisodeCardPreview() {
             thumbnailUrl = null,
             airDate = "2023-01-01",
             runtime = 45,
+            stillPath = null,
             voteAverage = 8.5f,
             isWatched = true,
             watchProgress = 1.0f
@@ -566,7 +568,7 @@ fun CompactEpisodeCardPreview() {
 @Preview(showBackground = true)
 @Composable
 fun ListEpisodeCardPreview() {
-    RDWatchTheme {
+    RdwatchTheme {
         val sampleEpisode = TVEpisode(
             id = "1",
             seasonNumber = 1,
@@ -576,6 +578,7 @@ fun ListEpisodeCardPreview() {
             thumbnailUrl = null,
             airDate = "2023-01-01",
             runtime = 45,
+            stillPath = null,
             voteAverage = 8.5f,
             isWatched = false,
             watchProgress = 0.3f

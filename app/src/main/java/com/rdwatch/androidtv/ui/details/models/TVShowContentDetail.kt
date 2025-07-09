@@ -286,6 +286,7 @@ data class TVShowContentDetail(
                     thumbnailUrl = "https://image.tmdb.org/t/p/w500/demo1.jpg",
                     airDate = "2023-01-01",
                     runtime = 45,
+                    stillPath = null,
                     isWatched = true,
                     watchProgress = 1.0f
                 ),
@@ -298,6 +299,7 @@ data class TVShowContentDetail(
                     thumbnailUrl = "https://image.tmdb.org/t/p/w500/demo2.jpg",
                     airDate = "2023-01-08",
                     runtime = 42,
+                    stillPath = null,
                     isWatched = false,
                     watchProgress = 0.3f
                 )
@@ -317,11 +319,14 @@ data class TVShowContentDetail(
             val demoTVShow = TVShowDetail(
                 id = "demo-show",
                 title = "Demo TV Show",
+                originalTitle = "Demo TV Show",
                 overview = "This is a demo TV show for preview purposes",
                 posterPath = "https://image.tmdb.org/t/p/w500/demo-poster.jpg",
                 backdropPath = "https://image.tmdb.org/t/p/w1280/demo-backdrop.jpg",
                 firstAirDate = "2023-01-01",
+                lastAirDate = null,
                 status = "Returning Series",
+                type = "Scripted",
                 genres = listOf("Drama", "Mystery"),
                 numberOfSeasons = 2,
                 numberOfEpisodes = 20,

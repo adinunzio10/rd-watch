@@ -18,6 +18,7 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rdwatch.androidtv.ui.details.models.SourceProvider
@@ -258,7 +259,7 @@ private fun SourceCardContent(
 private fun ProviderLogo(
     provider: SourceProvider,
     isEnabled: Boolean,
-    size: dp = 32.dp
+    size: Dp = 32.dp
 ) {
     val backgroundColor = provider.color?.let { Color(android.graphics.Color.parseColor(it)) }
         ?: MaterialTheme.colorScheme.primaryContainer

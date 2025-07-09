@@ -345,7 +345,7 @@ class TMDbMovieRepositoryImpl @Inject constructor(
         },
         saveCallResult = { searchResponse ->
             val searchId = "$query-$page-movie"
-            tmdbSearchDao.insertSearchResult(searchResponse.toEntity(searchId, query, page, "movie"))
+            tmdbSearchDao.insertSearchResult((searchResponse as TMDbSearchResponse).toEntity(searchId, query, page, "movie"))
         }
     )
 
@@ -383,7 +383,7 @@ class TMDbMovieRepositoryImpl @Inject constructor(
         },
         saveCallResult = { discoveryResponse ->
             val discoveryId = "discover-$page-movie"
-            tmdbSearchDao.insertSearchResult(discoveryResponse.toEntity(discoveryId, "discover", page, "movie"))
+            tmdbSearchDao.insertSearchResult((discoveryResponse as TMDbSearchResponse).toEntity(discoveryId, "discover", page, "movie"))
         }
     )
 

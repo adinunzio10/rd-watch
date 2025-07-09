@@ -43,14 +43,14 @@ class TMDbSearchRepositoryImpl @Inject constructor(
     ): Flow<Result<TMDbSearchResponse>> = networkBoundResource(
         loadFromDb = {
             tmdbSearchDao.getSearchResults(query, "movie", page)
-                .map { it?.toSearchResponse() }
+                .map { it?.toSearchResponse() ?: TMDbSearchResponse() }
         },
         shouldFetch = { cachedSearch ->
-            cachedSearch == null || shouldRefreshSearchCache(cachedSearch.lastUpdated)
+            cachedSearch == null || true // Always fetch search results as they can change frequently
         },
         createCall = {
             val response = tmdbSearchService.searchMovies(
-                query, page, language, includeAdult, region, year, primaryReleaseYear
+                query, language, page, includeAdult, region, year, primaryReleaseYear
             ).execute()
             when (val apiResponse = handleApiResponse(response)) {
                 is ApiResponse.Success -> apiResponse.data
@@ -60,7 +60,7 @@ class TMDbSearchRepositoryImpl @Inject constructor(
         },
         saveCallResult = { searchResponse ->
             val searchId = buildSearchId(query, page, "movie")
-            tmdbSearchDao.insertSearchResult(searchResponse.toEntity(searchId, query, page, "movie"))
+            tmdbSearchDao.insertSearchResult((searchResponse as TMDbSearchResponse).toEntity(searchId, query, page, "movie"))
         }
     )
 
@@ -73,14 +73,14 @@ class TMDbSearchRepositoryImpl @Inject constructor(
     ): Flow<Result<TMDbSearchResponse>> = networkBoundResource(
         loadFromDb = {
             tmdbSearchDao.getSearchResults(query, "tv", page)
-                .map { it?.toSearchResponse() }
+                .map { it?.toSearchResponse() ?: TMDbSearchResponse() }
         },
         shouldFetch = { cachedSearch ->
-            cachedSearch == null || shouldRefreshSearchCache(cachedSearch.lastUpdated)
+            cachedSearch == null || true // Always fetch search results as they can change frequently
         },
         createCall = {
             val response = tmdbSearchService.searchTVShows(
-                query, page, language, includeAdult, firstAirDateYear
+                query, language, page, includeAdult, firstAirDateYear
             ).execute()
             when (val apiResponse = handleApiResponse(response)) {
                 is ApiResponse.Success -> apiResponse.data
@@ -90,7 +90,7 @@ class TMDbSearchRepositoryImpl @Inject constructor(
         },
         saveCallResult = { searchResponse ->
             val searchId = buildSearchId(query, page, "tv")
-            tmdbSearchDao.insertSearchResult(searchResponse.toEntity(searchId, query, page, "tv"))
+            tmdbSearchDao.insertSearchResult((searchResponse as TMDbSearchResponse).toEntity(searchId, query, page, "tv"))
         }
     )
 
@@ -103,14 +103,14 @@ class TMDbSearchRepositoryImpl @Inject constructor(
     ): Flow<Result<TMDbSearchResponse>> = networkBoundResource(
         loadFromDb = {
             tmdbSearchDao.getSearchResults(query, "person", page)
-                .map { it?.toSearchResponse() }
+                .map { it?.toSearchResponse() ?: TMDbSearchResponse() }
         },
         shouldFetch = { cachedSearch ->
-            cachedSearch == null || shouldRefreshSearchCache(cachedSearch.lastUpdated)
+            cachedSearch == null || true // Always fetch search results as they can change frequently
         },
         createCall = {
             val response = tmdbSearchService.searchPeople(
-                query, page, language, includeAdult, region
+                query, language, page, includeAdult, region
             ).execute()
             when (val apiResponse = handleApiResponse(response)) {
                 is ApiResponse.Success -> apiResponse.data
@@ -120,7 +120,7 @@ class TMDbSearchRepositoryImpl @Inject constructor(
         },
         saveCallResult = { searchResponse ->
             val searchId = buildSearchId(query, page, "person")
-            tmdbSearchDao.insertSearchResult(searchResponse.toEntity(searchId, query, page, "person"))
+            tmdbSearchDao.insertSearchResult((searchResponse as TMDbSearchResponse).toEntity(searchId, query, page, "person"))
         }
     )
 
@@ -133,14 +133,14 @@ class TMDbSearchRepositoryImpl @Inject constructor(
     ): Flow<Result<TMDbMultiSearchResponse>> = networkBoundResource(
         loadFromDb = {
             tmdbSearchDao.getSearchResults(query, "multi", page)
-                .map { it?.toMultiSearchResponse() }
+                .map { it?.toMultiSearchResponse() ?: TMDbMultiSearchResponse() }
         },
         shouldFetch = { cachedSearch ->
-            cachedSearch == null || shouldRefreshSearchCache(cachedSearch.lastUpdated)
+            cachedSearch == null || true // Always fetch search results as they can change frequently
         },
         createCall = {
-            val response = tmdbSearchService.searchMulti(
-                query, page, language, includeAdult, region
+            val response = tmdbSearchService.multiSearch(
+                query, language, page, includeAdult, region
             ).execute()
             when (val apiResponse = handleApiResponse(response)) {
                 is ApiResponse.Success -> apiResponse.data
@@ -150,7 +150,7 @@ class TMDbSearchRepositoryImpl @Inject constructor(
         },
         saveCallResult = { multiSearchResponse ->
             val searchId = buildSearchId(query, page, "multi")
-            tmdbSearchDao.insertSearchResult(multiSearchResponse.toEntity(searchId, query, page, "multi"))
+            tmdbSearchDao.insertSearchResult((multiSearchResponse as TMDbMultiSearchResponse).toEntity(searchId, query, page, "multi"))
         }
     )
 
@@ -172,10 +172,10 @@ class TMDbSearchRepositoryImpl @Inject constructor(
     ): Flow<Result<TMDbSearchResponse>> = networkBoundResource(
         loadFromDb = {
             tmdbSearchDao.getSearchResults(query, "collection", page)
-                .map { it?.toSearchResponse() }
+                .map { it?.toSearchResponse() ?: TMDbSearchResponse() }
         },
         shouldFetch = { cachedSearch ->
-            cachedSearch == null || shouldRefreshSearchCache(cachedSearch.lastUpdated)
+            cachedSearch == null || true // Always fetch search results as they can change frequently
         },
         createCall = {
             val response = tmdbSearchService.searchCollections(query, language, page).execute()
@@ -187,7 +187,7 @@ class TMDbSearchRepositoryImpl @Inject constructor(
         },
         saveCallResult = { searchResponse ->
             val searchId = buildSearchId(query, page, "collection")
-            tmdbSearchDao.insertSearchResult(searchResponse.toEntity(searchId, query, page, "collection"))
+            tmdbSearchDao.insertSearchResult((searchResponse as TMDbSearchResponse).toEntity(searchId, query, page, "collection"))
         }
     )
 
@@ -197,10 +197,10 @@ class TMDbSearchRepositoryImpl @Inject constructor(
     ): Flow<Result<TMDbSearchResponse>> = networkBoundResource(
         loadFromDb = {
             tmdbSearchDao.getSearchResults(query, "company", page)
-                .map { it?.toSearchResponse() }
+                .map { it?.toSearchResponse() ?: TMDbSearchResponse() }
         },
         shouldFetch = { cachedSearch ->
-            cachedSearch == null || shouldRefreshSearchCache(cachedSearch.lastUpdated)
+            cachedSearch == null || true // Always fetch search results as they can change frequently
         },
         createCall = {
             val response = tmdbSearchService.searchCompanies(query, page).execute()
@@ -212,7 +212,7 @@ class TMDbSearchRepositoryImpl @Inject constructor(
         },
         saveCallResult = { searchResponse ->
             val searchId = buildSearchId(query, page, "company")
-            tmdbSearchDao.insertSearchResult(searchResponse.toEntity(searchId, query, page, "company"))
+            tmdbSearchDao.insertSearchResult((searchResponse as TMDbSearchResponse).toEntity(searchId, query, page, "company"))
         }
     )
 
@@ -222,10 +222,10 @@ class TMDbSearchRepositoryImpl @Inject constructor(
     ): Flow<Result<TMDbSearchResponse>> = networkBoundResource(
         loadFromDb = {
             tmdbSearchDao.getSearchResults(query, "keyword", page)
-                .map { it?.toSearchResponse() }
+                .map { it?.toSearchResponse() ?: TMDbSearchResponse() }
         },
         shouldFetch = { cachedSearch ->
-            cachedSearch == null || shouldRefreshSearchCache(cachedSearch.lastUpdated)
+            cachedSearch == null || true // Always fetch search results as they can change frequently
         },
         createCall = {
             val response = tmdbSearchService.searchKeywords(query, page).execute()
@@ -237,7 +237,7 @@ class TMDbSearchRepositoryImpl @Inject constructor(
         },
         saveCallResult = { searchResponse ->
             val searchId = buildSearchId(query, page, "keyword")
-            tmdbSearchDao.insertSearchResult(searchResponse.toEntity(searchId, query, page, "keyword"))
+            tmdbSearchDao.insertSearchResult((searchResponse as TMDbSearchResponse).toEntity(searchId, query, page, "keyword"))
         }
     )
 
@@ -250,14 +250,14 @@ class TMDbSearchRepositoryImpl @Inject constructor(
         loadFromDb = {
             val searchId = buildSearchId("trending_${mediaType}_$timeWindow", page, mediaType)
             tmdbSearchDao.getSearchResults("trending_${mediaType}_$timeWindow", mediaType, page)
-                .map { it?.toSearchResponse() }
+                .map { it?.toSearchResponse() ?: TMDbSearchResponse() }
         },
         shouldFetch = { cachedTrending ->
             // Always fetch trending as it changes frequently
             true
         },
         createCall = {
-            val response = tmdbSearchService.getTrending(mediaType, timeWindow, page, language).execute()
+            val response = tmdbSearchService.getTrending(mediaType, timeWindow, language, page).execute()
             when (val apiResponse = handleApiResponse(response)) {
                 is ApiResponse.Success -> apiResponse.data
                 is ApiResponse.Error -> throw apiResponse.exception
@@ -267,7 +267,7 @@ class TMDbSearchRepositoryImpl @Inject constructor(
         saveCallResult = { trendingResponse ->
             val searchId = buildSearchId("trending_${mediaType}_$timeWindow", page, mediaType)
             tmdbSearchDao.insertSearchResult(
-                trendingResponse.toEntity(searchId, "trending_${mediaType}_$timeWindow", page, mediaType)
+                (trendingResponse as TMDbSearchResponse).toEntity(searchId, "trending_${mediaType}_$timeWindow", page, mediaType)
             )
         }
     )

@@ -40,7 +40,7 @@ class TMDbTVRepositoryImpl @Inject constructor(
         language: String
     ): Flow<Result<TMDbTVResponse>> = networkBoundResource(
         loadFromDb = {
-            tmdbTVDao.getTVShowById(tvId).map { it?.toTVResponse() }
+            tmdbTVDao.getTVShowById(tvId).map { it?.toTVResponse() ?: TMDbTVResponse() }
         },
         shouldFetch = { cachedTV ->
             forceRefresh || cachedTV == null || shouldRefreshCache(tvId, "tv")
@@ -69,7 +69,7 @@ class TMDbTVRepositoryImpl @Inject constructor(
                     val contentDetail = result.data?.let { tvResponse ->
                         contentDetailMapper.mapTVToContentDetail(tvResponse)
                     }
-                    Result.Success(contentDetail ?: ContentDetail())
+                    Result.Success(contentDetail ?: TMDbTVContentDetail(result.data!!))
                 }
                 is Result.Error -> Result.Error(result.exception)
                 is Result.Loading -> Result.Loading
@@ -82,7 +82,7 @@ class TMDbTVRepositoryImpl @Inject constructor(
         language: String
     ): Flow<Result<TMDbCreditsResponse>> = networkBoundResource(
         loadFromDb = {
-            tmdbSearchDao.getCredits(tvId, "tv").map { it?.toCreditsResponse() }
+            tmdbSearchDao.getCredits(tvId, "tv").map { it?.toCreditsResponse() ?: TMDbCreditsResponse() }
         },
         shouldFetch = { cachedCredits ->
             forceRefresh || cachedCredits == null || shouldRefreshCache(tvId, "credits")
@@ -108,7 +108,7 @@ class TMDbTVRepositoryImpl @Inject constructor(
     ): Flow<Result<TMDbRecommendationsResponse>> = networkBoundResource(
         loadFromDb = {
             tmdbSearchDao.getRecommendations(tvId, "tv", "recommendations", page)
-                .map { it?.toRecommendationsResponse() }
+                .map { it?.toRecommendationsResponse() ?: TMDbRecommendationsResponse() }
         },
         shouldFetch = { cachedRecommendations ->
             forceRefresh || cachedRecommendations == null || shouldRefreshCache(tvId, "recommendations")
@@ -136,7 +136,7 @@ class TMDbTVRepositoryImpl @Inject constructor(
     ): Flow<Result<TMDbRecommendationsResponse>> = networkBoundResource(
         loadFromDb = {
             tmdbSearchDao.getRecommendations(tvId, "tv", "similar", page)
-                .map { it?.toRecommendationsResponse() }
+                .map { it?.toRecommendationsResponse() ?: TMDbRecommendationsResponse() }
         },
         shouldFetch = { cachedSimilar ->
             forceRefresh || cachedSimilar == null || shouldRefreshCache(tvId, "similar")
@@ -162,7 +162,7 @@ class TMDbTVRepositoryImpl @Inject constructor(
         includeImageLanguage: String?
     ): Flow<Result<TMDbTVImagesResponse>> = networkBoundResource(
         loadFromDb = {
-            tmdbSearchDao.getImages(tvId, "tv").map { it?.toTVImagesResponse() }
+            tmdbSearchDao.getImages(tvId, "tv").map { it?.toTVImagesResponse() ?: TMDbTVImagesResponse() }
         },
         shouldFetch = { cachedImages ->
             forceRefresh || cachedImages == null || shouldRefreshCache(tvId, "images")
@@ -186,7 +186,7 @@ class TMDbTVRepositoryImpl @Inject constructor(
         language: String
     ): Flow<Result<TMDbTVVideosResponse>> = networkBoundResource(
         loadFromDb = {
-            tmdbSearchDao.getVideos(tvId, "tv").map { it?.toTVVideosResponse() }
+            tmdbSearchDao.getVideos(tvId, "tv").map { it?.toTVVideosResponse() ?: TMDbTVVideosResponse() }
         },
         shouldFetch = { cachedVideos ->
             forceRefresh || cachedVideos == null || shouldRefreshCache(tvId, "videos")
@@ -243,7 +243,7 @@ class TMDbTVRepositoryImpl @Inject constructor(
     ): Flow<Result<TMDbRecommendationsResponse>> = networkBoundResource(
         loadFromDb = {
             tmdbSearchDao.getRecommendations(0, "tv", "popular", page)
-                .map { it?.toRecommendationsResponse() }
+                .map { it?.toRecommendationsResponse() ?: TMDbRecommendationsResponse() }
         },
         shouldFetch = { cachedPopular ->
             forceRefresh || cachedPopular == null || shouldRefreshCache(0, "popular")
@@ -270,7 +270,7 @@ class TMDbTVRepositoryImpl @Inject constructor(
     ): Flow<Result<TMDbRecommendationsResponse>> = networkBoundResource(
         loadFromDb = {
             tmdbSearchDao.getRecommendations(0, "tv", "top_rated", page)
-                .map { it?.toRecommendationsResponse() }
+                .map { it?.toRecommendationsResponse() ?: TMDbRecommendationsResponse() }
         },
         shouldFetch = { cachedTopRated ->
             forceRefresh || cachedTopRated == null || shouldRefreshCache(0, "top_rated")
@@ -297,7 +297,7 @@ class TMDbTVRepositoryImpl @Inject constructor(
     ): Flow<Result<TMDbRecommendationsResponse>> = networkBoundResource(
         loadFromDb = {
             tmdbSearchDao.getRecommendations(0, "tv", "airing_today", page)
-                .map { it?.toRecommendationsResponse() }
+                .map { it?.toRecommendationsResponse() ?: TMDbRecommendationsResponse() }
         },
         shouldFetch = { cachedAiringToday ->
             forceRefresh || cachedAiringToday == null || shouldRefreshCache(0, "airing_today")
@@ -324,7 +324,7 @@ class TMDbTVRepositoryImpl @Inject constructor(
     ): Flow<Result<TMDbRecommendationsResponse>> = networkBoundResource(
         loadFromDb = {
             tmdbSearchDao.getRecommendations(0, "tv", "on_the_air", page)
-                .map { it?.toRecommendationsResponse() }
+                .map { it?.toRecommendationsResponse() ?: TMDbRecommendationsResponse() }
         },
         shouldFetch = { cachedOnTheAir ->
             forceRefresh || cachedOnTheAir == null || shouldRefreshCache(0, "on_the_air")
@@ -353,7 +353,7 @@ class TMDbTVRepositoryImpl @Inject constructor(
     ): Flow<Result<TMDbSearchResponse>> = networkBoundResource(
         loadFromDb = {
             tmdbSearchDao.getSearchResults(query, "tv", page)
-                .map { it?.toSearchResponse() }
+                .map { it?.toSearchResponse() ?: TMDbSearchResponse() }
         },
         shouldFetch = { cachedSearch ->
             // Always fetch search results as they can change frequently
@@ -365,7 +365,7 @@ class TMDbTVRepositoryImpl @Inject constructor(
         },
         saveCallResult = { searchResponse ->
             val searchId = "$query-$page-tv"
-            tmdbSearchDao.insertSearchResult(searchResponse.toEntity(searchId, query, page, "tv"))
+            tmdbSearchDao.insertSearchResult((searchResponse as TMDbSearchResponse).toEntity(searchId, query, page, "tv"))
         }
     )
 
@@ -406,7 +406,7 @@ class TMDbTVRepositoryImpl @Inject constructor(
     ): Flow<Result<TMDbSearchResponse>> = networkBoundResource(
         loadFromDb = {
             tmdbSearchDao.getRecommendations(0, "tv", "trending_$timeWindow", page)
-                .map { it?.toSearchResponse() }
+                .map { it?.toSearchResponse() ?: TMDbSearchResponse() }
         },
         shouldFetch = { cachedTrending ->
             // Always fetch trending results as they change frequently

@@ -136,7 +136,7 @@ private fun HeroBackButton(
             modifier = modifier
                 .focusRequester(firstFocusRequester)
                 .tvFocusable(
-                    onFocusChanged = { backButtonFocused = it.isFocused }
+                    onFocusChanged = { backButtonFocused = it }
                 )
         ) {
             Icon(
@@ -490,7 +490,7 @@ private fun HeroActionButton(
             onClick = onClick,
             modifier = Modifier
                 .tvFocusable(
-                    onFocusChanged = { isFocused = it.isFocused }
+                    onFocusChanged = { isFocused = it }
                 )
                 .height(52.dp),
             colors = ButtonDefaults.buttonColors(

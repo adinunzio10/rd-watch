@@ -30,7 +30,7 @@ import com.rdwatch.androidtv.presentation.components.tvFocusable
 import com.rdwatch.androidtv.presentation.components.tvFocusBorder
 import com.rdwatch.androidtv.presentation.components.tvFocusScale
 import com.rdwatch.androidtv.ui.details.models.TVSeason
-import com.rdwatch.androidtv.ui.theme.RDWatchTheme
+import com.rdwatch.androidtv.ui.theme.RdwatchTheme
 import kotlinx.coroutines.launch
 
 /**
@@ -444,7 +444,7 @@ fun DropdownSeasonSelector(
 @Preview(showBackground = true)
 @Composable
 fun SeasonSelectorPreview() {
-    RDWatchTheme {
+    RdwatchTheme {
         val sampleSeasons = listOf(
             TVSeason(
                 id = "s1",
@@ -479,7 +479,7 @@ fun SeasonSelectorPreview() {
 @Preview(showBackground = true)
 @Composable
 fun CompactSeasonSelectorPreview() {
-    RDWatchTheme {
+    RdwatchTheme {
         val sampleSeasons = listOf(
             TVSeason(
                 id = "s1",
@@ -514,7 +514,7 @@ fun CompactSeasonSelectorPreview() {
 @Preview(showBackground = true)
 @Composable
 fun DropdownSeasonSelectorPreview() {
-    RDWatchTheme {
+    RdwatchTheme {
         val sampleSeasons = listOf(
             TVSeason(
                 id = "s1",

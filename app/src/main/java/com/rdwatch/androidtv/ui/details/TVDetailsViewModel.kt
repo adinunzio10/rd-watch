@@ -120,7 +120,7 @@ class TVDetailsViewModel @Inject constructor(
                 
                 if (watchlistIndex != -1) {
                     val currentAction = currentActions[watchlistIndex] as ContentAction.AddToWatchlist
-                    currentActions[watchlistIndex] = currentAction.copy(isInWatchlist = !currentAction.isInWatchlist)
+                    currentActions[watchlistIndex] = ContentAction.AddToWatchlist(isInWatchlist = !currentAction.isInWatchlist)
                     
                     val updatedTvShow = tvShow.withActions(currentActions)
                     _tvShowState.value = updatedTvShow
@@ -141,7 +141,7 @@ class TVDetailsViewModel @Inject constructor(
                 
                 if (likeIndex != -1) {
                     val currentAction = currentActions[likeIndex] as ContentAction.Like
-                    currentActions[likeIndex] = currentAction.copy(isLiked = !currentAction.isLiked)
+                    currentActions[likeIndex] = ContentAction.Like(isLiked = !currentAction.isLiked)
                     
                     val updatedTvShow = tvShow.withActions(currentActions)
                     _tvShowState.value = updatedTvShow
@@ -173,7 +173,7 @@ class TVDetailsViewModel @Inject constructor(
                 
                 if (downloadIndex != -1) {
                     val currentAction = currentActions[downloadIndex] as ContentAction.Download
-                    currentActions[downloadIndex] = currentAction.copy(isDownloading = true)
+                    currentActions[downloadIndex] = ContentAction.Download(isDownloaded = currentAction.isDownloaded, isDownloading = true)
                     
                     val updatedTvShow = tvShow.withActions(currentActions)
                     _tvShowState.value = updatedTvShow

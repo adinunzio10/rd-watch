@@ -80,6 +80,7 @@ class DeepLinkHandler {
             is Screen.Home -> "$SCHEME://$HOST/"
             is Screen.Browse -> "$SCHEME://$HOST/browse"
             is Screen.MovieDetails -> "$SCHEME://$HOST/movie/${screen.movieId}"
+            is Screen.TVDetails -> "$SCHEME://$HOST/tv/${screen.tvShowId}"
             is Screen.VideoPlayer -> {
                 val encodedUrl = Uri.encode(screen.videoUrl)
                 val titleParam = if (screen.title.isNotEmpty()) "?title=${Uri.encode(screen.title)}" else ""

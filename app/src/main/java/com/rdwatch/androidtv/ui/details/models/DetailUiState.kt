@@ -13,7 +13,7 @@ data class DetailUiState(
     val isLoading: Boolean = false,
     val isLoaded: Boolean = false,
     val error: String? = null,
-    val layoutConfig: DetailLayoutConfig = DetailLayoutConfig(),
+    val defaultLayoutConfig: DetailLayoutConfig = DetailLayoutConfig(),
     val focusedSection: DetailSection = DetailSection.HERO
 ) {
     val hasContent: Boolean get() = content != null
@@ -25,7 +25,7 @@ data class DetailUiState(
      * Get the layout configuration for the current content type
      */
     fun getLayoutConfig(): DetailLayoutConfig {
-        return content?.let { DetailLayoutConfig.forContentType(it.contentType) } ?: layoutConfig
+        return content?.let { DetailLayoutConfig.forContentType(it.contentType) } ?: defaultLayoutConfig
     }
     
     /**

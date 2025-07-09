@@ -307,7 +307,7 @@ private fun InfoQualityBadge(quality: String) {
             Icon(
                 imageVector = when (quality) {
                     "4K" -> Icons.Default.HighQuality
-                    "HDR" -> Icons.Default.Hdr
+                    "HDR" -> Icons.Default.HighQuality
                     else -> Icons.Default.VideoLabel
                 },
                 contentDescription = null,

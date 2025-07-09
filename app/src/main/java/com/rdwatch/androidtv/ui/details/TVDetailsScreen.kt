@@ -55,14 +55,15 @@ fun TVDetailsScreen(
             TVDetailsLoadingScreen(modifier = modifier)
         }
         is UiState.Error -> {
+            val errorState = uiState as UiState.Error
             TVDetailsErrorScreen(
-                error = uiState.message,
+                error = errorState.message,
                 onRetry = { viewModel.loadTVShow(tvShowId) },
                 onBackPressed = onBackPressed,
                 modifier = modifier
             )
         }
-        is UiState.Success -> {
+        is UiState.Success<*> -> {
             tvShowState?.let { tvShow ->
                 TVDetailsContent(
                     tvShow = tvShow,
@@ -164,8 +165,12 @@ private fun TVDetailsContent(
             item {
                 SeasonSelector(
                     seasons = tvShow.getSeasons(),
-                    selectedSeason = selectedSeason,
-                    onSeasonSelected = onSeasonSelected,
+                    selectedSeasonNumber = selectedSeason?.seasonNumber ?: 1,
+                    onSeasonSelected = { seasonNumber ->
+                        tvShow.getSeasonByNumber(seasonNumber)?.let { season ->
+                            onSeasonSelected(season)
+                        }
+                    },
                     modifier = Modifier.padding(horizontal = 32.dp, vertical = 16.dp)
                 )
             }
@@ -175,10 +180,13 @@ private fun TVDetailsContent(
         selectedSeason?.let { season ->
             item {
                 EpisodeGridSection(
-                    season = season,
-                    episodes = tvShow.getEpisodesForSeason(season.seasonNumber),
-                    selectedEpisode = selectedEpisode,
-                    progress = progress,
+                    tvShowDetail = tvShow.getTVShowDetail(),
+                    selectedSeasonNumber = season.seasonNumber,
+                    onSeasonSelected = { seasonNumber ->
+                        tvShow.getSeasonByNumber(seasonNumber)?.let { selectedSeason ->
+                            onSeasonSelected(selectedSeason)
+                        }
+                    },
                     onEpisodeClick = onEpisodeSelected,
                     modifier = Modifier.padding(horizontal = 32.dp, vertical = 16.dp)
                 )
@@ -196,7 +204,7 @@ private fun TVDetailsContent(
         // Related content section
         item {
             RelatedSection(
-                content = tvShow,
+                relatedContent = emptyList(),
                 onContentClick = { /* TODO: Handle related content click */ },
                 modifier = Modifier.padding(horizontal = 32.dp, vertical = 16.dp)
             )

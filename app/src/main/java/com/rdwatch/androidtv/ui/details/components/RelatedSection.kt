@@ -293,9 +293,9 @@ private fun ContentTypeIndicator(
         ContentType.TV_SHOW -> Icons.Default.Tv to "TV Show"
         ContentType.TV_EPISODE -> Icons.Default.VideoLibrary to "Episode"
         ContentType.DOCUMENTARY -> Icons.Default.VideoLibrary to "Doc"
-        ContentType.SPORTS -> Icons.Default.Sports to "Sports"
-        ContentType.MUSIC_VIDEO -> Icons.Default.MusicVideo to "Music"
-        ContentType.PODCAST -> Icons.Default.Podcast to "Podcast"
+        ContentType.SPORTS -> Icons.Default.SportsFootball to "Sports"
+        ContentType.MUSIC_VIDEO -> Icons.Default.MusicNote to "Music"
+        ContentType.PODCAST -> Icons.Default.AudioFile to "Podcast"
     }
     
     Surface(
