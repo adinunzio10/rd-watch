@@ -2,6 +2,7 @@ package com.rdwatch.androidtv.auth
 
 import android.graphics.Bitmap
 import android.graphics.Color
+import android.util.Log
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.EncodeHintType
 import com.google.zxing.WriterException
@@ -61,12 +62,23 @@ class QRCodeGenerator @Inject constructor() {
         text: String,
         tvSize: Int = 600  // Larger for TV viewing
     ): Bitmap? {
+        Log.d("QRCodeGenerator", "Generating TV optimized QR code for: $text")
+        Log.d("QRCodeGenerator", "Size: $tvSize")
+        
         // High contrast colors optimized for TV displays
-        return generateQRCode(
+        val result = generateQRCode(
             text = text,
             size = tvSize,
             foregroundColor = Color.BLACK,
             backgroundColor = Color.WHITE
         )
+        
+        if (result == null) {
+            Log.e("QRCodeGenerator", "Failed to generate QR code for text: $text")
+        } else {
+            Log.d("QRCodeGenerator", "Successfully generated QR code")
+        }
+        
+        return result
     }
 }
