@@ -1114,8 +1114,127 @@
           7,
           9
         ],
-        "status": "pending",
-        "subtasks": []
+        "status": "in-progress",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Design Content Details Layout Architecture",
+            "description": "Create the base layout structure for content details screen with proper navigation focus handling and Android TV UI guidelines",
+            "dependencies": [],
+            "details": "Define composable structure for header section, content info area, action buttons row, and scrollable content sections. Implement focus management for D-pad navigation between sections.\n<info added on 2025-07-09T04:24:28.297Z>\nContent Details Layout Architecture implementation has been completed successfully. The comprehensive component system includes:\n\n- ContentDetail interface providing type-safe content abstraction for movies, TV shows, episodes, and other content types\n- MovieContentDetail implementation that adapts the existing Movie model to the new architecture\n- DetailUiState for flexible state management across different content types\n- BaseDetailLayout offering a flexible structural foundation for various detail screens\n- Modular component extraction:\n  * HeroSection: Handles backdrop imagery, title display, metadata presentation, progress tracking, and primary action buttons\n  * InfoSection: Manages description text, metadata grid layout, genre tags, and cast information display\n  * ActionSection: Implements action buttons with TV-optimized focus handling and D-pad navigation\n  * RelatedSection: Displays related content cards with configurable styles and layouts\n\nThe new architecture delivers enhanced TV-specific behaviors, improved focus management, comprehensive metadata systems with quality indicators, progress tracking capabilities, and reusable modular components. The foundation is now ready for enhanced focus management implementation and comprehensive testing.\n</info added on 2025-07-09T04:24:28.297Z>",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Implement TMDb API Service Layer",
+            "description": "Build service layer for TMDb API integration with proper error handling and caching mechanisms",
+            "dependencies": [],
+            "details": "Create Retrofit interfaces for movie/TV show details, credits, recommendations endpoints. Implement repository pattern with proper error states and offline caching using Room database.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Create Media Header Component",
+            "description": "Build the header section displaying poster, backdrop, title, and basic media information",
+            "dependencies": [
+              1
+            ],
+            "details": "Implement hero image with backdrop blur effect, floating poster image, title typography, rating badges, and metadata (year, runtime, genres). Handle both movie and TV show variations.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Build Source Selection UI",
+            "description": "Create source management interface for selecting streaming providers and quality options",
+            "dependencies": [
+              1
+            ],
+            "details": "Design horizontally scrollable source cards with provider logos, quality badges, and availability status. Implement focus states and selection handling for remote control navigation.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Implement Action Button Row",
+            "description": "Create action buttons for play, trailer, watchlist, and other media actions",
+            "dependencies": [
+              1,
+              4
+            ],
+            "details": "Build focusable button row with play/resume, add to watchlist, play trailer, and download actions. Handle different states (playing, downloaded, in watchlist) with appropriate icons and labels.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 6,
+            "title": "Create TV Show Episode Grid",
+            "description": "Build episode selection grid for TV shows with season navigation",
+            "dependencies": [
+              1,
+              2
+            ],
+            "details": "Implement season dropdown/tabs, episode grid with thumbnails and titles, watched status indicators, and smooth D-pad navigation. Handle loading states and pagination for large seasons.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 7,
+            "title": "Build Cast and Crew Section",
+            "description": "Create horizontally scrollable cast/crew display with profile images",
+            "dependencies": [
+              1,
+              2
+            ],
+            "details": "Design card-based layout for cast members with profile photos, character names, and actor names. Implement lazy loading for images and smooth horizontal scrolling with D-pad support.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 8,
+            "title": "Implement Recommendations System",
+            "description": "Create recommendation section showing similar/related content",
+            "dependencies": [
+              1,
+              2
+            ],
+            "details": "Build horizontal content rows for 'Similar', 'You May Also Like', and 'More from [Director/Studio]' sections. Implement lazy loading and navigation to other detail screens.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 9,
+            "title": "Create Overview and Details Tab",
+            "description": "Build information tabs for synopsis, details, and additional metadata",
+            "dependencies": [
+              1,
+              3
+            ],
+            "details": "Implement expandable synopsis text, detailed information grid (director, writers, release date, languages), and ratings from multiple sources (IMDb, TMDb, Rotten Tomatoes).",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 10,
+            "title": "Implement State Management and Navigation",
+            "description": "Set up ViewModel, navigation integration, and state handling for the entire details screen",
+            "dependencies": [
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "details": "Create DetailsViewModel with StateFlow for UI state, integrate with Navigation component for deep linking, handle loading/error states, and implement proper lifecycle management for API calls.",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
       },
       {
         "id": 12,
@@ -2501,7 +2620,7 @@
     ],
     "metadata": {
       "created": "2025-06-22T03:41:46.714Z",
-      "updated": "2025-07-06T23:32:01.068Z",
+      "updated": "2025-07-09T04:24:33.171Z",
       "description": "Tasks for master context"
     }
   }
