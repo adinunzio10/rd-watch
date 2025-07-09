@@ -19,6 +19,9 @@ android {
         versionName = "1.0"
         
         testInstrumentationRunner = "com.rdwatch.androidtv.HiltTestRunner"
+        
+        // TMDb API Key configuration
+        buildConfigField("String", "TMDB_API_KEY", "\"${project.findProperty("TMDB_API_KEY") ?: ""}\"")
     }
 
     buildTypes {

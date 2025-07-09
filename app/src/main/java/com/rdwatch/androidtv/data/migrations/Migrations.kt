@@ -235,10 +235,231 @@ object Migrations {
         }
     }
     
+    val MIGRATION_5_6 = object : Migration(5, 6) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            // Create TMDb movies table
+            database.execSQL("""
+                CREATE TABLE IF NOT EXISTS `tmdb_movies` (
+                    `id` INTEGER PRIMARY KEY NOT NULL,
+                    `title` TEXT NOT NULL,
+                    `originalTitle` TEXT NOT NULL,
+                    `overview` TEXT,
+                    `releaseDate` TEXT,
+                    `posterPath` TEXT,
+                    `backdropPath` TEXT,
+                    `voteAverage` REAL NOT NULL,
+                    `voteCount` INTEGER NOT NULL,
+                    `popularity` REAL NOT NULL,
+                    `adult` INTEGER NOT NULL,
+                    `video` INTEGER NOT NULL,
+                    `originalLanguage` TEXT NOT NULL,
+                    `genreIds` TEXT NOT NULL,
+                    `runtime` INTEGER,
+                    `budget` INTEGER,
+                    `revenue` INTEGER,
+                    `status` TEXT,
+                    `tagline` TEXT,
+                    `homepage` TEXT,
+                    `imdbId` TEXT,
+                    `spokenLanguages` TEXT,
+                    `productionCompanies` TEXT,
+                    `productionCountries` TEXT,
+                    `genres` TEXT,
+                    `lastUpdated` INTEGER NOT NULL
+                )
+            """.trimIndent())
+            
+            // Create indices for tmdb_movies
+            database.execSQL("CREATE INDEX IF NOT EXISTS `index_tmdb_movies_title` ON `tmdb_movies` (`title`)")
+            database.execSQL("CREATE INDEX IF NOT EXISTS `index_tmdb_movies_popularity` ON `tmdb_movies` (`popularity`)")
+            database.execSQL("CREATE INDEX IF NOT EXISTS `index_tmdb_movies_voteAverage` ON `tmdb_movies` (`voteAverage`)")
+            database.execSQL("CREATE INDEX IF NOT EXISTS `index_tmdb_movies_releaseDate` ON `tmdb_movies` (`releaseDate`)")
+            database.execSQL("CREATE INDEX IF NOT EXISTS `index_tmdb_movies_lastUpdated` ON `tmdb_movies` (`lastUpdated`)")
+            
+            // Create TMDb TV shows table
+            database.execSQL("""
+                CREATE TABLE IF NOT EXISTS `tmdb_tv_shows` (
+                    `id` INTEGER PRIMARY KEY NOT NULL,
+                    `name` TEXT NOT NULL,
+                    `originalName` TEXT NOT NULL,
+                    `overview` TEXT,
+                    `firstAirDate` TEXT,
+                    `lastAirDate` TEXT,
+                    `posterPath` TEXT,
+                    `backdropPath` TEXT,
+                    `voteAverage` REAL NOT NULL,
+                    `voteCount` INTEGER NOT NULL,
+                    `popularity` REAL NOT NULL,
+                    `adult` INTEGER NOT NULL,
+                    `originalLanguage` TEXT NOT NULL,
+                    `genreIds` TEXT NOT NULL,
+                    `numberOfEpisodes` INTEGER,
+                    `numberOfSeasons` INTEGER,
+                    `status` TEXT,
+                    `type` TEXT,
+                    `homepage` TEXT,
+                    `inProduction` INTEGER,
+                    `languages` TEXT,
+                    `lastEpisodeToAir` TEXT,
+                    `nextEpisodeToAir` TEXT,
+                    `networks` TEXT,
+                    `originCountry` TEXT,
+                    `productionCompanies` TEXT,
+                    `productionCountries` TEXT,
+                    `spokenLanguages` TEXT,
+                    `seasons` TEXT,
+                    `genres` TEXT,
+                    `lastUpdated` INTEGER NOT NULL
+                )
+            """.trimIndent())
+            
+            // Create indices for tmdb_tv_shows
+            database.execSQL("CREATE INDEX IF NOT EXISTS `index_tmdb_tv_shows_name` ON `tmdb_tv_shows` (`name`)")
+            database.execSQL("CREATE INDEX IF NOT EXISTS `index_tmdb_tv_shows_popularity` ON `tmdb_tv_shows` (`popularity`)")
+            database.execSQL("CREATE INDEX IF NOT EXISTS `index_tmdb_tv_shows_voteAverage` ON `tmdb_tv_shows` (`voteAverage`)")
+            database.execSQL("CREATE INDEX IF NOT EXISTS `index_tmdb_tv_shows_firstAirDate` ON `tmdb_tv_shows` (`firstAirDate`)")
+            database.execSQL("CREATE INDEX IF NOT EXISTS `index_tmdb_tv_shows_lastUpdated` ON `tmdb_tv_shows` (`lastUpdated`)")
+            
+            // Create TMDb search results table
+            database.execSQL("""
+                CREATE TABLE IF NOT EXISTS `tmdb_search_results` (
+                    `id` TEXT PRIMARY KEY NOT NULL,
+                    `query` TEXT NOT NULL,
+                    `page` INTEGER NOT NULL,
+                    `totalPages` INTEGER NOT NULL,
+                    `totalResults` INTEGER NOT NULL,
+                    `searchType` TEXT NOT NULL,
+                    `results` TEXT NOT NULL,
+                    `lastUpdated` INTEGER NOT NULL
+                )
+            """.trimIndent())
+            
+            // Create indices for tmdb_search_results
+            database.execSQL("CREATE INDEX IF NOT EXISTS `index_tmdb_search_results_query` ON `tmdb_search_results` (`query`)")
+            database.execSQL("CREATE INDEX IF NOT EXISTS `index_tmdb_search_results_searchType` ON `tmdb_search_results` (`searchType`)")
+            database.execSQL("CREATE INDEX IF NOT EXISTS `index_tmdb_search_results_lastUpdated` ON `tmdb_search_results` (`lastUpdated`)")
+            
+            // Create TMDb credits table
+            database.execSQL("""
+                CREATE TABLE IF NOT EXISTS `tmdb_credits` (
+                    `id` TEXT PRIMARY KEY NOT NULL,
+                    `contentId` INTEGER NOT NULL,
+                    `contentType` TEXT NOT NULL,
+                    `cast` TEXT NOT NULL,
+                    `crew` TEXT NOT NULL,
+                    `lastUpdated` INTEGER NOT NULL
+                )
+            """.trimIndent())
+            
+            // Create indices for tmdb_credits
+            database.execSQL("CREATE INDEX IF NOT EXISTS `index_tmdb_credits_contentId` ON `tmdb_credits` (`contentId`)")
+            database.execSQL("CREATE INDEX IF NOT EXISTS `index_tmdb_credits_contentType` ON `tmdb_credits` (`contentType`)")
+            database.execSQL("CREATE INDEX IF NOT EXISTS `index_tmdb_credits_lastUpdated` ON `tmdb_credits` (`lastUpdated`)")
+            
+            // Create TMDb recommendations table
+            database.execSQL("""
+                CREATE TABLE IF NOT EXISTS `tmdb_recommendations` (
+                    `id` TEXT PRIMARY KEY NOT NULL,
+                    `contentId` INTEGER NOT NULL,
+                    `contentType` TEXT NOT NULL,
+                    `recommendationType` TEXT NOT NULL,
+                    `page` INTEGER NOT NULL,
+                    `totalPages` INTEGER NOT NULL,
+                    `totalResults` INTEGER NOT NULL,
+                    `results` TEXT NOT NULL,
+                    `lastUpdated` INTEGER NOT NULL
+                )
+            """.trimIndent())
+            
+            // Create indices for tmdb_recommendations
+            database.execSQL("CREATE INDEX IF NOT EXISTS `index_tmdb_recommendations_contentId` ON `tmdb_recommendations` (`contentId`)")
+            database.execSQL("CREATE INDEX IF NOT EXISTS `index_tmdb_recommendations_contentType` ON `tmdb_recommendations` (`contentType`)")
+            database.execSQL("CREATE INDEX IF NOT EXISTS `index_tmdb_recommendations_recommendationType` ON `tmdb_recommendations` (`recommendationType`)")
+            database.execSQL("CREATE INDEX IF NOT EXISTS `index_tmdb_recommendations_lastUpdated` ON `tmdb_recommendations` (`lastUpdated`)")
+            
+            // Create TMDb images table
+            database.execSQL("""
+                CREATE TABLE IF NOT EXISTS `tmdb_images` (
+                    `id` TEXT PRIMARY KEY NOT NULL,
+                    `contentId` INTEGER NOT NULL,
+                    `contentType` TEXT NOT NULL,
+                    `backdrops` TEXT NOT NULL,
+                    `posters` TEXT NOT NULL,
+                    `logos` TEXT,
+                    `lastUpdated` INTEGER NOT NULL
+                )
+            """.trimIndent())
+            
+            // Create indices for tmdb_images
+            database.execSQL("CREATE INDEX IF NOT EXISTS `index_tmdb_images_contentId` ON `tmdb_images` (`contentId`)")
+            database.execSQL("CREATE INDEX IF NOT EXISTS `index_tmdb_images_contentType` ON `tmdb_images` (`contentType`)")
+            database.execSQL("CREATE INDEX IF NOT EXISTS `index_tmdb_images_lastUpdated` ON `tmdb_images` (`lastUpdated`)")
+            
+            // Create TMDb videos table
+            database.execSQL("""
+                CREATE TABLE IF NOT EXISTS `tmdb_videos` (
+                    `id` TEXT PRIMARY KEY NOT NULL,
+                    `contentId` INTEGER NOT NULL,
+                    `contentType` TEXT NOT NULL,
+                    `results` TEXT NOT NULL,
+                    `lastUpdated` INTEGER NOT NULL
+                )
+            """.trimIndent())
+            
+            // Create indices for tmdb_videos
+            database.execSQL("CREATE INDEX IF NOT EXISTS `index_tmdb_videos_contentId` ON `tmdb_videos` (`contentId`)")
+            database.execSQL("CREATE INDEX IF NOT EXISTS `index_tmdb_videos_contentType` ON `tmdb_videos` (`contentType`)")
+            database.execSQL("CREATE INDEX IF NOT EXISTS `index_tmdb_videos_lastUpdated` ON `tmdb_videos` (`lastUpdated`)")
+            
+            // Create TMDb genres table
+            database.execSQL("""
+                CREATE TABLE IF NOT EXISTS `tmdb_genres` (
+                    `id` INTEGER PRIMARY KEY NOT NULL,
+                    `name` TEXT NOT NULL,
+                    `mediaType` TEXT NOT NULL,
+                    `lastUpdated` INTEGER NOT NULL
+                )
+            """.trimIndent())
+            
+            // Create indices for tmdb_genres
+            database.execSQL("CREATE INDEX IF NOT EXISTS `index_tmdb_genres_name` ON `tmdb_genres` (`name`)")
+            database.execSQL("CREATE INDEX IF NOT EXISTS `index_tmdb_genres_mediaType` ON `tmdb_genres` (`mediaType`)")
+            database.execSQL("CREATE INDEX IF NOT EXISTS `index_tmdb_genres_lastUpdated` ON `tmdb_genres` (`lastUpdated`)")
+            
+            // Create TMDb config table
+            database.execSQL("""
+                CREATE TABLE IF NOT EXISTS `tmdb_config` (
+                    `id` TEXT PRIMARY KEY NOT NULL,
+                    `imageBaseUrl` TEXT NOT NULL,
+                    `secureBaseUrl` TEXT NOT NULL,
+                    `backdropSizes` TEXT NOT NULL,
+                    `logoSizes` TEXT NOT NULL,
+                    `posterSizes` TEXT NOT NULL,
+                    `profileSizes` TEXT NOT NULL,
+                    `stillSizes` TEXT NOT NULL,
+                    `changeKeys` TEXT NOT NULL,
+                    `lastUpdated` INTEGER NOT NULL
+                )
+            """.trimIndent())
+            
+            // Create indices for tmdb_config
+            database.execSQL("CREATE INDEX IF NOT EXISTS `index_tmdb_config_lastUpdated` ON `tmdb_config` (`lastUpdated`)")
+        }
+    }
+    
+    val MIGRATION_6_7 = object : Migration(6, 7) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            // No schema changes needed - just version bump to ensure consistency
+            // All TMDb tables were already created in migration 5_6
+        }
+    }
+    
     // All migrations for this database
     val ALL_MIGRATIONS = arrayOf(
         MIGRATION_1_2,
         MIGRATION_2_3,
-        MIGRATION_3_4
+        MIGRATION_3_4,
+        MIGRATION_5_6,
+        MIGRATION_6_7
     )
 }

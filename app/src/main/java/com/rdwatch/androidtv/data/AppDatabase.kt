@@ -23,9 +23,19 @@ import com.rdwatch.androidtv.data.entities.*
         SubtitleCacheEntity::class,
         SubtitleResultEntity::class,
         SubtitleFileEntity::class,
-        SubtitleProviderStatsEntity::class
+        SubtitleProviderStatsEntity::class,
+        // TMDb entities
+        TMDbMovieEntity::class,
+        TMDbTVEntity::class,
+        TMDbSearchResultEntity::class,
+        TMDbCreditsEntity::class,
+        TMDbRecommendationEntity::class,
+        TMDbImagesEntity::class,
+        TMDbVideosEntity::class,
+        TMDbGenreEntity::class,
+        TMDbConfigEntity::class
     ],
-    version = 5,
+    version = 7,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -43,6 +53,11 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun downloadDao(): DownloadDao
     abstract fun fileHashDao(): FileHashDao
     abstract fun subtitleDao(): SubtitleDao
+    
+    // TMDb DAOs
+    abstract fun tmdbMovieDao(): TMDbMovieDao
+    abstract fun tmdbTVDao(): TMDbTVDao
+    abstract fun tmdbSearchDao(): TMDbSearchDao
 
     companion object {
         const val DATABASE_NAME = "rdwatch_database"
