@@ -1153,7 +1153,7 @@
               1
             ],
             "details": "Design horizontally scrollable source cards with provider logos, quality badges, and availability status. Implement focus states and selection handling for remote control navigation.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -1177,7 +1177,7 @@
               2
             ],
             "details": "Implement season dropdown/tabs, episode grid with thumbnails and titles, watched status indicators, and smooth D-pad navigation. Handle loading states and pagination for large seasons.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -2620,7 +2620,7 @@
     ],
     "metadata": {
       "created": "2025-06-22T03:41:46.714Z",
-      "updated": "2025-07-09T06:22:58.188Z",
+      "updated": "2025-07-09T15:32:52.098Z",
       "description": "Tasks for master context"
     }
   }

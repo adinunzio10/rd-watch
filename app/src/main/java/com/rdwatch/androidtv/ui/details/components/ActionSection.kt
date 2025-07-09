@@ -19,8 +19,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.rdwatch.androidtv.ui.details.models.*
-import com.rdwatch.androidtv.ui.focus.TVFocusIndicator
-import com.rdwatch.androidtv.ui.focus.tvFocusable
+import com.rdwatch.androidtv.presentation.components.tvFocusable
 
 /**
  * Action section component for content detail screens

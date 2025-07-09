@@ -14,6 +14,8 @@ interface ContentDetail {
     val metadata: ContentMetadata
     val actions: List<ContentAction>
     val videoUrl: String?
+    val sources: List<StreamingSource>
+        get() = emptyList() // Default implementation for backward compatibility
     
     /**
      * Get display title for the content
@@ -33,12 +35,34 @@ interface ContentDetail {
     /**
      * Check if content is playable
      */
-    fun isPlayable(): Boolean = videoUrl != null
+    fun isPlayable(): Boolean = videoUrl != null || sources.isNotEmpty()
     
     /**
      * Get content-specific metadata chips
      */
     fun getMetadataChips(): List<MetadataChip> = metadata.toChips()
+    
+    /**
+     * Get available streaming sources
+     */
+    fun getAvailableSources(): List<StreamingSource> = sources.filter { it.isCurrentlyAvailable() }
+    
+    /**
+     * Get the best quality source (if available)
+     */
+    fun getBestQualitySource(): StreamingSource? = 
+        getAvailableSources().maxByOrNull { it.quality.priority }
+    
+    /**
+     * Get free streaming sources
+     */
+    fun getFreeSources(): List<StreamingSource> = 
+        getAvailableSources().filter { !it.requiresPayment() }
+    
+    /**
+     * Check if content has free streaming options
+     */
+    fun hasFreeStreaming(): Boolean = getFreeSources().isNotEmpty()
 }
 
 /**
