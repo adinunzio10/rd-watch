@@ -38,6 +38,20 @@ app/src/main/java/com/rdwatch/androidtv/
 │   ├── theme/                  # Material3 theme configuration
 │   │   ├── Theme.kt            # Theme definitions
 │   │   └── Type.kt             # TV-optimized typography
+│   ├── details/                # Content Details System
+│   │   ├── components/         # Content detail UI components
+│   │   │   ├── HeroSection.kt  # Media header with backdrop, poster, metadata
+│   │   │   ├── InfoSection.kt  # Content information display
+│   │   │   ├── ActionSection.kt # Action buttons (play, add to list, etc.)
+│   │   │   └── RelatedSection.kt # Related content recommendations
+│   │   ├── layouts/            # Layout containers
+│   │   │   └── BaseDetailLayout.kt # Base layout for content detail screens
+│   │   ├── models/             # Content detail data models
+│   │   │   ├── ContentDetail.kt # Interface for content representation
+│   │   │   ├── DetailUiState.kt # UI state for detail screens
+│   │   │   ├── MovieContentDetail.kt # Movie-specific implementation
+│   │   │   └── TMDbContentDetail.kt # TMDb-enhanced content details
+│   │   └── MovieDetailsScreen.kt # Main movie detail screen
 │   ├── filebrowser/            # Account File Browser System
 │   │   ├── AccountFileBrowserScreen.kt     # Main UI screen
 │   │   ├── AccountFileBrowserViewModel.kt  # State management
@@ -94,6 +108,152 @@ app/src/main/java/com/rdwatch/androidtv/
 │   └── [other modules]
 └── [legacy leanback files]     # Being phased out
 ```
+
+## Content Details System Architecture
+
+### Overview
+
+The Content Details System provides a unified architecture for displaying detailed information about movies, TV shows, and other media content. It features a modular component-based design, TMDb integration, and TV-optimized UI patterns.
+
+### Core Components
+
+#### 1. HeroSection Component (`HeroSection.kt`)
+- **Purpose**: Media header component with backdrop, floating poster, and metadata
+- **Key Features**:
+  - Backdrop image with subtle blur effect for better text readability
+  - Floating poster image with shadow elevation and rounded corners
+  - Content-type specific metadata display (movie vs TV show vs episode)
+  - Rating badges with star icons and quality indicators (4K, HDR, HD)
+  - Progress indicators for partially watched content
+  - Enhanced typography hierarchy with proper contrast
+  - TV-optimized action buttons with focus states
+
+#### 2. BaseDetailLayout (`BaseDetailLayout.kt`)
+- **Purpose**: Layout container for content detail screens
+- **Key Features**:
+  - Modular section-based layout system
+  - Loading, error, and content states
+  - TV-optimized overscan margin handling
+  - Lazy loading with proper focus management
+  - Integration with DetailUiState for reactive updates
+
+#### 3. ContentDetail Model System (`models/`)
+- **ContentDetail.kt**: Interface for unified content representation
+- **DetailUiState.kt**: UI state management with progress tracking
+- **TMDbContentDetail.kt**: TMDb-enhanced content implementations
+- **Key Features**:
+  - Content-type specific metadata handling
+  - Action system for user interactions
+  - Progress tracking for watch history
+  - Extensible metadata system with custom fields
+
+### Media Header Component Features
+
+#### Visual Elements
+- **Backdrop Image**: Full-width background with blur effect
+- **Floating Poster**: Overlay positioned poster with shadow
+- **Title Typography**: Large, bold text with proper contrast
+- **Metadata Badges**: Color-coded quality and rating indicators
+- **Action Buttons**: Primary play/resume buttons with focus states
+
+#### Content-Type Variations
+- **Movies**: Runtime, director, studio, year, rating
+- **TV Shows**: Seasons, episodes, network, year, rating
+- **Episodes**: Season/episode number, runtime, air date
+
+#### Rating System
+- **Star Rating**: Gold star icons with numeric ratings
+- **Quality Badges**: Color-coded 4K (green), HDR (orange), HD (blue)
+- **Custom Metadata**: Extensible system for additional info
+
+### Integration Patterns
+
+#### TMDb Integration
+```kotlin
+// TMDb-specific ContentDetail with enhanced metadata
+data class TMDbMovieContentDetail(
+    private val tmdbMovie: TMDbMovieResponse,
+    private val credits: TMDbCreditsResponse? = null
+) : ContentDetail {
+    
+    override val metadata: ContentMetadata = ContentMetadata(
+        year = tmdbMovie.releaseDate?.take(4),
+        duration = formatRuntime(tmdbMovie.runtime),
+        rating = formatTMDbRating(tmdbMovie.voteAverage),
+        cast = credits?.cast?.take(5)?.map { it.name } ?: emptyList(),
+        director = credits?.crew?.find { it.job == "Director" }?.name
+    )
+}
+```
+
+#### Progress Tracking
+```kotlin
+// ContentProgress integration with HeroSection
+data class ContentProgress(
+    val watchPercentage: Float = 0f,
+    val isCompleted: Boolean = false,
+    val resumePosition: Long = 0L,
+    val totalDuration: Long = 0L
+)
+
+// Usage in HeroSection
+if (progress.isPartiallyWatched) {
+    // Show "Resume Playing" button
+    // Display progress indicator
+}
+```
+
+#### TV-Optimized UI Patterns
+```kotlin
+// Enhanced action button with focus states
+@Composable
+private fun HeroActionButton(
+    action: ContentAction,
+    onClick: () -> Unit,
+    isResume: Boolean = false
+) {
+    var isFocused by remember { mutableStateOf(false) }
+    
+    TVFocusIndicator(isFocused = isFocused) {
+        Button(
+            onClick = onClick,
+            modifier = Modifier
+                .tvFocusable(onFocusChanged = { isFocused = it.isFocused })
+                .height(52.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = if (isFocused) {
+                    MaterialTheme.colorScheme.primary
+                } else {
+                    MaterialTheme.colorScheme.primary.copy(alpha = 0.95f)
+                }
+            ),
+            shape = RoundedCornerShape(26.dp),
+            elevation = ButtonDefaults.buttonElevation(
+                defaultElevation = if (isFocused) 8.dp else 4.dp
+            )
+        ) {
+            // Button content with icon and text
+        }
+    }
+}
+```
+
+### Testing Strategy
+
+#### Component Testing
+- **HeroSection**: Content display, metadata rendering, action handling
+- **BaseDetailLayout**: State management, section visibility, navigation
+- **ContentDetail**: Data transformation, content-type specifics
+
+#### Integration Testing
+- **TMDb Integration**: API data to ContentDetail transformation
+- **Progress Tracking**: Watch history integration
+- **Navigation**: Screen transitions and focus management
+
+#### TV-Specific Testing
+- **Focus Management**: D-pad navigation, focus restoration
+- **Visual Regression**: Typography, layout, color contrast
+- **Performance**: Image loading, blur effects, animations
 
 ## AccountFileBrowser System Architecture
 

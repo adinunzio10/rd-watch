@@ -13,6 +13,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.unit.dp
 import com.rdwatch.androidtv.ui.common.UiState
 import com.rdwatch.androidtv.ui.details.models.*
+import com.rdwatch.androidtv.ui.details.components.HeroSection
 
 /**
  * Base layout for content detail screens
@@ -101,8 +102,9 @@ private fun ContentDetailLayout(
                 DetailSection.HERO -> {
                     if (uiState.shouldShowSection(section)) {
                         item(key = "hero_${content.id}") {
-                            HeroSectionPlaceholder(
+                            HeroSection(
                                 content = content,
+                                progress = uiState.progress ?: ContentProgress(),
                                 onActionClick = onActionClick,
                                 onBackPressed = onBackPressed,
                                 firstFocusRequester = firstFocusRequester,
@@ -284,28 +286,6 @@ private fun ContentNotFoundState(
 }
 
 // Placeholder components that will be replaced by actual implementations
-@Composable
-private fun HeroSectionPlaceholder(
-    content: ContentDetail,
-    onActionClick: (ContentAction) -> Unit,
-    onBackPressed: () -> Unit,
-    firstFocusRequester: FocusRequester,
-    overscanMargin: androidx.compose.ui.unit.Dp
-) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(400.dp)
-            .background(MaterialTheme.colorScheme.primaryContainer),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = "Hero Section: ${content.title}",
-            style = MaterialTheme.typography.headlineMedium,
-            color = MaterialTheme.colorScheme.onPrimaryContainer
-        )
-    }
-}
 
 @Composable
 private fun InfoSectionPlaceholder(

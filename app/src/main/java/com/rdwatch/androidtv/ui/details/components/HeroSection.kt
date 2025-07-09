@@ -10,6 +10,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Brush
@@ -63,6 +64,16 @@ fun HeroSection(
                 .padding(overscanMargin)
         )
         
+        // Floating poster image
+        FloatingPosterImage(
+            imageUrl = content.cardImageUrl,
+            contentDescription = content.title,
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .padding(overscanMargin)
+                .padding(bottom = 120.dp)
+        )
+        
         // Content info overlay
         HeroContentInfo(
             content = content,
@@ -71,6 +82,7 @@ fun HeroSection(
             modifier = Modifier
                 .align(Alignment.BottomStart)
                 .padding(overscanMargin)
+                .padding(start = 200.dp) // Offset for poster image
                 .fillMaxWidth(0.6f)
         )
     }
@@ -88,6 +100,7 @@ private fun HeroBackground(
         contentScale = ContentScale.Crop,
         priority = ImagePriority.HIGH,
         modifier = modifier
+            .blur(radius = 1.dp) // Subtle blur effect for better text readability
     )
 }
 
@@ -148,30 +161,48 @@ private fun HeroContentInfo(
 ) {
     Column(
         modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // Content title
+        // Content title with enhanced typography
         Text(
             text = content.getDisplayTitle(),
-            style = MaterialTheme.typography.displayMedium,
+            style = MaterialTheme.typography.displayLarge.copy(
+                fontWeight = FontWeight.ExtraBold,
+                lineHeight = MaterialTheme.typography.displayLarge.lineHeight * 0.9f
+            ),
             color = Color.White,
-            fontWeight = FontWeight.Bold,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis
         )
         
-        // Metadata chips
+        // Subtitle/tagline from description (first line)
+        content.description?.let { description ->
+            if (description.isNotBlank()) {
+                Text(
+                    text = description.lines().first().take(120) + if (description.length > 120) "..." else "",
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.Medium,
+                        lineHeight = MaterialTheme.typography.titleMedium.lineHeight * 1.1f
+                    ),
+                    color = Color.White.copy(alpha = 0.9f),
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+        }
+        
+        // Metadata chips with improved spacing
         HeroMetadataRow(
             content = content,
             progress = progress
         )
         
-        // Progress indicator
+        // Progress indicator with enhanced styling
         if (progress.hasProgress && !progress.isCompleted) {
             HeroProgressIndicator(progress = progress)
         }
         
-        // Primary action button
+        // Primary action button with enhanced styling
         HeroPrimaryAction(
             content = content,
             progress = progress,
@@ -189,8 +220,9 @@ private fun HeroMetadataRow(
         horizontalArrangement = Arrangement.spacedBy(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Display metadata chips
-        content.getMetadataChips().take(4).forEach { chip ->
+        // Display content-type specific metadata chips
+        val chips = getContentTypeSpecificChips(content)
+        chips.take(5).forEach { chip ->
             HeroMetadataChip(chip = chip)
         }
         
@@ -206,8 +238,162 @@ private fun HeroMetadataRow(
     }
 }
 
+/**
+ * Get content-type specific metadata chips
+ */
+private fun getContentTypeSpecificChips(content: ContentDetail): List<MetadataChip> {
+    val chips = mutableListOf<MetadataChip>()
+    
+    when (content.contentType) {
+        ContentType.MOVIE -> {
+            // Movie-specific metadata: Quality, Rating, Year, Duration, Studio
+            content.metadata.quality?.let { chips.add(MetadataChip.Quality(it)) }
+            if (content.metadata.is4K) chips.add(MetadataChip.Quality("4K"))
+            if (content.metadata.isHDR) chips.add(MetadataChip.Quality("HDR"))
+            content.metadata.rating?.let { chips.add(MetadataChip.Rating(it)) }
+            content.metadata.year?.let { chips.add(MetadataChip.Year(it)) }
+            content.metadata.duration?.let { chips.add(MetadataChip.Duration(it)) }
+            content.metadata.studio?.let { chips.add(MetadataChip.Studio(it)) }
+        }
+        ContentType.TV_SHOW -> {
+            // TV Show-specific metadata: Quality, Rating, Year, Seasons, Network
+            content.metadata.quality?.let { chips.add(MetadataChip.Quality(it)) }
+            if (content.metadata.is4K) chips.add(MetadataChip.Quality("4K"))
+            if (content.metadata.isHDR) chips.add(MetadataChip.Quality("HDR"))
+            content.metadata.rating?.let { chips.add(MetadataChip.Rating(it)) }
+            content.metadata.year?.let { chips.add(MetadataChip.Year(it)) }
+            
+            // Add seasons info from custom metadata
+            content.metadata.customMetadata["seasons"]?.let { seasons ->
+                chips.add(MetadataChip.Custom("$seasons Seasons"))
+            }
+            content.metadata.customMetadata["episodes"]?.let { episodes ->
+                chips.add(MetadataChip.Custom("$episodes Episodes"))
+            }
+            
+            content.metadata.studio?.let { chips.add(MetadataChip.Studio(it)) }
+        }
+        ContentType.TV_EPISODE -> {
+            // Episode-specific metadata: Quality, Rating, Season/Episode, Duration
+            content.metadata.quality?.let { chips.add(MetadataChip.Quality(it)) }
+            if (content.metadata.is4K) chips.add(MetadataChip.Quality("4K"))
+            if (content.metadata.isHDR) chips.add(MetadataChip.Quality("HDR"))
+            content.metadata.rating?.let { chips.add(MetadataChip.Rating(it)) }
+            
+            // Show season and episode info
+            val season = content.metadata.season
+            val episode = content.metadata.episode
+            if (season != null && episode != null) {
+                chips.add(MetadataChip.Custom("S${season}E${episode}"))
+            }
+            
+            content.metadata.duration?.let { chips.add(MetadataChip.Duration(it)) }
+            content.metadata.year?.let { chips.add(MetadataChip.Year(it)) }
+        }
+        else -> {
+            // Default metadata for other content types
+            content.metadata.quality?.let { chips.add(MetadataChip.Quality(it)) }
+            if (content.metadata.is4K) chips.add(MetadataChip.Quality("4K"))
+            if (content.metadata.isHDR) chips.add(MetadataChip.Quality("HDR"))
+            content.metadata.rating?.let { chips.add(MetadataChip.Rating(it)) }
+            content.metadata.year?.let { chips.add(MetadataChip.Year(it)) }
+            content.metadata.duration?.let { chips.add(MetadataChip.Duration(it)) }
+        }
+    }
+    
+    return chips
+}
+
 @Composable
 private fun HeroMetadataChip(
+    chip: MetadataChip
+) {
+    when (chip) {
+        is MetadataChip.Rating -> {
+            RatingBadge(rating = chip.text)
+        }
+        is MetadataChip.Quality -> {
+            QualityBadge(quality = chip.text)
+        }
+        else -> {
+            DefaultMetadataChip(chip = chip)
+        }
+    }
+}
+
+@Composable
+private fun RatingBadge(
+    rating: String,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        color = Color.Black.copy(alpha = 0.7f),
+        shape = RoundedCornerShape(16.dp),
+        modifier = modifier
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Default.Star,
+                contentDescription = null,
+                tint = Color(0xFFFFD700), // Gold color for star
+                modifier = Modifier.size(16.dp)
+            )
+            Text(
+                text = rating,
+                style = MaterialTheme.typography.labelMedium,
+                color = Color.White,
+                fontWeight = FontWeight.SemiBold
+            )
+        }
+    }
+}
+
+@Composable
+private fun QualityBadge(
+    quality: String,
+    modifier: Modifier = Modifier
+) {
+    val backgroundColor = when (quality) {
+        "4K" -> Color(0xFF4CAF50) // Green for 4K
+        "HDR" -> Color(0xFFFF9800) // Orange for HDR
+        "HD" -> Color(0xFF2196F3) // Blue for HD
+        else -> Color.Black.copy(alpha = 0.7f)
+    }
+    
+    Surface(
+        color = backgroundColor,
+        shape = RoundedCornerShape(16.dp),
+        modifier = modifier
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            if (quality in listOf("4K", "HDR", "HD")) {
+                Icon(
+                    imageVector = Icons.Default.HighQuality,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(16.dp)
+                )
+            }
+            Text(
+                text = quality,
+                style = MaterialTheme.typography.labelMedium,
+                color = Color.White,
+                fontWeight = FontWeight.Bold
+            )
+        }
+    }
+}
+
+@Composable
+private fun DefaultMetadataChip(
     chip: MetadataChip
 ) {
     Surface(
@@ -242,19 +428,33 @@ private fun HeroMetadataChip(
 
 @Composable
 private fun HeroProgressIndicator(progress: ContentProgress) {
-    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        Text(
-            text = progress.getProgressText(),
-            style = MaterialTheme.typography.bodyMedium,
-            color = Color.White.copy(alpha = 0.9f)
-        )
+    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Default.PlayArrow,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(16.dp)
+            )
+            Text(
+                text = progress.getProgressText(),
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    fontWeight = FontWeight.Medium
+                ),
+                color = Color.White.copy(alpha = 0.95f)
+            )
+        }
         LinearProgressIndicator(
             progress = { progress.watchPercentage },
             modifier = Modifier
-                .width(200.dp)
-                .height(4.dp),
+                .width(240.dp)
+                .height(6.dp)
+                .clip(RoundedCornerShape(3.dp)),
             color = MaterialTheme.colorScheme.primary,
-            trackColor = Color.White.copy(alpha = 0.3f)
+            trackColor = Color.White.copy(alpha = 0.2f)
         )
     }
 }
@@ -291,32 +491,62 @@ private fun HeroActionButton(
             modifier = Modifier
                 .tvFocusable(
                     onFocusChanged = { isFocused = it.isFocused }
-                ),
+                )
+                .height(52.dp),
             colors = ButtonDefaults.buttonColors(
                 containerColor = if (isFocused) {
                     MaterialTheme.colorScheme.primary
                 } else {
-                    MaterialTheme.colorScheme.primary.copy(alpha = 0.9f)
+                    MaterialTheme.colorScheme.primary.copy(alpha = 0.95f)
                 }
             ),
-            contentPadding = PaddingValues(horizontal = 24.dp, vertical = 12.dp)
+            shape = RoundedCornerShape(26.dp),
+            contentPadding = PaddingValues(horizontal = 28.dp, vertical = 14.dp),
+            elevation = ButtonDefaults.buttonElevation(
+                defaultElevation = if (isFocused) 8.dp else 4.dp
+            )
         ) {
             Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
                     imageVector = Icons.Default.PlayArrow,
                     contentDescription = null,
-                    modifier = Modifier.size(24.dp)
+                    modifier = Modifier.size(26.dp)
                 )
                 Text(
-                    text = if (isResume) "Resume" else action.title,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold
+                    text = if (isResume) "Resume Playing" else action.title,
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.Bold
+                    )
                 )
             }
         }
+    }
+}
+
+/**
+ * Floating poster image component that overlays on the hero section
+ */
+@Composable
+private fun FloatingPosterImage(
+    imageUrl: String?,
+    contentDescription: String,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        modifier = modifier.size(width = 160.dp, height = 240.dp),
+        shape = RoundedCornerShape(12.dp),
+        shadowElevation = 8.dp
+    ) {
+        SmartTVImageLoader(
+            imageUrl = imageUrl,
+            contentDescription = contentDescription,
+            contentScale = ContentScale.Crop,
+            priority = ImagePriority.HIGH,
+            modifier = Modifier.clip(RoundedCornerShape(12.dp))
+        )
     }
 }
 

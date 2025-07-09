@@ -9,6 +9,7 @@ import com.rdwatch.androidtv.ui.common.UiState
 data class DetailUiState(
     val content: ContentDetail? = null,
     val relatedContent: List<ContentDetail> = emptyList(),
+    val progress: ContentProgress? = null,
     val isLoading: Boolean = false,
     val isLoaded: Boolean = false,
     val error: String? = null,
