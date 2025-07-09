@@ -10,6 +10,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.rdwatch.androidtv.auth.ui.AuthenticationScreen
+import com.rdwatch.androidtv.auth.ui.AuthGuard
 import com.rdwatch.androidtv.ui.browse.BrowseScreen
 import com.rdwatch.androidtv.ui.settings.SettingsScreen
 import com.rdwatch.androidtv.ui.settings.scrapers.ScraperSettingsScreen
@@ -64,13 +65,24 @@ fun AppNavigation(
                 )
             }
         ) {
-            TVHomeScreen(
-                onNavigateToScreen = { screen ->
-                    navController.navigate(screen)
+            AuthGuard(
+                onAuthenticationRequired = {
+                    // Navigate to authentication and clear back stack
+                    navController.navigate(Screen.Authentication) {
+                        popUpTo(0) { inclusive = true }
+                    }
                 },
-                onMovieClick = { movie ->
-                    navController.navigate(Screen.MovieDetails(movie.id.toString()))
-                }
+                content = {
+                    TVHomeScreen(
+                        onNavigateToScreen = { screen ->
+                            navController.navigate(screen)
+                        },
+                        onMovieClick = { movie ->
+                            navController.navigate(Screen.MovieDetails(movie.id.toString()))
+                        }
+                    )
+                },
+                showLoadingOnInitializing = true
             )
         }
         
@@ -88,12 +100,21 @@ fun AppNavigation(
                 )
             }
         ) {
-            BrowseScreen(
-                onMovieClick = { movie ->
-                    navController.navigate(Screen.MovieDetails(movie.id.toString()))
+            AuthGuard(
+                onAuthenticationRequired = {
+                    navController.navigate(Screen.Authentication) {
+                        popUpTo(0) { inclusive = true }
+                    }
                 },
-                onBackPressed = {
-                    navController.popBackStack()
+                content = {
+                    BrowseScreen(
+                        onMovieClick = { movie ->
+                            navController.navigate(Screen.MovieDetails(movie.id.toString()))
+                        },
+                        onBackPressed = {
+                            navController.popBackStack()
+                        }
+                    )
                 }
             )
         }
@@ -160,12 +181,21 @@ fun AppNavigation(
                 )
             }
         ) {
-            SearchScreen(
-                onNavigateBack = {
-                    navController.popBackStack()
+            AuthGuard(
+                onAuthenticationRequired = {
+                    navController.navigate(Screen.Authentication) {
+                        popUpTo(0) { inclusive = true }
+                    }
                 },
-                onItemSelected = { movieId ->
-                    navController.navigate(Screen.MovieDetails(movieId))
+                content = {
+                    SearchScreen(
+                        onNavigateBack = {
+                            navController.popBackStack()
+                        },
+                        onItemSelected = { movieId ->
+                            navController.navigate(Screen.MovieDetails(movieId))
+                        }
+                    )
                 }
             )
         }
@@ -238,15 +268,24 @@ fun AppNavigation(
                 )
             }
         ) {
-            ProfileScreen(
-                onMovieClick = { movie ->
-                    navController.navigate(Screen.MovieDetails(movie.id.toString()))
+            AuthGuard(
+                onAuthenticationRequired = {
+                    navController.navigate(Screen.Authentication) {
+                        popUpTo(0) { inclusive = true }
+                    }
                 },
-                onNavigateToScreen = { screen ->
-                    navController.navigate(screen)
-                },
-                onBackPressed = {
-                    navController.popBackStack()
+                content = {
+                    ProfileScreen(
+                        onMovieClick = { movie ->
+                            navController.navigate(Screen.MovieDetails(movie.id.toString()))
+                        },
+                        onNavigateToScreen = { screen ->
+                            navController.navigate(screen)
+                        },
+                        onBackPressed = {
+                            navController.popBackStack()
+                        }
+                    )
                 }
             )
         }

@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -23,6 +24,8 @@ import com.rdwatch.androidtv.util.PlaybackCleanupManager
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import androidx.media3.common.util.UnstableApi
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 /**
  * Main Activity using Jetpack Compose for TV interface
@@ -66,15 +69,25 @@ class MainActivity : ComponentActivity() {
                 if (isReady) {
                     Log.d(TAG, "App is ready, showing navigation")
                     val navController = rememberNavController()
+                    val coroutineScope = rememberCoroutineScope()
+                    
                     AppNavigation(
                         navController = navController,
                         startDestination = startDestination,
                         onAuthenticationSuccess = {
                             Log.d(TAG, "Authentication success callback triggered")
                             mainViewModel.onAuthenticationSuccess()
-                            // Navigate to home and clear back stack
-                            navController.navigate(Screen.Home) {
-                                popUpTo(Screen.Authentication) { inclusive = true }
+                            
+                            // Add a small delay to ensure auth state is fully propagated
+                            coroutineScope.launch {
+                                Log.d(TAG, "Delaying navigation to ensure state propagation")
+                                delay(500) // 500ms delay
+                                
+                                Log.d(TAG, "Navigating to home screen after authentication")
+                                // Navigate to home and clear back stack
+                                navController.navigate(Screen.Home) {
+                                    popUpTo(Screen.Authentication) { inclusive = true }
+                                }
                             }
                         }
                     )

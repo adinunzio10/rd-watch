@@ -12,6 +12,7 @@ import com.rdwatch.androidtv.repository.base.Result
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -56,17 +57,48 @@ class AuthViewModel @Inject constructor(
     
     fun startAuthentication() {
         viewModelScope.launch {
-            when (val result = authRepository.startDeviceFlow()) {
-                is Result.Success -> {
-                    // State will be updated through the repository flow
-                }
-                is Result.Error -> {
-                    _authState.value = AuthState.Error("Failed to start authentication: ${result.exception.message}")
-                }
-                is Result.Loading -> {
-                    _authState.value = AuthState.Initializing
+            // Reset state and retry count
+            _authState.value = AuthState.Initializing
+            retryAuthenticationInternal()
+        }
+    }
+    
+    private suspend fun retryAuthenticationInternal(retryCount: Int = 0) {
+        val maxRetries = 3
+        
+        when (val result = authRepository.startDeviceFlow()) {
+            is Result.Success -> {
+                Log.d(TAG, "Device flow started successfully")
+                // State will be updated through the repository flow
+            }
+            is Result.Error -> {
+                val errorMessage = result.exception.message ?: "Unknown error"
+                Log.e(TAG, "Device flow error (attempt ${retryCount + 1}/$maxRetries): $errorMessage")
+                
+                // Check if we should retry
+                if (retryCount < maxRetries - 1 && result.exception is Exception && shouldRetry(result.exception)) {
+                    Log.d(TAG, "Retrying device flow after delay...")
+                    delay(2000) // Wait 2 seconds before retry
+                    retryAuthenticationInternal(retryCount + 1)
+                } else {
+                    Log.e(TAG, "Max retries reached or non-retryable error")
+                    _authState.value = AuthState.Error("Failed to start authentication: $errorMessage")
                 }
             }
+            is Result.Loading -> {
+                _authState.value = AuthState.Initializing
+            }
+        }
+    }
+    
+    private fun shouldRetry(exception: Exception): Boolean {
+        // Retry on network errors but not on client errors
+        return when (exception) {
+            is java.net.UnknownHostException,
+            is java.net.SocketTimeoutException,
+            is kotlinx.coroutines.TimeoutCancellationException -> true
+            else -> exception.message?.contains("timeout", ignoreCase = true) == true ||
+                    exception.message?.contains("network", ignoreCase = true) == true
         }
     }
     

@@ -13,6 +13,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.withTimeout
 import retrofit2.HttpException
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -29,6 +30,7 @@ class AuthRepository @Inject constructor(
         private const val TAG = "AuthRepository"
         private const val CLIENT_ID = "X245A4XAIBGVM"  // Real Debrid client ID for open source apps
         private const val POLLING_TIMEOUT_MS = 600_000L  // 10 minutes
+        private const val API_CALL_TIMEOUT_MS = 30_000L  // 30 seconds for individual API calls
     }
     
     private val _authState = MutableStateFlow<AuthState>(AuthState.Initializing)
@@ -107,6 +109,10 @@ class AuthRepository @Inject constructor(
             // Immediately set authenticated state - no validation needed for API keys
             _authState.value = AuthState.Authenticated
             Log.d(TAG, "AuthState set to Authenticated immediately (API keys don't need validation)")
+            
+            // Add a small delay to ensure state propagation
+            delay(100)
+            
             Log.d(TAG, "API key authentication completed successfully")
             
             Result.Success(Unit)
@@ -125,12 +131,26 @@ class AuthRepository @Inject constructor(
     
     suspend fun startDeviceFlow(): Result<DeviceCodeInfo> {
         return try {
+            Log.d(TAG, "Starting device flow...")
             _authState.value = AuthState.Initializing
             
-            val response = oauth2ApiService.getDeviceCode(CLIENT_ID)
+            // Add timeout to prevent indefinite waiting
+            val response = withTimeout(API_CALL_TIMEOUT_MS) {
+                Log.d(TAG, "Calling getDeviceCode API with CLIENT_ID: $CLIENT_ID")
+                oauth2ApiService.getDeviceCode(CLIENT_ID)
+            }
+            
+            Log.d(TAG, "API call completed, response code: ${response.code()}")
             
             if (response.isSuccessful) {
-                val deviceCodeResponse = response.body()!!
+                val deviceCodeResponse = response.body()
+                if (deviceCodeResponse == null) {
+                    Log.e(TAG, "Device code response body is null")
+                    val errorMessage = "Invalid response from authentication server"
+                    _authState.value = AuthState.Error(errorMessage)
+                    return Result.Error(Exception(errorMessage))
+                }
+                
                 Log.d(TAG, "Device code response received: $deviceCodeResponse")
                 Log.d(TAG, "Verification URI: ${deviceCodeResponse.verificationUri}")
                 
@@ -149,12 +169,35 @@ class AuthRepository @Inject constructor(
                 Result.Success(deviceCodeInfo)
             } else {
                 val errorBody = response.errorBody()?.string()
-                val error = parseError(errorBody)
+                Log.e(TAG, "Device flow API error - Code: ${response.code()}, Body: $errorBody")
+                
+                val error = when (response.code()) {
+                    404 -> "Authentication service not found. Please check your internet connection."
+                    500, 502, 503 -> "Server error. Please try again later."
+                    else -> parseError(errorBody)
+                }
+                
                 _authState.value = AuthState.Error(error)
                 Result.Error(Exception(error))
             }
+        } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
+            Log.e(TAG, "Device flow API call timed out after ${API_CALL_TIMEOUT_MS}ms")
+            val errorMessage = "Authentication request timed out. Please check your internet connection and try again."
+            _authState.value = AuthState.Error(errorMessage)
+            Result.Error(Exception(errorMessage))
+        } catch (e: java.net.UnknownHostException) {
+            Log.e(TAG, "Network error - unable to reach server: ${e.message}")
+            val errorMessage = "Unable to connect to authentication server. Please check your internet connection."
+            _authState.value = AuthState.Error(errorMessage)
+            Result.Error(e)
+        } catch (e: java.net.SocketTimeoutException) {
+            Log.e(TAG, "Socket timeout: ${e.message}")
+            val errorMessage = "Connection timed out. Please check your internet connection and try again."
+            _authState.value = AuthState.Error(errorMessage)
+            Result.Error(e)
         } catch (e: Exception) {
-            val errorMessage = "Failed to start device flow: ${e.message}"
+            Log.e(TAG, "Unexpected error during device flow: ${e.message}", e)
+            val errorMessage = "Failed to start authentication: ${e.message ?: "Unknown error"}"
             _authState.value = AuthState.Error(errorMessage)
             Result.Error(e)
         }
