@@ -17,20 +17,22 @@ import kotlinx.coroutines.withTimeout
 import retrofit2.HttpException
 import javax.inject.Inject
 import javax.inject.Singleton
+import com.rdwatch.androidtv.util.NetworkUtils
 
 @Singleton
 class AuthRepository @Inject constructor(
     private val oauth2ApiService: OAuth2ApiService,
     private val realDebridApiService: RealDebridApiService,
     private val tokenProvider: TokenProvider,
-    private val moshi: Moshi
+    private val moshi: Moshi,
+    private val networkUtils: NetworkUtils
 ) {
     
     companion object {
         private const val TAG = "AuthRepository"
         private const val CLIENT_ID = "X245A4XAIBGVM"  // Real Debrid client ID for open source apps
         private const val POLLING_TIMEOUT_MS = 600_000L  // 10 minutes
-        private const val API_CALL_TIMEOUT_MS = 30_000L  // 30 seconds for individual API calls
+        private const val API_CALL_TIMEOUT_MS = 15_000L  // 15 seconds for individual API calls - reduced for better UX
     }
     
     private val _authState = MutableStateFlow<AuthState>(AuthState.Initializing)
@@ -132,11 +134,22 @@ class AuthRepository @Inject constructor(
     suspend fun startDeviceFlow(): Result<DeviceCodeInfo> {
         return try {
             Log.d(TAG, "Starting device flow...")
+            
+            // Check network connectivity first
+            if (!networkUtils.isNetworkAvailable()) {
+                Log.e(TAG, "No network connection available")
+                val errorMessage = "No internet connection. Please check your network settings."
+                _authState.value = AuthState.Error(errorMessage)
+                return Result.Error(Exception(errorMessage))
+            }
+            
+            Log.d(TAG, "Network is available. Type: ${networkUtils.getNetworkType()}")
             _authState.value = AuthState.Initializing
             
             // Add timeout to prevent indefinite waiting
             val response = withTimeout(API_CALL_TIMEOUT_MS) {
                 Log.d(TAG, "Calling getDeviceCode API with CLIENT_ID: $CLIENT_ID")
+                Log.d(TAG, "API URL: ${OAuth2ApiService.OAUTH_BASE_URL}oauth/v2/device/code")
                 oauth2ApiService.getDeviceCode(CLIENT_ID)
             }
             
@@ -182,7 +195,9 @@ class AuthRepository @Inject constructor(
             }
         } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
             Log.e(TAG, "Device flow API call timed out after ${API_CALL_TIMEOUT_MS}ms")
-            val errorMessage = "Authentication request timed out. Please check your internet connection and try again."
+            Log.e(TAG, "API URL: ${OAuth2ApiService.OAUTH_BASE_URL}oauth/v2/device/code")
+            Log.e(TAG, "This usually indicates a network connectivity issue. The API is accessible via curl.")
+            val errorMessage = "Unable to reach Real-Debrid servers. This may be due to:\n• Network connectivity issues\n• Firewall or VPN blocking the connection\n• IPv6 connectivity problems\n\nPlease check your network settings and try again."
             _authState.value = AuthState.Error(errorMessage)
             Result.Error(Exception(errorMessage))
         } catch (e: java.net.UnknownHostException) {

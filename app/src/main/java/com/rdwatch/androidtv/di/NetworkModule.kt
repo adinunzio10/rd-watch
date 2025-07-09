@@ -14,6 +14,7 @@ import com.rdwatch.androidtv.network.interceptors.TokenAuthenticator
 import com.rdwatch.androidtv.network.interceptors.TokenProvider
 import com.rdwatch.androidtv.network.interceptors.TokenProviderImpl
 import com.rdwatch.androidtv.network.interceptors.NetworkMonitoringInterceptor
+import com.rdwatch.androidtv.network.interceptors.IPv4DnsResolver
 import com.rdwatch.androidtv.BuildConfig
 import android.content.Context
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -63,14 +64,16 @@ abstract class NetworkModule {
         @PublicClient
         fun providePublicOkHttpClient(
             loggingInterceptor: HttpLoggingInterceptor,
-            monitoringInterceptor: NetworkMonitoringInterceptor
+            monitoringInterceptor: NetworkMonitoringInterceptor,
+            ipv4DnsResolver: IPv4DnsResolver
         ): OkHttpClient {
             return OkHttpClient.Builder()
+                .dns(ipv4DnsResolver) // Use IPv4 DNS resolver to avoid IPv6 issues
                 .addInterceptor(monitoringInterceptor)
                 .addInterceptor(loggingInterceptor)
-                .connectTimeout(30, TimeUnit.SECONDS)
-                .readTimeout(30, TimeUnit.SECONDS)
-                .writeTimeout(30, TimeUnit.SECONDS)
+                .connectTimeout(20, TimeUnit.SECONDS) // Reduced from 30s
+                .readTimeout(20, TimeUnit.SECONDS)    // Reduced from 30s
+                .writeTimeout(20, TimeUnit.SECONDS)   // Reduced from 30s
                 .build()
         }
 
