@@ -3,7 +3,13 @@ package com.rdwatch.androidtv.ui.search
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.rdwatch.androidtv.data.repository.UserRepository
+import com.rdwatch.androidtv.data.repository.TMDbSearchRepository
 import com.rdwatch.androidtv.ui.search.VoiceSearchState
+import com.rdwatch.androidtv.repository.base.Result
+import com.rdwatch.androidtv.ui.details.models.ContentDetail
+import com.rdwatch.androidtv.ui.details.models.ContentType
+import com.rdwatch.androidtv.ui.details.models.TMDbMovieContentDetail
+import com.rdwatch.androidtv.ui.details.models.TMDbTVContentDetail
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
@@ -13,14 +19,13 @@ import android.Manifest
 import androidx.annotation.RequiresPermission
 
 /**
- * ViewModel for search functionality coordinating all search components
+ * ViewModel for search functionality using TMDb API
  */
 @HiltViewModel
 class SearchViewModel @Inject constructor(
-    private val searchOrchestrationService: SearchOrchestrationService,
+    private val tmdbSearchRepository: TMDbSearchRepository,
     private val searchHistoryManager: SearchHistoryManager,
     private val voiceSearchManager: VoiceSearchManager,
-    private val resultAggregator: SearchResultAggregator,
     private val userRepository: UserRepository
 ) : ViewModel() {
     
@@ -31,7 +36,6 @@ class SearchViewModel @Inject constructor(
     val searchHistory: StateFlow<List<String>> = _searchHistory.asStateFlow()
     
     private var currentSearchJob: Job? = null
-    private var currentSearchId: String? = null
     
     // User ID - will be initialized from UserRepository
     private var currentUserId = UserRepository.DEFAULT_USER_ID
@@ -72,7 +76,7 @@ class SearchViewModel @Inject constructor(
     }
     
     /**
-     * Perform search with current query and filters
+     * Perform search with current query using TMDb API
      */
     fun performSearch() {
         val currentState = _uiState.value
@@ -91,7 +95,7 @@ class SearchViewModel @Inject constructor(
                     )
                 }
                 
-                // Ensure user exists and add to search history
+                // Add to search history
                 try {
                     val userId = userRepository.getDefaultUserId()
                     currentUserId = userId
@@ -101,17 +105,53 @@ class SearchViewModel @Inject constructor(
                         filtersJson = serializeFilters(currentState.searchFilters)
                     )
                 } catch (e: Exception) {
-                    // Log error but continue with search
                     android.util.Log.e("SearchViewModel", "Failed to add to search history", e)
                 }
                 
-                // Perform orchestrated search
-                searchOrchestrationService.performSearch(
+                // Perform TMDb multi-search
+                tmdbSearchRepository.multiSearchAsContentDetails(
                     query = currentState.searchQuery,
-                    filters = currentState.searchFilters,
-                    config = SearchConfig()
+                    includeAdult = !currentState.searchFilters.excludeAdult
                 ).collect { result ->
-                    handleSearchOrchestrationResult(result)
+                    when (result) {
+                        is Result.Success -> {
+                            val searchResults = result.data.map { contentDetail ->
+                                contentDetail.toSearchResultItem()
+                            }
+                            
+                            _uiState.update { 
+                                it.copy(
+                                    searchResults = searchResults,
+                                    isLoading = false,
+                                    error = if (searchResults.isEmpty()) "No results found" else null
+                                )
+                            }
+                            
+                            // Update search history with results count
+                            try {
+                                val userId = userRepository.getDefaultUserId()
+                                searchHistoryManager.addSearchQuery(
+                                    userId = userId,
+                                    query = currentState.searchQuery,
+                                    resultsCount = searchResults.size,
+                                    filtersJson = serializeFilters(currentState.searchFilters)
+                                )
+                            } catch (e: Exception) {
+                                android.util.Log.e("SearchViewModel", "Failed to update search history", e)
+                            }
+                        }
+                        is Result.Error -> {
+                            _uiState.update { 
+                                it.copy(
+                                    isLoading = false,
+                                    error = "Search failed: ${result.exception.message}"
+                                )
+                            }
+                        }
+                        is Result.Loading -> {
+                            // Keep loading state
+                        }
+                    }
                 }
                 
             } catch (e: Exception) {
@@ -126,73 +166,30 @@ class SearchViewModel @Inject constructor(
     }
     
     /**
-     * Handle search orchestration results
+     * Convert ContentDetail to SearchResultItem
      */
-    private suspend fun handleSearchOrchestrationResult(result: SearchOrchestrationResult) {
-        when (result) {
-            is SearchOrchestrationResult.Started -> {
-                currentSearchId = result.searchId
-                _uiState.update { it.copy(isLoading = true, error = null) }
-            }
-            
-            is SearchOrchestrationResult.ScrapersSelected -> {
-                // Could show scraper count in UI
-            }
-            
-            is SearchOrchestrationResult.Progress -> {
-                // Could show progress per scraper
-            }
-            
-            is SearchOrchestrationResult.PartialResults -> {
-                // Aggregate and display partial results
-                val aggregatedResults = resultAggregator.aggregateResults(result.results)
-                _uiState.update { 
-                    it.copy(
-                        searchResults = aggregatedResults.toSimpleResults(),
-                        isLoading = result.completedScrapers < result.totalScrapers
-                    )
-                }
-            }
-            
-            is SearchOrchestrationResult.ScraperError -> {
-                // Could show scraper-specific errors
-            }
-            
-            is SearchOrchestrationResult.Completed -> {
-                // Final aggregated results
-                val aggregatedResults = resultAggregator.aggregateResults(result.results)
-                _uiState.update { 
-                    it.copy(
-                        searchResults = aggregatedResults.toSimpleResults(),
-                        isLoading = false,
-                        error = if (result.results.isEmpty()) "No results found" else null
-                    )
-                }
-                
-                // Update search history with results count
-                try {
-                    val userId = userRepository.getDefaultUserId()
-                    searchHistoryManager.addSearchQuery(
-                        userId = userId,
-                        query = _uiState.value.searchQuery,
-                        resultsCount = result.results.size,
-                        filtersJson = serializeFilters(_uiState.value.searchFilters)
-                    )
-                } catch (e: Exception) {
-                    // Log error but don't crash
-                    android.util.Log.e("SearchViewModel", "Failed to update search history", e)
-                }
-            }
-            
-            is SearchOrchestrationResult.Error -> {
-                _uiState.update { 
-                    it.copy(
-                        isLoading = false,
-                        error = result.error
-                    )
-                }
-            }
-        }
+    private fun ContentDetail.toSearchResultItem(): SearchResultItem {
+        return SearchResultItem(
+            id = when (this.contentType) {
+                ContentType.MOVIE -> "movie:${this.id}"
+                ContentType.TV_SHOW -> "tv:${this.id}"
+                else -> "unknown:${this.id}"
+            },
+            title = this.title,
+            description = this.description?.take(200),
+            thumbnailUrl = this.cardImageUrl,
+            year = when (this) {
+                is TMDbMovieContentDetail -> this.releaseDate?.take(4)?.toIntOrNull()
+                is TMDbTVContentDetail -> this.firstAirDate?.take(4)?.toIntOrNull()
+                else -> this.metadata.year?.toIntOrNull()
+            },
+            rating = when (this) {
+                is TMDbMovieContentDetail -> this.voteAverage
+                is TMDbTVContentDetail -> this.voteAverage
+                else -> null
+            },
+            scraperSource = "TMDb"
+        )
     }
     
     /**
@@ -200,7 +197,6 @@ class SearchViewModel @Inject constructor(
      */
     fun clearSearch() {
         currentSearchJob?.cancel()
-        currentSearchId?.let { searchOrchestrationService.cancelSearch(it) }
         
         _uiState.update { 
             it.copy(
@@ -362,7 +358,6 @@ class SearchViewModel @Inject constructor(
     override fun onCleared() {
         super.onCleared()
         currentSearchJob?.cancel()
-        currentSearchId?.let { searchOrchestrationService.cancelSearch(it) }
         voiceSearchManager.cleanup()
     }
 }

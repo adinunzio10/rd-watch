@@ -235,8 +235,22 @@ fun AppNavigation(
                         onNavigateBack = {
                             navController.popBackStack()
                         },
-                        onItemSelected = { movieId ->
-                            navController.navigate(Screen.MovieDetails(movieId))
+                        onItemSelected = { contentId ->
+                            // Parse content ID format: "movie:123" or "tv:456"
+                            when {
+                                contentId.startsWith("movie:") -> {
+                                    val movieId = contentId.removePrefix("movie:")
+                                    navController.navigate(Screen.MovieDetails(movieId))
+                                }
+                                contentId.startsWith("tv:") -> {
+                                    val tvShowId = contentId.removePrefix("tv:")
+                                    navController.navigate(Screen.TVDetails(tvShowId))
+                                }
+                                else -> {
+                                    // Fallback to movie details for unknown format
+                                    navController.navigate(Screen.MovieDetails(contentId))
+                                }
+                            }
                         }
                     )
                 }
