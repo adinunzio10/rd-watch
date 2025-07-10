@@ -93,7 +93,7 @@ fun CastCrewSection(
             ) {
                 items(
                     items = keyCrew,
-                    key = { "crew_${it.id}" }
+                    key = { "crew_${it.id}_${it.job}" }
                 ) { crewMember ->
                     CrewMemberCard(
                         crewMember = crewMember,
