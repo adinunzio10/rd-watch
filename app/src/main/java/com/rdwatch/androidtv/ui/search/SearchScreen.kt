@@ -34,6 +34,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.rdwatch.androidtv.ui.components.TVImageLoader
 import com.rdwatch.androidtv.ui.focus.TVSpatialNavigation
 
 /**
@@ -599,14 +600,13 @@ private fun SearchResultCard(
                 .padding(16.dp),
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Placeholder for thumbnail
-            Surface(
+            // Poster image
+            TVImageLoader(
+                imageUrl = result.thumbnailUrl,
+                contentDescription = result.title,
                 modifier = Modifier.size(80.dp, 120.dp),
-                color = MaterialTheme.colorScheme.primaryContainer,
                 shape = RoundedCornerShape(8.dp)
-            ) {
-                // Thumbnail would go here
-            }
+            )
             
             Column(
                 modifier = Modifier.weight(1f),
