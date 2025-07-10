@@ -198,12 +198,13 @@ fun AppNavigation(
         
         composable<Screen.VideoPlayer> { backStackEntry ->
             val videoPlayer = backStackEntry.toRoute<Screen.VideoPlayer>()
-            // TODO: Implement VideoPlayerScreen composable
-            // VideoPlayerScreen(
-            //     videoUrl = videoPlayer.videoUrl,
-            //     title = videoPlayer.title,
-            //     navController = navController
-            // )
+            com.rdwatch.androidtv.ui.videoplayer.VideoPlayerScreen(
+                videoUrl = videoPlayer.videoUrl,
+                title = videoPlayer.title,
+                onBackPressed = {
+                    navController.popBackStack()
+                }
+            )
         }
         
         composable<Screen.Search>(
@@ -371,12 +372,17 @@ fun AppNavigation(
         
         composable<Screen.Error> { backStackEntry ->
             val error = backStackEntry.toRoute<Screen.Error>()
-            // TODO: Implement ErrorScreen composable
-            // ErrorScreen(
-            //     message = error.message,
-            //     canRetry = error.canRetry,
-            //     navController = navController
-            // )
+            com.rdwatch.androidtv.ui.error.ErrorScreen(
+                message = error.message,
+                canRetry = error.canRetry,
+                onRetry = {
+                    // Navigate back and let the previous screen handle retry
+                    navController.popBackStack()
+                },
+                onBackPressed = {
+                    navController.popBackStack()
+                }
+            )
         }
     }
 }

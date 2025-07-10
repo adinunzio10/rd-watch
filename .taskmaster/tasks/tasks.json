@@ -1114,7 +1114,7 @@
           7,
           9
         ],
-        "status": "in-progress",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -1201,7 +1201,7 @@
               2
             ],
             "details": "Build horizontal content rows for 'Similar', 'You May Also Like', and 'More from [Director/Studio]' sections. Implement lazy loading and navigation to other detail screens.",
-            "status": "deferred",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -1230,7 +1230,7 @@
               9
             ],
             "details": "Create DetailsViewModel with StateFlow for UI state, integrate with Navigation component for deep linking, handle loading/error states, and implement proper lifecycle management for API calls.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           }
         ]
@@ -2619,7 +2619,7 @@
     ],
     "metadata": {
       "created": "2025-06-22T03:41:46.714Z",
-      "updated": "2025-07-10T02:32:15.561Z",
+      "updated": "2025-07-10T02:49:23.312Z",
       "description": "Tasks for master context"
     }
   }
