@@ -87,8 +87,43 @@ class TVDetailsViewModel @Inject constructor(
                             
                             // Create TVShowDetail from TMDb data
                             val tmdbTvDetail = when (contentDetail) {
+                                is com.rdwatch.androidtv.ui.details.models.TMDbTVContentDetail -> {
+                                    // Use TMDb data from models package
+                                    TVShowDetail(
+                                        id = contentDetail.id,
+                                        title = contentDetail.title,
+                                        originalTitle = contentDetail.originalTitle,
+                                        overview = contentDetail.description,
+                                        posterPath = contentDetail.cardImageUrl,
+                                        backdropPath = contentDetail.backgroundImageUrl,
+                                        firstAirDate = contentDetail.firstAirDate,
+                                        lastAirDate = contentDetail.lastAirDate,
+                                        status = contentDetail.status ?: "Unknown",
+                                        type = contentDetail.type ?: "Scripted",
+                                        genres = contentDetail.genres,
+                                        languages = contentDetail.spokenLanguages,
+                                        originCountry = contentDetail.originCountry,
+                                        numberOfSeasons = contentDetail.numberOfSeasons ?: 1,
+                                        numberOfEpisodes = contentDetail.numberOfEpisodes ?: 0,
+                                        seasons = emptyList(), // TMDbTVContentDetail doesn't have seasons data
+                                        networks = contentDetail.networks,
+                                        productionCompanies = contentDetail.productionCompanies,
+                                        creators = emptyList(), // TODO: Load from TMDb credits
+                                        cast = emptyList(), // TODO: Load from TMDb credits
+                                        voteAverage = contentDetail.voteAverage,
+                                        voteCount = contentDetail.voteCount,
+                                        popularity = contentDetail.popularity,
+                                        adult = contentDetail.adult,
+                                        homepage = contentDetail.homepage,
+                                        tagline = null, // Not available in this model
+                                        inProduction = contentDetail.inProduction ?: false,
+                                        episodeRunTime = emptyList(), // TODO: Parse from TMDb data
+                                        lastEpisodeToAir = null, // TODO: Load from TMDb
+                                        nextEpisodeToAir = null // TODO: Load from TMDb
+                                    )
+                                }
                                 is com.rdwatch.androidtv.data.mappers.TMDbTVContentDetail -> {
-                                    // Use real TMDb data to create TVShowDetail
+                                    // Use real TMDb data from mappers package (with seasons)
                                     TVShowDetail(
                                         id = contentDetail.id,
                                         title = contentDetail.title,

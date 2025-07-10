@@ -49,7 +49,7 @@ class TMDbTVRepositoryImpl @Inject constructor(
             forceRefresh || cachedTV == null || shouldRefreshCache(tvId, "tv")
         },
         createCall = {
-            awaitApiResponse(tmdbTVService.getTVDetails(tvId, null, language))
+            awaitApiResponse(tmdbTVService.getTVDetails(tvId, "credits,images,videos,recommendations,similar", language))
         },
         saveCallResult = { tvResponse ->
             tmdbTVDao.insertTVShow(tvResponse.toEntity())
@@ -64,8 +64,9 @@ class TMDbTVRepositoryImpl @Inject constructor(
         getTVDetails(tvId, forceRefresh, language).map { result ->
             when (result) {
                 is Result.Success -> {
+                    // Use the mappers package version that includes seasons data
                     val contentDetail = result.data?.let { tvResponse ->
-                        contentDetailMapper.mapTVToContentDetail(tvResponse)
+                        TMDbTVContentDetail(tvResponse)
                     }
                     Result.Success(contentDetail ?: TMDbTVContentDetail(result.data!!))
                 }
