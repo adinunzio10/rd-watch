@@ -8,6 +8,7 @@ import com.rdwatch.androidtv.repository.base.Result
 import com.rdwatch.androidtv.ui.details.models.MovieContentDetail
 import com.rdwatch.androidtv.ui.details.models.ContentProgress
 import com.rdwatch.androidtv.network.models.tmdb.TMDbRecommendationsResponse
+import com.rdwatch.androidtv.network.models.tmdb.TMDbMovieResponse
 import com.rdwatch.androidtv.ui.common.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
@@ -40,6 +41,7 @@ class MovieDetailsViewModel @Inject constructor(
      * Load movie details and related content from TMDb
      */
     fun loadMovieDetails(movieId: String) {
+        println("DEBUG [MovieDetailsViewModel]: loadMovieDetails called with movieId: $movieId")
         viewModelScope.launch {
             _movieState.value = UiState.Loading
             updateState { copy(isLoading = true, error = null) }
@@ -47,6 +49,7 @@ class MovieDetailsViewModel @Inject constructor(
             try {
                 // Convert movieId to Int for TMDb API
                 val tmdbId = movieId.toIntOrNull() ?: run {
+                    println("DEBUG [MovieDetailsViewModel]: Invalid movie ID: $movieId")
                     _movieState.value = UiState.Error("Invalid TMDb movie ID")
                     updateState { 
                         copy(
@@ -57,15 +60,21 @@ class MovieDetailsViewModel @Inject constructor(
                     return@launch
                 }
                 
-                // Fetch movie details from TMDb
-                tmdbMovieRepository.getMovieContentDetail(tmdbId)
+                println("DEBUG [MovieDetailsViewModel]: Converted movieId $movieId to tmdbId $tmdbId")
+                
+                // Fetch movie details from TMDb using simpler method
+                println("DEBUG [MovieDetailsViewModel]: Calling tmdbMovieRepository.getMovieDetails($tmdbId)")
+                tmdbMovieRepository.getMovieDetails(tmdbId)
                     .take(1) // Just take the first emission
                     .collect { result ->
+                        println("DEBUG [MovieDetailsViewModel]: Received result: $result")
                         when (result) {
                             is Result.Success -> {
-                                val contentDetail = result.data
+                                println("DEBUG [MovieDetailsViewModel]: Success result received")
+                                val movieResponse = result.data
                                 
-                                if (contentDetail == null) {
+                                if (movieResponse == null) {
+                                    println("DEBUG [MovieDetailsViewModel]: MovieResponse is null")
                                     _movieState.value = UiState.Error("Movie not found on TMDb")
                                     updateState { 
                                         copy(
@@ -76,13 +85,14 @@ class MovieDetailsViewModel @Inject constructor(
                                     return@collect
                                 }
                                 
-                                // Convert ContentDetail to Movie for UI compatibility
+                                println("DEBUG [MovieDetailsViewModel]: Converting MovieResponse to Movie: ${movieResponse.title}")
+                                // Convert TMDbMovieResponse to Movie for UI compatibility
                                 val movie = Movie(
                                     id = tmdbId.toLong(),
-                                    title = contentDetail.title,
-                                    description = contentDetail.description,
-                                    cardImageUrl = contentDetail.cardImageUrl,
-                                    backgroundImageUrl = contentDetail.backgroundImageUrl,
+                                    title = movieResponse.title,
+                                    description = movieResponse.overview,
+                                    cardImageUrl = movieResponse.posterPath?.let { "https://image.tmdb.org/t/p/w342$it" },
+                                    backgroundImageUrl = movieResponse.backdropPath?.let { "https://image.tmdb.org/t/p/w780$it" },
                                     videoUrl = null, // TMDb doesn't provide video URLs
                                     studio = "TMDb"
                                 )
@@ -102,6 +112,7 @@ class MovieDetailsViewModel @Inject constructor(
                                 loadRelatedMovies(tmdbId)
                             }
                             is Result.Error -> {
+                                println("DEBUG [MovieDetailsViewModel]: Error result received: ${result.exception.message}")
                                 _movieState.value = UiState.Error(
                                     message = "Failed to load movie details: ${result.exception.message}",
                                     throwable = result.exception
@@ -114,6 +125,7 @@ class MovieDetailsViewModel @Inject constructor(
                                 }
                             }
                             is Result.Loading -> {
+                                println("DEBUG [MovieDetailsViewModel]: Loading result received")
                                 // Keep loading state
                             }
                         }
