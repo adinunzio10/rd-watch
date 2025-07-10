@@ -87,39 +87,39 @@ class TVDetailsViewModel @Inject constructor(
                             
                             // Create TVShowDetail from TMDb data
                             val tmdbTvDetail = when (contentDetail) {
-                                is com.rdwatch.androidtv.ui.details.models.TMDbTVContentDetail -> {
+                                is com.rdwatch.androidtv.data.mappers.TMDbTVContentDetail -> {
                                     // Use real TMDb data to create TVShowDetail
                                     TVShowDetail(
                                         id = contentDetail.id,
                                         title = contentDetail.title,
-                                        originalTitle = contentDetail.originalTitle,
+                                        originalTitle = contentDetail.getOriginalName(),
                                         overview = contentDetail.description,
                                         posterPath = contentDetail.cardImageUrl,
                                         backdropPath = contentDetail.backgroundImageUrl,
-                                        firstAirDate = contentDetail.firstAirDate,
-                                        lastAirDate = contentDetail.lastAirDate,
-                                        status = contentDetail.status ?: "Unknown",
-                                        type = contentDetail.type ?: "Scripted",
-                                        genres = contentDetail.genres,
-                                        languages = contentDetail.spokenLanguages,
-                                        originCountry = contentDetail.originCountry,
-                                        numberOfSeasons = contentDetail.numberOfSeasons ?: 1,
-                                        numberOfEpisodes = contentDetail.numberOfEpisodes ?: 0,
-                                        seasons = emptyList(), // TODO: Load seasons/episodes from TMDb
-                                        networks = contentDetail.networks,
-                                        productionCompanies = contentDetail.productionCompanies,
-                                        creators = emptyList(), // TODO: Load from TMDb credits
+                                        firstAirDate = contentDetail.getFormattedFirstAirDate(),
+                                        lastAirDate = contentDetail.getFormattedLastAirDate(),
+                                        status = contentDetail.getStatus(),
+                                        type = contentDetail.getType(),
+                                        genres = contentDetail.getGenres().map { it.name },
+                                        languages = contentDetail.getSpokenLanguages().map { it.name },
+                                        originCountry = contentDetail.getOriginCountries(),
+                                        numberOfSeasons = contentDetail.getNumberOfSeasons(),
+                                        numberOfEpisodes = contentDetail.getNumberOfEpisodes(),
+                                        seasons = mapTMDbSeasonsToTVSeasons(contentDetail.getSeasons()),
+                                        networks = contentDetail.getNetworks().map { it.name },
+                                        productionCompanies = contentDetail.getProductionCompanies().map { it.name },
+                                        creators = contentDetail.getCreatedBy().map { it.name },
                                         cast = emptyList(), // TODO: Load from TMDb credits
-                                        voteAverage = contentDetail.voteAverage,
-                                        voteCount = contentDetail.voteCount,
-                                        popularity = contentDetail.popularity,
-                                        adult = contentDetail.adult,
-                                        homepage = contentDetail.homepage,
-                                        tagline = null, // Not available in TV response
-                                        inProduction = contentDetail.inProduction ?: false,
-                                        episodeRunTime = emptyList(), // TODO: Parse from TMDb data
-                                        lastEpisodeToAir = null, // TODO: Load from TMDb
-                                        nextEpisodeToAir = null // TODO: Load from TMDb
+                                        voteAverage = contentDetail.getFormattedVoteAverage().toFloat(),
+                                        voteCount = contentDetail.getVoteCount(),
+                                        popularity = contentDetail.getPopularity().toFloat(),
+                                        adult = contentDetail.isAdultContent(),
+                                        homepage = contentDetail.getHomepage(),
+                                        tagline = contentDetail.getTagline(),
+                                        inProduction = contentDetail.isInProduction(),
+                                        episodeRunTime = contentDetail.getEpisodeRunTime(),
+                                        lastEpisodeToAir = contentDetail.getLastEpisodeToAir()?.let { mapTMDbEpisodeToTVEpisode(it) },
+                                        nextEpisodeToAir = contentDetail.getNextEpisodeToAir()?.let { mapTMDbEpisodeToTVEpisode(it) }
                                     )
                                 }
                                 else -> {
@@ -401,6 +401,58 @@ class TVDetailsViewModel @Inject constructor(
         _selectedTabIndex.value = 0
         
         updateState { createInitialState() }
+    }
+    
+    /**
+     * Map TMDb seasons to UI TVSeason models
+     */
+    private fun mapTMDbSeasonsToTVSeasons(tmdbSeasons: List<com.rdwatch.androidtv.network.models.tmdb.TMDbSeasonResponse>): List<TVSeason> {
+        return tmdbSeasons.map { tmdbSeason ->
+            TVSeason(
+                id = tmdbSeason.id.toString(),
+                seasonNumber = tmdbSeason.seasonNumber,
+                name = tmdbSeason.name,
+                overview = tmdbSeason.overview,
+                posterPath = tmdbSeason.posterPath?.let { "https://image.tmdb.org/t/p/w500$it" },
+                airDate = tmdbSeason.airDate,
+                episodeCount = tmdbSeason.episodeCount,
+                episodes = mapTMDbEpisodesToTVEpisodes(tmdbSeason.episodes, tmdbSeason.seasonNumber),
+                voteAverage = tmdbSeason.voteAverage.toFloat()
+            )
+        }
+    }
+    
+    /**
+     * Map TMDb episodes to UI TVEpisode models
+     */
+    private fun mapTMDbEpisodesToTVEpisodes(tmdbEpisodes: List<com.rdwatch.androidtv.network.models.tmdb.TMDbEpisodeResponse>, seasonNumber: Int): List<TVEpisode> {
+        return tmdbEpisodes.map { tmdbEpisode ->
+            mapTMDbEpisodeToTVEpisode(tmdbEpisode, seasonNumber)
+        }
+    }
+    
+    /**
+     * Map a single TMDb episode to UI TVEpisode model
+     */
+    private fun mapTMDbEpisodeToTVEpisode(tmdbEpisode: com.rdwatch.androidtv.network.models.tmdb.TMDbEpisodeResponse, seasonNumber: Int? = null): TVEpisode {
+        return TVEpisode(
+            id = tmdbEpisode.id.toString(),
+            seasonNumber = seasonNumber ?: tmdbEpisode.seasonNumber,
+            episodeNumber = tmdbEpisode.episodeNumber,
+            title = tmdbEpisode.name,
+            description = tmdbEpisode.overview,
+            thumbnailUrl = tmdbEpisode.stillPath?.let { "https://image.tmdb.org/t/p/w500$it" },
+            airDate = tmdbEpisode.airDate,
+            runtime = tmdbEpisode.runtime,
+            stillPath = tmdbEpisode.stillPath?.let { "https://image.tmdb.org/t/p/w500$it" },
+            voteAverage = tmdbEpisode.voteAverage.toFloat(),
+            voteCount = tmdbEpisode.voteCount,
+            overview = tmdbEpisode.overview,
+            isWatched = false,
+            watchProgress = 0f,
+            resumePosition = 0L,
+            videoUrl = null // Will be populated later with streaming sources
+        )
     }
 }
 
