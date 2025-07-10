@@ -1,5 +1,8 @@
 package com.rdwatch.androidtv.ui.search
 
+import android.Manifest
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.*
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -27,6 +30,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.rdwatch.androidtv.ui.focus.TVSpatialNavigation
@@ -47,6 +52,16 @@ fun SearchScreen(
     var showKeyboard by remember { mutableStateOf(true) }
     var showFilters by remember { mutableStateOf(false) }
     var isVoiceSearchActive by remember { mutableStateOf(false) }
+    
+    val context = LocalContext.current
+    val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            isVoiceSearchActive = true
+            viewModel.startVoiceSearch()
+        }
+    }
     
     val backButtonFocusRequester = remember { FocusRequester() }
     
@@ -113,8 +128,17 @@ fun SearchScreen(
                                 showKeyboard = false
                             },
                             onVoiceSearch = { 
-                                isVoiceSearchActive = true
-                                viewModel.startVoiceSearch()
+                                val hasPermission = ContextCompat.checkSelfPermission(
+                                    context,
+                                    Manifest.permission.RECORD_AUDIO
+                                ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+                                
+                                if (hasPermission) {
+                                    isVoiceSearchActive = true
+                                    viewModel.startVoiceSearch()
+                                } else {
+                                    permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+                                }
                             },
                             onClear = viewModel::clearSearch,
                             onHistoryItemSelected = { query ->

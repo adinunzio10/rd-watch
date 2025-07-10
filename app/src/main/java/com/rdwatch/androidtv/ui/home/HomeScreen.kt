@@ -1,3 +1,5 @@
+@file:OptIn(androidx.media3.common.util.UnstableApi::class)
+
 package com.rdwatch.androidtv.ui.home
 
 import androidx.compose.animation.AnimatedVisibility
@@ -41,7 +43,9 @@ import com.rdwatch.androidtv.ui.components.ResumeDialogOverlay
 import com.rdwatch.androidtv.ui.components.ContinueWatchingManager
 import com.rdwatch.androidtv.navigation.PlaybackNavigationHelper
 import com.rdwatch.androidtv.presentation.navigation.Screen
+import androidx.media3.common.util.UnstableApi
 
+@OptIn(UnstableApi::class)
 @Composable
 fun TVHomeScreen(
     playbackViewModel: PlaybackViewModel = hiltViewModel(),
@@ -373,6 +377,7 @@ fun SafeAreaContent(
     }
 }
 
+@OptIn(UnstableApi::class)
 @Composable
 fun TVContentGrid(
     playbackViewModel: PlaybackViewModel = hiltViewModel(),

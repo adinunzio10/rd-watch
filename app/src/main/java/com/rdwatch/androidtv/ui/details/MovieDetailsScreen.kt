@@ -35,11 +35,13 @@ import com.rdwatch.androidtv.ui.focus.TVFocusIndicator
 import com.rdwatch.androidtv.ui.viewmodel.PlaybackViewModel
 import com.rdwatch.androidtv.ui.details.components.ActionSection
 import com.rdwatch.androidtv.ui.details.models.*
+import androidx.media3.common.util.UnstableApi
 
 /**
  * Movie Details Screen with hero layout and metadata
  * Optimized for Android TV 10-foot UI experience
  */
+@OptIn(UnstableApi::class)
 @Composable
 fun MovieDetailsScreen(
     movieId: String,

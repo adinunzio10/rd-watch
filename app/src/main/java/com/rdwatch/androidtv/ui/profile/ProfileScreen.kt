@@ -30,11 +30,13 @@ import com.rdwatch.androidtv.ui.focus.tvFocusable
 import com.rdwatch.androidtv.ui.focus.TVFocusIndicator
 import com.rdwatch.androidtv.ui.viewmodel.PlaybackViewModel
 import com.rdwatch.androidtv.presentation.navigation.Screen
+import androidx.media3.common.util.UnstableApi
 
 /**
  * Profile Screen with user preferences and watch history
  * Designed for Android TV with D-pad navigation support
  */
+@OptIn(UnstableApi::class)
 @Composable
 fun ProfileScreen(
     modifier: Modifier = Modifier,

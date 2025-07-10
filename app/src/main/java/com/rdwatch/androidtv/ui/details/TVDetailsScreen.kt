@@ -15,11 +15,13 @@ import com.rdwatch.androidtv.ui.common.UiState
 import com.rdwatch.androidtv.ui.details.components.*
 import com.rdwatch.androidtv.ui.details.models.*
 import com.rdwatch.androidtv.ui.viewmodel.PlaybackViewModel
+import androidx.media3.common.util.UnstableApi
 
 /**
  * TV Details Screen with hero layout, episode grid, and action buttons
  * Optimized for Android TV 10-foot UI experience
  */
+@OptIn(UnstableApi::class)
 @Composable
 fun TVDetailsScreen(
     tvShowId: String,

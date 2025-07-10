@@ -4,6 +4,7 @@ import android.graphics.Color
 import android.graphics.Typeface
 import androidx.media3.ui.CaptionStyleCompat
 import androidx.datastore.core.DataStore
+import androidx.media3.common.util.UnstableApi
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.floatPreferencesKey
@@ -17,6 +18,7 @@ import javax.inject.Singleton
 /**
  * Enhanced subtitle style configuration with user preferences
  */
+@UnstableApi
 data class SubtitleStyleConfig(
     val textSize: Float = 0.08f, // 8% of screen height
     val textColor: Int = Color.WHITE,
@@ -224,6 +226,7 @@ enum class SubtitlePosition(
 /**
  * Repository for managing subtitle style preferences
  */
+@UnstableApi
 @Singleton
 class SubtitleStyleRepository @Inject constructor(
     private val dataStore: DataStore<Preferences>
