@@ -295,20 +295,46 @@ class TMDbSearchRepositoryImpl @Inject constructor(
         page: Int
     ): Flow<Result<TMDbSearchResponse>> = networkBoundResource(
         loadFromDb = {
+            android.util.Log.d("TMDbSearchRepo", "=== Loading from DB ===")
             val searchId = buildSearchId("trending_${mediaType}_$timeWindow", page, mediaType)
-            tmdbSearchDao.getSearchResults("trending_${mediaType}_$timeWindow", mediaType, page)
-                .map { it?.toSearchResponse() ?: TMDbSearchResponse() }
+            android.util.Log.d("TMDbSearchRepo", "Searching DB for searchId: $searchId")
+            
+            val dbFlow = tmdbSearchDao.getSearchResults("trending_${mediaType}_$timeWindow", mediaType, page)
+                .map { 
+                    val result = it?.toSearchResponse() ?: TMDbSearchResponse()
+                    android.util.Log.d("TMDbSearchRepo", "DB returned: ${if (it != null) "cached data with ${result.results.size} results" else "null (will use empty response)"}")
+                    result
+                }
+            dbFlow
         },
         shouldFetch = { cachedTrending ->
-            // Always fetch trending as it changes frequently
-            true
+            android.util.Log.d("TMDbSearchRepo", "=== Should Fetch Check ===")
+            android.util.Log.d("TMDbSearchRepo", "Cached trending has ${cachedTrending?.results?.size ?: 0} results")
+            val shouldFetch = true // Always fetch trending as it changes frequently
+            android.util.Log.d("TMDbSearchRepo", "Should fetch from network: $shouldFetch")
+            shouldFetch
         },
         createCall = {
+            android.util.Log.d("TMDbSearchRepo", "=== Creating API Call ===")
+            android.util.Log.d("TMDbSearchRepo", "Making getTrending API call: mediaType=$mediaType, timeWindow=$timeWindow, language=$language, page=$page")
+            
             val response = tmdbSearchService.getTrending(mediaType, timeWindow, language, page).execute()
+            
+            android.util.Log.d("TMDbSearchRepo", "API call completed, processing response...")
+            
             when (val apiResponse = handleApiResponse(response)) {
-                is ApiResponse.Success -> apiResponse.data
-                is ApiResponse.Error -> throw apiResponse.exception
-                is ApiResponse.Loading -> throw Exception("Unexpected loading state")
+                is ApiResponse.Success -> {
+                    android.util.Log.d("TMDbSearchRepo", "CreateCall returning success data")
+                    apiResponse.data
+                }
+                is ApiResponse.Error -> {
+                    android.util.Log.e("TMDbSearchRepo", "CreateCall throwing error: ${apiResponse.exception.message}")
+                    throw apiResponse.exception
+                }
+                is ApiResponse.Loading -> {
+                    android.util.Log.w("TMDbSearchRepo", "CreateCall unexpected loading state")
+                    throw Exception("Unexpected loading state")
+                }
             }
         },
         saveCallResult = { trendingResponse ->
