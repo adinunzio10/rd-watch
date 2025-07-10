@@ -54,10 +54,6 @@ fun TVDetailsScreen(
         viewModel.loadTVShow(tvShowId)
     }
     
-    // Request focus on back button when screen loads
-    LaunchedEffect(Unit) {
-        backButtonFocusRequester.requestFocus()
-    }
     
     when (uiState) {
         is UiState.Loading -> {
