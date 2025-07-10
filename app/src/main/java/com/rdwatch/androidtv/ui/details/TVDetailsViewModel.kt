@@ -17,7 +17,8 @@ import javax.inject.Inject
  */
 @HiltViewModel
 class TVDetailsViewModel @Inject constructor(
-    private val realDebridContentRepository: RealDebridContentRepository
+    private val realDebridContentRepository: RealDebridContentRepository,
+    private val tmdbTVRepository: com.rdwatch.androidtv.data.repository.TMDbTVRepository
 ) : BaseViewModel<TVDetailsUiState>() {
     
     private val _tvShowState = MutableStateFlow<TVShowContentDetail?>(null)
@@ -40,40 +41,80 @@ class TVDetailsViewModel @Inject constructor(
     }
     
     /**
-     * Load TV show details and related content
+     * Load TV show details and related content from TMDb
      */
     fun loadTVShow(tvShowId: String) {
         viewModelScope.launch {
             updateState { copy(isLoading = true, error = null) }
             
             try {
-                // For now, use the demo TV show content
-                // In a real app, this would fetch from a repository
-                val tvShowDetail = TVShowContentDetail.createDemo()
-                
-                _tvShowState.value = tvShowDetail
-                
-                // Select first season by default
-                val firstSeason = tvShowDetail.getSeasons().firstOrNull()
-                _selectedSeason.value = firstSeason
-                
-                // Select first episode of first season by default
-                val firstEpisode = firstSeason?.episodes?.firstOrNull()
-                _selectedEpisode.value = firstEpisode
-                
-                updateState { 
-                    copy(
-                        tvShow = tvShowDetail,
-                        isLoading = false,
-                        error = null,
-                        isLoaded = true,
-                        currentSeason = firstSeason,
-                        currentEpisode = firstEpisode
-                    )
+                // Convert tvShowId to Int for TMDb API
+                val tmdbId = tvShowId.toIntOrNull() ?: run {
+                    updateState { 
+                        copy(
+                            isLoading = false,
+                            error = "Invalid TMDb TV show ID"
+                        )
+                    }
+                    return@launch
                 }
                 
-                // Load related shows
-                loadRelatedShows(tvShowDetail)
+                // Load TV show details from TMDb
+                tmdbTVRepository.getTVContentDetail(tmdbId).collect { result ->
+                    when (result) {
+                        is com.rdwatch.androidtv.repository.base.Result.Loading -> {
+                            updateState { copy(isLoading = true, error = null) }
+                        }
+                        is com.rdwatch.androidtv.repository.base.Result.Success -> {
+                            val contentDetail = result.data
+                            
+                            // Create a demo TVShowContentDetail with real TMDb data
+                            // For now, we'll use demo episodes but real metadata
+                            val demoTvShow = TVShowContentDetail.createDemo()
+                            val realTvShowDetail = demoTvShow.getTVShowDetail().copy(
+                                id = contentDetail.id,
+                                title = contentDetail.title,
+                                overview = contentDetail.description,
+                                backdropPath = contentDetail.backgroundImageUrl,
+                                posterPath = contentDetail.cardImageUrl
+                                // TODO: Parse more metadata from contentDetail
+                            )
+                            val tvShowDetail = TVShowContentDetail.from(realTvShowDetail)
+                            
+                            _tvShowState.value = tvShowDetail
+                            
+                            // Select first season by default
+                            val firstSeason = tvShowDetail.getSeasons().firstOrNull()
+                            _selectedSeason.value = firstSeason
+                            
+                            // Select first episode of first season by default
+                            val firstEpisode = firstSeason?.episodes?.firstOrNull()
+                            _selectedEpisode.value = firstEpisode
+                            
+                            updateState { 
+                                copy(
+                                    tvShow = tvShowDetail,
+                                    isLoading = false,
+                                    error = null,
+                                    isLoaded = true,
+                                    currentSeason = firstSeason,
+                                    currentEpisode = firstEpisode
+                                )
+                            }
+                            
+                            // Load related shows
+                            loadRelatedShows(tvShowDetail)
+                        }
+                        is com.rdwatch.androidtv.repository.base.Result.Error -> {
+                            updateState { 
+                                copy(
+                                    isLoading = false,
+                                    error = "Failed to load TV show: ${result.exception.message}"
+                                )
+                            }
+                        }
+                    }
+                }
                 
             } catch (e: Exception) {
                 updateState { 
@@ -219,19 +260,43 @@ class TVDetailsViewModel @Inject constructor(
     }
     
     /**
-     * Load related TV shows
+     * Load related TV shows from TMDb
      */
     private fun loadRelatedShows(tvShow: TVShowContentDetail) {
         viewModelScope.launch {
             _relatedShowsState.value = UiState.Loading
             
             try {
-                // For now, return empty list
-                // In a real app, this would fetch related shows from repository
-                val relatedShows = emptyList<TVShowContentDetail>()
-                
-                _relatedShowsState.value = UiState.Success(relatedShows)
-                updateState { copy(relatedShows = relatedShows) }
+                val tmdbId = tvShow.id.toIntOrNull()
+                if (tmdbId != null) {
+                    // Load recommendations from TMDb
+                    tmdbTVRepository.getTVRecommendations(tmdbId).collect { result ->
+                        when (result) {
+                            is com.rdwatch.androidtv.repository.base.Result.Success -> {
+                                // For now, return empty list until we implement proper mapping
+                                // TODO: Convert TMDb recommendations to TVShowContentDetail list
+                                val relatedShows = emptyList<TVShowContentDetail>()
+                                
+                                _relatedShowsState.value = UiState.Success(relatedShows)
+                                updateState { copy(relatedShows = relatedShows) }
+                            }
+                            is com.rdwatch.androidtv.repository.base.Result.Error -> {
+                                _relatedShowsState.value = UiState.Error(
+                                    message = "Failed to load related shows: ${result.exception.message}",
+                                    throwable = result.exception
+                                )
+                            }
+                            is com.rdwatch.androidtv.repository.base.Result.Loading -> {
+                                // Already set to Loading above
+                            }
+                        }
+                    }
+                } else {
+                    // Invalid ID, return empty list
+                    val relatedShows = emptyList<TVShowContentDetail>()
+                    _relatedShowsState.value = UiState.Success(relatedShows)
+                    updateState { copy(relatedShows = relatedShows) }
+                }
                 
             } catch (e: Exception) {
                 _relatedShowsState.value = UiState.Error(
