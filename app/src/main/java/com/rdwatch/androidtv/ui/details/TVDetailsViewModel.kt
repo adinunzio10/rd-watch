@@ -85,18 +85,68 @@ class TVDetailsViewModel @Inject constructor(
                         is com.rdwatch.androidtv.repository.base.Result.Success -> {
                             val contentDetail = result.data
                             
-                            // Create a demo TVShowContentDetail with real TMDb data
-                            // For now, we'll use demo episodes but real metadata
-                            val demoTvShow = TVShowContentDetail.createDemo()
-                            val realTvShowDetail = demoTvShow.getTVShowDetail().copy(
-                                id = contentDetail.id,
-                                title = contentDetail.title,
-                                overview = contentDetail.description,
-                                backdropPath = contentDetail.backgroundImageUrl,
-                                posterPath = contentDetail.cardImageUrl
-                                // TODO: Parse more metadata from contentDetail
-                            )
-                            val tvShowDetail = TVShowContentDetail.from(realTvShowDetail)
+                            // Create TVShowDetail from TMDb data
+                            val tmdbTvDetail = when (contentDetail) {
+                                is com.rdwatch.androidtv.ui.details.models.TMDbTVContentDetail -> {
+                                    // Use real TMDb data to create TVShowDetail
+                                    TVShowDetail(
+                                        id = contentDetail.id,
+                                        title = contentDetail.title,
+                                        originalTitle = contentDetail.originalTitle,
+                                        overview = contentDetail.description,
+                                        posterPath = contentDetail.cardImageUrl,
+                                        backdropPath = contentDetail.backgroundImageUrl,
+                                        firstAirDate = contentDetail.firstAirDate,
+                                        lastAirDate = contentDetail.lastAirDate,
+                                        status = contentDetail.status ?: "Unknown",
+                                        type = contentDetail.type ?: "Scripted",
+                                        genres = contentDetail.genres,
+                                        languages = contentDetail.spokenLanguages,
+                                        originCountry = contentDetail.originCountry,
+                                        numberOfSeasons = contentDetail.numberOfSeasons ?: 1,
+                                        numberOfEpisodes = contentDetail.numberOfEpisodes ?: 0,
+                                        seasons = emptyList(), // TODO: Load seasons/episodes from TMDb
+                                        networks = contentDetail.networks,
+                                        productionCompanies = contentDetail.productionCompanies,
+                                        creators = emptyList(), // TODO: Load from TMDb credits
+                                        cast = emptyList(), // TODO: Load from TMDb credits
+                                        voteAverage = contentDetail.voteAverage,
+                                        voteCount = contentDetail.voteCount,
+                                        popularity = contentDetail.popularity,
+                                        adult = contentDetail.adult,
+                                        homepage = contentDetail.homepage,
+                                        tagline = null, // Not available in TV response
+                                        inProduction = contentDetail.inProduction ?: false,
+                                        episodeRunTime = emptyList(), // TODO: Parse from TMDb data
+                                        lastEpisodeToAir = null, // TODO: Load from TMDb
+                                        nextEpisodeToAir = null // TODO: Load from TMDb
+                                    )
+                                }
+                                else -> {
+                                    // Fallback for non-TMDb content
+                                    TVShowDetail(
+                                        id = contentDetail.id,
+                                        title = contentDetail.title,
+                                        originalTitle = contentDetail.title,
+                                        overview = contentDetail.description,
+                                        posterPath = contentDetail.cardImageUrl,
+                                        backdropPath = contentDetail.backgroundImageUrl,
+                                        firstAirDate = contentDetail.metadata.year?.let { "$it-01-01" },
+                                        lastAirDate = null,
+                                        status = "Unknown",
+                                        type = "Scripted",
+                                        genres = contentDetail.metadata.genre,
+                                        numberOfSeasons = 1,
+                                        numberOfEpisodes = 0,
+                                        seasons = emptyList(),
+                                        networks = listOf(contentDetail.metadata.studio ?: "Unknown"),
+                                        voteAverage = 0f,
+                                        voteCount = 0
+                                    )
+                                }
+                            }
+                            
+                            val tvShowDetail = TVShowContentDetail.from(tmdbTvDetail)
                             
                             _tvShowState.value = tvShowDetail
                             
