@@ -466,13 +466,41 @@ class TMDbSearchRepositoryImpl @Inject constructor(
     }
 
     private fun <T> handleApiResponse(response: retrofit2.Response<ApiResponse<T>>): ApiResponse<T> {
+        android.util.Log.d("TMDbSearchRepo", "=== API Response Debug ===")
+        android.util.Log.d("TMDbSearchRepo", "Response URL: ${response.raw().request.url}")
+        android.util.Log.d("TMDbSearchRepo", "Response code: ${response.code()}")
+        android.util.Log.d("TMDbSearchRepo", "Response message: ${response.message()}")
+        android.util.Log.d("TMDbSearchRepo", "Response isSuccessful: ${response.isSuccessful}")
+        
         return if (response.isSuccessful) {
-            response.body() ?: ApiResponse.Error(ApiException.ParseException("Empty response body"))
+            val body = response.body()
+            android.util.Log.d("TMDbSearchRepo", "Response body is null: ${body == null}")
+            
+            if (body != null) {
+                android.util.Log.d("TMDbSearchRepo", "Response body type: ${body::class.simpleName}")
+                when (body) {
+                    is ApiResponse.Success<*> -> {
+                        android.util.Log.d("TMDbSearchRepo", "ApiResponse.Success with data type: ${body.data?.let { it::class.simpleName }}")
+                    }
+                    is ApiResponse.Error -> {
+                        android.util.Log.e("TMDbSearchRepo", "ApiResponse.Error: ${body.exception.message}")
+                    }
+                    is ApiResponse.Loading -> {
+                        android.util.Log.d("TMDbSearchRepo", "ApiResponse.Loading")
+                    }
+                }
+            }
+            
+            body ?: ApiResponse.Error(ApiException.ParseException("Empty response body"))
         } else {
+            val errorBody = response.errorBody()?.string()
+            android.util.Log.e("TMDbSearchRepo", "HTTP Error ${response.code()}: ${response.message()}")
+            android.util.Log.e("TMDbSearchRepo", "Error body: $errorBody")
+            
             ApiResponse.Error(ApiException.HttpException(
                 code = response.code(),
                 message = response.message(),
-                body = response.errorBody()?.string()
+                body = errorBody
             ))
         }
     }
