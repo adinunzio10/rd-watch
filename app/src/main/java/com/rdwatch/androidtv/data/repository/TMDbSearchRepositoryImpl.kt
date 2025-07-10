@@ -14,6 +14,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -50,10 +52,12 @@ class TMDbSearchRepositoryImpl @Inject constructor(
             cachedSearch == null || true // Always fetch search results as they can change frequently
         },
         createCall = {
-            val response = tmdbSearchService.searchMovies(
-                query, language, page, includeAdult, region, year, primaryReleaseYear
-            ).execute()
-            handleRawApiResponse(response)
+            withContext(Dispatchers.IO) {
+                val response = tmdbSearchService.searchMovies(
+                    query, language, page, includeAdult, region, year, primaryReleaseYear
+                ).execute()
+                handleRawApiResponse(response)
+            }
         },
         saveCallResult = { searchResponse ->
             val searchId = buildSearchId(query, page, "movie")
@@ -76,10 +80,12 @@ class TMDbSearchRepositoryImpl @Inject constructor(
             cachedSearch == null || true // Always fetch search results as they can change frequently
         },
         createCall = {
-            val response = tmdbSearchService.searchTVShows(
-                query, language, page, includeAdult, firstAirDateYear
-            ).execute()
-            handleRawApiResponse(response)
+            withContext(Dispatchers.IO) {
+                val response = tmdbSearchService.searchTVShows(
+                    query, language, page, includeAdult, firstAirDateYear
+                ).execute()
+                handleRawApiResponse(response)
+            }
         },
         saveCallResult = { searchResponse ->
             val searchId = buildSearchId(query, page, "tv")
@@ -102,10 +108,12 @@ class TMDbSearchRepositoryImpl @Inject constructor(
             cachedSearch == null || true // Always fetch search results as they can change frequently
         },
         createCall = {
-            val response = tmdbSearchService.searchPeople(
-                query, language, page, includeAdult, region
-            ).execute()
-            handleRawApiResponse(response)
+            withContext(Dispatchers.IO) {
+                val response = tmdbSearchService.searchPeople(
+                    query, language, page, includeAdult, region
+                ).execute()
+                handleRawApiResponse(response)
+            }
         },
         saveCallResult = { searchResponse ->
             val searchId = buildSearchId(query, page, "person")
@@ -135,19 +143,21 @@ class TMDbSearchRepositoryImpl @Inject constructor(
             },
             createCall = {
                 android.util.Log.d("TMDbSearchRepo", "Making TMDb API call for multi-search: '$query'")
-                try {
-                    val response = tmdbSearchService.multiSearch(
-                        query, language, page, includeAdult, region
-                    ).execute()
-                    
-                    android.util.Log.d("TMDbSearchRepo", "TMDb API response: isSuccessful=${response.isSuccessful}, code=${response.code()}")
-                    
-                    val result = handleRawApiResponse(response)
-                    android.util.Log.d("TMDbSearchRepo", "Multi-search API success: ${result.results.size} results")
-                    result
-                } catch (e: Exception) {
-                    android.util.Log.e("TMDbSearchRepo", "Exception in createCall for multi-search", e)
-                    throw e
+                withContext(Dispatchers.IO) {
+                    try {
+                        val response = tmdbSearchService.multiSearch(
+                            query, language, page, includeAdult, region
+                        ).execute()
+                        
+                        android.util.Log.d("TMDbSearchRepo", "TMDb API response: isSuccessful=${response.isSuccessful}, code=${response.code()}")
+                        
+                        val result = handleRawApiResponse(response)
+                        android.util.Log.d("TMDbSearchRepo", "Multi-search API success: ${result.results.size} results")
+                        result
+                    } catch (e: Exception) {
+                        android.util.Log.e("TMDbSearchRepo", "Exception in createCall for multi-search", e)
+                        throw e
+                    }
                 }
             },
             saveCallResult = { multiSearchResponse ->
@@ -207,8 +217,10 @@ class TMDbSearchRepositoryImpl @Inject constructor(
             cachedSearch == null || true // Always fetch search results as they can change frequently
         },
         createCall = {
-            val response = tmdbSearchService.searchCollections(query, language, page).execute()
-            handleRawApiResponse(response)
+            withContext(Dispatchers.IO) {
+                val response = tmdbSearchService.searchCollections(query, language, page).execute()
+                handleRawApiResponse(response)
+            }
         },
         saveCallResult = { searchResponse ->
             val searchId = buildSearchId(query, page, "collection")
@@ -228,8 +240,10 @@ class TMDbSearchRepositoryImpl @Inject constructor(
             cachedSearch == null || true // Always fetch search results as they can change frequently
         },
         createCall = {
-            val response = tmdbSearchService.searchCompanies(query, page).execute()
-            handleRawApiResponse(response)
+            withContext(Dispatchers.IO) {
+                val response = tmdbSearchService.searchCompanies(query, page).execute()
+                handleRawApiResponse(response)
+            }
         },
         saveCallResult = { searchResponse ->
             val searchId = buildSearchId(query, page, "company")
@@ -249,8 +263,10 @@ class TMDbSearchRepositoryImpl @Inject constructor(
             cachedSearch == null || true // Always fetch search results as they can change frequently
         },
         createCall = {
-            val response = tmdbSearchService.searchKeywords(query, page).execute()
-            handleRawApiResponse(response)
+            withContext(Dispatchers.IO) {
+                val response = tmdbSearchService.searchKeywords(query, page).execute()
+                handleRawApiResponse(response)
+            }
         },
         saveCallResult = { searchResponse ->
             val searchId = buildSearchId(query, page, "keyword")
@@ -288,17 +304,19 @@ class TMDbSearchRepositoryImpl @Inject constructor(
             android.util.Log.d("TMDbSearchRepo", "=== Creating API Call ===")
             android.util.Log.d("TMDbSearchRepo", "Making getTrending API call: mediaType=$mediaType, timeWindow=$timeWindow, language=$language, page=$page")
             
-            try {
-                val response = tmdbSearchService.getTrending(mediaType, timeWindow, language, page).execute()
-                
-                android.util.Log.d("TMDbSearchRepo", "API call completed, processing response...")
-                
-                val result = handleRawApiResponse(response)
-                android.util.Log.d("TMDbSearchRepo", "CreateCall returning success data with ${result.results.size} results")
-                result
-            } catch (e: Exception) {
-                android.util.Log.e("TMDbSearchRepo", "Exception in createCall for trending", e)
-                throw e
+            withContext(Dispatchers.IO) {
+                try {
+                    val response = tmdbSearchService.getTrending(mediaType, timeWindow, language, page).execute()
+                    
+                    android.util.Log.d("TMDbSearchRepo", "API call completed, processing response...")
+                    
+                    val result = handleRawApiResponse(response)
+                    android.util.Log.d("TMDbSearchRepo", "CreateCall returning success data with ${result.results.size} results")
+                    result
+                } catch (e: Exception) {
+                    android.util.Log.e("TMDbSearchRepo", "Exception in createCall for trending", e)
+                    throw e
+                }
             }
         },
         saveCallResult = { trendingResponse ->
