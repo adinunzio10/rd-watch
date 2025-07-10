@@ -55,22 +55,21 @@ fun TVDetailsScreen(
     }
     
     
-    when (uiState) {
-        is UiState.Loading -> {
+    when {
+        uiState.isLoading -> {
             TVDetailsLoadingScreen(modifier = modifier)
         }
-        is UiState.Error -> {
-            val errorState = uiState as UiState.Error
+        uiState.error != null -> {
             TVDetailsErrorScreen(
-                error = errorState.message,
+                error = uiState.error ?: "Unknown error",
                 onRetry = { viewModel.loadTVShow(tvShowId) },
                 onBackPressed = onBackPressed,
                 modifier = modifier
             )
         }
-        is UiState.Success<*> -> {
-            tvShowState?.let { tvShow ->
-                TVDetailsContent(
+        tvShowState != null -> {
+            val tvShow = tvShowState!!
+            TVDetailsContent(
                     tvShow = tvShow,
                     selectedSeason = selectedSeason,
                     selectedEpisode = selectedEpisode,
@@ -122,7 +121,6 @@ fun TVDetailsScreen(
                     listState = listState,
                     modifier = modifier
                 )
-            }
         }
     }
 }
