@@ -135,15 +135,20 @@ class TMDbSearchRepositoryImpl @Inject constructor(
             },
             createCall = {
                 android.util.Log.d("TMDbSearchRepo", "Making TMDb API call for multi-search: '$query'")
-                val response = tmdbSearchService.multiSearch(
-                    query, language, page, includeAdult, region
-                ).execute()
-                
-                android.util.Log.d("TMDbSearchRepo", "TMDb API response: isSuccessful=${response.isSuccessful}, code=${response.code()}")
-                
-                val result = handleRawApiResponse(response)
-                android.util.Log.d("TMDbSearchRepo", "Multi-search API success: ${result.results.size} results")
-                result
+                try {
+                    val response = tmdbSearchService.multiSearch(
+                        query, language, page, includeAdult, region
+                    ).execute()
+                    
+                    android.util.Log.d("TMDbSearchRepo", "TMDb API response: isSuccessful=${response.isSuccessful}, code=${response.code()}")
+                    
+                    val result = handleRawApiResponse(response)
+                    android.util.Log.d("TMDbSearchRepo", "Multi-search API success: ${result.results.size} results")
+                    result
+                } catch (e: Exception) {
+                    android.util.Log.e("TMDbSearchRepo", "Exception in createCall for multi-search", e)
+                    throw e
+                }
             },
             saveCallResult = { multiSearchResponse ->
                 android.util.Log.d("TMDbSearchRepo", "Saving multi-search results to DB for query: $query")
@@ -283,13 +288,18 @@ class TMDbSearchRepositoryImpl @Inject constructor(
             android.util.Log.d("TMDbSearchRepo", "=== Creating API Call ===")
             android.util.Log.d("TMDbSearchRepo", "Making getTrending API call: mediaType=$mediaType, timeWindow=$timeWindow, language=$language, page=$page")
             
-            val response = tmdbSearchService.getTrending(mediaType, timeWindow, language, page).execute()
-            
-            android.util.Log.d("TMDbSearchRepo", "API call completed, processing response...")
-            
-            val result = handleRawApiResponse(response)
-            android.util.Log.d("TMDbSearchRepo", "CreateCall returning success data with ${result.results.size} results")
-            result
+            try {
+                val response = tmdbSearchService.getTrending(mediaType, timeWindow, language, page).execute()
+                
+                android.util.Log.d("TMDbSearchRepo", "API call completed, processing response...")
+                
+                val result = handleRawApiResponse(response)
+                android.util.Log.d("TMDbSearchRepo", "CreateCall returning success data with ${result.results.size} results")
+                result
+            } catch (e: Exception) {
+                android.util.Log.e("TMDbSearchRepo", "Exception in createCall for trending", e)
+                throw e
+            }
         },
         saveCallResult = { trendingResponse ->
             val searchId = buildSearchId("trending_${mediaType}_$timeWindow", page, mediaType)
