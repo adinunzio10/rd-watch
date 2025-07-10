@@ -7,7 +7,6 @@ import com.rdwatch.androidtv.data.mappers.TMDbToContentDetailMapper
 import com.rdwatch.androidtv.data.mappers.*
 import com.rdwatch.androidtv.network.api.TMDbMovieService
 import com.rdwatch.androidtv.network.models.tmdb.*
-import com.rdwatch.androidtv.network.response.ApiResponse
 import com.rdwatch.androidtv.network.response.ApiException
 import com.rdwatch.androidtv.repository.base.Result
 import com.rdwatch.androidtv.repository.base.networkBoundResource
@@ -46,11 +45,7 @@ class TMDbMovieRepositoryImpl @Inject constructor(
         },
         createCall = {
             val response = tmdbMovieService.getMovieDetails(movieId, null, language).execute()
-            when (val apiResponse = handleApiResponse(response)) {
-                is ApiResponse.Success -> apiResponse.data
-                is ApiResponse.Error -> throw apiResponse.exception
-                is ApiResponse.Loading -> throw Exception("Unexpected loading state")
-            }
+            handleRawApiResponse(response)
         },
         saveCallResult = { movieResponse ->
             tmdbMovieDao.insertMovie(movieResponse.toEntity())
@@ -94,11 +89,7 @@ class TMDbMovieRepositoryImpl @Inject constructor(
         },
         createCall = {
             val response = tmdbMovieService.getMovieCredits(movieId, language).execute()
-            when (val apiResponse = handleApiResponse(response)) {
-                is ApiResponse.Success -> apiResponse.data
-                is ApiResponse.Error -> throw apiResponse.exception
-                is ApiResponse.Loading -> throw Exception("Unexpected loading state")
-            }
+            handleRawApiResponse(response)
         },
         saveCallResult = { creditsResponse ->
             tmdbSearchDao.insertCredits(creditsResponse.toEntity(movieId, "movie"))
@@ -120,11 +111,7 @@ class TMDbMovieRepositoryImpl @Inject constructor(
         },
         createCall = {
             val response = tmdbMovieService.getMovieRecommendations(movieId, language, page).execute()
-            when (val apiResponse = handleApiResponse(response)) {
-                is ApiResponse.Success -> apiResponse.data
-                is ApiResponse.Error -> throw apiResponse.exception
-                is ApiResponse.Loading -> throw Exception("Unexpected loading state")
-            }
+            handleRawApiResponse(response)
         },
         saveCallResult = { recommendationsResponse ->
             tmdbSearchDao.insertRecommendations(
@@ -148,11 +135,7 @@ class TMDbMovieRepositoryImpl @Inject constructor(
         },
         createCall = {
             val response = tmdbMovieService.getSimilarMovies(movieId, language, page).execute()
-            when (val apiResponse = handleApiResponse(response)) {
-                is ApiResponse.Success -> apiResponse.data
-                is ApiResponse.Error -> throw apiResponse.exception
-                is ApiResponse.Loading -> throw Exception("Unexpected loading state")
-            }
+            handleRawApiResponse(response)
         },
         saveCallResult = { similarResponse ->
             tmdbSearchDao.insertRecommendations(
@@ -174,11 +157,7 @@ class TMDbMovieRepositoryImpl @Inject constructor(
         },
         createCall = {
             val response = tmdbMovieService.getMovieImages(movieId, includeImageLanguage).execute()
-            when (val apiResponse = handleApiResponse(response)) {
-                is ApiResponse.Success -> apiResponse.data
-                is ApiResponse.Error -> throw apiResponse.exception
-                is ApiResponse.Loading -> throw Exception("Unexpected loading state")
-            }
+            handleRawApiResponse(response)
         },
         saveCallResult = { imagesResponse ->
             tmdbSearchDao.insertImages(imagesResponse.toEntity(movieId, "movie"))
@@ -198,11 +177,7 @@ class TMDbMovieRepositoryImpl @Inject constructor(
         },
         createCall = {
             val response = tmdbMovieService.getMovieVideos(movieId, language).execute()
-            when (val apiResponse = handleApiResponse(response)) {
-                is ApiResponse.Success -> apiResponse.data
-                is ApiResponse.Error -> throw apiResponse.exception
-                is ApiResponse.Loading -> throw Exception("Unexpected loading state")
-            }
+            handleRawApiResponse(response)
         },
         saveCallResult = { videosResponse ->
             tmdbSearchDao.insertVideos(videosResponse.toEntity(movieId, "movie"))
@@ -224,11 +199,7 @@ class TMDbMovieRepositoryImpl @Inject constructor(
         },
         createCall = {
             val response = tmdbMovieService.getPopularMovies(language, page, region).execute()
-            when (val apiResponse = handleApiResponse(response)) {
-                is ApiResponse.Success -> apiResponse.data
-                is ApiResponse.Error -> throw apiResponse.exception
-                is ApiResponse.Loading -> throw Exception("Unexpected loading state")
-            }
+            handleRawApiResponse(response)
         },
         saveCallResult = { popularResponse ->
             tmdbSearchDao.insertRecommendations(
@@ -252,11 +223,7 @@ class TMDbMovieRepositoryImpl @Inject constructor(
         },
         createCall = {
             val response = tmdbMovieService.getTopRatedMovies(language, page, region).execute()
-            when (val apiResponse = handleApiResponse(response)) {
-                is ApiResponse.Success -> apiResponse.data
-                is ApiResponse.Error -> throw apiResponse.exception
-                is ApiResponse.Loading -> throw Exception("Unexpected loading state")
-            }
+            handleRawApiResponse(response)
         },
         saveCallResult = { topRatedResponse ->
             tmdbSearchDao.insertRecommendations(
@@ -280,11 +247,7 @@ class TMDbMovieRepositoryImpl @Inject constructor(
         },
         createCall = {
             val response = tmdbMovieService.getNowPlayingMovies(language, page, region).execute()
-            when (val apiResponse = handleApiResponse(response)) {
-                is ApiResponse.Success -> apiResponse.data
-                is ApiResponse.Error -> throw apiResponse.exception
-                is ApiResponse.Loading -> throw Exception("Unexpected loading state")
-            }
+            handleRawApiResponse(response)
         },
         saveCallResult = { nowPlayingResponse ->
             tmdbSearchDao.insertRecommendations(
@@ -308,11 +271,7 @@ class TMDbMovieRepositoryImpl @Inject constructor(
         },
         createCall = {
             val response = tmdbMovieService.getUpcomingMovies(language, page, region).execute()
-            when (val apiResponse = handleApiResponse(response)) {
-                is ApiResponse.Success -> apiResponse.data
-                is ApiResponse.Error -> throw apiResponse.exception
-                is ApiResponse.Loading -> throw Exception("Unexpected loading state")
-            }
+            handleRawApiResponse(response)
         },
         saveCallResult = { upcomingResponse ->
             tmdbSearchDao.insertRecommendations(
@@ -438,15 +397,42 @@ class TMDbMovieRepositoryImpl @Inject constructor(
         return true // TODO: Implement proper cache checking
     }
 
-    private fun <T> handleApiResponse(response: retrofit2.Response<ApiResponse<T>>): ApiResponse<T> {
+    private fun <T> handleRawApiResponse(response: retrofit2.Response<T>): T {
+        android.util.Log.d("TMDbMovieRepo", "=== API Response Debug ===")
+        android.util.Log.d("TMDbMovieRepo", "Response URL: ${response.raw().request.url}")
+        android.util.Log.d("TMDbMovieRepo", "Response code: ${response.code()}")
+        android.util.Log.d("TMDbMovieRepo", "Response message: ${response.message()}")
+        android.util.Log.d("TMDbMovieRepo", "Response isSuccessful: ${response.isSuccessful}")
+        
         return if (response.isSuccessful) {
-            response.body() ?: ApiResponse.Error(ApiException.ParseException("Empty response body"))
+            val body = response.body()
+            android.util.Log.d("TMDbMovieRepo", "Response body is null: ${body == null}")
+            
+            if (body != null) {
+                android.util.Log.d("TMDbMovieRepo", "Response body type: ${body::class.simpleName}")
+                
+                // Log specific details for TMDb responses
+                when (body) {
+                    is TMDbMovieResponse -> {
+                        android.util.Log.d("TMDbMovieRepo", "TMDbMovieResponse: ${body.title} (ID: ${body.id})")
+                    }
+                    is TMDbRecommendationsResponse -> {
+                        android.util.Log.d("TMDbMovieRepo", "TMDbRecommendationsResponse with ${body.results.size} results, page ${body.page}/${body.totalPages}")
+                    }
+                }
+            }
+            
+            body ?: throw ApiException.ParseException("Empty response body")
         } else {
-            ApiResponse.Error(ApiException.HttpException(
+            val errorBody = response.errorBody()?.string()
+            android.util.Log.e("TMDbMovieRepo", "HTTP Error ${response.code()}: ${response.message()}")
+            android.util.Log.e("TMDbMovieRepo", "Error body: $errorBody")
+            
+            throw ApiException.HttpException(
                 code = response.code(),
                 message = response.message(),
-                body = response.errorBody()?.string()
-            ))
+                body = errorBody
+            )
         }
     }
 

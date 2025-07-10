@@ -1,6 +1,5 @@
 package com.rdwatch.androidtv.network.api
 
-import com.rdwatch.androidtv.network.response.ApiResponse
 import com.rdwatch.androidtv.network.models.tmdb.TMDbMovieResponse
 import com.rdwatch.androidtv.network.models.tmdb.TMDbCreditsResponse
 import com.rdwatch.androidtv.network.models.tmdb.TMDbRecommendationsResponse
@@ -37,7 +36,7 @@ interface TMDbMovieService {
         @Path("movie_id") movieId: Int,
         @Query("append_to_response") appendToResponse: String? = null,
         @Query("language") language: String = "en-US"
-    ): Call<ApiResponse<TMDbMovieResponse>>
+    ): Call<TMDbMovieResponse>
     
     /**
      * Get movie credits (cast and crew)
@@ -48,7 +47,7 @@ interface TMDbMovieService {
     fun getMovieCredits(
         @Path("movie_id") movieId: Int,
         @Query("language") language: String = "en-US"
-    ): Call<ApiResponse<TMDbCreditsResponse>>
+    ): Call<TMDbCreditsResponse>
     
     /**
      * Get movie recommendations
@@ -61,7 +60,7 @@ interface TMDbMovieService {
         @Path("movie_id") movieId: Int,
         @Query("language") language: String = "en-US",
         @Query("page") page: Int = 1
-    ): Call<ApiResponse<TMDbRecommendationsResponse>>
+    ): Call<TMDbRecommendationsResponse>
     
     /**
      * Get similar movies
@@ -74,7 +73,7 @@ interface TMDbMovieService {
         @Path("movie_id") movieId: Int,
         @Query("language") language: String = "en-US",
         @Query("page") page: Int = 1
-    ): Call<ApiResponse<TMDbRecommendationsResponse>>
+    ): Call<TMDbRecommendationsResponse>
     
     /**
      * Get movie images (posters, backdrops, logos)
@@ -85,7 +84,7 @@ interface TMDbMovieService {
     fun getMovieImages(
         @Path("movie_id") movieId: Int,
         @Query("include_image_language") includeImageLanguage: String? = null
-    ): Call<ApiResponse<TMDbMovieImagesResponse>>
+    ): Call<TMDbMovieImagesResponse>
     
     /**
      * Get movie videos (trailers, teasers, etc.)
@@ -96,7 +95,7 @@ interface TMDbMovieService {
     fun getMovieVideos(
         @Path("movie_id") movieId: Int,
         @Query("language") language: String = "en-US"
-    ): Call<ApiResponse<TMDbMovieVideosResponse>>
+    ): Call<TMDbMovieVideosResponse>
     
     /**
      * Get popular movies
@@ -109,7 +108,7 @@ interface TMDbMovieService {
         @Query("language") language: String = "en-US",
         @Query("page") page: Int = 1,
         @Query("region") region: String? = null
-    ): Call<ApiResponse<TMDbRecommendationsResponse>>
+    ): Call<TMDbRecommendationsResponse>
     
     /**
      * Get top rated movies
@@ -122,7 +121,7 @@ interface TMDbMovieService {
         @Query("language") language: String = "en-US",
         @Query("page") page: Int = 1,
         @Query("region") region: String? = null
-    ): Call<ApiResponse<TMDbRecommendationsResponse>>
+    ): Call<TMDbRecommendationsResponse>
     
     /**
      * Get now playing movies
@@ -135,7 +134,7 @@ interface TMDbMovieService {
         @Query("language") language: String = "en-US",
         @Query("page") page: Int = 1,
         @Query("region") region: String? = null
-    ): Call<ApiResponse<TMDbRecommendationsResponse>>
+    ): Call<TMDbRecommendationsResponse>
     
     /**
      * Get upcoming movies
@@ -148,5 +147,5 @@ interface TMDbMovieService {
         @Query("language") language: String = "en-US",
         @Query("page") page: Int = 1,
         @Query("region") region: String? = null
-    ): Call<ApiResponse<TMDbRecommendationsResponse>>
+    ): Call<TMDbRecommendationsResponse>
 }
