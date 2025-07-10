@@ -8,6 +8,9 @@ import com.rdwatch.androidtv.ui.details.models.ContentType
 import com.rdwatch.androidtv.ui.details.models.ContentMetadata
 import com.rdwatch.androidtv.ui.details.models.ContentAction
 import com.rdwatch.androidtv.ui.details.models.ContentProgress
+import com.rdwatch.androidtv.ui.details.models.ExtendedContentMetadata
+import com.rdwatch.androidtv.ui.details.models.CastMember
+import com.rdwatch.androidtv.ui.details.models.CrewMember
 
 /**
  * TMDb TV Show implementation of ContentDetail
@@ -30,7 +33,7 @@ data class TMDbTVContentDetail(
     override val contentType: ContentType = ContentType.TV_SHOW
     override val videoUrl: String? = null // TMDb doesn't provide direct video URLs
     
-    override val metadata: ContentMetadata = ContentMetadata(
+    val extendedMetadata: ExtendedContentMetadata = ExtendedContentMetadata(
         year = formatYear(tmdbTV.firstAirDate),
         duration = formatEpisodeRuntime(tmdbTV.episodeRunTime),
         rating = if (tmdbTV.voteAverage > 0) formatRating(tmdbTV.voteAverage) else null,
@@ -38,7 +41,9 @@ data class TMDbTVContentDetail(
         genre = extractGenreNames(tmdbTV.genres),
         studio = tmdbTV.networks.firstOrNull()?.name ?: tmdbTV.productionCompanies.firstOrNull()?.name,
         cast = extractCastNames(credits),
+        fullCast = extractFullCast(credits),
         director = extractCreator(tmdbTV),
+        crew = extractFullCrew(credits, tmdbTV),
         customMetadata = mapOf(
             "tmdb_id" to tmdbTV.id.toString(),
             "vote_count" to tmdbTV.voteCount.toString(),
@@ -65,6 +70,8 @@ data class TMDbTVContentDetail(
             "episode_run_time" to tmdbTV.episodeRunTime.joinToString(", ") { "${it}min" }
         )
     )
+    
+    override val metadata: ContentMetadata = extendedMetadata.toContentMetadata()
     
     override val actions: List<ContentAction> = createContentActions(
         isInWatchlist = isInWatchlist,
@@ -219,6 +226,7 @@ data class TMDbTVContentDetail(
      */
     fun getSeasons(): List<com.rdwatch.androidtv.network.models.tmdb.TMDbSeasonResponse> = tmdbTV.seasons
     
+    
     /**
      * Get last episode to air
      */
@@ -311,6 +319,45 @@ data class TMDbTVContentDetail(
     
     private fun extractSpokenLanguageNames(languages: List<com.rdwatch.androidtv.network.models.tmdb.TMDbSpokenLanguageResponse>): List<String> {
         return languages.map { it.name }
+    }
+    
+    private fun extractFullCast(credits: TMDbCreditsResponse?, limit: Int = 20): List<CastMember> {
+        return credits?.cast?.take(limit)?.map { castMember ->
+            CastMember(
+                id = castMember.id,
+                name = castMember.name,
+                character = castMember.character,
+                profileImageUrl = CastMember.buildProfileImageUrl(castMember.profilePath),
+                order = castMember.order
+            )
+        } ?: emptyList()
+    }
+    
+    private fun extractFullCrew(credits: TMDbCreditsResponse?, tmdbTV: TMDbTVResponse): List<CrewMember> {
+        val crewFromCredits = credits?.crew?.filter { crewMember ->
+            CrewMember.isKeyRole(crewMember.job)
+        }?.map { crewMember ->
+            CrewMember(
+                id = crewMember.id,
+                name = crewMember.name,
+                job = crewMember.job,
+                department = crewMember.department,
+                profileImageUrl = CrewMember.buildProfileImageUrl(crewMember.profilePath)
+            )
+        } ?: emptyList()
+        
+        // Add creators from TV show data as crew members
+        val creators = tmdbTV.createdBy.map { creator ->
+            CrewMember(
+                id = creator.id,
+                name = creator.name,
+                job = "Creator",
+                department = "Writing",
+                profileImageUrl = CastMember.buildProfileImageUrl(creator.profilePath)
+            )
+        }
+        
+        return (creators + crewFromCredits).distinctBy { it.id }
     }
     
     private fun createContentActions(

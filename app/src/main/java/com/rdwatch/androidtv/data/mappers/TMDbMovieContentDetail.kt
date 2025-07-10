@@ -8,6 +8,9 @@ import com.rdwatch.androidtv.ui.details.models.ContentType
 import com.rdwatch.androidtv.ui.details.models.ContentMetadata
 import com.rdwatch.androidtv.ui.details.models.ContentAction
 import com.rdwatch.androidtv.ui.details.models.ContentProgress
+import com.rdwatch.androidtv.ui.details.models.ExtendedContentMetadata
+import com.rdwatch.androidtv.ui.details.models.CastMember
+import com.rdwatch.androidtv.ui.details.models.CrewMember
 
 /**
  * TMDb Movie implementation of ContentDetail
@@ -30,7 +33,7 @@ data class TMDbMovieContentDetail(
     override val contentType: ContentType = ContentType.MOVIE
     override val videoUrl: String? = null // TMDb doesn't provide direct video URLs
     
-    override val metadata: ContentMetadata = ContentMetadata(
+    val extendedMetadata: ExtendedContentMetadata = ExtendedContentMetadata(
         year = formatYear(tmdbMovie.releaseDate),
         duration = formatRuntime(tmdbMovie.runtime),
         rating = if (tmdbMovie.voteAverage > 0) formatRating(tmdbMovie.voteAverage) else null,
@@ -38,7 +41,9 @@ data class TMDbMovieContentDetail(
         genre = extractGenreNames(tmdbMovie.genres),
         studio = tmdbMovie.productionCompanies.firstOrNull()?.name,
         cast = extractCastNames(credits),
+        fullCast = extractFullCast(credits),
         director = extractDirector(credits),
+        crew = extractFullCrew(credits),
         customMetadata = mapOf(
             "tmdb_id" to tmdbMovie.id.toString(),
             "imdb_id" to (tmdbMovie.imdbId ?: ""),
@@ -58,6 +63,8 @@ data class TMDbMovieContentDetail(
             "belongs_to_collection" to (tmdbMovie.belongsToCollection?.name ?: "")
         )
     )
+    
+    override val metadata: ContentMetadata = extendedMetadata.toContentMetadata()
     
     override val actions: List<ContentAction> = createContentActions(
         isInWatchlist = isInWatchlist,
@@ -177,6 +184,7 @@ data class TMDbMovieContentDetail(
      */
     fun getGenres(): List<com.rdwatch.androidtv.network.models.tmdb.TMDbGenreResponse> = tmdbMovie.genres
     
+    
     /**
      * Check if movie has video content
      */
@@ -264,6 +272,32 @@ data class TMDbMovieContentDetail(
     
     private fun extractSpokenLanguageNames(languages: List<com.rdwatch.androidtv.network.models.tmdb.TMDbSpokenLanguageResponse>): List<String> {
         return languages.map { it.name }
+    }
+    
+    private fun extractFullCast(credits: TMDbCreditsResponse?, limit: Int = 20): List<CastMember> {
+        return credits?.cast?.take(limit)?.map { castMember ->
+            CastMember(
+                id = castMember.id,
+                name = castMember.name,
+                character = castMember.character,
+                profileImageUrl = CastMember.buildProfileImageUrl(castMember.profilePath),
+                order = castMember.order
+            )
+        } ?: emptyList()
+    }
+    
+    private fun extractFullCrew(credits: TMDbCreditsResponse?): List<CrewMember> {
+        return credits?.crew?.filter { crewMember ->
+            CrewMember.isKeyRole(crewMember.job)
+        }?.map { crewMember ->
+            CrewMember(
+                id = crewMember.id,
+                name = crewMember.name,
+                job = crewMember.job,
+                department = crewMember.department,
+                profileImageUrl = CrewMember.buildProfileImageUrl(crewMember.profilePath)
+            )
+        } ?: emptyList()
     }
     
     private fun createContentActions(

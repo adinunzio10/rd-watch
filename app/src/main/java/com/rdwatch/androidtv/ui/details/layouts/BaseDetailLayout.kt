@@ -15,6 +15,9 @@ import androidx.compose.ui.unit.dp
 import com.rdwatch.androidtv.ui.common.UiState
 import com.rdwatch.androidtv.ui.details.models.*
 import com.rdwatch.androidtv.ui.details.components.HeroSection
+import com.rdwatch.androidtv.ui.components.CastCrewSection
+import com.rdwatch.androidtv.data.mappers.TMDbMovieContentDetail
+import com.rdwatch.androidtv.data.mappers.TMDbTVContentDetail
 
 /**
  * Base layout for content detail screens
@@ -368,14 +371,40 @@ private fun CastCrewSectionPlaceholder(
     content: ContentDetail,
     modifier: Modifier
 ) {
-    Column(
-        modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        Text(
-            text = "Cast & Crew",
-            style = MaterialTheme.typography.headlineSmall,
-            color = MaterialTheme.colorScheme.onBackground
+    // Check if content has extended metadata with cast/crew info
+    val extendedMetadata = when (content) {
+        is TMDbMovieContentDetail -> content.extendedMetadata
+        is TMDbTVContentDetail -> content.extendedMetadata
+        else -> null
+    }
+    
+    if (extendedMetadata != null && (extendedMetadata.fullCast.isNotEmpty() || extendedMetadata.crew.isNotEmpty())) {
+        CastCrewSection(
+            metadata = extendedMetadata,
+            modifier = modifier,
+            onCastMemberClick = { castMember ->
+                // TODO: Handle cast member click (e.g., navigate to person details)
+            },
+            onCrewMemberClick = { crewMember ->
+                // TODO: Handle crew member click (e.g., navigate to person details)
+            }
         )
+    } else {
+        // Fallback if no cast/crew data available
+        Column(
+            modifier = modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(
+                text = "Cast & Crew",
+                style = MaterialTheme.typography.headlineSmall,
+                color = MaterialTheme.colorScheme.onBackground
+            )
+            Text(
+                text = "No cast or crew information available",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
+            )
+        }
     }
 }
