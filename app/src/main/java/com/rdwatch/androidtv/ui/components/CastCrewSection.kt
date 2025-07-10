@@ -63,7 +63,7 @@ fun CastCrewSection(
             ) {
                 items(
                     items = metadata.fullCast,
-                    key = { it.id }
+                    key = { "cast_${it.id}" }
                 ) { castMember ->
                     CastMemberCard(
                         castMember = castMember,
@@ -93,7 +93,7 @@ fun CastCrewSection(
             ) {
                 items(
                     items = keyCrew,
-                    key = { it.id }
+                    key = { "crew_${it.id}" }
                 ) { crewMember ->
                     CrewMemberCard(
                         crewMember = crewMember,
