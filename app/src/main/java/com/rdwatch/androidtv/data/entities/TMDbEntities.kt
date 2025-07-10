@@ -4,6 +4,7 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import androidx.room.TypeConverters
 import com.rdwatch.androidtv.data.converters.Converters
+import com.squareup.moshi.JsonClass
 
 /**
  * Room entity for TMDb movie data
@@ -99,6 +100,7 @@ data class TMDbSearchResultEntity(
 /**
  * Individual search result item
  */
+@JsonClass(generateAdapter = true)
 data class TMDbSearchItemEntity(
     val id: Int,
     val mediaType: String, // "movie" or "tv"
@@ -137,6 +139,7 @@ data class TMDbCreditsEntity(
 /**
  * Cast member data
  */
+@JsonClass(generateAdapter = true)
 data class TMDbCastMemberEntity(
     val id: Int,
     val name: String,
@@ -155,6 +158,7 @@ data class TMDbCastMemberEntity(
 /**
  * Crew member data
  */
+@JsonClass(generateAdapter = true)
 data class TMDbCrewMemberEntity(
     val id: Int,
     val name: String,
@@ -204,6 +208,7 @@ data class TMDbImagesEntity(
 /**
  * Individual image data
  */
+@JsonClass(generateAdapter = true)
 data class TMDbImageEntity(
     val filePath: String,
     val width: Int,
@@ -230,6 +235,7 @@ data class TMDbVideosEntity(
 /**
  * Individual video data
  */
+@JsonClass(generateAdapter = true)
 data class TMDbVideoEntity(
     val id: String,
     val key: String,
