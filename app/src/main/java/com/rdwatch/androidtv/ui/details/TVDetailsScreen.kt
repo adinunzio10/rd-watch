@@ -142,124 +142,125 @@ private fun TVDetailsContent(
     listState: LazyListState,
     modifier: Modifier = Modifier
 ) {
-    Column(
-        modifier = modifier.fillMaxSize()
+    LazyColumn(
+        state = listState,
+        modifier = modifier.fillMaxSize(),
+        contentPadding = PaddingValues(bottom = 32.dp)
     ) {
         // Hero section with backdrop, title, and primary action
-        HeroSection(
-            content = tvShow,
-            progress = ContentProgress(
-                watchPercentage = progress.find { it.contentId == selectedEpisode?.videoUrl }?.watchPercentage ?: 0f,
-                isCompleted = (progress.find { it.contentId == selectedEpisode?.videoUrl }?.watchPercentage ?: 0f) >= 0.9f
-            ),
-            onActionClick = onActionClick,
-            onBackPressed = onBackPressed,
-            firstFocusRequester = backButtonFocusRequester,
-            modifier = Modifier.padding(bottom = 16.dp)
-        )
+        item {
+            HeroSection(
+                content = tvShow,
+                progress = ContentProgress(
+                    watchPercentage = progress.find { it.contentId == selectedEpisode?.videoUrl }?.watchPercentage ?: 0f,
+                    isCompleted = (progress.find { it.contentId == selectedEpisode?.videoUrl }?.watchPercentage ?: 0f) >= 0.9f
+                ),
+                onActionClick = onActionClick,
+                onBackPressed = onBackPressed,
+                firstFocusRequester = backButtonFocusRequester,
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
+        }
         
         // Action buttons row
-        ActionSection(
-            content = tvShow,
-            onActionClick = onActionClick,
-            modifier = Modifier.padding(horizontal = 32.dp, vertical = 8.dp)
-        )
+        item {
+            ActionSection(
+                content = tvShow,
+                onActionClick = onActionClick,
+                modifier = Modifier.padding(horizontal = 32.dp, vertical = 8.dp)
+            )
+        }
         
         // Tab navigation
-        ContentDetailTabs(
-            selectedTabIndex = selectedTabIndex,
-            contentType = tvShow.contentType,
-            onTabSelected = onTabSelected,
-            firstTabFocusRequester = tabFocusRequester
-        )
+        item {
+            ContentDetailTabs(
+                selectedTabIndex = selectedTabIndex,
+                contentType = tvShow.contentType,
+                onTabSelected = onTabSelected,
+                firstTabFocusRequester = tabFocusRequester,
+                modifier = Modifier.padding(horizontal = 32.dp)
+            )
+        }
         
-        // Tab content
-        LazyColumn(
-            state = listState,
-            modifier = Modifier
-                .fillMaxSize()
-                .weight(1f),
-            contentPadding = PaddingValues(bottom = 32.dp)
-        ) {
-            when (selectedTabIndex) {
-                0 -> {
-                    // Overview Tab
+        // Tab content based on selected tab
+        when (selectedTabIndex) {
+            0 -> {
+                // Overview Tab
+                item {
+                    InfoSection(
+                        content = tvShow,
+                        tabMode = InfoSectionTabMode.OVERVIEW,
+                        modifier = Modifier.padding(horizontal = 32.dp, vertical = 16.dp)
+                    )
+                }
+                
+                // Continue watching for TV shows
+                selectedEpisode?.let { episode ->
                     item {
-                        InfoSection(
-                            content = tvShow,
-                            tabMode = InfoSectionTabMode.OVERVIEW,
+                        TVNextEpisodeSection(
+                            episode = episode,
+                            season = selectedSeason,
+                            onPlayClick = { onActionClick(ContentAction.Play()) },
                             modifier = Modifier.padding(horizontal = 32.dp, vertical = 16.dp)
                         )
                     }
-                    
-                    // Continue watching for TV shows
-                    selectedEpisode?.let { episode ->
+                }
+            }
+            
+            1 -> {
+                // Details Tab
+                item {
+                    InfoSection(
+                        content = tvShow,
+                        tabMode = InfoSectionTabMode.DETAILS,
+                        showExpandableDescription = true,
+                        modifier = Modifier.padding(horizontal = 32.dp, vertical = 16.dp)
+                    )
+                }
+                
+                // Related content section
+                item {
+                    RelatedSection(
+                        relatedContent = emptyList(),
+                        onContentClick = { /* TODO: Handle related content click */ },
+                        modifier = Modifier.padding(horizontal = 32.dp, vertical = 16.dp)
+                    )
+                }
+            }
+            
+            2 -> {
+                // Episodes Tab (TV shows only)
+                if (tvShow.contentType == ContentType.TV_SHOW) {
+                    // Season selector if multiple seasons
+                    if (tvShow.hasMultipleSeasons()) {
                         item {
-                            TVNextEpisodeSection(
-                                episode = episode,
-                                season = selectedSeason,
-                                onPlayClick = { onActionClick(ContentAction.Play()) },
+                            SeasonSelector(
+                                seasons = tvShow.getSeasons(),
+                                selectedSeasonNumber = selectedSeason?.seasonNumber ?: 1,
+                                onSeasonSelected = { seasonNumber ->
+                                    tvShow.getSeasonByNumber(seasonNumber)?.let { season ->
+                                        onSeasonSelected(season)
+                                    }
+                                },
                                 modifier = Modifier.padding(horizontal = 32.dp, vertical = 16.dp)
                             )
                         }
                     }
-                }
-                
-                1 -> {
-                    // Details Tab
-                    item {
-                        InfoSection(
-                            content = tvShow,
-                            tabMode = InfoSectionTabMode.DETAILS,
-                            showExpandableDescription = true,
-                            modifier = Modifier.padding(horizontal = 32.dp, vertical = 16.dp)
-                        )
-                    }
                     
-                    // Related content section
-                    item {
-                        RelatedSection(
-                            relatedContent = emptyList(),
-                            onContentClick = { /* TODO: Handle related content click */ },
-                            modifier = Modifier.padding(horizontal = 32.dp, vertical = 16.dp)
-                        )
-                    }
-                }
-                
-                2 -> {
-                    // Episodes Tab (TV shows only)
-                    if (tvShow.contentType == ContentType.TV_SHOW) {
-                        // Season selector if multiple seasons
-                        if (tvShow.hasMultipleSeasons()) {
-                            item {
-                                SeasonSelector(
-                                    seasons = tvShow.getSeasons(),
-                                    selectedSeasonNumber = selectedSeason?.seasonNumber ?: 1,
-                                    onSeasonSelected = { seasonNumber ->
-                                        tvShow.getSeasonByNumber(seasonNumber)?.let { season ->
-                                            onSeasonSelected(season)
-                                        }
-                                    },
-                                    modifier = Modifier.padding(horizontal = 32.dp, vertical = 16.dp)
-                                )
-                            }
-                        }
-                        
-                        // Episode grid for selected season
-                        selectedSeason?.let { season ->
-                            item {
-                                EpisodeGridSection(
-                                    tvShowDetail = tvShow.getTVShowDetail(),
-                                    selectedSeasonNumber = season.seasonNumber,
-                                    onSeasonSelected = { seasonNumber ->
-                                        tvShow.getSeasonByNumber(seasonNumber)?.let { selectedSeason ->
-                                            onSeasonSelected(selectedSeason)
-                                        }
-                                    },
-                                    onEpisodeClick = onEpisodeSelected,
-                                    modifier = Modifier.padding(horizontal = 32.dp, vertical = 16.dp)
-                                )
-                            }
+                    // Episode grid for selected season
+                    selectedSeason?.let { season ->
+                        item {
+                            EpisodeGridSection(
+                                tvShowDetail = tvShow.getTVShowDetail(),
+                                selectedSeasonNumber = season.seasonNumber,
+                                onSeasonSelected = { seasonNumber ->
+                                    tvShow.getSeasonByNumber(seasonNumber)?.let { selectedSeason ->
+                                        onSeasonSelected(selectedSeason)
+                                    }
+                                },
+                                onEpisodeClick = onEpisodeSelected,
+                                modifier = Modifier.padding(horizontal = 32.dp, vertical = 16.dp)
+                            )
                         }
                     }
                 }
