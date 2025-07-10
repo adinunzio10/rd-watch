@@ -235,9 +235,85 @@ object Migrations {
         }
     }
     
+    val MIGRATION_4_5 = object : Migration(4, 5) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            // Create subtitle-related tables
+            database.execSQL("""
+                CREATE TABLE IF NOT EXISTS `subtitle_cache` (
+                    `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                    `content_hash` TEXT NOT NULL,
+                    `language_code` TEXT NOT NULL,
+                    `provider_name` TEXT NOT NULL,
+                    `subtitle_data` TEXT NOT NULL,
+                    `created_at` INTEGER NOT NULL,
+                    `expires_at` INTEGER NOT NULL,
+                    `file_size` INTEGER NOT NULL,
+                    `encoding` TEXT NOT NULL DEFAULT 'UTF-8'
+                )
+            """.trimIndent())
+            
+            database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_subtitle_cache_content_hash_language_provider` ON `subtitle_cache` (`content_hash`, `language_code`, `provider_name`)")
+            database.execSQL("CREATE INDEX IF NOT EXISTS `index_subtitle_cache_expires_at` ON `subtitle_cache` (`expires_at`)")
+            
+            database.execSQL("""
+                CREATE TABLE IF NOT EXISTS `subtitle_results` (
+                    `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                    `content_hash` TEXT NOT NULL,
+                    `query_params` TEXT NOT NULL,
+                    `results_json` TEXT NOT NULL,
+                    `provider_name` TEXT NOT NULL,
+                    `created_at` INTEGER NOT NULL,
+                    `expires_at` INTEGER NOT NULL,
+                    `result_count` INTEGER NOT NULL DEFAULT 0
+                )
+            """.trimIndent())
+            
+            database.execSQL("CREATE INDEX IF NOT EXISTS `index_subtitle_results_content_hash_provider` ON `subtitle_results` (`content_hash`, `provider_name`)")
+            database.execSQL("CREATE INDEX IF NOT EXISTS `index_subtitle_results_expires_at` ON `subtitle_results` (`expires_at`)")
+            
+            database.execSQL("""
+                CREATE TABLE IF NOT EXISTS `subtitle_files` (
+                    `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                    `subtitle_id` TEXT NOT NULL,
+                    `file_path` TEXT NOT NULL,
+                    `language_code` TEXT NOT NULL,
+                    `provider_name` TEXT NOT NULL,
+                    `content_hash` TEXT NOT NULL,
+                    `downloaded_at` INTEGER NOT NULL,
+                    `file_size` INTEGER NOT NULL,
+                    `encoding` TEXT NOT NULL DEFAULT 'UTF-8',
+                    `is_valid` INTEGER NOT NULL DEFAULT 1
+                )
+            """.trimIndent())
+            
+            database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_subtitle_files_file_path` ON `subtitle_files` (`file_path`)")
+            database.execSQL("CREATE INDEX IF NOT EXISTS `index_subtitle_files_content_hash_language` ON `subtitle_files` (`content_hash`, `language_code`)")
+            
+            database.execSQL("""
+                CREATE TABLE IF NOT EXISTS `subtitle_provider_stats` (
+                    `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                    `provider_name` TEXT NOT NULL,
+                    `total_requests` INTEGER NOT NULL DEFAULT 0,
+                    `successful_requests` INTEGER NOT NULL DEFAULT 0,
+                    `failed_requests` INTEGER NOT NULL DEFAULT 0,
+                    `avg_response_time_ms` INTEGER NOT NULL DEFAULT 0,
+                    `last_request_at` INTEGER,
+                    `last_success_at` INTEGER,
+                    `consecutive_failures` INTEGER NOT NULL DEFAULT 0,
+                    `is_enabled` INTEGER NOT NULL DEFAULT 1,
+                    `created_at` INTEGER NOT NULL,
+                    `updated_at` INTEGER NOT NULL
+                )
+            """.trimIndent())
+            
+            database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_subtitle_provider_stats_provider_name` ON `subtitle_provider_stats` (`provider_name`)")
+            database.execSQL("CREATE INDEX IF NOT EXISTS `index_subtitle_provider_stats_is_enabled` ON `subtitle_provider_stats` (`is_enabled`)")
+        }
+    }
+    
     val MIGRATION_5_6 = object : Migration(5, 6) {
         override fun migrate(database: SupportSQLiteDatabase) {
-            // Create TMDb movies table
+            // Create TMDb movies table - schema must match TMDbMovieEntity exactly
             database.execSQL("""
                 CREATE TABLE IF NOT EXISTS `tmdb_movies` (
                     `id` INTEGER PRIMARY KEY NOT NULL,
@@ -459,6 +535,7 @@ object Migrations {
         MIGRATION_1_2,
         MIGRATION_2_3,
         MIGRATION_3_4,
+        MIGRATION_4_5,
         MIGRATION_5_6,
         MIGRATION_6_7
     )
