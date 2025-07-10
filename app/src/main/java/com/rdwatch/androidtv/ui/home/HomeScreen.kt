@@ -173,7 +173,7 @@ fun TVHomeScreen(
             // Get movies from current content state for continue watching
             val currentContentState = homeContentState
             val movies = when (currentContentState) {
-                is UiState.Success -> currentContentState.data.allContent
+                is UiState.Success -> currentContentState.data.allContentAsMovies()
                 else -> emptyList()
             }
             
@@ -407,7 +407,7 @@ fun TVContentGrid(
                     if (inProgressContent.isNotEmpty()) {
                         val continueWatchingMovies = inProgressContent.mapNotNull { progress ->
                             // Map content IDs back to movies - in a real app this would be more sophisticated
-                            homeContent.allContent.find { it.videoUrl == progress.contentId }
+                            homeContent.allContentAsMovies().find { it.videoUrl == progress.contentId }
                         }.take(10)
                         
                         if (continueWatchingMovies.isNotEmpty()) {
@@ -427,7 +427,7 @@ fun TVContentGrid(
                         add(
                             ContentRowData(
                                 title = "Featured",
-                                movies = homeContent.featured,
+                                movies = homeContent.featuredAsMovies(),
                                 type = ContentRowType.FEATURED
                             )
                         )
@@ -437,14 +437,14 @@ fun TVContentGrid(
                         add(
                             ContentRowData(
                                 title = "Recently Added",
-                                movies = homeContent.recentlyAdded,
+                                movies = homeContent.recentlyAddedAsMovies(),
                                 type = ContentRowType.STANDARD
                             )
                         )
                     }
                     
                     // Add genre-based rows
-                    homeContent.byGenre.forEach { (genre, movies) ->
+                    homeContent.byGenreAsMovies().forEach { (genre, movies) ->
                         if (movies.isNotEmpty()) {
                             add(
                                 ContentRowData(
@@ -461,7 +461,7 @@ fun TVContentGrid(
                         add(
                             ContentRowData(
                                 title = "My Library",
-                                movies = homeContent.allContent,
+                                movies = homeContent.allContentAsMovies(),
                                 type = ContentRowType.STANDARD
                             )
                         )

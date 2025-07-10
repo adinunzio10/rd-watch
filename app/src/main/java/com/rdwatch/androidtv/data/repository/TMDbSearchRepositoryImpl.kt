@@ -24,7 +24,8 @@ import javax.inject.Singleton
 @Singleton
 class TMDbSearchRepositoryImpl @Inject constructor(
     private val tmdbSearchService: TMDbSearchService,
-    private val tmdbSearchDao: TMDbSearchDao
+    private val tmdbSearchDao: TMDbSearchDao,
+    private val tmdbToContentDetailMapper: TMDbToContentDetailMapper
 ) : TMDbSearchRepository {
 
     companion object {
@@ -130,29 +131,50 @@ class TMDbSearchRepositoryImpl @Inject constructor(
         language: String,
         includeAdult: Boolean,
         region: String?
-    ): Flow<Result<TMDbMultiSearchResponse>> = networkBoundResource(
-        loadFromDb = {
-            tmdbSearchDao.getSearchResults(query, "multi", page)
-                .map { it?.toMultiSearchResponse() ?: TMDbMultiSearchResponse() }
-        },
-        shouldFetch = { cachedSearch ->
-            cachedSearch == null || true // Always fetch search results as they can change frequently
-        },
-        createCall = {
-            val response = tmdbSearchService.multiSearch(
-                query, language, page, includeAdult, region
-            ).execute()
-            when (val apiResponse = handleApiResponse(response)) {
-                is ApiResponse.Success -> apiResponse.data
-                is ApiResponse.Error -> throw apiResponse.exception
-                is ApiResponse.Loading -> throw Exception("Unexpected loading state")
+    ): Flow<Result<TMDbMultiSearchResponse>> {
+        android.util.Log.d("TMDbSearchRepo", "multiSearch: query='$query', page=$page, language=$language, includeAdult=$includeAdult, region=$region")
+        
+        return networkBoundResource(
+            loadFromDb = {
+                android.util.Log.d("TMDbSearchRepo", "Loading multi-search from DB for query: $query")
+                tmdbSearchDao.getSearchResults(query, "multi", page)
+                    .map { it?.toMultiSearchResponse() ?: TMDbMultiSearchResponse() }
+            },
+            shouldFetch = { cachedSearch ->
+                val shouldFetch = cachedSearch == null || true // Always fetch search results as they can change frequently
+                android.util.Log.d("TMDbSearchRepo", "Should fetch multi-search for '$query': $shouldFetch")
+                shouldFetch
+            },
+            createCall = {
+                android.util.Log.d("TMDbSearchRepo", "Making TMDb API call for multi-search: '$query'")
+                val response = tmdbSearchService.multiSearch(
+                    query, language, page, includeAdult, region
+                ).execute()
+                
+                android.util.Log.d("TMDbSearchRepo", "TMDb API response: isSuccessful=${response.isSuccessful}, code=${response.code()}")
+                
+                when (val apiResponse = handleApiResponse(response)) {
+                    is ApiResponse.Success -> {
+                        android.util.Log.d("TMDbSearchRepo", "Multi-search API success: ${apiResponse.data.results.size} results")
+                        apiResponse.data
+                    }
+                    is ApiResponse.Error -> {
+                        android.util.Log.e("TMDbSearchRepo", "Multi-search API error: ${apiResponse.exception.message}")
+                        throw apiResponse.exception
+                    }
+                    is ApiResponse.Loading -> {
+                        android.util.Log.w("TMDbSearchRepo", "Unexpected loading state in API response")
+                        throw Exception("Unexpected loading state")
+                    }
+                }
+            },
+            saveCallResult = { multiSearchResponse ->
+                android.util.Log.d("TMDbSearchRepo", "Saving multi-search results to DB for query: $query")
+                val searchId = buildSearchId(query, page, "multi")
+                tmdbSearchDao.insertSearchResult((multiSearchResponse as TMDbMultiSearchResponse).toEntity(searchId, query, page, "multi"))
             }
-        },
-        saveCallResult = { multiSearchResponse ->
-            val searchId = buildSearchId(query, page, "multi")
-            tmdbSearchDao.insertSearchResult((multiSearchResponse as TMDbMultiSearchResponse).toEntity(searchId, query, page, "multi"))
-        }
-    )
+        )
+    }
 
     override fun multiSearchAsContentDetails(
         query: String,
@@ -161,8 +183,33 @@ class TMDbSearchRepositoryImpl @Inject constructor(
         includeAdult: Boolean,
         region: String?
     ): Flow<Result<List<ContentDetail>>> {
-        // TODO: Implement ContentDetail mapping
-        return flowOf(Result.Success(emptyList()))
+        android.util.Log.d("TMDbSearchRepo", "multiSearchAsContentDetails: query='$query', page=$page, includeAdult=$includeAdult")
+        
+        return multiSearch(query, page, language, includeAdult, region).map { result ->
+            when (result) {
+                is Result.Success -> {
+                    try {
+                        android.util.Log.d("TMDbSearchRepo", "Multi-search returned ${result.data.results.size} results")
+                        
+                        val contentDetails = tmdbToContentDetailMapper.mapMultiSearchResultsToContentDetails(result.data.results)
+                        
+                        android.util.Log.d("TMDbSearchRepo", "Mapped to ${contentDetails.size} ContentDetails")
+                        Result.Success(contentDetails)
+                    } catch (e: Exception) {
+                        android.util.Log.e("TMDbSearchRepo", "Error mapping search results to ContentDetails", e)
+                        Result.Error(e)
+                    }
+                }
+                is Result.Error -> {
+                    android.util.Log.e("TMDbSearchRepo", "Multi-search failed", result.exception)
+                    result
+                }
+                is Result.Loading -> {
+                    android.util.Log.d("TMDbSearchRepo", "Multi-search loading...")
+                    result
+                }
+            }
+        }
     }
 
     override fun searchCollections(
@@ -278,8 +325,36 @@ class TMDbSearchRepositoryImpl @Inject constructor(
         language: String,
         page: Int
     ): Flow<Result<List<ContentDetail>>> {
-        // TODO: Implement ContentDetail mapping
-        return flowOf(Result.Success(emptyList()))
+        android.util.Log.d("TMDbSearchRepo", "getTrendingAsContentDetails: mediaType='$mediaType', timeWindow='$timeWindow', page=$page")
+        
+        return getTrending(mediaType, timeWindow, language, page).map { result ->
+            when (result) {
+                is Result.Success -> {
+                    try {
+                        android.util.Log.d("TMDbSearchRepo", "Trending returned ${result.data.results.size} results")
+                        
+                        val contentDetails = tmdbToContentDetailMapper.mapSearchResultsToContentDetails(
+                            result.data.results, 
+                            mediaType.takeIf { it != "all" } // Pass media type hint if specific
+                        )
+                        
+                        android.util.Log.d("TMDbSearchRepo", "Mapped trending to ${contentDetails.size} ContentDetails")
+                        Result.Success(contentDetails)
+                    } catch (e: Exception) {
+                        android.util.Log.e("TMDbSearchRepo", "Error mapping trending results to ContentDetails", e)
+                        Result.Error(e)
+                    }
+                }
+                is Result.Error -> {
+                    android.util.Log.e("TMDbSearchRepo", "Trending failed", result.exception)
+                    result
+                }
+                is Result.Loading -> {
+                    android.util.Log.d("TMDbSearchRepo", "Trending loading...")
+                    result
+                }
+            }
+        }
     }
 
     override fun discoverMovies(
