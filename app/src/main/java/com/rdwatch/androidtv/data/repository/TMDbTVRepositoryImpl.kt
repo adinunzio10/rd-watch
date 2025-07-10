@@ -16,6 +16,9 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.flowOf
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 
 /**
  * Implementation of TMDbTVRepository using NetworkBoundResource pattern
@@ -46,12 +49,7 @@ class TMDbTVRepositoryImpl @Inject constructor(
             forceRefresh || cachedTV == null || shouldRefreshCache(tvId, "tv")
         },
         createCall = {
-            val response = tmdbTVService.getTVDetails(tvId, null, language).execute()
-            when (val apiResponse = handleApiResponse(response)) {
-                is ApiResponse.Success -> apiResponse.data
-                is ApiResponse.Error -> throw apiResponse.exception
-                is ApiResponse.Loading -> throw Exception("Unexpected loading state")
-            }
+            awaitApiResponse(tmdbTVService.getTVDetails(tvId, null, language))
         },
         saveCallResult = { tvResponse ->
             tmdbTVDao.insertTVShow(tvResponse.toEntity())
@@ -88,12 +86,7 @@ class TMDbTVRepositoryImpl @Inject constructor(
             forceRefresh || cachedCredits == null || shouldRefreshCache(tvId, "credits")
         },
         createCall = {
-            val response = tmdbTVService.getTVCredits(tvId, language).execute()
-            when (val apiResponse = handleApiResponse(response)) {
-                is ApiResponse.Success -> apiResponse.data
-                is ApiResponse.Error -> throw apiResponse.exception
-                is ApiResponse.Loading -> throw Exception("Unexpected loading state")
-            }
+            awaitApiResponse(tmdbTVService.getTVCredits(tvId, language))
         },
         saveCallResult = { creditsResponse ->
             tmdbSearchDao.insertCredits(creditsResponse.toEntity(tvId, "tv"))
@@ -114,12 +107,7 @@ class TMDbTVRepositoryImpl @Inject constructor(
             forceRefresh || cachedRecommendations == null || shouldRefreshCache(tvId, "recommendations")
         },
         createCall = {
-            val response = tmdbTVService.getTVRecommendations(tvId, language, page).execute()
-            when (val apiResponse = handleApiResponse(response)) {
-                is ApiResponse.Success -> apiResponse.data
-                is ApiResponse.Error -> throw apiResponse.exception
-                is ApiResponse.Loading -> throw Exception("Unexpected loading state")
-            }
+            awaitApiResponse(tmdbTVService.getTVRecommendations(tvId, language, page))
         },
         saveCallResult = { recommendationsResponse ->
             tmdbSearchDao.insertRecommendations(
@@ -142,12 +130,7 @@ class TMDbTVRepositoryImpl @Inject constructor(
             forceRefresh || cachedSimilar == null || shouldRefreshCache(tvId, "similar")
         },
         createCall = {
-            val response = tmdbTVService.getSimilarTVShows(tvId, language, page).execute()
-            when (val apiResponse = handleApiResponse(response)) {
-                is ApiResponse.Success -> apiResponse.data
-                is ApiResponse.Error -> throw apiResponse.exception
-                is ApiResponse.Loading -> throw Exception("Unexpected loading state")
-            }
+            awaitApiResponse(tmdbTVService.getSimilarTVShows(tvId, language, page))
         },
         saveCallResult = { similarResponse ->
             tmdbSearchDao.insertRecommendations(
@@ -168,18 +151,53 @@ class TMDbTVRepositoryImpl @Inject constructor(
             forceRefresh || cachedImages == null || shouldRefreshCache(tvId, "images")
         },
         createCall = {
-            val response = tmdbTVService.getTVImages(tvId, includeImageLanguage).execute()
-            when (val apiResponse = handleApiResponse(response)) {
-                is ApiResponse.Success -> apiResponse.data
-                is ApiResponse.Error -> throw apiResponse.exception
-                is ApiResponse.Loading -> throw Exception("Unexpected loading state")
-            }
+            awaitApiResponse(tmdbTVService.getTVImages(tvId, includeImageLanguage))
         },
         saveCallResult = { imagesResponse ->
             tmdbSearchDao.insertImages(imagesResponse.toEntity(tvId, "tv"))
         }
     )
 
+    /**
+     * Helper function to convert Call<ApiResponse<T>> to suspend function result
+     */
+    private suspend inline fun <reified T> awaitApiResponse(call: retrofit2.Call<ApiResponse<T>>): T {
+        return suspendCancellableCoroutine { continuation ->
+            call.enqueue(object : retrofit2.Callback<ApiResponse<T>> {
+                override fun onResponse(
+                    call: retrofit2.Call<ApiResponse<T>>,
+                    response: retrofit2.Response<ApiResponse<T>>
+                ) {
+                    if (response.isSuccessful) {
+                        val apiResponse = response.body()
+                        when (apiResponse) {
+                            is ApiResponse.Success -> continuation.resume(apiResponse.data)
+                            is ApiResponse.Error -> continuation.resumeWithException(apiResponse.exception)
+                            is ApiResponse.Loading -> continuation.resumeWithException(Exception("Unexpected loading state"))
+                            null -> continuation.resumeWithException(Exception("Response body was null"))
+                        }
+                    } else {
+                        continuation.resumeWithException(
+                            ApiException.HttpException(
+                                code = response.code(),
+                                message = response.message(),
+                                body = response.errorBody()?.string()
+                            )
+                        )
+                    }
+                }
+                
+                override fun onFailure(call: retrofit2.Call<ApiResponse<T>>, t: Throwable) {
+                    continuation.resumeWithException(t)
+                }
+            })
+            
+            continuation.invokeOnCancellation {
+                call.cancel()
+            }
+        }
+    }
+    
     override fun getTVVideos(
         tvId: Int,
         forceRefresh: Boolean,
@@ -192,12 +210,7 @@ class TMDbTVRepositoryImpl @Inject constructor(
             forceRefresh || cachedVideos == null || shouldRefreshCache(tvId, "videos")
         },
         createCall = {
-            val response = tmdbTVService.getTVVideos(tvId, language).execute()
-            when (val apiResponse = handleApiResponse(response)) {
-                is ApiResponse.Success -> apiResponse.data
-                is ApiResponse.Error -> throw apiResponse.exception
-                is ApiResponse.Loading -> throw Exception("Unexpected loading state")
-            }
+            awaitApiResponse(tmdbTVService.getTVVideos(tvId, language))
         },
         saveCallResult = { videosResponse ->
             tmdbSearchDao.insertVideos(videosResponse.toEntity(tvId, "tv"))
@@ -249,12 +262,7 @@ class TMDbTVRepositoryImpl @Inject constructor(
             forceRefresh || cachedPopular == null || shouldRefreshCache(0, "popular")
         },
         createCall = {
-            val response = tmdbTVService.getPopularTVShows(language, page).execute()
-            when (val apiResponse = handleApiResponse(response)) {
-                is ApiResponse.Success -> apiResponse.data
-                is ApiResponse.Error -> throw apiResponse.exception
-                is ApiResponse.Loading -> throw Exception("Unexpected loading state")
-            }
+            awaitApiResponse(tmdbTVService.getPopularTVShows(language, page))
         },
         saveCallResult = { popularResponse ->
             tmdbSearchDao.insertRecommendations(
@@ -276,12 +284,7 @@ class TMDbTVRepositoryImpl @Inject constructor(
             forceRefresh || cachedTopRated == null || shouldRefreshCache(0, "top_rated")
         },
         createCall = {
-            val response = tmdbTVService.getTopRatedTVShows(language, page).execute()
-            when (val apiResponse = handleApiResponse(response)) {
-                is ApiResponse.Success -> apiResponse.data
-                is ApiResponse.Error -> throw apiResponse.exception
-                is ApiResponse.Loading -> throw Exception("Unexpected loading state")
-            }
+            awaitApiResponse(tmdbTVService.getTopRatedTVShows(language, page))
         },
         saveCallResult = { topRatedResponse ->
             tmdbSearchDao.insertRecommendations(
@@ -303,12 +306,7 @@ class TMDbTVRepositoryImpl @Inject constructor(
             forceRefresh || cachedAiringToday == null || shouldRefreshCache(0, "airing_today")
         },
         createCall = {
-            val response = tmdbTVService.getAiringTodayTVShows(language, page).execute()
-            when (val apiResponse = handleApiResponse(response)) {
-                is ApiResponse.Success -> apiResponse.data
-                is ApiResponse.Error -> throw apiResponse.exception
-                is ApiResponse.Loading -> throw Exception("Unexpected loading state")
-            }
+            awaitApiResponse(tmdbTVService.getAiringTodayTVShows(language, page))
         },
         saveCallResult = { airingTodayResponse ->
             tmdbSearchDao.insertRecommendations(
@@ -330,12 +328,7 @@ class TMDbTVRepositoryImpl @Inject constructor(
             forceRefresh || cachedOnTheAir == null || shouldRefreshCache(0, "on_the_air")
         },
         createCall = {
-            val response = tmdbTVService.getOnTheAirTVShows(language, page).execute()
-            when (val apiResponse = handleApiResponse(response)) {
-                is ApiResponse.Success -> apiResponse.data
-                is ApiResponse.Error -> throw apiResponse.exception
-                is ApiResponse.Loading -> throw Exception("Unexpected loading state")
-            }
+            awaitApiResponse(tmdbTVService.getOnTheAirTVShows(language, page))
         },
         saveCallResult = { onTheAirResponse ->
             tmdbSearchDao.insertRecommendations(
@@ -454,17 +447,5 @@ class TMDbTVRepositoryImpl @Inject constructor(
     private fun shouldRefreshCache(contentId: Int, type: String): Boolean {
         // For now, we'll use a simpler approach - always refresh if older than cache timeout
         return true // TODO: Implement proper cache checking
-    }
-
-    private fun <T> handleApiResponse(response: retrofit2.Response<ApiResponse<T>>): ApiResponse<T> {
-        return if (response.isSuccessful) {
-            response.body() ?: ApiResponse.Error(ApiException.ParseException("Empty response body"))
-        } else {
-            ApiResponse.Error(ApiException.HttpException(
-                code = response.code(),
-                message = response.message(),
-                body = response.errorBody()?.string()
-            ))
-        }
     }
 }
