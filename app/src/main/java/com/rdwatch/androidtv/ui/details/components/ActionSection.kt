@@ -19,8 +19,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.rdwatch.androidtv.ui.details.models.*
-import com.rdwatch.androidtv.presentation.components.tvFocusable
 import com.rdwatch.androidtv.ui.focus.TVFocusIndicator
+import com.rdwatch.androidtv.ui.focus.tvFocusable
 
 /**
  * Action section component for content detail screens
@@ -101,7 +101,7 @@ private fun ActionButton(
             modifier = modifier
                 .width(if (showLabel) 140.dp else 64.dp)
                 .tvFocusable(
-                    onFocusChanged = { isFocused = it }
+                    onFocusChanged = { isFocused = it.isFocused }
                 ),
             colors = CardDefaults.outlinedCardColors(
                 containerColor = when {
@@ -210,7 +210,7 @@ fun PrimaryActionButton(
             },
             modifier = modifier
                 .tvFocusable(
-                    onFocusChanged = { isFocused = it }
+                    onFocusChanged = { isFocused = it.isFocused }
                 ),
             colors = ButtonDefaults.buttonColors(
                 containerColor = if (isFocused) {
@@ -288,7 +288,7 @@ private fun SecondaryActionButton(
             },
             modifier = Modifier
                 .tvFocusable(
-                    onFocusChanged = { isFocused = it }
+                    onFocusChanged = { isFocused = it.isFocused }
                 ),
             colors = ButtonDefaults.filledTonalButtonColors(
                 containerColor = if (isFocused) {

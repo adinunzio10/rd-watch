@@ -26,7 +26,7 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.rdwatch.androidtv.R
-import com.rdwatch.androidtv.presentation.components.tvFocusable
+import com.rdwatch.androidtv.ui.focus.tvFocusable
 import com.rdwatch.androidtv.presentation.components.tvFocusBorder
 import com.rdwatch.androidtv.presentation.components.tvFocusScale
 import com.rdwatch.androidtv.ui.details.models.TVSeason
@@ -127,7 +127,7 @@ private fun SeasonSelectorItem(
         modifier = modifier
             .width(120.dp)
             .height(180.dp)
-            .tvFocusable { isFocused = it }
+            .tvFocusable(onFocusChanged = { isFocused = it.isFocused })
             .tvFocusBorder(isFocused)
             .tvFocusScale(isFocused)
             .clickable(onClick = onClick),
@@ -309,7 +309,7 @@ private fun CompactSeasonSelectorItem(
         modifier = modifier
             .width(80.dp)
             .height(40.dp)
-            .tvFocusable { isFocused = it }
+            .tvFocusable(onFocusChanged = { isFocused = it.isFocused })
             .tvFocusBorder(isFocused)
             .tvFocusScale(isFocused)
             .clickable(onClick = onClick),
@@ -397,7 +397,7 @@ fun DropdownSeasonSelector(
             modifier = Modifier
                 .menuAnchor()
                 .fillMaxWidth()
-                .tvFocusable { isFocused = it }
+                .tvFocusable(onFocusChanged = { isFocused = it.isFocused })
                 .tvFocusBorder(isFocused)
         )
         

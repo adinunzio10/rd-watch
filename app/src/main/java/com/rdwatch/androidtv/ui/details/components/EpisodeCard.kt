@@ -25,7 +25,7 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.rdwatch.androidtv.R
 import com.rdwatch.androidtv.presentation.components.tvCardFocus
-import com.rdwatch.androidtv.presentation.components.tvFocusable
+import com.rdwatch.androidtv.ui.focus.tvFocusable
 import com.rdwatch.androidtv.ui.details.models.TVEpisode
 import com.rdwatch.androidtv.ui.theme.RdwatchTheme
 
@@ -49,8 +49,8 @@ fun EpisodeCard(
         modifier = modifier
             .width(280.dp)
             .height(158.dp) // 16:9 aspect ratio
-            .tvCardFocus(focused) { onClick() }
-            .tvFocusable { focused = it }
+            .tvCardFocus(focused, onClick)
+            .tvFocusable(onFocusChanged = { focused = it.isFocused })
             .clickable(onClick = onClick),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface,
@@ -256,8 +256,8 @@ fun CompactEpisodeCard(
         modifier = modifier
             .width(200.dp)
             .height(120.dp)
-            .tvCardFocus(focused) { onClick() }
-            .tvFocusable { focused = it }
+            .tvCardFocus(focused, onClick)
+            .tvFocusable(onFocusChanged = { focused = it.isFocused })
             .clickable(onClick = onClick),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface,
@@ -375,8 +375,8 @@ fun ListEpisodeCard(
         modifier = modifier
             .fillMaxWidth()
             .height(80.dp)
-            .tvCardFocus(focused) { onClick() }
-            .tvFocusable { focused = it }
+            .tvCardFocus(focused, onClick)
+            .tvFocusable(onFocusChanged = { focused = it.isFocused })
             .clickable(onClick = onClick),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface,
