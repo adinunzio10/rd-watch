@@ -30,7 +30,7 @@ fun ContentDetailTabs(
     Row(
         modifier = modifier
             .selectableGroup()
-            .padding(horizontal = 32.dp, vertical = 16.dp),
+            .padding(vertical = 16.dp),
         horizontalArrangement = Arrangement.spacedBy(24.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
