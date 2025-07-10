@@ -36,6 +36,13 @@ fun ActionSection(
 ) {
     val availableActions = content.actions.take(maxVisibleActions)
     
+    // Debug logging
+    android.util.Log.d("ActionSection", "Content type: ${content.contentType}")
+    android.util.Log.d("ActionSection", "Actions count: ${content.actions.size}")
+    content.actions.forEachIndexed { index, action ->
+        android.util.Log.d("ActionSection", "Action $index: ${action.javaClass.simpleName} - ${action.title}")
+    }
+    
     if (availableActions.isNotEmpty()) {
         Column(
             modifier = modifier,
