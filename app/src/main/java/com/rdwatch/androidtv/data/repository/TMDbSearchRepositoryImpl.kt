@@ -53,15 +53,11 @@ class TMDbSearchRepositoryImpl @Inject constructor(
             val response = tmdbSearchService.searchMovies(
                 query, language, page, includeAdult, region, year, primaryReleaseYear
             ).execute()
-            when (val apiResponse = handleApiResponse(response)) {
-                is ApiResponse.Success -> apiResponse.data
-                is ApiResponse.Error -> throw apiResponse.exception
-                is ApiResponse.Loading -> throw Exception("Unexpected loading state")
-            }
+            handleRawApiResponse(response)
         },
         saveCallResult = { searchResponse ->
             val searchId = buildSearchId(query, page, "movie")
-            tmdbSearchDao.insertSearchResult((searchResponse as TMDbSearchResponse).toEntity(searchId, query, page, "movie"))
+            tmdbSearchDao.insertSearchResult(searchResponse.toEntity(searchId, query, page, "movie"))
         }
     )
 
@@ -83,15 +79,11 @@ class TMDbSearchRepositoryImpl @Inject constructor(
             val response = tmdbSearchService.searchTVShows(
                 query, language, page, includeAdult, firstAirDateYear
             ).execute()
-            when (val apiResponse = handleApiResponse(response)) {
-                is ApiResponse.Success -> apiResponse.data
-                is ApiResponse.Error -> throw apiResponse.exception
-                is ApiResponse.Loading -> throw Exception("Unexpected loading state")
-            }
+            handleRawApiResponse(response)
         },
         saveCallResult = { searchResponse ->
             val searchId = buildSearchId(query, page, "tv")
-            tmdbSearchDao.insertSearchResult((searchResponse as TMDbSearchResponse).toEntity(searchId, query, page, "tv"))
+            tmdbSearchDao.insertSearchResult(searchResponse.toEntity(searchId, query, page, "tv"))
         }
     )
 
@@ -113,15 +105,11 @@ class TMDbSearchRepositoryImpl @Inject constructor(
             val response = tmdbSearchService.searchPeople(
                 query, language, page, includeAdult, region
             ).execute()
-            when (val apiResponse = handleApiResponse(response)) {
-                is ApiResponse.Success -> apiResponse.data
-                is ApiResponse.Error -> throw apiResponse.exception
-                is ApiResponse.Loading -> throw Exception("Unexpected loading state")
-            }
+            handleRawApiResponse(response)
         },
         saveCallResult = { searchResponse ->
             val searchId = buildSearchId(query, page, "person")
-            tmdbSearchDao.insertSearchResult((searchResponse as TMDbSearchResponse).toEntity(searchId, query, page, "person"))
+            tmdbSearchDao.insertSearchResult(searchResponse.toEntity(searchId, query, page, "person"))
         }
     )
 
@@ -153,25 +141,14 @@ class TMDbSearchRepositoryImpl @Inject constructor(
                 
                 android.util.Log.d("TMDbSearchRepo", "TMDb API response: isSuccessful=${response.isSuccessful}, code=${response.code()}")
                 
-                when (val apiResponse = handleApiResponse(response)) {
-                    is ApiResponse.Success -> {
-                        android.util.Log.d("TMDbSearchRepo", "Multi-search API success: ${apiResponse.data.results.size} results")
-                        apiResponse.data
-                    }
-                    is ApiResponse.Error -> {
-                        android.util.Log.e("TMDbSearchRepo", "Multi-search API error: ${apiResponse.exception.message}")
-                        throw apiResponse.exception
-                    }
-                    is ApiResponse.Loading -> {
-                        android.util.Log.w("TMDbSearchRepo", "Unexpected loading state in API response")
-                        throw Exception("Unexpected loading state")
-                    }
-                }
+                val result = handleRawApiResponse(response)
+                android.util.Log.d("TMDbSearchRepo", "Multi-search API success: ${result.results.size} results")
+                result
             },
             saveCallResult = { multiSearchResponse ->
                 android.util.Log.d("TMDbSearchRepo", "Saving multi-search results to DB for query: $query")
                 val searchId = buildSearchId(query, page, "multi")
-                tmdbSearchDao.insertSearchResult((multiSearchResponse as TMDbMultiSearchResponse).toEntity(searchId, query, page, "multi"))
+                tmdbSearchDao.insertSearchResult(multiSearchResponse.toEntity(searchId, query, page, "multi"))
             }
         )
     }
@@ -226,15 +203,11 @@ class TMDbSearchRepositoryImpl @Inject constructor(
         },
         createCall = {
             val response = tmdbSearchService.searchCollections(query, language, page).execute()
-            when (val apiResponse = handleApiResponse(response)) {
-                is ApiResponse.Success -> apiResponse.data
-                is ApiResponse.Error -> throw apiResponse.exception
-                is ApiResponse.Loading -> throw Exception("Unexpected loading state")
-            }
+            handleRawApiResponse(response)
         },
         saveCallResult = { searchResponse ->
             val searchId = buildSearchId(query, page, "collection")
-            tmdbSearchDao.insertSearchResult((searchResponse as TMDbSearchResponse).toEntity(searchId, query, page, "collection"))
+            tmdbSearchDao.insertSearchResult(searchResponse.toEntity(searchId, query, page, "collection"))
         }
     )
 
@@ -251,15 +224,11 @@ class TMDbSearchRepositoryImpl @Inject constructor(
         },
         createCall = {
             val response = tmdbSearchService.searchCompanies(query, page).execute()
-            when (val apiResponse = handleApiResponse(response)) {
-                is ApiResponse.Success -> apiResponse.data
-                is ApiResponse.Error -> throw apiResponse.exception
-                is ApiResponse.Loading -> throw Exception("Unexpected loading state")
-            }
+            handleRawApiResponse(response)
         },
         saveCallResult = { searchResponse ->
             val searchId = buildSearchId(query, page, "company")
-            tmdbSearchDao.insertSearchResult((searchResponse as TMDbSearchResponse).toEntity(searchId, query, page, "company"))
+            tmdbSearchDao.insertSearchResult(searchResponse.toEntity(searchId, query, page, "company"))
         }
     )
 
@@ -276,15 +245,11 @@ class TMDbSearchRepositoryImpl @Inject constructor(
         },
         createCall = {
             val response = tmdbSearchService.searchKeywords(query, page).execute()
-            when (val apiResponse = handleApiResponse(response)) {
-                is ApiResponse.Success -> apiResponse.data
-                is ApiResponse.Error -> throw apiResponse.exception
-                is ApiResponse.Loading -> throw Exception("Unexpected loading state")
-            }
+            handleRawApiResponse(response)
         },
         saveCallResult = { searchResponse ->
             val searchId = buildSearchId(query, page, "keyword")
-            tmdbSearchDao.insertSearchResult((searchResponse as TMDbSearchResponse).toEntity(searchId, query, page, "keyword"))
+            tmdbSearchDao.insertSearchResult(searchResponse.toEntity(searchId, query, page, "keyword"))
         }
     )
 
@@ -322,25 +287,14 @@ class TMDbSearchRepositoryImpl @Inject constructor(
             
             android.util.Log.d("TMDbSearchRepo", "API call completed, processing response...")
             
-            when (val apiResponse = handleApiResponse(response)) {
-                is ApiResponse.Success -> {
-                    android.util.Log.d("TMDbSearchRepo", "CreateCall returning success data")
-                    apiResponse.data
-                }
-                is ApiResponse.Error -> {
-                    android.util.Log.e("TMDbSearchRepo", "CreateCall throwing error: ${apiResponse.exception.message}")
-                    throw apiResponse.exception
-                }
-                is ApiResponse.Loading -> {
-                    android.util.Log.w("TMDbSearchRepo", "CreateCall unexpected loading state")
-                    throw Exception("Unexpected loading state")
-                }
-            }
+            val result = handleRawApiResponse(response)
+            android.util.Log.d("TMDbSearchRepo", "CreateCall returning success data with ${result.results.size} results")
+            result
         },
         saveCallResult = { trendingResponse ->
             val searchId = buildSearchId("trending_${mediaType}_$timeWindow", page, mediaType)
             tmdbSearchDao.insertSearchResult(
-                (trendingResponse as TMDbSearchResponse).toEntity(searchId, "trending_${mediaType}_$timeWindow", page, mediaType)
+                trendingResponse.toEntity(searchId, "trending_${mediaType}_$timeWindow", page, mediaType)
             )
         }
     )
@@ -491,7 +445,7 @@ class TMDbSearchRepositoryImpl @Inject constructor(
         return System.currentTimeMillis() - lastUpdated > SEARCH_CACHE_TIMEOUT_MS
     }
 
-    private fun <T> handleApiResponse(response: retrofit2.Response<ApiResponse<T>>): ApiResponse<T> {
+    private fun <T> handleRawApiResponse(response: retrofit2.Response<T>): T {
         android.util.Log.d("TMDbSearchRepo", "=== API Response Debug ===")
         android.util.Log.d("TMDbSearchRepo", "Response URL: ${response.raw().request.url}")
         android.util.Log.d("TMDbSearchRepo", "Response code: ${response.code()}")
@@ -504,30 +458,29 @@ class TMDbSearchRepositoryImpl @Inject constructor(
             
             if (body != null) {
                 android.util.Log.d("TMDbSearchRepo", "Response body type: ${body::class.simpleName}")
+                
+                // Log specific details for TMDb responses
                 when (body) {
-                    is ApiResponse.Success<*> -> {
-                        android.util.Log.d("TMDbSearchRepo", "ApiResponse.Success with data type: ${body.data?.let { it::class.simpleName }}")
+                    is TMDbSearchResponse -> {
+                        android.util.Log.d("TMDbSearchRepo", "TMDbSearchResponse with ${body.results.size} results, page ${body.page}/${body.totalPages}")
                     }
-                    is ApiResponse.Error -> {
-                        android.util.Log.e("TMDbSearchRepo", "ApiResponse.Error: ${body.exception.message}")
-                    }
-                    is ApiResponse.Loading -> {
-                        android.util.Log.d("TMDbSearchRepo", "ApiResponse.Loading")
+                    is TMDbMultiSearchResponse -> {
+                        android.util.Log.d("TMDbSearchRepo", "TMDbMultiSearchResponse with ${body.results.size} results, page ${body.page}/${body.totalPages}")
                     }
                 }
             }
             
-            body ?: ApiResponse.Error(ApiException.ParseException("Empty response body"))
+            body ?: throw ApiException.ParseException("Empty response body")
         } else {
             val errorBody = response.errorBody()?.string()
             android.util.Log.e("TMDbSearchRepo", "HTTP Error ${response.code()}: ${response.message()}")
             android.util.Log.e("TMDbSearchRepo", "Error body: $errorBody")
             
-            ApiResponse.Error(ApiException.HttpException(
+            throw ApiException.HttpException(
                 code = response.code(),
                 message = response.message(),
                 body = errorBody
-            ))
+            )
         }
     }
 }

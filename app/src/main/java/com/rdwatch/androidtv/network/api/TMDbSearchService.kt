@@ -35,7 +35,7 @@ interface TMDbSearchService {
         @Query("region") region: String? = null,
         @Query("year") year: Int? = null,
         @Query("primary_release_year") primaryReleaseYear: Int? = null
-    ): Call<ApiResponse<TMDbSearchResponse>>
+    ): Call<TMDbSearchResponse>
     
     /**
      * Search for TV shows
@@ -52,7 +52,7 @@ interface TMDbSearchService {
         @Query("page") page: Int = 1,
         @Query("include_adult") includeAdult: Boolean = false,
         @Query("first_air_date_year") firstAirDateYear: Int? = null
-    ): Call<ApiResponse<TMDbSearchResponse>>
+    ): Call<TMDbSearchResponse>
     
     /**
      * Search for people (actors, directors, etc.)
@@ -69,7 +69,7 @@ interface TMDbSearchService {
         @Query("page") page: Int = 1,
         @Query("include_adult") includeAdult: Boolean = false,
         @Query("region") region: String? = null
-    ): Call<ApiResponse<TMDbSearchResponse>>
+    ): Call<TMDbSearchResponse>
     
     /**
      * Multi-search across movies, TV shows, and people
@@ -86,7 +86,7 @@ interface TMDbSearchService {
         @Query("page") page: Int = 1,
         @Query("include_adult") includeAdult: Boolean = false,
         @Query("region") region: String? = null
-    ): Call<ApiResponse<TMDbMultiSearchResponse>>
+    ): Call<TMDbMultiSearchResponse>
     
     /**
      * Search for collections
@@ -99,7 +99,7 @@ interface TMDbSearchService {
         @Query("query") query: String,
         @Query("language") language: String = "en-US",
         @Query("page") page: Int = 1
-    ): Call<ApiResponse<TMDbSearchResponse>>
+    ): Call<TMDbSearchResponse>
     
     /**
      * Search for companies
@@ -110,7 +110,7 @@ interface TMDbSearchService {
     fun searchCompanies(
         @Query("query") query: String,
         @Query("page") page: Int = 1
-    ): Call<ApiResponse<TMDbSearchResponse>>
+    ): Call<TMDbSearchResponse>
     
     /**
      * Search for keywords
@@ -121,7 +121,7 @@ interface TMDbSearchService {
     fun searchKeywords(
         @Query("query") query: String,
         @Query("page") page: Int = 1
-    ): Call<ApiResponse<TMDbSearchResponse>>
+    ): Call<TMDbSearchResponse>
     
     /**
      * Get trending content
@@ -136,7 +136,7 @@ interface TMDbSearchService {
         @Path("time_window") timeWindow: String = "day",
         @Query("language") language: String = "en-US",
         @Query("page") page: Int = 1
-    ): Call<ApiResponse<TMDbSearchResponse>>
+    ): Call<TMDbSearchResponse>
     
     /**
      * Discover movies with filtering options
@@ -207,7 +207,7 @@ interface TMDbSearchService {
         @Query("watch_region") watchRegion: String? = null,
         @Query("with_watch_monetization_types") withWatchMonetizationTypes: String? = null,
         @Query("without_companies") withoutCompanies: String? = null
-    ): Call<ApiResponse<TMDbSearchResponse>>
+    ): Call<TMDbSearchResponse>
     
     /**
      * Discover TV shows with filtering options
@@ -266,5 +266,5 @@ interface TMDbSearchService {
         @Query("with_status") withStatus: String? = null,
         @Query("with_type") withType: String? = null,
         @Query("with_keywords") withKeywords: String? = null
-    ): Call<ApiResponse<TMDbSearchResponse>>
+    ): Call<TMDbSearchResponse>
 }
