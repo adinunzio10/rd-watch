@@ -44,6 +44,7 @@ import com.rdwatch.androidtv.ui.components.ContinueWatchingManager
 import com.rdwatch.androidtv.navigation.PlaybackNavigationHelper
 import com.rdwatch.androidtv.presentation.navigation.Screen
 import androidx.media3.common.util.UnstableApi
+import com.rdwatch.androidtv.ui.details.models.ContentType
 
 @OptIn(UnstableApi::class)
 @Composable
@@ -51,7 +52,8 @@ fun TVHomeScreen(
     playbackViewModel: PlaybackViewModel = hiltViewModel(),
     homeViewModel: HomeViewModel = hiltViewModel(),
     onNavigateToScreen: ((Any) -> Unit)? = null,
-    onMovieClick: ((Movie) -> Unit)? = null
+    onMovieClick: ((Movie) -> Unit)? = null,
+    onContentClick: ((Movie, ContentType) -> Unit)? = null
 ) {
     var isDrawerOpen by remember { mutableStateOf(false) }
     var showContinueWatchingManager by remember { mutableStateOf(false) }
@@ -117,7 +119,8 @@ fun TVHomeScreen(
             homeContentState = homeContentState,
             homeUiState = homeUiState,
             onShowContinueWatching = { showContinueWatchingManager = true },
-            onMovieClick = onMovieClick
+            onMovieClick = onMovieClick,
+            onContentClick = onContentClick
         )
         
         // Navigation drawer
@@ -329,7 +332,8 @@ fun SafeAreaContent(
     homeContentState: UiState<HomeContent>,
     homeUiState: HomeUiState,
     onShowContinueWatching: () -> Unit,
-    onMovieClick: ((Movie) -> Unit)? = null
+    onMovieClick: ((Movie) -> Unit)? = null,
+    onContentClick: ((Movie, ContentType) -> Unit)? = null
 ) {
     val overscanMargin = 32.dp // 5% for most TVs
     
@@ -369,10 +373,12 @@ fun SafeAreaContent(
         // Content rows placeholder
         TVContentGrid(
             playbackViewModel = playbackViewModel,
+            homeViewModel = homeViewModel,
             homeContentState = homeContentState,
             homeUiState = homeUiState,
             onShowContinueWatching = onShowContinueWatching,
-            onMovieClick = onMovieClick
+            onMovieClick = onMovieClick,
+            onContentClick = onContentClick
         )
     }
 }
@@ -381,10 +387,12 @@ fun SafeAreaContent(
 @Composable
 fun TVContentGrid(
     playbackViewModel: PlaybackViewModel = hiltViewModel(),
+    homeViewModel: HomeViewModel = hiltViewModel(),
     homeContentState: UiState<HomeContent>,
     homeUiState: HomeUiState,
     onShowContinueWatching: () -> Unit = {},
-    onMovieClick: ((Movie) -> Unit)? = null
+    onMovieClick: ((Movie) -> Unit)? = null,
+    onContentClick: ((Movie, ContentType) -> Unit)? = null
 ) {
     val firstRowFocusRequester = remember { FocusRequester() }
     
@@ -576,7 +584,13 @@ fun TVContentGrid(
                                 { onShowContinueWatching() }
                             } else null,
                             onItemClick = { movie ->
-                                onMovieClick?.invoke(movie)
+                                // Use new content-aware callback if available, otherwise fallback to old callback
+                                if (onContentClick != null) {
+                                    val contentType = homeViewModel.getContentTypeByMovieId(movie.id.toString())
+                                    onContentClick.invoke(movie, contentType)
+                                } else {
+                                    onMovieClick?.invoke(movie)
+                                }
                             }
                         )
                     }

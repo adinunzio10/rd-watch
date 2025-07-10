@@ -25,6 +25,8 @@ import com.rdwatch.androidtv.ui.home.TVHomeScreen
 import com.rdwatch.androidtv.ui.search.SearchScreen
 import com.rdwatch.androidtv.ui.filebrowser.AccountFileBrowserScreen
 import androidx.media3.common.util.UnstableApi
+import com.rdwatch.androidtv.ui.navigation.ContentTypeDetector
+import com.rdwatch.androidtv.ui.details.models.ContentType
 
 @Composable
 fun AppNavigation(
@@ -82,8 +84,16 @@ fun AppNavigation(
                         onNavigateToScreen = { screen ->
                             navController.navigate(screen)
                         },
-                        onMovieClick = { movie ->
-                            navController.navigate(Screen.MovieDetails(movie.id.toString()))
+                        onContentClick = { movie, contentType ->
+                            // Route based on actual content type from HomeViewModel
+                            when (contentType) {
+                                ContentType.TV_SHOW -> {
+                                    navController.navigate(Screen.TVDetails(movie.id.toString()))
+                                }
+                                else -> {
+                                    navController.navigate(Screen.MovieDetails(movie.id.toString()))
+                                }
+                            }
                         }
                     )
                 },
@@ -114,7 +124,16 @@ fun AppNavigation(
                 content = {
                     BrowseScreen(
                         onMovieClick = { movie ->
-                            navController.navigate(Screen.MovieDetails(movie.id.toString()))
+                            // Detect content type and route accordingly
+                            val contentType = ContentTypeDetector.detectContentType(movie)
+                            when (contentType) {
+                                ContentType.TV_SHOW -> {
+                                    navController.navigate(Screen.TVDetails(movie.id.toString()))
+                                }
+                                else -> {
+                                    navController.navigate(Screen.MovieDetails(movie.id.toString()))
+                                }
+                            }
                         },
                         onBackPressed = {
                             navController.popBackStack()
@@ -154,7 +173,16 @@ fun AppNavigation(
                     )
                 },
                 onMovieClick = { movie ->
-                    navController.navigate(Screen.MovieDetails(movie.id.toString()))
+                    // Detect content type and route accordingly
+                    val contentType = ContentTypeDetector.detectContentType(movie)
+                    when (contentType) {
+                        ContentType.TV_SHOW -> {
+                            navController.navigate(Screen.TVDetails(movie.id.toString()))
+                        }
+                        else -> {
+                            navController.navigate(Screen.MovieDetails(movie.id.toString()))
+                        }
+                    }
                 },
                 onBackPressed = {
                     navController.popBackStack()
@@ -343,7 +371,16 @@ fun AppNavigation(
                 content = {
                     ProfileScreen(
                         onMovieClick = { movie ->
-                            navController.navigate(Screen.MovieDetails(movie.id.toString()))
+                            // Detect content type and route accordingly
+                            val contentType = ContentTypeDetector.detectContentType(movie)
+                            when (contentType) {
+                                ContentType.TV_SHOW -> {
+                                    navController.navigate(Screen.TVDetails(movie.id.toString()))
+                                }
+                                else -> {
+                                    navController.navigate(Screen.MovieDetails(movie.id.toString()))
+                                }
+                            }
                         },
                         onNavigateToScreen = { screen ->
                             navController.navigate(screen)

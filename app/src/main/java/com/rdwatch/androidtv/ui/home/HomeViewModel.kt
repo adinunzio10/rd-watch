@@ -288,6 +288,24 @@ class HomeViewModel @Inject constructor(
     }
     
     /**
+     * Get content type by movie ID for navigation routing
+     */
+    fun getContentTypeByMovieId(movieId: String): ContentType {
+        val movieIdLong = movieId.toLongOrNull() ?: 0L
+        
+        // Find the corresponding ContentDetail by matching the converted Movie ID
+        val contentDetail = _allContent.value.find { content ->
+            when (content) {
+                is com.rdwatch.androidtv.ui.details.models.TMDbMovieContentDetail -> content.tmdbId.toLong() == movieIdLong
+                is com.rdwatch.androidtv.ui.details.models.TMDbTVContentDetail -> content.tmdbId.toLong() == movieIdLong
+                else -> content.id.hashCode().toLong() == movieIdLong
+            }
+        }
+        
+        return contentDetail?.contentType ?: ContentType.MOVIE // Default to movie if not found
+    }
+    
+    /**
      * Convert ContentDetail to Movie for UI compatibility
      */
     private fun ContentDetail.toMovie(): Movie {
