@@ -48,16 +48,33 @@ class TVDetailsViewModel @Inject constructor(
             updateState { copy(isLoading = true, error = null) }
             
             try {
+                // Debug logging for ID tracking
+                android.util.Log.d("TVDetailsViewModel", "=== TV Show ID Debug ===")
+                android.util.Log.d("TVDetailsViewModel", "Raw tvShowId received: '$tvShowId'")
+                android.util.Log.d("TVDetailsViewModel", "tvShowId length: ${tvShowId.length}")
+                android.util.Log.d("TVDetailsViewModel", "tvShowId bytes: ${tvShowId.toByteArray().contentToString()}")
+                
+                // Sanitize input - trim whitespace and validate format
+                val sanitizedId = tvShowId.trim()
+                android.util.Log.d("TVDetailsViewModel", "Sanitized tvShowId: '$sanitizedId'")
+                
                 // Convert tvShowId to Int for TMDb API
-                val tmdbId = tvShowId.toIntOrNull() ?: run {
+                val tmdbId = sanitizedId.toIntOrNull()
+                android.util.Log.d("TVDetailsViewModel", "toIntOrNull() result: $tmdbId")
+                
+                if (tmdbId == null) {
+                    val errorMessage = "Invalid TMDb TV show ID: '$sanitizedId' (original: '$tvShowId')"
+                    android.util.Log.e("TVDetailsViewModel", errorMessage)
                     updateState { 
                         copy(
                             isLoading = false,
-                            error = "Invalid TMDb TV show ID"
+                            error = errorMessage
                         )
                     }
                     return@launch
                 }
+                
+                android.util.Log.d("TVDetailsViewModel", "Successfully converted to TMDb ID: $tmdbId")
                 
                 // Load TV show details from TMDb
                 tmdbTVRepository.getTVContentDetail(tmdbId).collect { result ->

@@ -169,11 +169,29 @@ class SearchViewModel @Inject constructor(
      * Convert ContentDetail to SearchResultItem
      */
     private fun ContentDetail.toSearchResultItem(): SearchResultItem {
+        // Validate and sanitize the content ID
+        val sanitizedId = this.id.trim()
+        
+        // For TMDb content, ensure ID is numeric (can be converted to Int)
+        val isValidTMDbId = when (this.contentType) {
+            ContentType.MOVIE, ContentType.TV_SHOW -> {
+                val isNumeric = sanitizedId.toIntOrNull() != null
+                if (!isNumeric) {
+                    android.util.Log.w("SearchViewModel", "Invalid TMDb ID format for ${this.contentType}: '$sanitizedId' (original: '${this.id}')")
+                }
+                isNumeric
+            }
+            else -> true // For non-TMDb content, allow any ID format
+        }
+        
+        // Log the conversion for debugging
+        android.util.Log.d("SearchViewModel", "Converting ContentDetail to SearchResultItem: ${this.contentType} id='$sanitizedId' title='${this.title}' valid=$isValidTMDbId")
+        
         return SearchResultItem(
             id = when (this.contentType) {
-                ContentType.MOVIE -> "movie:${this.id}"
-                ContentType.TV_SHOW -> "tv:${this.id}"
-                else -> "unknown:${this.id}"
+                ContentType.MOVIE -> if (isValidTMDbId) "movie:$sanitizedId" else "unknown:$sanitizedId"
+                ContentType.TV_SHOW -> if (isValidTMDbId) "tv:$sanitizedId" else "unknown:$sanitizedId"
+                else -> "unknown:$sanitizedId"
             },
             title = this.title,
             description = this.description?.take(200),

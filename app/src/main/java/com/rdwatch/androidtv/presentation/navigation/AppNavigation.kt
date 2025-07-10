@@ -237,16 +237,25 @@ fun AppNavigation(
                         },
                         onItemSelected = { contentId ->
                             // Parse content ID format: "movie:123" or "tv:456"
+                            android.util.Log.d("AppNavigation", "Navigating to content: '$contentId'")
+                            
                             when {
                                 contentId.startsWith("movie:") -> {
                                     val movieId = contentId.removePrefix("movie:")
+                                    android.util.Log.d("AppNavigation", "Navigating to movie: '$movieId'")
                                     navController.navigate(Screen.MovieDetails(movieId))
                                 }
                                 contentId.startsWith("tv:") -> {
                                     val tvShowId = contentId.removePrefix("tv:")
+                                    android.util.Log.d("AppNavigation", "Navigating to TV show: '$tvShowId'")
                                     navController.navigate(Screen.TVDetails(tvShowId))
                                 }
+                                contentId.startsWith("unknown:") -> {
+                                    android.util.Log.w("AppNavigation", "Content ID marked as unknown: '$contentId' - skipping navigation")
+                                    // Don't navigate for unknown content types to prevent crashes
+                                }
                                 else -> {
+                                    android.util.Log.w("AppNavigation", "Unknown content ID format: '$contentId' - falling back to movie details")
                                     // Fallback to movie details for unknown format
                                     navController.navigate(Screen.MovieDetails(contentId))
                                 }
