@@ -9,6 +9,7 @@ import com.rdwatch.androidtv.ui.details.models.MovieContentDetail
 import com.rdwatch.androidtv.ui.details.models.ContentProgress
 import com.rdwatch.androidtv.network.models.tmdb.TMDbRecommendationsResponse
 import com.rdwatch.androidtv.network.models.tmdb.TMDbMovieResponse
+import kotlinx.coroutines.withContext
 import com.rdwatch.androidtv.ui.common.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
@@ -21,7 +22,8 @@ import javax.inject.Inject
  */
 @HiltViewModel
 class MovieDetailsViewModel @Inject constructor(
-    private val tmdbMovieRepository: TMDbMovieRepository
+    private val tmdbMovieRepository: TMDbMovieRepository,
+    private val tmdbMovieService: com.rdwatch.androidtv.network.api.TMDbMovieService
 ) : BaseViewModel<MovieDetailsUiState>() {
     
     private val _movieState = MutableStateFlow<UiState<Movie>>(UiState.Loading)
@@ -62,10 +64,57 @@ class MovieDetailsViewModel @Inject constructor(
                 
                 println("DEBUG [MovieDetailsViewModel]: Converted movieId $movieId to tmdbId $tmdbId")
                 
-                // Fetch movie details from TMDb using simpler method
-                println("DEBUG [MovieDetailsViewModel]: Calling tmdbMovieRepository.getMovieDetails($tmdbId)")
+                // Direct TMDb API call for testing
+                println("DEBUG [MovieDetailsViewModel]: Making direct TMDb API call for movie $tmdbId")
+                
+                try {
+                    val response = withContext(kotlinx.coroutines.Dispatchers.IO) {
+                        tmdbMovieService.getMovieDetails(tmdbId, null, "en-US").execute()
+                    }
+                    
+                    println("DEBUG [MovieDetailsViewModel]: Direct call response code: ${response.code()}")
+                    println("DEBUG [MovieDetailsViewModel]: Direct call isSuccessful: ${response.isSuccessful}")
+                    
+                    if (response.isSuccessful && response.body() != null) {
+                        val movieResponse = response.body()!!
+                        
+                        val movie = Movie(
+                            id = tmdbId.toLong(),
+                            title = movieResponse.title,
+                            description = movieResponse.overview,
+                            cardImageUrl = movieResponse.posterPath?.let { "https://image.tmdb.org/t/p/w342$it" },
+                            backgroundImageUrl = movieResponse.backdropPath?.let { "https://image.tmdb.org/t/p/w780$it" },
+                            videoUrl = null,
+                            studio = "TMDb"
+                        )
+                        
+                        _movieState.value = UiState.Success(movie)
+                        updateState { 
+                            copy(
+                                movie = movie,
+                                isLoading = false,
+                                error = null,
+                                isLoaded = true,
+                                isFromRealDebrid = false
+                            )
+                        }
+                        println("DEBUG [MovieDetailsViewModel]: Movie loaded successfully: ${movie.title}")
+                        
+                        // Load related movies
+                        loadRelatedMovies(tmdbId)
+                        return@launch
+                    } else {
+                        println("DEBUG [MovieDetailsViewModel]: API call failed: ${response.code()} - ${response.message()}")
+                    }
+                } catch (e: Exception) {
+                    println("DEBUG [MovieDetailsViewModel]: Exception during direct API call: ${e.message}")
+                    e.printStackTrace()
+                }
+                
+                // Fallback to repository approach if direct call fails
+                println("DEBUG [MovieDetailsViewModel]: Falling back to repository approach")
                 tmdbMovieRepository.getMovieDetails(tmdbId)
-                    .take(1) // Just take the first emission
+                    .take(1)
                     .collect { result ->
                         println("DEBUG [MovieDetailsViewModel]: Received result: $result")
                         when (result) {
