@@ -3,10 +3,11 @@ package com.rdwatch.androidtv.ui.details
 import androidx.lifecycle.viewModelScope
 import com.rdwatch.androidtv.Movie
 import com.rdwatch.androidtv.presentation.viewmodel.BaseViewModel
-import com.rdwatch.androidtv.repository.RealDebridContentRepository
+import com.rdwatch.androidtv.data.repository.TMDbMovieRepository
 import com.rdwatch.androidtv.repository.base.Result
-import com.rdwatch.androidtv.data.mappers.ContentEntityToMovieMapper.toMovies
-import com.rdwatch.androidtv.data.mappers.ContentEntityToMovieMapper.findMovieById
+import com.rdwatch.androidtv.ui.details.models.MovieContentDetail
+import com.rdwatch.androidtv.ui.details.models.ContentProgress
+import com.rdwatch.androidtv.network.models.tmdb.TMDbRecommendationsResponse
 import com.rdwatch.androidtv.ui.common.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
@@ -19,7 +20,7 @@ import javax.inject.Inject
  */
 @HiltViewModel
 class MovieDetailsViewModel @Inject constructor(
-    private val realDebridContentRepository: RealDebridContentRepository
+    private val tmdbMovieRepository: TMDbMovieRepository
 ) : BaseViewModel<MovieDetailsUiState>() {
     
     private val _movieState = MutableStateFlow<UiState<Movie>>(UiState.Loading)
@@ -36,7 +37,7 @@ class MovieDetailsViewModel @Inject constructor(
     }
     
     /**
-     * Load movie details and related content
+     * Load movie details and related content from TMDb
      */
     fun loadMovieDetails(movieId: String) {
         viewModelScope.launch {
@@ -44,36 +45,47 @@ class MovieDetailsViewModel @Inject constructor(
             updateState { copy(isLoading = true, error = null) }
             
             try {
-                // Convert movieId to Long
-                val id = movieId.toLongOrNull() ?: run {
-                    _movieState.value = UiState.Error("Invalid movie ID")
+                // Convert movieId to Int for TMDb API
+                val tmdbId = movieId.toIntOrNull() ?: run {
+                    _movieState.value = UiState.Error("Invalid TMDb movie ID")
                     updateState { 
                         copy(
                             isLoading = false,
-                            error = "Invalid movie ID"
+                            error = "Invalid TMDb movie ID"
                         )
                     }
                     return@launch
                 }
                 
-                // Fetch all content and find the movie
-                realDebridContentRepository.getAllContent()
+                // Fetch movie details from TMDb
+                tmdbMovieRepository.getMovieContentDetail(tmdbId)
                     .take(1) // Just take the first emission
                     .collect { result ->
                         when (result) {
                             is Result.Success -> {
-                                val movie = result.data.findMovieById(id)
+                                val contentDetail = result.data
                                 
-                                if (movie == null) {
-                                    _movieState.value = UiState.Error("Movie not found")
+                                if (contentDetail == null) {
+                                    _movieState.value = UiState.Error("Movie not found on TMDb")
                                     updateState { 
                                         copy(
                                             isLoading = false,
-                                            error = "Movie not found"
+                                            error = "Movie not found on TMDb"
                                         )
                                     }
                                     return@collect
                                 }
+                                
+                                // Convert ContentDetail to Movie for UI compatibility
+                                val movie = Movie(
+                                    id = tmdbId.toLong(),
+                                    title = contentDetail.title,
+                                    description = contentDetail.description,
+                                    cardImageUrl = contentDetail.cardImageUrl,
+                                    backgroundImageUrl = contentDetail.backgroundImageUrl,
+                                    videoUrl = null, // TMDb doesn't provide video URLs
+                                    studio = "TMDb"
+                                )
                                 
                                 _movieState.value = UiState.Success(movie)
                                 updateState { 
@@ -82,12 +94,12 @@ class MovieDetailsViewModel @Inject constructor(
                                         isLoading = false,
                                         error = null,
                                         isLoaded = true,
-                                        isFromRealDebrid = movie.studio?.contains("RealDebrid", ignoreCase = true) == true
+                                        isFromRealDebrid = false // TMDb content is not from Real Debrid
                                     )
                                 }
                                 
                                 // Load related movies
-                                loadRelatedMovies(movie)
+                                loadRelatedMovies(tmdbId)
                             }
                             is Result.Error -> {
                                 _movieState.value = UiState.Error(
@@ -138,19 +150,20 @@ class MovieDetailsViewModel @Inject constructor(
                 )
             }
             
-            // Load related movies
-            loadRelatedMovies(movie)
+            // Load related movies using TMDb ID
+            val tmdbId = movie.id.toInt()
+            loadRelatedMovies(tmdbId)
         }
     }
     
     /**
-     * Load related movies
+     * Load related movies from TMDb recommendations
      */
-    private fun loadRelatedMovies(currentMovie: Movie) {
+    private fun loadRelatedMovies(tmdbId: Int) {
         viewModelScope.launch {
             _relatedMoviesState.value = UiState.Loading
             
-            realDebridContentRepository.getAllContent()
+            tmdbMovieRepository.getMovieRecommendations(tmdbId)
                 .catch { e ->
                     _relatedMoviesState.value = UiState.Error(
                         message = "Failed to load related movies",
@@ -161,19 +174,22 @@ class MovieDetailsViewModel @Inject constructor(
                 .collect { result ->
                     when (result) {
                         is Result.Success -> {
-                            val allMovies = result.data.toMovies()
+                            val recommendationsResponse = result.data
                             
-                            // Get related movies (same studio, excluding current movie)
-                            val related = allMovies
-                                .filter { it.id != currentMovie.id }
-                                .filter { it.studio == currentMovie.studio }
-                                .take(6)
-                                .ifEmpty {
-                                    // If no movies from same studio, just get random movies
-                                    allMovies.filter { it.id != currentMovie.id }.take(6)
-                                }
+                            // Convert TMDb recommendations to Movie objects
+                            val relatedMovies = recommendationsResponse.results.take(6).map { tmdbMovie ->
+                                Movie(
+                                    id = tmdbMovie.id.toLong(),
+                                    title = tmdbMovie.title ?: "Unknown Title",
+                                    description = tmdbMovie.overview,
+                                    cardImageUrl = tmdbMovie.posterPath?.let { "https://image.tmdb.org/t/p/w342$it" },
+                                    backgroundImageUrl = tmdbMovie.backdropPath?.let { "https://image.tmdb.org/t/p/w780$it" },
+                                    videoUrl = null,
+                                    studio = "TMDb"
+                                )
+                            }
                             
-                            _relatedMoviesState.value = UiState.Success(related)
+                            _relatedMoviesState.value = UiState.Success(relatedMovies)
                         }
                         is Result.Error -> {
                             _relatedMoviesState.value = UiState.Error(
@@ -273,7 +289,7 @@ class MovieDetailsViewModel @Inject constructor(
     }
     
     /**
-     * Download movie for offline viewing
+     * Download movie for offline viewing (placeholder for TMDb content)
      */
     fun downloadMovie() {
         val currentMovie = uiState.value.movie ?: return
@@ -281,8 +297,8 @@ class MovieDetailsViewModel @Inject constructor(
         viewModelScope.launch {
             updateState { copy(isDownloading = true) }
             
-            // TODO: Implement download service when available
-            // For RD content, this might involve different logic
+            // For TMDb content, downloading would require additional scraper integration
+            // This is a placeholder implementation
             kotlinx.coroutines.delay(2000)
             
             updateState { 
@@ -295,65 +311,43 @@ class MovieDetailsViewModel @Inject constructor(
     }
     
     /**
-     * Delete from Real-Debrid (if applicable)
+     * Delete content (not applicable for TMDb content)
      */
     fun deleteFromRealDebrid() {
-        if (!uiState.value.isFromRealDebrid) return
-        
-        viewModelScope.launch {
-            // TODO: Implement RD deletion when RD repository is available
-            updateState { copy(isDeleting = true) }
-            
-            try {
-                // Placeholder for RD deletion
-                kotlinx.coroutines.delay(1000)
-                
-                updateState { 
-                    copy(
-                        isDeleting = false,
-                        isDeleted = true
-                    )
-                }
-            } catch (e: Exception) {
-                updateState { 
-                    copy(
-                        isDeleting = false,
-                        error = "Failed to delete from Real-Debrid: ${e.message}"
-                    )
-                }
-            }
-        }
+        // TMDb content cannot be deleted as it's not stored locally
+        // This method is kept for UI compatibility but does nothing
+        updateState { copy(error = "Cannot delete TMDb content") }
     }
     
     /**
-     * Get formatted duration string
+     * Get formatted duration string (placeholder - would come from TMDb metadata)
      */
     fun getFormattedDuration(): String {
-        // TODO: Get from movie metadata when available
+        // In a complete implementation, this would extract runtime from TMDb movie details
         return "2h 15m"
     }
     
     /**
-     * Get movie rating
+     * Get movie rating (placeholder - would come from TMDb metadata)
      */
     fun getMovieRating(): String {
-        // TODO: Get from movie metadata when available
+        // In a complete implementation, this would extract rating from TMDb movie details
         return "PG-13"
     }
     
     /**
-     * Get movie language
+     * Get movie language (placeholder - would come from TMDb metadata)
      */
     fun getMovieLanguage(): String {
-        // TODO: Get from movie metadata when available
+        // In a complete implementation, this would extract language from TMDb movie details
         return "English"
     }
     
     /**
-     * Get movie year
+     * Get movie year (placeholder - would come from TMDb metadata)
      */
     fun getMovieYear(): String {
-        // TODO: Get from movie metadata when available
+        // In a complete implementation, this would extract year from TMDb movie details
         return "2023"
     }
     
