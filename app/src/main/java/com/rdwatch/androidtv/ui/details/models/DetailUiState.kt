@@ -160,3 +160,4 @@ data class DetailFocusState(
 enum class NavigationDirection {
     UP, DOWN, LEFT, RIGHT
 }
+

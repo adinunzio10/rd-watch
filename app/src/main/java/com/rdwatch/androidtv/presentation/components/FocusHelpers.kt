@@ -38,6 +38,9 @@ fun Modifier.tvClickable(
 fun rememberTvFocusRequester(): FocusRequester = remember { FocusRequester() }
 
 @Composable
+fun rememberTVFocusRequester(): FocusRequester = remember { FocusRequester() }
+
+@Composable
 fun Modifier.tvFocusRequester(
     focusRequester: FocusRequester,
     requestFocus: Boolean = false

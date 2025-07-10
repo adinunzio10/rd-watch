@@ -22,7 +22,7 @@ import com.rdwatch.androidtv.ui.components.SmartTVImageLoader
 import com.rdwatch.androidtv.ui.components.ImagePriority
 import com.rdwatch.androidtv.ui.details.models.*
 import com.rdwatch.androidtv.ui.focus.TVFocusIndicator
-import com.rdwatch.androidtv.ui.focus.tvFocusable
+import com.rdwatch.androidtv.presentation.components.tvFocusable
 
 /**
  * Related content section component for content detail screens
@@ -156,7 +156,7 @@ private fun RelatedContentCard(
                     height = if (isFocused) focusedSize.height else cardSize.height
                 )
                 .tvFocusable(
-                    onFocusChanged = { isFocused = it.isFocused }
+                    onFocusChanged = { isFocused = it }
                 ),
             colors = CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.surface

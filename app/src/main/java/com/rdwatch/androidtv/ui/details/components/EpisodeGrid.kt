@@ -22,10 +22,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rdwatch.androidtv.R
-import com.rdwatch.androidtv.presentation.components.rememberTvFocusRequester
+import com.rdwatch.androidtv.presentation.components.rememberTVFocusRequester
 import com.rdwatch.androidtv.presentation.components.tvFocusRequester
 import com.rdwatch.androidtv.ui.details.models.TVEpisode
 import com.rdwatch.androidtv.ui.details.models.EpisodePaginationState
+import com.rdwatch.androidtv.ui.details.models.EpisodeGridUiState
 import com.rdwatch.androidtv.ui.theme.RdwatchTheme
 
 /**
@@ -142,7 +143,7 @@ private fun EpisodeGridLayout(
     requestInitialFocus: Boolean
 ) {
     val gridState = rememberLazyGridState()
-    val focusRequester = rememberTvFocusRequester()
+    val focusRequester = rememberTVFocusRequester()
     
     // Auto-scroll to focused episode
     LaunchedEffect(focusedEpisodeId) {
@@ -249,7 +250,7 @@ private fun EpisodeListLayout(
     requestInitialFocus: Boolean
 ) {
     val scrollState = rememberScrollState()
-    val focusRequester = rememberTvFocusRequester()
+    val focusRequester = rememberTVFocusRequester()
     
     Column(
         modifier = Modifier
