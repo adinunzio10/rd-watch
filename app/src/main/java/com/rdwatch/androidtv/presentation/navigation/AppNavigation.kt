@@ -1,3 +1,5 @@
+@file:OptIn(androidx.media3.common.util.UnstableApi::class)
+
 package com.rdwatch.androidtv.presentation.navigation
 
 import androidx.compose.animation.AnimatedContentTransitionScope
@@ -22,6 +24,7 @@ import com.rdwatch.androidtv.ui.profile.ProfileScreen
 import com.rdwatch.androidtv.ui.home.TVHomeScreen
 import com.rdwatch.androidtv.ui.search.SearchScreen
 import com.rdwatch.androidtv.ui.filebrowser.AccountFileBrowserScreen
+import androidx.media3.common.util.UnstableApi
 
 @Composable
 fun AppNavigation(
