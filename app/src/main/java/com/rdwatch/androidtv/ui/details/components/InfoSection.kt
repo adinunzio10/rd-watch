@@ -24,32 +24,80 @@ fun InfoSection(
     content: ContentDetail,
     modifier: Modifier = Modifier,
     maxDescriptionLines: Int = 4,
-    showExpandableDescription: Boolean = false
+    showExpandableDescription: Boolean = false,
+    tabMode: InfoSectionTabMode = InfoSectionTabMode.FULL
 ) {
     Column(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // Description
-        if (content.description != null) {
-            InfoDescriptionSection(
-                description = content.description!!,
-                maxLines = maxDescriptionLines,
-                showExpandable = showExpandableDescription
-            )
-        }
-        
-        // Metadata grid
-        InfoMetadataGrid(content = content)
-        
-        // Genres (if available)
-        if (content.metadata.genre.isNotEmpty()) {
-            InfoGenresSection(genres = content.metadata.genre)
-        }
-        
-        // Cast (if available)
-        if (content.metadata.cast.isNotEmpty()) {
-            InfoCastSection(cast = content.metadata.cast)
+        when (tabMode) {
+            InfoSectionTabMode.OVERVIEW -> {
+                // Overview: Description summary + key metadata + genres
+                if (content.description != null) {
+                    InfoDescriptionSection(
+                        description = content.description!!,
+                        maxLines = 3,
+                        showExpandable = false
+                    )
+                }
+                
+                // Key metadata only
+                InfoMetadataGrid(content = content, isOverview = true)
+                
+                // Genres
+                if (content.metadata.genre.isNotEmpty()) {
+                    InfoGenresSection(genres = content.metadata.genre.take(4))
+                }
+            }
+            
+            InfoSectionTabMode.DETAILS -> {
+                // Details: Full description + complete metadata + cast
+                if (content.description != null) {
+                    InfoDescriptionSection(
+                        description = content.description!!,
+                        maxLines = maxDescriptionLines,
+                        showExpandable = showExpandableDescription
+                    )
+                }
+                
+                // Complete metadata grid
+                InfoMetadataGrid(content = content, isOverview = false)
+                
+                // All genres
+                if (content.metadata.genre.isNotEmpty()) {
+                    InfoGenresSection(genres = content.metadata.genre)
+                }
+                
+                // Cast & crew
+                if (content.metadata.cast.isNotEmpty()) {
+                    InfoCastSection(cast = content.metadata.cast)
+                }
+                
+                // Quality indicators
+                InfoQualitySection(content = content)
+            }
+            
+            InfoSectionTabMode.FULL -> {
+                // Full mode (original behavior)
+                if (content.description != null) {
+                    InfoDescriptionSection(
+                        description = content.description!!,
+                        maxLines = maxDescriptionLines,
+                        showExpandable = showExpandableDescription
+                    )
+                }
+                
+                InfoMetadataGrid(content = content)
+                
+                if (content.metadata.genre.isNotEmpty()) {
+                    InfoGenresSection(genres = content.metadata.genre)
+                }
+                
+                if (content.metadata.cast.isNotEmpty()) {
+                    InfoCastSection(cast = content.metadata.cast)
+                }
+            }
         }
     }
 }
@@ -98,20 +146,37 @@ private fun InfoDescriptionSection(
 }
 
 @Composable
-private fun InfoMetadataGrid(content: ContentDetail) {
+private fun InfoMetadataGrid(content: ContentDetail, isOverview: Boolean = false) {
     val metadataItems = buildList {
-        content.metadata.duration?.let { add(InfoMetadataItem("Duration", it)) }
-        content.metadata.language?.let { add(InfoMetadataItem("Language", it)) }
-        content.metadata.rating?.let { add(InfoMetadataItem("Rating", it)) }
-        content.metadata.year?.let { add(InfoMetadataItem("Year", it)) }
-        content.metadata.director?.let { add(InfoMetadataItem("Director", it)) }
-        content.metadata.studio?.let { add(InfoMetadataItem("Studio", it)) }
-        
-        // Add season/episode info for TV content
-        if (content.contentType == ContentType.TV_EPISODE) {
-            content.metadata.season?.let { season ->
-                content.metadata.episode?.let { episode ->
-                    add(InfoMetadataItem("Episode", "S${season}E${episode}"))
+        if (isOverview) {
+            // Overview: Show only key metadata
+            content.metadata.year?.let { add(InfoMetadataItem("Year", it)) }
+            content.metadata.duration?.let { add(InfoMetadataItem("Duration", it)) }
+            content.metadata.rating?.let { add(InfoMetadataItem("Rating", it)) }
+            
+            // Add season/episode info for TV content
+            if (content.contentType == ContentType.TV_EPISODE) {
+                content.metadata.season?.let { season ->
+                    content.metadata.episode?.let { episode ->
+                        add(InfoMetadataItem("Episode", "S${season}E${episode}"))
+                    }
+                }
+            }
+        } else {
+            // Details: Show all available metadata
+            content.metadata.duration?.let { add(InfoMetadataItem("Duration", it)) }
+            content.metadata.language?.let { add(InfoMetadataItem("Language", it)) }
+            content.metadata.rating?.let { add(InfoMetadataItem("Rating", it)) }
+            content.metadata.year?.let { add(InfoMetadataItem("Year", it)) }
+            content.metadata.director?.let { add(InfoMetadataItem("Director", it)) }
+            content.metadata.studio?.let { add(InfoMetadataItem("Studio", it)) }
+            
+            // Add season/episode info for TV content
+            if (content.contentType == ContentType.TV_EPISODE) {
+                content.metadata.season?.let { season ->
+                    content.metadata.episode?.let { episode ->
+                        add(InfoMetadataItem("Episode", "S${season}E${episode}"))
+                    }
                 }
             }
         }
@@ -331,6 +396,15 @@ private data class InfoMetadataItem(
     val label: String,
     val value: String
 )
+
+/**
+ * Tab modes for InfoSection content filtering
+ */
+enum class InfoSectionTabMode {
+    OVERVIEW,   // Essential information only
+    DETAILS,    // Complete detailed information
+    FULL        // Original full behavior (backward compatibility)
+}
 
 /**
  * Preview/Demo configurations for InfoSection

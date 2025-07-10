@@ -32,6 +32,9 @@ class TVDetailsViewModel @Inject constructor(
     private val _relatedShowsState = MutableStateFlow<UiState<List<TVShowContentDetail>>>(UiState.Loading)
     val relatedShowsState: StateFlow<UiState<List<TVShowContentDetail>>> = _relatedShowsState.asStateFlow()
     
+    private val _selectedTabIndex = MutableStateFlow(0)
+    val selectedTabIndex: StateFlow<Int> = _selectedTabIndex.asStateFlow()
+    
     override fun createInitialState(): TVDetailsUiState {
         return TVDetailsUiState()
     }
@@ -249,6 +252,13 @@ class TVDetailsViewModel @Inject constructor(
     }
     
     /**
+     * Select a tab
+     */
+    fun selectTab(tabIndex: Int) {
+        _selectedTabIndex.value = tabIndex
+    }
+    
+    /**
      * Clear all data
      */
     fun clearData() {
@@ -256,6 +266,7 @@ class TVDetailsViewModel @Inject constructor(
         _selectedSeason.value = null
         _selectedEpisode.value = null
         _relatedShowsState.value = UiState.Loading
+        _selectedTabIndex.value = 0
         
         updateState { createInitialState() }
     }

@@ -28,6 +28,9 @@ class MovieDetailsViewModel @Inject constructor(
     private val _relatedMoviesState = MutableStateFlow<UiState<List<Movie>>>(UiState.Loading)
     val relatedMoviesState: StateFlow<UiState<List<Movie>>> = _relatedMoviesState.asStateFlow()
     
+    private val _selectedTabIndex = MutableStateFlow(0)
+    val selectedTabIndex: StateFlow<Int> = _selectedTabIndex.asStateFlow()
+    
     override fun createInitialState(): MovieDetailsUiState {
         return MovieDetailsUiState()
     }
@@ -352,6 +355,13 @@ class MovieDetailsViewModel @Inject constructor(
     fun getMovieYear(): String {
         // TODO: Get from movie metadata when available
         return "2023"
+    }
+    
+    /**
+     * Select a tab
+     */
+    fun selectTab(tabIndex: Int) {
+        _selectedTabIndex.value = tabIndex
     }
     
     /**

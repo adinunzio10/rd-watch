@@ -34,6 +34,7 @@ import com.rdwatch.androidtv.ui.focus.tvFocusable
 import com.rdwatch.androidtv.ui.focus.TVFocusIndicator
 import com.rdwatch.androidtv.ui.viewmodel.PlaybackViewModel
 import com.rdwatch.androidtv.ui.details.components.ActionSection
+import com.rdwatch.androidtv.ui.details.components.ContentDetailTabs
 import com.rdwatch.androidtv.ui.details.models.*
 import androidx.media3.common.util.UnstableApi
 
@@ -59,6 +60,7 @@ fun MovieDetailsScreen(
     val uiState by viewModel.uiState.collectAsState()
     val movieState by viewModel.movieState.collectAsState()
     val relatedMoviesState by viewModel.relatedMoviesState.collectAsState()
+    val selectedTabIndex by viewModel.selectedTabIndex.collectAsState()
     
     // Load movie details when screen is first displayed
     LaunchedEffect(movieId) {
@@ -167,118 +169,144 @@ fun MovieDetailsScreen(
                     firstFocusRequester.requestFocus()
                 }
                 
-                LazyColumn(
+                Column(
                     modifier = modifier
                         .fillMaxSize()
-                        .background(MaterialTheme.colorScheme.background),
-                    verticalArrangement = Arrangement.spacedBy(24.dp)
+                        .background(MaterialTheme.colorScheme.background)
                 ) {
-        // Hero Section
-        item {
-            MovieHeroSection(
-                movie = movie,
-                watchProgress = watchProgress,
-                isCompleted = isCompleted,
-                onPlayClick = onPlayClick,
-                onBackPressed = onBackPressed,
-                firstFocusRequester = firstFocusRequester,
-                overscanMargin = overscanMargin
-            )
-        }
-        
-        // Movie Info Section
-        item {
-            MovieInfoSection(
-                movie = movie,
-                modifier = Modifier.padding(horizontal = overscanMargin)
-            )
-        }
-        
-        // Action Buttons Section
-        item {
-            val movieContentDetail = MovieContentDetail(
-                movie = movie,
-                progress = ContentProgress(
-                    watchPercentage = watchProgress,
-                    isCompleted = isCompleted
-                ),
-                isInWatchlist = uiState.isInWatchlist,
-                isLiked = uiState.isLiked,
-                isDownloaded = uiState.isDownloaded,
-                isDownloading = uiState.isDownloading,
-                isFromRealDebrid = uiState.isFromRealDebrid
-            )
-            
-            ActionSection(
-                content = movieContentDetail,
-                onActionClick = { action ->
-                    when (action) {
-                        is ContentAction.Play -> {
-                            onPlayClick(movie)
-                        }
-                        is ContentAction.AddToWatchlist -> {
-                            if (action.isInWatchlist) {
-                                viewModel.removeFromWatchlist()
-                            } else {
-                                viewModel.addToWatchlist()
+                    // Hero Section
+                    MovieHeroSection(
+                        movie = movie,
+                        watchProgress = watchProgress,
+                        isCompleted = isCompleted,
+                        onPlayClick = onPlayClick,
+                        onBackPressed = onBackPressed,
+                        firstFocusRequester = firstFocusRequester,
+                        overscanMargin = overscanMargin
+                    )
+                    
+                    // Action Buttons Section
+                    val movieContentDetail = MovieContentDetail(
+                        movie = movie,
+                        progress = ContentProgress(
+                            watchPercentage = watchProgress,
+                            isCompleted = isCompleted
+                        ),
+                        isInWatchlist = uiState.isInWatchlist,
+                        isLiked = uiState.isLiked,
+                        isDownloaded = uiState.isDownloaded,
+                        isDownloading = uiState.isDownloading,
+                        isFromRealDebrid = uiState.isFromRealDebrid
+                    )
+                    
+                    ActionSection(
+                        content = movieContentDetail,
+                        onActionClick = { action ->
+                            when (action) {
+                                is ContentAction.Play -> {
+                                    onPlayClick(movie)
+                                }
+                                is ContentAction.AddToWatchlist -> {
+                                    if (action.isInWatchlist) {
+                                        viewModel.removeFromWatchlist()
+                                    } else {
+                                        viewModel.addToWatchlist()
+                                    }
+                                }
+                                is ContentAction.Like -> {
+                                    viewModel.toggleLike()
+                                }
+                                is ContentAction.Share -> {
+                                    viewModel.shareMovie()
+                                }
+                                is ContentAction.Download -> {
+                                    if (!action.isDownloaded && !action.isDownloading) {
+                                        viewModel.downloadMovie()
+                                    }
+                                }
+                                is ContentAction.Delete -> {
+                                    viewModel.deleteFromRealDebrid()
+                                }
+                                else -> {
+                                    // Handle other actions
+                                }
                             }
-                        }
-                        is ContentAction.Like -> {
-                            viewModel.toggleLike()
-                        }
-                        is ContentAction.Share -> {
-                            viewModel.shareMovie()
-                        }
-                        is ContentAction.Download -> {
-                            if (!action.isDownloaded && !action.isDownloading) {
-                                viewModel.downloadMovie()
-                            }
-                        }
-                        is ContentAction.Delete -> {
-                            viewModel.deleteFromRealDebrid()
-                        }
-                        else -> {
-                            // Handle other actions
-                        }
-                    }
-                },
-                modifier = Modifier.padding(horizontal = overscanMargin)
-            )
-        }
-        
-        // Related Movies Section
-        when (val currentRelatedMoviesState = relatedMoviesState) {
-            is com.rdwatch.androidtv.ui.common.UiState.Success -> {
-                if (currentRelatedMoviesState.data.isNotEmpty()) {
-                    item {
-                        RelatedMoviesSection(
-                            movies = currentRelatedMoviesState.data,
-                            onMovieClick = onMovieClick,
-                            modifier = Modifier.padding(horizontal = overscanMargin)
-                        )
-                    }
-                }
-            }
-            is com.rdwatch.androidtv.ui.common.UiState.Loading -> {
-                item {
-                    Box(
+                        },
+                        modifier = Modifier.padding(horizontal = overscanMargin, vertical = 8.dp)
+                    )
+                    
+                    // Tab navigation
+                    ContentDetailTabs(
+                        selectedTabIndex = selectedTabIndex,
+                        contentType = ContentType.MOVIE,
+                        onTabSelected = { tabIndex -> viewModel.selectTab(tabIndex) }
+                    )
+                    
+                    // Tab content
+                    LazyColumn(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = overscanMargin),
-                        contentAlignment = Alignment.Center
+                            .fillMaxSize()
+                            .weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        CircularProgressIndicator()
-                    }
-                }
-            }
-            is com.rdwatch.androidtv.ui.common.UiState.Error -> {
-                // Don't show error for related movies, just skip section
-            }
-        }
-        
-                    // Bottom spacing for TV overscan
-                    item {
-                        Spacer(modifier = Modifier.height(overscanMargin))
+                        when (selectedTabIndex) {
+                            0 -> {
+                                // Overview Tab
+                                item {
+                                    MovieInfoSection(
+                                        movie = movie,
+                                        isOverview = true,
+                                        modifier = Modifier.padding(horizontal = overscanMargin)
+                                    )
+                                }
+                            }
+                            
+                            1 -> {
+                                // Details Tab
+                                item {
+                                    MovieInfoSection(
+                                        movie = movie,
+                                        isOverview = false,
+                                        modifier = Modifier.padding(horizontal = overscanMargin)
+                                    )
+                                }
+                                
+                                // Related Movies Section
+                                when (val currentRelatedMoviesState = relatedMoviesState) {
+                                    is com.rdwatch.androidtv.ui.common.UiState.Success -> {
+                                        if (currentRelatedMoviesState.data.isNotEmpty()) {
+                                            item {
+                                                RelatedMoviesSection(
+                                                    movies = currentRelatedMoviesState.data,
+                                                    onMovieClick = onMovieClick,
+                                                    modifier = Modifier.padding(horizontal = overscanMargin)
+                                                )
+                                            }
+                                        }
+                                    }
+                                    is com.rdwatch.androidtv.ui.common.UiState.Loading -> {
+                                        item {
+                                            Box(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .padding(horizontal = overscanMargin),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                CircularProgressIndicator()
+                                            }
+                                        }
+                                    }
+                                    is com.rdwatch.androidtv.ui.common.UiState.Error -> {
+                                        // Don't show error for related movies, just skip section
+                                    }
+                                }
+                            }
+                        }
+                        
+                        // Bottom spacing for TV overscan
+                        item {
+                            Spacer(modifier = Modifier.height(overscanMargin))
+                        }
                     }
                 }
             }
@@ -493,6 +521,7 @@ private fun PlayButton(
 @Composable
 private fun MovieInfoSection(
     movie: Movie,
+    isOverview: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -512,18 +541,34 @@ private fun MovieInfoSection(
                     text = movie.description!!,
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.8f),
-                    lineHeight = MaterialTheme.typography.bodyLarge.lineHeight * 1.2
+                    lineHeight = MaterialTheme.typography.bodyLarge.lineHeight * 1.2,
+                    maxLines = if (isOverview) 3 else Int.MAX_VALUE
                 )
             }
         }
         
         // Additional info (placeholder)
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(32.dp)
-        ) {
-            InfoItem(label = "Duration", value = "2h 15m")
-            InfoItem(label = "Language", value = "English")
-            InfoItem(label = "Rating", value = "PG-13")
+        if (isOverview) {
+            // Overview: Show key metadata only
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(32.dp)
+            ) {
+                InfoItem(label = "Duration", value = "2h 15m")
+                InfoItem(label = "Rating", value = "PG-13")
+            }
+        } else {
+            // Details: Show all metadata
+            LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(24.dp),
+                contentPadding = PaddingValues(horizontal = 4.dp)
+            ) {
+                item { InfoItem(label = "Duration", value = "2h 15m") }
+                item { InfoItem(label = "Language", value = "English") }
+                item { InfoItem(label = "Rating", value = "PG-13") }
+                item { InfoItem(label = "Studio", value = movie.studio ?: "Unknown") }
+                item { InfoItem(label = "Year", value = "2023") }
+                item { InfoItem(label = "Quality", value = "HD") }
+            }
         }
     }
 }
