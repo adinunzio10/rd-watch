@@ -35,7 +35,9 @@ import com.rdwatch.androidtv.ui.focus.TVFocusIndicator
 import com.rdwatch.androidtv.ui.viewmodel.PlaybackViewModel
 import com.rdwatch.androidtv.ui.details.components.ActionSection
 import com.rdwatch.androidtv.ui.details.components.ContentDetailTabs
+import com.rdwatch.androidtv.ui.components.CastCrewSection
 import com.rdwatch.androidtv.ui.details.models.*
+import com.rdwatch.androidtv.ui.details.MovieDetailsUiState
 import androidx.media3.common.util.UnstableApi
 
 /**
@@ -60,6 +62,7 @@ fun MovieDetailsScreen(
     val uiState by viewModel.uiState.collectAsState()
     val movieState by viewModel.movieState.collectAsState()
     val relatedMoviesState by viewModel.relatedMoviesState.collectAsState()
+    val creditsState by viewModel.creditsState.collectAsState()
     val selectedTabIndex by viewModel.selectedTabIndex.collectAsState()
     
     // Load movie details when screen is first displayed
@@ -177,6 +180,7 @@ fun MovieDetailsScreen(
                     // Hero Section
                     MovieHeroSection(
                         movie = movie,
+                        uiState = uiState,
                         watchProgress = watchProgress,
                         isCompleted = isCompleted,
                         onPlayClick = onPlayClick,
@@ -255,6 +259,7 @@ fun MovieDetailsScreen(
                                 item {
                                     MovieInfoSection(
                                         movie = movie,
+                                        uiState = uiState,
                                         isOverview = true,
                                         modifier = Modifier.padding(horizontal = overscanMargin)
                                     )
@@ -266,6 +271,7 @@ fun MovieDetailsScreen(
                                 item {
                                     MovieInfoSection(
                                         movie = movie,
+                                        uiState = uiState,
                                         isOverview = false,
                                         modifier = Modifier.padding(horizontal = overscanMargin)
                                     )
@@ -301,6 +307,48 @@ fun MovieDetailsScreen(
                                     }
                                 }
                             }
+                            
+                            2 -> {
+                                // Cast & Crew Tab
+                                when (val currentCreditsState = creditsState) {
+                                    is UiState.Success -> {
+                                        item {
+                                            CastCrewSection(
+                                                metadata = currentCreditsState.data,
+                                                modifier = Modifier.padding(horizontal = overscanMargin)
+                                            )
+                                        }
+                                    }
+                                    is UiState.Loading -> {
+                                        item {
+                                            Box(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .padding(horizontal = overscanMargin),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                CircularProgressIndicator()
+                                            }
+                                        }
+                                    }
+                                    is UiState.Error -> {
+                                        item {
+                                            Box(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .padding(horizontal = overscanMargin),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Text(
+                                                    text = "Failed to load cast & crew",
+                                                    style = MaterialTheme.typography.bodyMedium,
+                                                    color = MaterialTheme.colorScheme.error
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
                         }
                         
                         // Bottom spacing for TV overscan
@@ -317,6 +365,7 @@ fun MovieDetailsScreen(
 @Composable
 private fun MovieHeroSection(
     movie: Movie,
+    uiState: MovieDetailsUiState,
     watchProgress: Float,
     isCompleted: Boolean,
     onPlayClick: (Movie) -> Unit,
@@ -407,7 +456,7 @@ private fun MovieHeroSection(
                     MetadataChip(text = movie.studio!!)
                 }
                 MetadataChip(text = "HD") // Placeholder quality
-                MetadataChip(text = "2023") // Placeholder year
+                MetadataChip(text = uiState.getMovieYear())
                 if (isCompleted) {
                     MetadataChip(
                         text = "Watched",
@@ -521,6 +570,7 @@ private fun PlayButton(
 @Composable
 private fun MovieInfoSection(
     movie: Movie,
+    uiState: MovieDetailsUiState,
     isOverview: Boolean = false,
     modifier: Modifier = Modifier
 ) {
@@ -553,8 +603,8 @@ private fun MovieInfoSection(
             Row(
                 horizontalArrangement = Arrangement.spacedBy(32.dp)
             ) {
-                InfoItem(label = "Duration", value = "2h 15m")
-                InfoItem(label = "Rating", value = "PG-13")
+                InfoItem(label = "Duration", value = uiState.getMovieRuntime())
+                InfoItem(label = "Rating", value = uiState.getMovieRating())
             }
         } else {
             // Details: Show all metadata
@@ -562,11 +612,11 @@ private fun MovieInfoSection(
                 horizontalArrangement = Arrangement.spacedBy(24.dp),
                 contentPadding = PaddingValues(horizontal = 4.dp)
             ) {
-                item { InfoItem(label = "Duration", value = "2h 15m") }
+                item { InfoItem(label = "Duration", value = uiState.getMovieRuntime()) }
                 item { InfoItem(label = "Language", value = "English") }
-                item { InfoItem(label = "Rating", value = "PG-13") }
+                item { InfoItem(label = "Rating", value = uiState.getMovieRating()) }
                 item { InfoItem(label = "Studio", value = movie.studio ?: "Unknown") }
-                item { InfoItem(label = "Year", value = "2023") }
+                item { InfoItem(label = "Year", value = uiState.getMovieYear()) }
                 item { InfoItem(label = "Quality", value = "HD") }
             }
         }

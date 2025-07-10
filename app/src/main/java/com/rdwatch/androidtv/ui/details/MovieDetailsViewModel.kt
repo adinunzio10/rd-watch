@@ -9,6 +9,10 @@ import com.rdwatch.androidtv.ui.details.models.MovieContentDetail
 import com.rdwatch.androidtv.ui.details.models.ContentProgress
 import com.rdwatch.androidtv.network.models.tmdb.TMDbRecommendationsResponse
 import com.rdwatch.androidtv.network.models.tmdb.TMDbMovieResponse
+import com.rdwatch.androidtv.network.models.tmdb.TMDbCreditsResponse
+import com.rdwatch.androidtv.ui.details.models.ExtendedContentMetadata
+import com.rdwatch.androidtv.ui.details.models.CastMember
+import com.rdwatch.androidtv.ui.details.models.CrewMember
 import kotlinx.coroutines.withContext
 import com.rdwatch.androidtv.ui.common.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -31,6 +35,9 @@ class MovieDetailsViewModel @Inject constructor(
     
     private val _relatedMoviesState = MutableStateFlow<UiState<List<Movie>>>(UiState.Loading)
     val relatedMoviesState: StateFlow<UiState<List<Movie>>> = _relatedMoviesState.asStateFlow()
+    
+    private val _creditsState = MutableStateFlow<UiState<ExtendedContentMetadata>>(UiState.Loading)
+    val creditsState: StateFlow<UiState<ExtendedContentMetadata>> = _creditsState.asStateFlow()
     
     private val _selectedTabIndex = MutableStateFlow(0)
     val selectedTabIndex: StateFlow<Int> = _selectedTabIndex.asStateFlow()
@@ -95,13 +102,15 @@ class MovieDetailsViewModel @Inject constructor(
                                 isLoading = false,
                                 error = null,
                                 isLoaded = true,
-                                isFromRealDebrid = false
+                                isFromRealDebrid = false,
+                                tmdbResponse = movieResponse
                             )
                         }
                         println("DEBUG [MovieDetailsViewModel]: Movie loaded successfully: ${movie.title}")
                         
-                        // Load related movies
+                        // Load related movies and credits
                         loadRelatedMovies(tmdbId)
+                        loadMovieCredits(tmdbId)
                         return@launch
                     } else {
                         println("DEBUG [MovieDetailsViewModel]: API call failed: ${response.code()} - ${response.message()}")
@@ -153,12 +162,14 @@ class MovieDetailsViewModel @Inject constructor(
                                         isLoading = false,
                                         error = null,
                                         isLoaded = true,
-                                        isFromRealDebrid = false // TMDb content is not from Real Debrid
+                                        isFromRealDebrid = false, // TMDb content is not from Real Debrid
+                                        tmdbResponse = movieResponse
                                     )
                                 }
                                 
-                                // Load related movies
+                                // Load related movies and credits
                                 loadRelatedMovies(tmdbId)
+                                loadMovieCredits(tmdbId)
                             }
                             is Result.Error -> {
                                 println("DEBUG [MovieDetailsViewModel]: Error result received: ${result.exception.message}")
@@ -211,9 +222,66 @@ class MovieDetailsViewModel @Inject constructor(
                 )
             }
             
-            // Load related movies using TMDb ID
+            // Load related movies and credits using TMDb ID
             val tmdbId = movie.id.toInt()
             loadRelatedMovies(tmdbId)
+            loadMovieCredits(tmdbId)
+        }
+    }
+    
+    /**
+     * Load movie credits (cast and crew) from TMDb
+     */
+    private fun loadMovieCredits(tmdbId: Int) {
+        viewModelScope.launch {
+            _creditsState.value = UiState.Loading
+            
+            try {
+                val response = withContext(kotlinx.coroutines.Dispatchers.IO) {
+                    tmdbMovieService.getMovieCredits(tmdbId, "en-US").execute()
+                }
+                
+                if (response.isSuccessful && response.body() != null) {
+                    val creditsResponse = response.body()!!
+                    
+                    // Convert TMDb cast to CastMember objects
+                    val castMembers = creditsResponse.cast.take(20).map { tmdbCast ->
+                        CastMember(
+                            id = tmdbCast.id,
+                            name = tmdbCast.name,
+                            character = tmdbCast.character,
+                            profileImageUrl = CastMember.buildProfileImageUrl(tmdbCast.profilePath),
+                            order = tmdbCast.order
+                        )
+                    }
+                    
+                    // Convert TMDb crew to CrewMember objects
+                    val crewMembers = creditsResponse.crew.map { tmdbCrew ->
+                        CrewMember(
+                            id = tmdbCrew.id,
+                            name = tmdbCrew.name,
+                            job = tmdbCrew.job,
+                            department = tmdbCrew.department,
+                            profileImageUrl = CrewMember.buildProfileImageUrl(tmdbCrew.profilePath)
+                        )
+                    }
+                    
+                    // Create ExtendedContentMetadata with cast and crew
+                    val extendedMetadata = ExtendedContentMetadata(
+                        fullCast = castMembers,
+                        crew = crewMembers
+                    )
+                    
+                    _creditsState.value = UiState.Success(extendedMetadata)
+                } else {
+                    _creditsState.value = UiState.Error("Failed to load movie credits")
+                }
+            } catch (e: Exception) {
+                _creditsState.value = UiState.Error(
+                    message = "Failed to load movie credits: ${e.message}",
+                    throwable = e
+                )
+            }
         }
     }
     
@@ -457,9 +525,36 @@ data class MovieDetailsUiState(
     val isFromRealDebrid: Boolean = false,
     val isDeleting: Boolean = false,
     val isDeleted: Boolean = false,
-    val error: String? = null
+    val error: String? = null,
+    val tmdbResponse: TMDbMovieResponse? = null
 ) {
     val hasMovie: Boolean get() = movie != null
     val canPlay: Boolean get() = movie?.videoUrl != null && !isDeleted
     val canDelete: Boolean get() = isFromRealDebrid && !isDeleted && !isDeleting
+    
+    // Helper methods to extract metadata from TMDb response
+    fun getMovieYear(): String {
+        return tmdbResponse?.releaseDate?.let { releaseDate ->
+            // Extract year from release date (format: YYYY-MM-DD)
+            releaseDate.split("-").firstOrNull() ?: "Unknown"
+        } ?: "Unknown"
+    }
+    
+    fun getMovieRating(): String {
+        return tmdbResponse?.voteAverage?.let { rating ->
+            String.format("%.1f", rating)
+        } ?: "N/A"
+    }
+    
+    fun getMovieRuntime(): String {
+        return tmdbResponse?.runtime?.let { runtime ->
+            val hours = runtime / 60
+            val minutes = runtime % 60
+            if (hours > 0) {
+                "${hours}h ${minutes}m"
+            } else {
+                "${minutes}m"
+            }
+        } ?: "Unknown"
+    }
 }

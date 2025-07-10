@@ -107,16 +107,19 @@ private fun getTabsForContentType(contentType: ContentType): List<ContentDetailT
     return when (contentType) {
         ContentType.MOVIE, ContentType.DOCUMENTARY -> listOf(
             ContentDetailTab("Overview", "overview"),
-            ContentDetailTab("Details", "details")
+            ContentDetailTab("Details", "details"),
+            ContentDetailTab("Cast & Crew", "cast_crew")
         )
         ContentType.TV_SHOW, ContentType.TV_EPISODE -> listOf(
             ContentDetailTab("Overview", "overview"),
             ContentDetailTab("Details", "details"),
-            ContentDetailTab("Episodes", "episodes")
+            ContentDetailTab("Episodes", "episodes"),
+            ContentDetailTab("Cast & Crew", "cast_crew")
         )
         else -> listOf(
             ContentDetailTab("Overview", "overview"),
-            ContentDetailTab("Details", "details")
+            ContentDetailTab("Details", "details"),
+            ContentDetailTab("Cast & Crew", "cast_crew")
         )
     }
 }
