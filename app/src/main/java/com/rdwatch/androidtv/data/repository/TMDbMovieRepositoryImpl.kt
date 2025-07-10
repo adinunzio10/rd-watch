@@ -39,18 +39,35 @@ class TMDbMovieRepositoryImpl @Inject constructor(
         forceRefresh: Boolean,
         language: String
     ): Flow<Result<TMDbMovieResponse?>> = networkBoundResource(
-        loadFromDb = { tmdbMovieDao.getMovieById(movieId).map { it?.toMovieResponse() } },
+        loadFromDb = { 
+            android.util.Log.d("TMDbMovieRepo", "=== Loading from DB for movieId: $movieId ===")
+            val dbFlow = tmdbMovieDao.getMovieById(movieId).map { 
+                val result = it?.toMovieResponse()
+                android.util.Log.d("TMDbMovieRepo", "DB returned: ${if (result != null) "cached movie ${result.title}" else "null (no cached data)"}")
+                result
+            }
+            dbFlow
+        },
         shouldFetch = { cachedMovie ->
-            forceRefresh || cachedMovie == null || shouldRefreshCache(movieId, "movie")
+            android.util.Log.d("TMDbMovieRepo", "=== Should Fetch Check ===")
+            android.util.Log.d("TMDbMovieRepo", "Cached movie: ${cachedMovie?.title ?: "null"}")
+            android.util.Log.d("TMDbMovieRepo", "forceRefresh: $forceRefresh")
+            val shouldFetch = forceRefresh || cachedMovie == null || shouldRefreshCache(movieId, "movie")
+            android.util.Log.d("TMDbMovieRepo", "Decision: shouldFetch = $shouldFetch")
+            shouldFetch
         },
         createCall = {
+            android.util.Log.d("TMDbMovieRepo", "=== Creating API Call for movieId: $movieId ===")
             val response = tmdbMovieService.getMovieDetails(movieId, null, language).execute()
             handleRawApiResponse(response)
         },
         saveCallResult = { movieResponse ->
+            android.util.Log.d("TMDbMovieRepo", "=== Saving to DB: ${movieResponse.title} (ID: ${movieResponse.id}) ===")
             tmdbMovieDao.insertMovie(movieResponse.toEntity())
         },
         onFetchFailed = { throwable ->
+            android.util.Log.e("TMDbMovieRepo", "=== Fetch Failed ===", throwable)
+            android.util.Log.e("TMDbMovieRepo", "Error message: ${throwable.message}")
             // Log error or handle specific error cases
             // For now, we'll just let the cached data be returned
         }
