@@ -68,6 +68,10 @@ fun MovieDetailsScreen(
     val selectedTabIndex by viewModel.selectedTabIndex.collectAsState()
     val sourcesState by viewModel.sourcesState.collectAsState()
     
+    // Debug logging for UI state
+    println("DEBUG [MovieDetailsScreen]: UI state availableSources count: ${uiState.availableSources.size}")
+    println("DEBUG [MovieDetailsScreen]: Sources state: ${sourcesState.javaClass.simpleName}")
+    
     // Load movie details when screen is first displayed
     LaunchedEffect(movieId) {
         viewModel.loadMovieDetails(movieId)
@@ -281,6 +285,10 @@ fun MovieDetailsScreen(
                             }
                             is UiState.Success -> {
                                 val sources = (sourcesState as UiState.Success).data
+                                println("DEBUG [MovieDetailsScreen]: UiState.Success received with ${sources.size} sources")
+                                sources.forEach { source ->
+                                    println("DEBUG [MovieDetailsScreen]: UI Source: ${source.provider.displayName} - ${source.quality.displayName} - ${source.id}")
+                                }
                                 if (sources.isNotEmpty()) {
                                     SourceSelectionSection(
                                         sources = sources,
