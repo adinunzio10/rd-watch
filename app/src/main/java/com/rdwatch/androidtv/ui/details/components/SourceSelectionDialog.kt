@@ -46,16 +46,16 @@ fun SourceSelectionDialog(
     var sortOption by remember { mutableStateOf(SourceSortOption.PRIORITY) }
     var selectedQuality by remember { mutableStateOf<SourceQuality?>(null) }
     var selectedProvider by remember { mutableStateOf<SourceProvider?>(null) }
-    var showFreeOnly by remember { mutableStateOf(false) }
+    var showP2POnly by remember { mutableStateOf(false) }
     var showFilters by remember { mutableStateOf(false) }
     
-    val filteredAndSortedSources = remember(sources, sortOption, selectedQuality, selectedProvider, showFreeOnly) {
+    val filteredAndSortedSources = remember(sources, sortOption, selectedQuality, selectedProvider, showP2POnly) {
         sources.filter { source ->
             val qualityMatch = selectedQuality?.let { it == source.quality } ?: true
             val providerMatch = selectedProvider?.let { it.id == source.provider.id } ?: true
-            val freeMatch = if (showFreeOnly) !source.requiresPayment() else true
+            val p2pMatch = if (showP2POnly) source.isP2P() else true
             
-            qualityMatch && providerMatch && freeMatch
+            qualityMatch && providerMatch && p2pMatch
         }.sortedWith(getSortComparator(sortOption))
     }
     
@@ -96,11 +96,11 @@ fun SourceSelectionDialog(
                         sources = sources,
                         selectedQuality = selectedQuality,
                         selectedProvider = selectedProvider,
-                        showFreeOnly = showFreeOnly,
+                        showP2POnly = showP2POnly,
                         sortOption = sortOption,
                         onQualitySelected = { selectedQuality = it },
                         onProviderSelected = { selectedProvider = it },
-                        onFreeOnlyChanged = { showFreeOnly = it },
+                        onP2POnlyChanged = { showP2POnly = it },
                         onSortChanged = { sortOption = it }
                     )
                 }
@@ -175,11 +175,11 @@ private fun SourceFiltersSection(
     sources: List<StreamingSource>,
     selectedQuality: SourceQuality?,
     selectedProvider: SourceProvider?,
-    showFreeOnly: Boolean,
+    showP2POnly: Boolean,
     sortOption: SourceSortOption,
     onQualitySelected: (SourceQuality?) -> Unit,
     onProviderSelected: (SourceProvider?) -> Unit,
-    onFreeOnlyChanged: (Boolean) -> Unit,
+    onP2POnlyChanged: (Boolean) -> Unit,
     onSortChanged: (SourceSortOption) -> Unit
 ) {
     val availableQualities = remember(sources) {
@@ -238,11 +238,11 @@ private fun SourceFiltersSection(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Free only toggle
+                // P2P only toggle
                 FilterToggle(
-                    label = "Free sources only",
-                    checked = showFreeOnly,
-                    onCheckedChange = onFreeOnlyChanged
+                    label = "P2P sources only",
+                    checked = showP2POnly,
+                    onCheckedChange = onP2POnlyChanged
                 )
                 
                 // Sort option
@@ -552,7 +552,8 @@ enum class SourceSortOption(val displayName: String) {
     PRIORITY("Priority"),
     QUALITY("Quality"),
     PROVIDER("Provider"),
-    PRICE("Price"),
+    SEEDERS("Seeders"),
+    RELIABILITY("Reliability"),
     AVAILABILITY("Availability")
 }
 
@@ -564,11 +565,15 @@ private fun getSortComparator(sortOption: SourceSortOption): Comparator<Streamin
         SourceSortOption.PRIORITY -> compareByDescending { it.getPriorityScore() }
         SourceSortOption.QUALITY -> compareByDescending { it.quality.priority }
         SourceSortOption.PROVIDER -> compareBy { it.provider.displayName }
-        SourceSortOption.PRICE -> compareBy { 
-            when (it.pricing.type) {
-                com.rdwatch.androidtv.ui.details.models.SourcePricing.PricingType.FREE -> 0.0
-                com.rdwatch.androidtv.ui.details.models.SourcePricing.PricingType.FREE_WITH_ADS -> 0.0
-                else -> it.pricing.price ?: Double.MAX_VALUE
+        SourceSortOption.SEEDERS -> compareByDescending { 
+            it.features.seeders ?: 0
+        }
+        SourceSortOption.RELIABILITY -> compareByDescending {
+            when (it.sourceType.reliability) {
+                com.rdwatch.androidtv.ui.details.models.SourceType.SourceReliability.HIGH -> 3
+                com.rdwatch.androidtv.ui.details.models.SourceType.SourceReliability.MEDIUM -> 2
+                com.rdwatch.androidtv.ui.details.models.SourceType.SourceReliability.LOW -> 1
+                com.rdwatch.androidtv.ui.details.models.SourceType.SourceReliability.UNKNOWN -> 0
             }
         }
         SourceSortOption.AVAILABILITY -> compareByDescending { it.isCurrentlyAvailable() }

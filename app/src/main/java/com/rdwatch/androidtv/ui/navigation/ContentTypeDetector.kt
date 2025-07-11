@@ -32,22 +32,35 @@ object ContentTypeDetector {
             return ContentType.TV_SHOW
         }
         
+        // Check for year range patterns (common in TV shows)
+        val yearRangePattern = "\\d{4}-\\d{4}|\\d{4}-".toRegex()
+        if (yearRangePattern.containsMatchIn(title)) {
+            return ContentType.TV_SHOW
+        }
+        
         // Check description for TV show indicators
         val description = movie.description?.lowercase() ?: ""
         val tvDescriptionPatterns = listOf(
             "season", "episode", "series", "episodes", "aired", "seasons",
-            "tv series", "television", "drama series", "comedy series"
+            "tv series", "television", "drama series", "comedy series", "miniseries",
+            "anthology", "documentary series", "reality series", "talk show", "sitcom"
         )
         
         if (tvDescriptionPatterns.any { pattern -> description.contains(pattern) }) {
             return ContentType.TV_SHOW
         }
         
-        // Check studio for TV networks
+        // Check for episode count indicators
+        val episodeCountPattern = "\\d+\\s*episodes?".toRegex()
+        if (episodeCountPattern.containsMatchIn(description)) {
+            return ContentType.TV_SHOW
+        }
+        
+        // Check studio for TV networks and production companies
         val studio = movie.studio?.lowercase() ?: ""
         val tvNetworks = listOf(
-            "netflix", "hbo", "amazon prime", "disney+", "hulu", "abc", "cbs", "nbc", "fox",
-            "cw", "fx", "amc", "showtime", "starz", "apple tv+", "paramount+", "peacock"
+            "tv", "television", "network", "channel", "broadcasting", "productions",
+            "studios", "entertainment", "media", "pictures television", "tv productions"
         )
         
         if (tvNetworks.any { network -> studio.contains(network) }) {

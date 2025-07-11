@@ -1,183 +1,80 @@
 package com.rdwatch.androidtv.ui.details.models
 
 /**
- * Represents a streaming provider/service
+ * Represents a scraper-based source provider
  */
 data class SourceProvider(
     val id: String,
     val name: String,
     val displayName: String,
     val logoUrl: String?,
-    val logoResource: Int? = null, // For bundled provider logos
+    val logoResource: Int? = null, // For bundled scraper logos
     val isAvailable: Boolean = true,
-    val requiresSubscription: Boolean = false,
-    val subscriptionTier: String? = null,
-    val color: String? = null, // Provider brand color
+    val isEnabled: Boolean = true,
+    val capabilities: List<String> = emptyList(),
+    val color: String? = null, // Scraper brand color
     val priority: Int = 0 // Higher priority sources appear first
 ) {
     companion object {
-        // Common streaming providers
-        val NETFLIX = SourceProvider(
-            id = "netflix",
-            name = "Netflix",
-            displayName = "Netflix",
+        // Default scraper providers - these will be populated from ScraperManifestManager
+        val TORRENTIO = SourceProvider(
+            id = "torrentio",
+            name = "torrentio",
+            displayName = "Torrentio",
             logoUrl = null,
-            logoResource = null, // TODO: Add logo resource when available
-            requiresSubscription = true,
-            color = "#E50914",
+            logoResource = null,
+            capabilities = listOf("stream", "p2p"),
+            color = "#FF6B35",
             priority = 100
         )
         
-        val AMAZON_PRIME = SourceProvider(
-            id = "amazon_prime",
-            name = "Amazon Prime Video",
-            displayName = "Prime Video",
+        val KNIGHTCRAWLER = SourceProvider(
+            id = "knightcrawler",
+            name = "knightcrawler",
+            displayName = "KnightCrawler",
             logoUrl = null,
             logoResource = null,
-            requiresSubscription = true,
-            color = "#00A8E1",
+            capabilities = listOf("stream", "p2p"),
+            color = "#2E86AB",
             priority = 90
         )
         
-        val DISNEY_PLUS = SourceProvider(
-            id = "disney_plus",
-            name = "Disney+",
-            displayName = "Disney+",
+        val CINEMETA = SourceProvider(
+            id = "cinemeta",
+            name = "cinemeta",
+            displayName = "Cinemeta",
             logoUrl = null,
             logoResource = null,
-            requiresSubscription = true,
-            color = "#113CCF",
-            priority = 85
-        )
-        
-        val HULU = SourceProvider(
-            id = "hulu",
-            name = "Hulu",
-            displayName = "Hulu",
-            logoUrl = null,
-            logoResource = null,
-            requiresSubscription = true,
-            color = "#1CE783",
+            capabilities = listOf("meta", "catalog"),
+            color = "#F18F01",
             priority = 80
         )
         
-        val HBO_MAX = SourceProvider(
-            id = "hbo_max",
-            name = "HBO Max",
-            displayName = "HBO Max",
+        val OPENSUBTITLES = SourceProvider(
+            id = "opensubtitles",
+            name = "opensubtitles",
+            displayName = "OpenSubtitles",
             logoUrl = null,
             logoResource = null,
-            requiresSubscription = true,
-            color = "#8B5CF6",
-            priority = 85
-        )
-        
-        val APPLE_TV = SourceProvider(
-            id = "apple_tv",
-            name = "Apple TV+",
-            displayName = "Apple TV+",
-            logoUrl = null,
-            logoResource = null,
-            requiresSubscription = true,
-            color = "#000000",
-            priority = 75
-        )
-        
-        val PARAMOUNT_PLUS = SourceProvider(
-            id = "paramount_plus",
-            name = "Paramount+",
-            displayName = "Paramount+",
-            logoUrl = null,
-            logoResource = null,
-            requiresSubscription = true,
-            color = "#0052CC",
+            capabilities = listOf("subtitles"),
+            color = "#2E8B57",
             priority = 70
         )
         
-        val PEACOCK = SourceProvider(
-            id = "peacock",
-            name = "Peacock",
-            displayName = "Peacock",
+        val KITSU = SourceProvider(
+            id = "kitsu",
+            name = "kitsu",
+            displayName = "Kitsu Anime",
             logoUrl = null,
             logoResource = null,
-            requiresSubscription = true,
-            color = "#4F46E5",
-            priority = 65
-        )
-        
-        // Free/Ad-supported providers
-        val TUBI = SourceProvider(
-            id = "tubi",
-            name = "Tubi",
-            displayName = "Tubi",
-            logoUrl = null,
-            logoResource = null,
-            requiresSubscription = false,
-            color = "#F59E0B",
-            priority = 50
-        )
-        
-        val CRACKLE = SourceProvider(
-            id = "crackle",
-            name = "Crackle",
-            displayName = "Crackle",
-            logoUrl = null,
-            logoResource = null,
-            requiresSubscription = false,
-            color = "#F97316",
-            priority = 45
-        )
-        
-        val PLUTO_TV = SourceProvider(
-            id = "pluto_tv",
-            name = "Pluto TV",
-            displayName = "Pluto TV",
-            logoUrl = null,
-            logoResource = null,
-            requiresSubscription = false,
-            color = "#FBBF24",
-            priority = 40
-        )
-        
-        // Rental/Purchase providers
-        val GOOGLE_PLAY = SourceProvider(
-            id = "google_play",
-            name = "Google Play Movies & TV",
-            displayName = "Google Play",
-            logoUrl = null,
-            logoResource = null,
-            requiresSubscription = false,
-            color = "#4285F4",
+            capabilities = listOf("meta", "catalog"),
+            color = "#F75239",
             priority = 60
         )
         
-        val APPLE_ITUNES = SourceProvider(
-            id = "apple_itunes",
-            name = "Apple iTunes",
-            displayName = "iTunes",
-            logoUrl = null,
-            logoResource = null,
-            requiresSubscription = false,
-            color = "#000000",
-            priority = 55
-        )
-        
-        val VUDU = SourceProvider(
-            id = "vudu",
-            name = "Vudu",
-            displayName = "Vudu",
-            logoUrl = null,
-            logoResource = null,
-            requiresSubscription = false,
-            color = "#2563EB",
-            priority = 55
-        )
-        
-        // Get all predefined providers
-        fun getAllProviders(): List<SourceProvider> = listOf(
-            NETFLIX, AMAZON_PRIME, DISNEY_PLUS, HULU, HBO_MAX, APPLE_TV,
-            PARAMOUNT_PLUS, PEACOCK, TUBI, CRACKLE, PLUTO_TV,
-            GOOGLE_PLAY, APPLE_ITUNES, VUDU
+        // Get all default scraper providers
+        fun getDefaultProviders(): List<SourceProvider> = listOf(
+            TORRENTIO, KNIGHTCRAWLER, CINEMETA, OPENSUBTITLES, KITSU
         )
     }
 }
@@ -224,64 +121,64 @@ enum class SourceQuality(
 }
 
 /**
- * Additional streaming source features
+ * Additional scraper source features
  */
 data class SourceFeatures(
     val supportsDolbyVision: Boolean = false,
     val supportsDolbyAtmos: Boolean = false,
-    val supportsDownload: Boolean = false,
-    val supportsOfflineViewing: Boolean = false,
-    val maxDevices: Int? = null,
-    val simultaneousStreams: Int? = null,
-    val hasAds: Boolean = false,
-    val isLiveContent: Boolean = false,
+    val supportsP2P: Boolean = false,
     val hasSubtitles: Boolean = true,
     val hasClosedCaptions: Boolean = true,
-    val supportedLanguages: List<String> = emptyList()
+    val supportedLanguages: List<String> = emptyList(),
+    val isConfigurable: Boolean = false,
+    val seeders: Int? = null,
+    val leechers: Int? = null
 )
 
 /**
- * Pricing information for streaming sources
+ * Source type information for scraper sources
  */
-data class SourcePricing(
-    val type: PricingType,
-    val price: Double? = null,
-    val currency: String = "USD",
-    val period: String? = null, // "monthly", "yearly", "one-time"
-    val isPromotional: Boolean = false,
-    val promotionalPrice: Double? = null,
-    val promotionalPeriod: String? = null,
-    val hasFreeTrial: Boolean = false,
-    val freeTrialDuration: String? = null
+data class SourceType(
+    val type: ScraperSourceType,
+    val reliability: SourceReliability = SourceReliability.UNKNOWN
 ) {
-    enum class PricingType {
-        FREE,
-        SUBSCRIPTION,
-        RENTAL,
-        PURCHASE,
-        FREE_WITH_ADS
+    enum class ScraperSourceType {
+        TORRENT,
+        DIRECT_LINK,
+        MAGNET,
+        METADATA,
+        SUBTITLES
     }
     
-    fun getDisplayPrice(): String {
+    enum class SourceReliability {
+        HIGH,
+        MEDIUM,
+        LOW,
+        UNKNOWN
+    }
+    
+    fun getDisplayType(): String {
         return when (type) {
-            PricingType.FREE -> "Free"
-            PricingType.FREE_WITH_ADS -> "Free with ads"
-            PricingType.SUBSCRIPTION -> {
-                val displayPrice = if (isPromotional && promotionalPrice != null) {
-                    "$${promotionalPrice}${period?.let { "/$it" } ?: ""}"
-                } else {
-                    price?.let { "$${it}${period?.let { "/$it" } ?: ""}" } ?: "Subscription"
-                }
-                displayPrice + if (hasFreeTrial) " (Free trial)" else ""
-            }
-            PricingType.RENTAL -> price?.let { "Rent $${it}" } ?: "Rent"
-            PricingType.PURCHASE -> price?.let { "Buy $${it}" } ?: "Buy"
+            ScraperSourceType.TORRENT -> "Torrent"
+            ScraperSourceType.DIRECT_LINK -> "Direct Link"
+            ScraperSourceType.MAGNET -> "Magnet"
+            ScraperSourceType.METADATA -> "Metadata"
+            ScraperSourceType.SUBTITLES -> "Subtitles"
+        }
+    }
+    
+    fun getReliabilityText(): String {
+        return when (reliability) {
+            SourceReliability.HIGH -> "High Quality"
+            SourceReliability.MEDIUM -> "Medium Quality"
+            SourceReliability.LOW -> "Low Quality"
+            SourceReliability.UNKNOWN -> "Unknown"
         }
     }
 }
 
 /**
- * Represents a streaming source with provider, quality, and metadata
+ * Represents a scraper-based streaming source with provider, quality, and metadata
  */
 data class StreamingSource(
     val id: String,
@@ -290,9 +187,10 @@ data class StreamingSource(
     val url: String,
     val isAvailable: Boolean = true,
     val features: SourceFeatures = SourceFeatures(),
-    val pricing: SourcePricing,
+    val sourceType: SourceType = SourceType(SourceType.ScraperSourceType.DIRECT_LINK),
     val region: String? = null,
-    val expirationDate: String? = null, // ISO date string
+    val title: String? = null,
+    val size: String? = null,
     val addedDate: String? = null, // ISO date string
     val lastUpdated: String? = null, // ISO date string
     val metadata: Map<String, String> = emptyMap()
@@ -310,8 +208,8 @@ data class StreamingSource(
     fun getAvailabilityText(): String {
         return when {
             !isAvailable -> "Not available"
-            !provider.isAvailable -> "Provider unavailable"
-            expirationDate != null -> "Expires $expirationDate"
+            !provider.isAvailable -> "Scraper unavailable"
+            !provider.isEnabled -> "Scraper disabled"
             else -> "Available"
         }
     }
@@ -325,25 +223,45 @@ data class StreamingSource(
         // Bonus for high-quality features
         if (features.supportsDolbyVision) score += 10
         if (features.supportsDolbyAtmos) score += 5
-        if (features.supportsDownload) score += 5
         
-        // Penalty for ads
-        if (features.hasAds) score -= 10
+        // Bonus for P2P sources with good seeder count
+        if (features.supportsP2P && features.seeders != null) {
+            score += when {
+                features.seeders!! > 100 -> 15
+                features.seeders!! > 50 -> 10
+                features.seeders!! > 10 -> 5
+                else -> 0
+            }
+        }
         
-        // Bonus for free content
-        if (pricing.type == SourcePricing.PricingType.FREE) score += 20
+        // Bonus for reliability
+        score += when (sourceType.reliability) {
+            SourceType.SourceReliability.HIGH -> 20
+            SourceType.SourceReliability.MEDIUM -> 10
+            SourceType.SourceReliability.LOW -> 0
+            SourceType.SourceReliability.UNKNOWN -> 0
+        }
         
         return score
     }
     
     /**
-     * Check if this source requires payment
+     * Check if this source is a P2P source
      */
-    fun requiresPayment(): Boolean {
-        return pricing.type in listOf(
-            SourcePricing.PricingType.SUBSCRIPTION,
-            SourcePricing.PricingType.RENTAL,
-            SourcePricing.PricingType.PURCHASE
+    fun isP2P(): Boolean {
+        return features.supportsP2P || sourceType.type in listOf(
+            SourceType.ScraperSourceType.TORRENT,
+            SourceType.ScraperSourceType.MAGNET
+        )
+    }
+    
+    /**
+     * Check if this source is reliable
+     */
+    fun isReliable(): Boolean {
+        return sourceType.reliability in listOf(
+            SourceType.SourceReliability.HIGH,
+            SourceType.SourceReliability.MEDIUM
         )
     }
     
@@ -360,63 +278,78 @@ data class StreamingSource(
         if (features.supportsDolbyVision) badges.add("Dolby Vision")
         if (features.supportsDolbyAtmos) badges.add("Dolby Atmos")
         
+        // P2P indicators
+        if (features.supportsP2P) {
+            badges.add("P2P")
+            features.seeders?.let { seeders ->
+                if (seeders > 0) badges.add("${seeders}S")
+            }
+        }
+        
+        // Source type
+        badges.add(sourceType.getDisplayType())
+        
         return badges
     }
     
     companion object {
         /**
-         * Create a sample streaming source for testing
+         * Create a sample scraper source for testing
          */
         fun createSample(
-            provider: SourceProvider = SourceProvider.NETFLIX,
+            provider: SourceProvider = SourceProvider.TORRENTIO,
             quality: SourceQuality = SourceQuality.QUALITY_4K,
-            pricing: SourcePricing = SourcePricing(SourcePricing.PricingType.SUBSCRIPTION)
+            sourceType: SourceType = SourceType(SourceType.ScraperSourceType.TORRENT, SourceType.SourceReliability.HIGH)
         ): StreamingSource {
             return StreamingSource(
                 id = "${provider.id}_${quality.name}",
                 provider = provider,
                 quality = quality,
-                url = "https://example.com/stream",
-                pricing = pricing,
+                url = "magnet:?xt=urn:btih:example",
+                sourceType = sourceType,
                 features = SourceFeatures(
                     supportsDolbyVision = quality.isHighQuality,
                     supportsDolbyAtmos = quality.isHighQuality,
-                    supportsDownload = provider.requiresSubscription,
+                    supportsP2P = sourceType.type in listOf(
+                        SourceType.ScraperSourceType.TORRENT,
+                        SourceType.ScraperSourceType.MAGNET
+                    ),
                     hasSubtitles = true,
-                    hasClosedCaptions = true
+                    hasClosedCaptions = true,
+                    seeders = if (sourceType.type == SourceType.ScraperSourceType.TORRENT) 150 else null
                 )
             )
         }
         
         /**
-         * Create sample sources for testing
+         * Create sample scraper sources for testing
          */
         fun createSampleSources(): List<StreamingSource> {
             return listOf(
                 createSample(
-                    SourceProvider.NETFLIX,
+                    SourceProvider.TORRENTIO,
                     SourceQuality.QUALITY_4K_HDR,
-                    SourcePricing(SourcePricing.PricingType.SUBSCRIPTION)
+                    SourceType(SourceType.ScraperSourceType.TORRENT, SourceType.SourceReliability.HIGH)
                 ),
                 createSample(
-                    SourceProvider.AMAZON_PRIME,
+                    SourceProvider.KNIGHTCRAWLER,
                     SourceQuality.QUALITY_4K,
-                    SourcePricing(SourcePricing.PricingType.SUBSCRIPTION)
+                    SourceType(SourceType.ScraperSourceType.TORRENT, SourceType.SourceReliability.HIGH)
                 ),
                 createSample(
-                    SourceProvider.DISNEY_PLUS,
+                    SourceProvider.TORRENTIO,
                     SourceQuality.QUALITY_1080P_HDR,
-                    SourcePricing(SourcePricing.PricingType.SUBSCRIPTION)
+                    SourceType(SourceType.ScraperSourceType.DIRECT_LINK, SourceType.SourceReliability.MEDIUM)
                 ),
                 createSample(
-                    SourceProvider.GOOGLE_PLAY,
-                    SourceQuality.QUALITY_4K,
-                    SourcePricing(SourcePricing.PricingType.RENTAL, price = 5.99)
-                ),
-                createSample(
-                    SourceProvider.TUBI,
+                    SourceProvider.CINEMETA,
                     SourceQuality.QUALITY_1080P,
-                    SourcePricing(SourcePricing.PricingType.FREE_WITH_ADS)
+                    SourceType(SourceType.ScraperSourceType.METADATA, SourceType.SourceReliability.HIGH)
+                ),
+                createSample(
+                    SourceProvider.OPENSUBTITLES,
+                    SourceQuality.QUALITY_1080P,
+                    SourceType(SourceType.ScraperSourceType.SUBTITLES, SourceType.SourceReliability.HIGH)
                 )
             )
         }
