@@ -298,7 +298,8 @@ fun MovieDetailsScreen(
                                         },
                                         selectedSourceId = selectedSourceId,
                                         onViewAllClick = { showSourceDialog = true },
-                                        modifier = Modifier.padding(horizontal = overscanMargin, vertical = 8.dp)
+                                        modifier = Modifier.padding(horizontal = overscanMargin, vertical = 8.dp),
+                                        showAllSources = true // DEBUG: Temporarily show all sources to test
                                     )
                                     
                                     if (showSourceDialog) {

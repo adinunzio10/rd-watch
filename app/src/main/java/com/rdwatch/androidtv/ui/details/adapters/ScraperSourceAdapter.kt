@@ -26,8 +26,8 @@ class ScraperSourceAdapter @Inject constructor() {
         println("DEBUG [ScraperSourceAdapter]: Is enabled: ${manifest.isEnabled}")
         
         // For development, be more lenient with validation status
-        val isAvailable = manifest.metadata.validationStatus.name in listOf("VALID", "OUTDATED", "UNKNOWN")
-        println("DEBUG [ScraperSourceAdapter]: Provider isAvailable: $isAvailable (allowing VALID, OUTDATED, UNKNOWN)")
+        val isAvailable = manifest.metadata.validationStatus.name in listOf("VALID", "OUTDATED", "UNKNOWN", "PENDING")
+        println("DEBUG [ScraperSourceAdapter]: Provider isAvailable: $isAvailable (allowing VALID, OUTDATED, UNKNOWN, PENDING)")
         
         return SourceProvider(
             id = manifest.id,
