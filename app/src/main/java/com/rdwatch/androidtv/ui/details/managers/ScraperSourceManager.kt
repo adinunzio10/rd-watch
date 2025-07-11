@@ -137,6 +137,7 @@ class ScraperSourceManager @Inject constructor(
         contentId: String,
         contentType: String
     ): List<StreamingSource> {
+        println("DEBUG [ScraperSourceManager]: Creating sample sources for manifest: ${manifest.name}")
         val sources = mutableListOf<StreamingSource>()
         
         // Create different quality sources
@@ -147,11 +148,14 @@ class ScraperSourceManager @Inject constructor(
         )
         
         qualities.forEach { quality ->
+            val url = generateSampleUrl(manifest, contentId, quality)
+            println("DEBUG [ScraperSourceManager]: Creating source for quality: ${quality.displayName}, URL: $url")
+            
             val source = scraperSourceAdapter.createStreamingSource(
                 manifest = manifest,
-                url = generateSampleUrl(manifest, contentId, quality),
+                url = url,
                 quality = quality,
-                title = "Sample ${contentType} ${quality.shortName}",
+                title = "${manifest.displayName} ${quality.shortName}",
                 seeders = if (manifest.metadata.capabilities.contains(ManifestCapability.P2P)) {
                     (50..200).random()
                 } else null,
@@ -160,8 +164,10 @@ class ScraperSourceManager @Inject constructor(
                 } else null
             )
             sources.add(source)
+            println("DEBUG [ScraperSourceManager]: Added source: ${source.id}")
         }
         
+        println("DEBUG [ScraperSourceManager]: Created ${sources.size} sources for manifest: ${manifest.name}")
         return sources
     }
     

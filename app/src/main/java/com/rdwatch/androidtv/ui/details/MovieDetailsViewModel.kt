@@ -520,6 +520,9 @@ class MovieDetailsViewModel @Inject constructor(
                 
                 _sourcesState.value = UiState.Success(sources)
                 updateState { copy(availableSources = sources, sourcesLoading = false) }
+                
+                println("DEBUG [MovieDetailsViewModel]: Updated sourcesState with ${sources.size} sources")
+                println("DEBUG [MovieDetailsViewModel]: Updated uiState.availableSources with ${sources.size} sources")
             } catch (e: Exception) {
                 println("DEBUG [MovieDetailsViewModel]: Exception loading sources: ${e.message}")
                 e.printStackTrace()

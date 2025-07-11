@@ -55,9 +55,10 @@ class ScraperSourceAdapter @Inject constructor() {
         leechers: Int? = null
     ): StreamingSource {
         val provider = manifestToProvider(manifest)
+        val sourceId = "${manifest.id}_${quality.name}_${url.hashCode()}"
         
-        return StreamingSource(
-            id = "${manifest.id}_${System.currentTimeMillis()}",
+        val streamingSource = StreamingSource(
+            id = sourceId,
             provider = provider,
             quality = quality,
             url = url,
@@ -68,6 +69,10 @@ class ScraperSourceAdapter @Inject constructor() {
             size = size,
             metadata = createSourceMetadata(manifest)
         )
+        
+        println("DEBUG [ScraperSourceAdapter]: Created streaming source - ID: $sourceId, Provider: ${provider.displayName}, Quality: ${quality.displayName}, URL: $url")
+        
+        return streamingSource
     }
     
     /**
