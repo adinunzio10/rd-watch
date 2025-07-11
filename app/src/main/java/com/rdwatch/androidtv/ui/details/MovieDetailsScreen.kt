@@ -66,6 +66,7 @@ fun MovieDetailsScreen(
     val relatedMoviesState by viewModel.relatedMoviesState.collectAsState()
     val creditsState by viewModel.creditsState.collectAsState()
     val selectedTabIndex by viewModel.selectedTabIndex.collectAsState()
+    val sourcesState by viewModel.sourcesState.collectAsState()
     
     // Load movie details when screen is first displayed
     LaunchedEffect(movieId) {
@@ -248,33 +249,125 @@ fun MovieDetailsScreen(
                     
                     // Source Selection Section
                     item {
-                        val sampleSources = StreamingSource.createSampleSources()
                         var selectedSourceId by remember { mutableStateOf<String?>(null) }
                         var showSourceDialog by remember { mutableStateOf(false) }
                         
-                        SourceSelectionSection(
-                            sources = sampleSources,
-                            onSourceSelected = { source ->
-                                selectedSourceId = source.id
-                                // TODO: Handle source selection for movie playback
-                            },
-                            selectedSourceId = selectedSourceId,
-                            onViewAllClick = { showSourceDialog = true },
-                            modifier = Modifier.padding(horizontal = overscanMargin, vertical = 8.dp)
-                        )
-                        
-                        if (showSourceDialog) {
-                            SourceSelectionDialog(
-                                sources = sampleSources,
-                                onSourceSelected = { source ->
-                                    selectedSourceId = source.id
-                                    showSourceDialog = false
-                                    // TODO: Handle source selection for movie playback
-                                },
-                                onDismiss = { showSourceDialog = false },
-                                selectedSourceId = selectedSourceId,
-                                title = "Select Movie Source"
-                            )
+                        when (sourcesState) {
+                            is UiState.Loading -> {
+                                // Show loading state for sources
+                                Surface(
+                                    modifier = Modifier.padding(horizontal = overscanMargin, vertical = 8.dp),
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = MaterialTheme.colorScheme.surfaceVariant
+                                ) {
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(16.dp),
+                                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        CircularProgressIndicator(
+                                            modifier = Modifier.size(24.dp),
+                                            color = MaterialTheme.colorScheme.primary
+                                        )
+                                        Text(
+                                            text = "Loading streaming sources...",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                }
+                            }
+                            is UiState.Success -> {
+                                val sources = (sourcesState as UiState.Success).data
+                                if (sources.isNotEmpty()) {
+                                    SourceSelectionSection(
+                                        sources = sources,
+                                        onSourceSelected = { source ->
+                                            selectedSourceId = source.id
+                                            // TODO: Handle source selection for movie playback
+                                        },
+                                        selectedSourceId = selectedSourceId,
+                                        onViewAllClick = { showSourceDialog = true },
+                                        modifier = Modifier.padding(horizontal = overscanMargin, vertical = 8.dp)
+                                    )
+                                    
+                                    if (showSourceDialog) {
+                                        SourceSelectionDialog(
+                                            sources = sources,
+                                            onSourceSelected = { source ->
+                                                selectedSourceId = source.id
+                                                showSourceDialog = false
+                                                // TODO: Handle source selection for movie playback
+                                            },
+                                            onDismiss = { showSourceDialog = false },
+                                            selectedSourceId = selectedSourceId,
+                                            title = "Select Movie Source"
+                                        )
+                                    }
+                                } else {
+                                    // No sources available
+                                    Surface(
+                                        modifier = Modifier.padding(horizontal = overscanMargin, vertical = 8.dp),
+                                        shape = RoundedCornerShape(8.dp),
+                                        color = MaterialTheme.colorScheme.surfaceVariant
+                                    ) {
+                                        Column(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(16.dp),
+                                            horizontalAlignment = Alignment.CenterHorizontally
+                                        ) {
+                                            Text(
+                                                text = "No streaming sources available",
+                                                style = MaterialTheme.typography.bodyLarge,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                            Text(
+                                                text = "Check back later or try refreshing",
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                            is UiState.Error -> {
+                                // Show error state with retry option
+                                Surface(
+                                    modifier = Modifier.padding(horizontal = overscanMargin, vertical = 8.dp),
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = MaterialTheme.colorScheme.errorContainer
+                                ) {
+                                    Column(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(16.dp),
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        Text(
+                                            text = "Failed to load sources",
+                                            style = MaterialTheme.typography.bodyLarge,
+                                            color = MaterialTheme.colorScheme.onErrorContainer
+                                        )
+                                        Text(
+                                            text = (sourcesState as UiState.Error).message ?: "Unknown error",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.8f)
+                                        )
+                                        Button(
+                                            onClick = { viewModel.retryLoadingSources() },
+                                            colors = ButtonDefaults.buttonColors(
+                                                containerColor = MaterialTheme.colorScheme.error
+                                            )
+                                        ) {
+                                            Text("Retry")
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                     

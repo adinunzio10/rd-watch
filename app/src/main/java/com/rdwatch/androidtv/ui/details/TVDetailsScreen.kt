@@ -47,6 +47,7 @@ fun TVDetailsScreen(
     val uiState by viewModel.uiState.collectAsState()
     val progress by playbackViewModel.inProgressContent.collectAsState()
     val creditsState by viewModel.creditsState.collectAsState()
+    val sourcesState by viewModel.sourcesState.collectAsState()
     
     // Focus management
     val backButtonFocusRequester = remember { FocusRequester() }
@@ -80,6 +81,8 @@ fun TVDetailsScreen(
                     selectedTabIndex = selectedTabIndex,
                     progress = progress,
                     creditsState = creditsState,
+                    sourcesState = sourcesState,
+                    viewModel = viewModel,
                     onActionClick = { action ->
                         when (action) {
                             is ContentAction.Play -> {
@@ -138,6 +141,8 @@ private fun TVDetailsContent(
     selectedTabIndex: Int,
     progress: List<com.rdwatch.androidtv.data.entities.WatchProgressEntity>,
     creditsState: UiState<ExtendedContentMetadata>,
+    sourcesState: UiState<List<StreamingSource>>,
+    viewModel: TVDetailsViewModel,
     onActionClick: (ContentAction) -> Unit,
     onSeasonSelected: (TVSeason) -> Unit,
     onEpisodeSelected: (TVEpisode) -> Unit,
@@ -179,33 +184,157 @@ private fun TVDetailsContent(
         
         // Source Selection Section
         item {
-            val sampleSources = StreamingSource.createSampleSources()
             var selectedSourceId by remember { mutableStateOf<String?>(null) }
             var showSourceDialog by remember { mutableStateOf(false) }
             
-            SourceSelectionSection(
-                sources = sampleSources,
-                onSourceSelected = { source ->
-                    selectedSourceId = source.id
-                    // TODO: Handle source selection for TV episode playback
-                },
-                selectedSourceId = selectedSourceId,
-                onViewAllClick = { showSourceDialog = true },
-                modifier = Modifier.padding(horizontal = 32.dp, vertical = 8.dp)
-            )
-            
-            if (showSourceDialog) {
-                SourceSelectionDialog(
-                    sources = sampleSources,
-                    onSourceSelected = { source ->
-                        selectedSourceId = source.id
-                        showSourceDialog = false
-                        // TODO: Handle source selection for TV episode playback
-                    },
-                    onDismiss = { showSourceDialog = false },
-                    selectedSourceId = selectedSourceId,
-                    title = "Select TV Show Source"
-                )
+            when (val currentSourcesState = sourcesState) {
+                is UiState.Loading -> {
+                    // Show loading state for sources
+                    Surface(
+                        modifier = Modifier.padding(horizontal = 32.dp, vertical = 8.dp),
+                        shape = RoundedCornerShape(8.dp),
+                        color = MaterialTheme.colorScheme.surfaceVariant
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(24.dp),
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            Column {
+                                Text(
+                                    text = "Loading sources for episode...",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                selectedEpisode?.let { episode ->
+                                    Text(
+                                        text = "S${episode.seasonNumber}E${episode.episodeNumber} - ${episode.title}",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+                is UiState.Success -> {
+                    val sources = currentSourcesState.data
+                    if (sources.isNotEmpty()) {
+                        Column {
+                            // Show current episode info
+                            selectedEpisode?.let { episode ->
+                                Text(
+                                    text = "Sources for S${episode.seasonNumber}E${episode.episodeNumber} - ${episode.title}",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = MaterialTheme.colorScheme.onBackground,
+                                    modifier = Modifier.padding(horizontal = 32.dp, vertical = 8.dp)
+                                )
+                            }
+                            
+                            SourceSelectionSection(
+                                sources = sources,
+                                onSourceSelected = { source ->
+                                    selectedSourceId = source.id
+                                    // TODO: Handle source selection for TV episode playback
+                                },
+                                selectedSourceId = selectedSourceId,
+                                onViewAllClick = { showSourceDialog = true },
+                                modifier = Modifier.padding(horizontal = 32.dp, vertical = 8.dp)
+                            )
+                            
+                            if (showSourceDialog) {
+                                SourceSelectionDialog(
+                                    sources = sources,
+                                    onSourceSelected = { source ->
+                                        selectedSourceId = source.id
+                                        showSourceDialog = false
+                                        // TODO: Handle source selection for TV episode playback
+                                    },
+                                    onDismiss = { showSourceDialog = false },
+                                    selectedSourceId = selectedSourceId,
+                                    title = "Select Episode Source"
+                                )
+                            }
+                        }
+                    } else {
+                        // No sources available
+                        Surface(
+                            modifier = Modifier.padding(horizontal = 32.dp, vertical = 8.dp),
+                            shape = RoundedCornerShape(8.dp),
+                            color = MaterialTheme.colorScheme.surfaceVariant
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                selectedEpisode?.let { episode ->
+                                    Text(
+                                        text = "No sources for S${episode.seasonNumber}E${episode.episodeNumber}",
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                                Text(
+                                    text = "Try selecting a different episode or refresh",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                                )
+                            }
+                        }
+                    }
+                }
+                is UiState.Error -> {
+                    // Show error state with retry option
+                    Surface(
+                        modifier = Modifier.padding(horizontal = 32.dp, vertical = 8.dp),
+                        shape = RoundedCornerShape(8.dp),
+                        color = MaterialTheme.colorScheme.errorContainer
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Text(
+                                text = "Failed to load episode sources",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onErrorContainer
+                            )
+                            Text(
+                                text = currentSourcesState.message ?: "Unknown error",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.8f)
+                            )
+                            selectedEpisode?.let { episode ->
+                                Text(
+                                    text = "S${episode.seasonNumber}E${episode.episodeNumber} - ${episode.title}",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.7f)
+                                )
+                            }
+                            Button(
+                                onClick = { 
+                                    viewModel.retryLoadingSources()
+                                },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.error
+                                )
+                            ) {
+                                Text("Retry")
+                            }
+                        }
+                    }
+                }
             }
         }
         

@@ -6,6 +6,7 @@ import com.rdwatch.androidtv.repository.RealDebridContentRepository
 import com.rdwatch.androidtv.repository.base.Result
 import com.rdwatch.androidtv.ui.common.UiState
 import com.rdwatch.androidtv.ui.details.models.*
+import com.rdwatch.androidtv.ui.details.managers.ScraperSourceManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -18,7 +19,8 @@ import javax.inject.Inject
 @HiltViewModel
 class TVDetailsViewModel @Inject constructor(
     private val realDebridContentRepository: RealDebridContentRepository,
-    private val tmdbTVRepository: com.rdwatch.androidtv.data.repository.TMDbTVRepository
+    private val tmdbTVRepository: com.rdwatch.androidtv.data.repository.TMDbTVRepository,
+    private val scraperSourceManager: ScraperSourceManager
 ) : BaseViewModel<TVDetailsUiState>() {
     
     private val _tvShowState = MutableStateFlow<TVShowContentDetail?>(null)
@@ -38,6 +40,9 @@ class TVDetailsViewModel @Inject constructor(
     
     private val _creditsState = MutableStateFlow<UiState<ExtendedContentMetadata>>(UiState.Loading)
     val creditsState: StateFlow<UiState<ExtendedContentMetadata>> = _creditsState.asStateFlow()
+    
+    private val _sourcesState = MutableStateFlow<UiState<List<StreamingSource>>>(UiState.Loading)
+    val sourcesState: StateFlow<UiState<List<StreamingSource>>> = _sourcesState.asStateFlow()
     
     override fun createInitialState(): TVDetailsUiState {
         return TVDetailsUiState()
@@ -212,6 +217,11 @@ class TVDetailsViewModel @Inject constructor(
                             
                             // Load credits
                             loadTVCredits(tmdbId)
+                            
+                            // Load sources for first episode
+                            firstEpisode?.let { episode ->
+                                loadSourcesForEpisode(tvShowDetail, episode)
+                            }
                         }
                         is com.rdwatch.androidtv.repository.base.Result.Error -> {
                             updateState { 
@@ -259,6 +269,11 @@ class TVDetailsViewModel @Inject constructor(
     fun selectEpisode(episode: TVEpisode) {
         _selectedEpisode.value = episode
         updateState { copy(currentEpisode = episode) }
+        
+        // Load sources for the selected episode
+        _tvShowState.value?.let { tvShow ->
+            loadSourcesForEpisode(tvShow, episode)
+        }
     }
     
     /**
@@ -502,6 +517,74 @@ class TVDetailsViewModel @Inject constructor(
     }
     
     /**
+     * Load streaming sources for a TV show episode from scrapers
+     */
+    fun loadSourcesForEpisode(tvShow: TVShowContentDetail, episode: TVEpisode) {
+        viewModelScope.launch {
+            _sourcesState.value = UiState.Loading
+            updateState { copy(sourcesLoading = true, sourcesError = null) }
+            
+            try {
+                val sources = scraperSourceManager.getSourcesForContent(
+                    contentId = "${tvShow.id}:${episode.seasonNumber}:${episode.episodeNumber}",
+                    contentType = "series",
+                    imdbId = null, // TMDb TV shows don't have IMDb IDs in this model
+                    tmdbId = tvShow.id
+                )
+                
+                _sourcesState.value = UiState.Success(sources)
+                updateState { copy(availableSources = sources, sourcesLoading = false) }
+            } catch (e: Exception) {
+                val errorMessage = when {
+                    e.message?.contains("timeout", ignoreCase = true) == true -> "Request timed out. Please try again."
+                    e.message?.contains("network", ignoreCase = true) == true -> "Network error. Check your connection."
+                    e.message?.contains("unauthorized", ignoreCase = true) == true -> "Scraper authentication failed."
+                    e.message?.contains("not found", ignoreCase = true) == true -> "Episode not found in scrapers."
+                    else -> "Failed to load sources: ${e.message}"
+                }
+                
+                _sourcesState.value = UiState.Error(
+                    message = errorMessage,
+                    throwable = e
+                )
+                updateState { 
+                    copy(
+                        sourcesLoading = false,
+                        sourcesError = errorMessage
+                    )
+                }
+            }
+        }
+    }
+    
+    /**
+     * Retry loading sources for current episode
+     */
+    fun retryLoadingSources() {
+        val currentTvShow = _tvShowState.value
+        val currentEpisode = _selectedEpisode.value
+        
+        if (currentTvShow != null && currentEpisode != null) {
+            updateState { copy(sourcesError = null) }
+            loadSourcesForEpisode(currentTvShow, currentEpisode)
+        }
+    }
+    
+    /**
+     * Refresh sources (clear cache and reload)
+     */
+    fun refreshSources() {
+        viewModelScope.launch {
+            try {
+                scraperSourceManager.refreshProviders()
+                retryLoadingSources()
+            } catch (e: Exception) {
+                updateState { copy(sourcesError = "Failed to refresh providers: ${e.message}") }
+            }
+        }
+    }
+    
+    /**
      * Clear all data
      */
     fun clearData() {
@@ -510,6 +593,7 @@ class TVDetailsViewModel @Inject constructor(
         _selectedEpisode.value = null
         _relatedShowsState.value = UiState.Loading
         _creditsState.value = UiState.Loading
+        _sourcesState.value = UiState.Loading
         _selectedTabIndex.value = 0
         
         updateState { createInitialState() }
@@ -611,5 +695,12 @@ data class TVDetailsUiState(
     val isLoading: Boolean = false,
     val isLoaded: Boolean = false,
     val error: String? = null,
-    val isFromRealDebrid: Boolean = false
-)
+    val isFromRealDebrid: Boolean = false,
+    val availableSources: List<StreamingSource> = emptyList(),
+    val sourcesLoading: Boolean = false,
+    val sourcesError: String? = null
+) {
+    val hasSourcesError: Boolean get() = sourcesError != null
+    val isSourcesLoading: Boolean get() = sourcesLoading
+    val hasAvailableSources: Boolean get() = availableSources.isNotEmpty()
+}
