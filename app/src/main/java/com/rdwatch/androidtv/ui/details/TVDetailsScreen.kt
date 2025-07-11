@@ -18,6 +18,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.rdwatch.androidtv.ui.common.UiState
 import com.rdwatch.androidtv.ui.details.components.*
 import com.rdwatch.androidtv.ui.details.components.InfoSectionTabMode
+import com.rdwatch.androidtv.ui.details.components.SourceSelectionSection
+import com.rdwatch.androidtv.ui.details.components.SourceSelectionDialog
 import com.rdwatch.androidtv.ui.components.CastCrewSection
 import com.rdwatch.androidtv.ui.details.models.*
 import com.rdwatch.androidtv.ui.viewmodel.PlaybackViewModel
@@ -173,6 +175,38 @@ private fun TVDetailsContent(
                 onActionClick = onActionClick,
                 modifier = Modifier.padding(horizontal = 32.dp, vertical = 8.dp)
             )
+        }
+        
+        // Source Selection Section
+        item {
+            val sampleSources = StreamingSource.createSampleSources()
+            var selectedSourceId by remember { mutableStateOf<String?>(null) }
+            var showSourceDialog by remember { mutableStateOf(false) }
+            
+            SourceSelectionSection(
+                sources = sampleSources,
+                onSourceSelected = { source ->
+                    selectedSourceId = source.id
+                    // TODO: Handle source selection for TV episode playback
+                },
+                selectedSourceId = selectedSourceId,
+                onViewAllClick = { showSourceDialog = true },
+                modifier = Modifier.padding(horizontal = 32.dp, vertical = 8.dp)
+            )
+            
+            if (showSourceDialog) {
+                SourceSelectionDialog(
+                    sources = sampleSources,
+                    onSourceSelected = { source ->
+                        selectedSourceId = source.id
+                        showSourceDialog = false
+                        // TODO: Handle source selection for TV episode playback
+                    },
+                    onDismiss = { showSourceDialog = false },
+                    selectedSourceId = selectedSourceId,
+                    title = "Select TV Show Source"
+                )
+            }
         }
         
         // Tab navigation
