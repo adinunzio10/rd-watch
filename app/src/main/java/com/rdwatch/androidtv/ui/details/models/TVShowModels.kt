@@ -153,6 +153,8 @@ data class TVShowDetail(
     val productionCompanies: List<String> = emptyList(),
     val creators: List<String> = emptyList(),
     val cast: List<String> = emptyList(),
+    val fullCast: List<CastMember> = emptyList(),
+    val crew: List<CrewMember> = emptyList(),
     val voteAverage: Float = 0f,
     val voteCount: Int = 0,
     val popularity: Float = 0f,

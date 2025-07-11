@@ -1,6 +1,7 @@
 package com.rdwatch.androidtv.data.repository
 
 import com.rdwatch.androidtv.data.dao.TMDbSearchDao
+import com.rdwatch.androidtv.data.dao.SearchHistoryDao
 import com.rdwatch.androidtv.data.entities.*
 import com.rdwatch.androidtv.data.mappers.*
 import com.rdwatch.androidtv.network.api.TMDbSearchService
@@ -14,8 +15,12 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.util.Date
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -27,7 +32,9 @@ import javax.inject.Singleton
 class TMDbSearchRepositoryImpl @Inject constructor(
     private val tmdbSearchService: TMDbSearchService,
     private val tmdbSearchDao: TMDbSearchDao,
-    private val tmdbToContentDetailMapper: TMDbToContentDetailMapper
+    private val tmdbToContentDetailMapper: TMDbToContentDetailMapper,
+    private val searchHistoryDao: SearchHistoryDao,
+    private val userRepository: UserRepository
 ) : TMDbSearchRepository {
 
     companion object {
@@ -383,10 +390,48 @@ class TMDbSearchRepositoryImpl @Inject constructor(
         withOriginalLanguage: String?,
         withWatchProviders: String?,
         watchRegion: String?
-    ): Flow<Result<TMDbSearchResponse>> {
-        // TODO: Implement movie discovery
-        return flowOf(Result.Success(TMDbSearchResponse(page = 1, totalPages = 1, totalResults = 0, results = emptyList())))
-    }
+    ): Flow<Result<TMDbSearchResponse>> = networkBoundResource(
+        loadFromDb = {
+            val discoverKey = buildDiscoverKey("movie", sortBy, page, withGenres, primaryReleaseYear)
+            tmdbSearchDao.getSearchResults(discoverKey, "discover_movie", page)
+                .map { it?.toSearchResponse() ?: TMDbSearchResponse() }
+        },
+        shouldFetch = { cachedDiscover ->
+            // Always fetch discover results as they can change frequently
+            cachedDiscover == null || true // Always refresh discover results
+        },
+        createCall = {
+            withContext(Dispatchers.IO) {
+                val response = tmdbSearchService.discoverMovies(
+                    language = language,
+                    region = region,
+                    sortBy = sortBy,
+                    includeAdult = includeAdult,
+                    includeVideo = includeVideo,
+                    page = page,
+                    primaryReleaseYear = primaryReleaseYear,
+                    withGenres = withGenres,
+                    withoutGenres = withoutGenres,
+                    withRuntimeGte = withRuntimeGte,
+                    withRuntimeLte = withRuntimeLte,
+                    voteAverageGte = voteAverageGte,
+                    voteAverageLte = voteAverageLte,
+                    voteCountGte = voteCountGte,
+                    withOriginalLanguage = withOriginalLanguage,
+                    withWatchProviders = withWatchProviders,
+                    watchRegion = watchRegion
+                ).execute()
+                handleRawApiResponse(response)
+            }
+        },
+        saveCallResult = { discoverResponse ->
+            val discoverKey = buildDiscoverKey("movie", sortBy, page, withGenres, primaryReleaseYear)
+            val searchId = buildSearchId(discoverKey, page, "discover_movie")
+            tmdbSearchDao.insertSearchResult(
+                discoverResponse.toEntity(searchId, discoverKey, page, "discover_movie")
+            )
+        }
+    )
 
     override fun discoverTVShows(
         page: Int,
@@ -413,26 +458,158 @@ class TMDbSearchRepositoryImpl @Inject constructor(
         withStatus: String?,
         withType: String?,
         withKeywords: String?
-    ): Flow<Result<TMDbSearchResponse>> {
-        // TODO: Implement TV show discovery
-        return flowOf(Result.Success(TMDbSearchResponse(page = 1, totalPages = 1, totalResults = 0, results = emptyList())))
-    }
+    ): Flow<Result<TMDbSearchResponse>> = networkBoundResource(
+        loadFromDb = {
+            val discoverKey = buildDiscoverKey("tv", sortBy, page, withGenres, firstAirDateYear)
+            tmdbSearchDao.getSearchResults(discoverKey, "discover_tv", page)
+                .map { it?.toSearchResponse() ?: TMDbSearchResponse() }
+        },
+        shouldFetch = { cachedDiscover ->
+            // Always fetch discover results as they can change frequently
+            cachedDiscover == null || true // Always refresh discover results
+        },
+        createCall = {
+            withContext(Dispatchers.IO) {
+                val response = tmdbSearchService.discoverTVShows(
+                    language = language,
+                    sortBy = sortBy,
+                    airDateGte = airDateGte,
+                    airDateLte = airDateLte,
+                    firstAirDateGte = firstAirDateGte,
+                    firstAirDateLte = firstAirDateLte,
+                    firstAirDateYear = firstAirDateYear,
+                    page = page,
+                    timezone = timezone,
+                    voteAverageGte = voteAverageGte,
+                    voteCountGte = voteCountGte,
+                    withGenres = withGenres,
+                    withNetworks = withNetworks,
+                    withoutGenres = withoutGenres,
+                    withRuntimeGte = withRuntimeGte,
+                    withRuntimeLte = withRuntimeLte,
+                    includeNullFirstAirDates = includeNullFirstAirDates,
+                    withOriginalLanguage = withOriginalLanguage,
+                    withoutKeywords = withoutKeywords,
+                    withWatchProviders = withWatchProviders,
+                    watchRegion = watchRegion,
+                    withStatus = withStatus,
+                    withType = withType,
+                    withKeywords = withKeywords
+                ).execute()
+                handleRawApiResponse(response)
+            }
+        },
+        saveCallResult = { discoverResponse ->
+            val discoverKey = buildDiscoverKey("tv", sortBy, page, withGenres, firstAirDateYear)
+            val searchId = buildSearchId(discoverKey, page, "discover_tv")
+            tmdbSearchDao.insertSearchResult(
+                discoverResponse.toEntity(searchId, discoverKey, page, "discover_tv")
+            )
+        }
+    )
 
     override fun getSearchSuggestions(
         query: String,
         limit: Int,
         language: String
-    ): Flow<Result<List<String>>> {
-        // TODO: Implement search suggestions
-        return flowOf(Result.Success(emptyList()))
+    ): Flow<Result<List<String>>> = flow {
+        emit(Result.Loading)
+        
+        try {
+            val userId = userRepository.getDefaultUserId()
+            
+            // Get suggestions from search history
+            val historySuggestions = searchHistoryDao.getSearchSuggestions(
+                userId = userId,
+                partialQuery = query,
+                limit = limit
+            )
+            
+            // Get recent search queries that match
+            val recentQueries = tmdbSearchDao.getRecentSearchQueries(limit * 2).first()
+                .filter { it.contains(query, ignoreCase = true) }
+                .take(limit)
+            
+            // Combine and deduplicate suggestions
+            val allSuggestions = (historySuggestions + recentQueries)
+                .distinct()
+                .take(limit)
+            
+            emit(Result.Success(allSuggestions))
+        } catch (e: Exception) {
+            android.util.Log.e("TMDbSearchRepo", "Error getting search suggestions", e)
+            emit(Result.Error(e))
+        }
     }
 
     override fun getCachedSearchResults(
         query: String,
         mediaType: String?
-    ): Flow<Result<List<ContentDetail>>> {
-        // TODO: Implement cached search results
-        return flowOf(Result.Success(emptyList()))
+    ): Flow<Result<List<ContentDetail>>> = flow {
+        emit(Result.Loading)
+        
+        try {
+            // Determine search type based on mediaType parameter
+            val searchType = when (mediaType) {
+                "movie" -> "movie"
+                "tv" -> "tv"
+                null -> "multi"
+                else -> "multi"
+            }
+            
+            // Get cached search results
+            val cachedResults = tmdbSearchDao.getAllSearchResults(query, searchType).first()
+            
+            if (cachedResults.isEmpty()) {
+                emit(Result.Success(emptyList()))
+                return@flow
+            }
+            
+            // Combine all pages of results
+            val allResults = mutableListOf<TMDbSearchResultResponse>()
+            cachedResults.forEach { searchEntity ->
+                when (searchType) {
+                    "multi" -> searchEntity.toMultiSearchResponse().results.forEach { multiResult ->
+                        // Convert multi-search result to regular search result
+                        allResults.add(TMDbSearchResultResponse(
+                            id = multiResult.id,
+                            title = when (multiResult.mediaType) {
+                                "movie" -> multiResult.title
+                                "tv" -> multiResult.name
+                                else -> multiResult.name ?: multiResult.title
+                            },
+                            originalTitle = when (multiResult.mediaType) {
+                                "movie" -> multiResult.originalTitle
+                                "tv" -> multiResult.originalName
+                                else -> multiResult.originalName ?: multiResult.originalTitle
+                            },
+                            overview = multiResult.overview,
+                            posterPath = multiResult.posterPath,
+                            backdropPath = multiResult.backdropPath,
+                            releaseDate = multiResult.releaseDate ?: multiResult.firstAirDate,
+                            voteAverage = multiResult.voteAverage,
+                            voteCount = multiResult.voteCount,
+                            popularity = multiResult.popularity,
+                            adult = multiResult.adult,
+                            video = multiResult.video,
+                            genreIds = multiResult.genreIds
+                        ))
+                    }
+                    else -> allResults.addAll(searchEntity.toSearchResponse().results)
+                }
+            }
+            
+            // Map to ContentDetail objects
+            val contentDetails = tmdbToContentDetailMapper.mapSearchResultsToContentDetails(
+                allResults,
+                mediaType
+            )
+            
+            emit(Result.Success(contentDetails))
+        } catch (e: Exception) {
+            android.util.Log.e("TMDbSearchRepo", "Error getting cached search results", e)
+            emit(Result.Error(e))
+        }
     }
 
     override suspend fun saveSearchHistory(
@@ -440,7 +617,27 @@ class TMDbSearchRepositoryImpl @Inject constructor(
         mediaType: String?,
         resultCount: Int
     ) {
-        // TODO: Implement search history saving
+        try {
+            val userId = userRepository.getDefaultUserId()
+            
+            val searchHistory = SearchHistoryEntity(
+                userId = userId,
+                searchQuery = query,
+                searchType = mediaType ?: "general",
+                resultsCount = resultCount,
+                searchDate = Date(),
+                filtersJson = null, // Could be extended to store filters
+                responseTimeMs = null // Could be tracked for performance monitoring
+            )
+            
+            searchHistoryDao.insertSearchHistory(searchHistory)
+            
+            // Clean up old search history to prevent unbounded growth
+            searchHistoryDao.cleanupOldSearchHistory(userId, keepCount = 1000)
+        } catch (e: Exception) {
+            android.util.Log.e("TMDbSearchRepo", "Error saving search history", e)
+            // Don't throw - search history is not critical
+        }
     }
 
     override fun getSearchHistory(
@@ -452,7 +649,13 @@ class TMDbSearchRepositoryImpl @Inject constructor(
     }
 
     override suspend fun clearSearchHistory() {
-        // TODO: Implement search history clearing
+        try {
+            val userId = userRepository.getDefaultUserId()
+            searchHistoryDao.deleteAllSearchHistoryForUser(userId)
+        } catch (e: Exception) {
+            android.util.Log.e("TMDbSearchRepo", "Error clearing search history", e)
+            throw e
+        }
     }
 
     override suspend fun clearSearchCache() {
@@ -471,6 +674,24 @@ class TMDbSearchRepositoryImpl @Inject constructor(
 
     private fun shouldRefreshSearchCache(lastUpdated: Long): Boolean {
         return System.currentTimeMillis() - lastUpdated > SEARCH_CACHE_TIMEOUT_MS
+    }
+    
+    private fun buildDiscoverKey(
+        mediaType: String,
+        sortBy: String,
+        page: Int,
+        genres: String?,
+        year: Int?
+    ): String {
+        val keyParts = mutableListOf<String>()
+        keyParts.add("discover")
+        keyParts.add(mediaType)
+        keyParts.add(sortBy)
+        
+        genres?.let { keyParts.add("genres:$it") }
+        year?.let { keyParts.add("year:$it") }
+        
+        return keyParts.joinToString("_")
     }
 
     private fun <T> handleRawApiResponse(response: retrofit2.Response<T>): T {

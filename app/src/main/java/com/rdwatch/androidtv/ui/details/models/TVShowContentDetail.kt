@@ -47,6 +47,41 @@ data class TVShowContentDetail(
         ).filterValues { it.isNotBlank() }
     )
     
+    /**
+     * Get extended metadata with full cast and crew information
+     */
+    val extendedMetadata: ExtendedContentMetadata = ExtendedContentMetadata(
+        year = tvShowDetail.firstAirDate?.take(4),
+        duration = tvShowDetail.getFormattedRuntime(),
+        rating = if (tvShowDetail.voteAverage > 0) "${tvShowDetail.voteAverage}/10" else null,
+        genre = tvShowDetail.genres,
+        studio = tvShowDetail.networks.firstOrNull(),
+        cast = tvShowDetail.cast,
+        fullCast = tvShowDetail.fullCast,
+        director = tvShowDetail.crew.find { it.job == "Director" }?.name,
+        crew = tvShowDetail.crew,
+        season = null, // Not applicable for TV show overview
+        episode = null, // Not applicable for TV show overview
+        customMetadata = mapOf(
+            "status" to (tvShowDetail.status ?: ""),
+            "type" to (tvShowDetail.type ?: ""),
+            "seasons" to tvShowDetail.numberOfSeasons.toString(),
+            "episodes" to tvShowDetail.numberOfEpisodes.toString(),
+            "creators" to tvShowDetail.creators.joinToString(", "),
+            "networks" to tvShowDetail.networks.joinToString(", "),
+            "countries" to tvShowDetail.originCountry.joinToString(", "),
+            "languages" to tvShowDetail.languages.joinToString(", "),
+            "tagline" to (tvShowDetail.tagline ?: ""),
+            "homepage" to (tvShowDetail.homepage ?: ""),
+            "popularity" to tvShowDetail.popularity.toString(),
+            "vote_count" to tvShowDetail.voteCount.toString(),
+            "adult" to tvShowDetail.adult.toString(),
+            "in_production" to tvShowDetail.inProduction.toString(),
+            "air_date_range" to (tvShowDetail.getFormattedAirDateRange() ?: ""),
+            "episode_count" to tvShowDetail.getFormattedCount()
+        ).filterValues { it.isNotBlank() }
+    )
+    
     override val actions: List<ContentAction> = if (actionOverrides.isNotEmpty()) {
         actionOverrides
     } else {

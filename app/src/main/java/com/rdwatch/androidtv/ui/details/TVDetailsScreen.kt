@@ -18,6 +18,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.rdwatch.androidtv.ui.common.UiState
 import com.rdwatch.androidtv.ui.details.components.*
 import com.rdwatch.androidtv.ui.details.components.InfoSectionTabMode
+import com.rdwatch.androidtv.ui.components.CastCrewSection
 import com.rdwatch.androidtv.ui.details.models.*
 import com.rdwatch.androidtv.ui.viewmodel.PlaybackViewModel
 import androidx.media3.common.util.UnstableApi
@@ -43,6 +44,7 @@ fun TVDetailsScreen(
     val selectedTabIndex by viewModel.selectedTabIndex.collectAsState()
     val uiState by viewModel.uiState.collectAsState()
     val progress by playbackViewModel.inProgressContent.collectAsState()
+    val creditsState by viewModel.creditsState.collectAsState()
     
     // Focus management
     val backButtonFocusRequester = remember { FocusRequester() }
@@ -75,6 +77,7 @@ fun TVDetailsScreen(
                     selectedEpisode = selectedEpisode,
                     selectedTabIndex = selectedTabIndex,
                     progress = progress,
+                    creditsState = creditsState,
                     onActionClick = { action ->
                         when (action) {
                             is ContentAction.Play -> {
@@ -132,6 +135,7 @@ private fun TVDetailsContent(
     selectedEpisode: TVEpisode?,
     selectedTabIndex: Int,
     progress: List<com.rdwatch.androidtv.data.entities.WatchProgressEntity>,
+    creditsState: UiState<ExtendedContentMetadata>,
     onActionClick: (ContentAction) -> Unit,
     onSeasonSelected: (TVSeason) -> Unit,
     onEpisodeSelected: (TVEpisode) -> Unit,
@@ -216,6 +220,48 @@ private fun TVDetailsContent(
                         showExpandableDescription = true,
                         modifier = Modifier.padding(horizontal = 32.dp, vertical = 16.dp)
                     )
+                }
+                
+                // Cast and Crew section
+                item {
+                    when (creditsState) {
+                        is UiState.Success -> {
+                            CastCrewSection(
+                                metadata = creditsState.data,
+                                onCastMemberClick = { /* TODO: Handle cast member click */ },
+                                onCrewMemberClick = { /* TODO: Handle crew member click */ },
+                                modifier = Modifier.padding(horizontal = 32.dp, vertical = 16.dp)
+                            )
+                        }
+                        is UiState.Error -> {
+                            // Show error message for cast/crew loading failure
+                            Surface(
+                                modifier = Modifier.padding(horizontal = 32.dp, vertical = 16.dp),
+                                shape = RoundedCornerShape(8.dp),
+                                color = MaterialTheme.colorScheme.errorContainer
+                            ) {
+                                Text(
+                                    text = "Failed to load cast and crew information",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onErrorContainer,
+                                    modifier = Modifier.padding(16.dp)
+                                )
+                            }
+                        }
+                        is UiState.Loading -> {
+                            // Show loading indicator for cast/crew
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 32.dp, vertical = 16.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            }
+                        }
+                    }
                 }
                 
                 // Related content section

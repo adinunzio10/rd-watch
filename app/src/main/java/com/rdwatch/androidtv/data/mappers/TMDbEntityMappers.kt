@@ -611,3 +611,11 @@ fun TMDbVideosEntity.toTVVideosResponse(): TMDbTVVideosResponse {
         results = results.map { it.toVideoResponse() }
     )
 }
+
+// Helper function to convert TMDbRecommendationItemResponse to TMDbSearchItemResponse
+fun TMDbRecommendationItemResponse.toTMDbSearchItemResponse(): TMDbSearchItemResponse {
+    // Since TMDbRecommendationItemResponse is a typealias for TMDbSearchResultResponse,
+    // and TMDbSearchItemResponse is also a typealias for TMDbSearchResultResponse,
+    // we can simply return this object
+    return this
+}
