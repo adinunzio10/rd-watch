@@ -15,6 +15,8 @@ This file contains detailed architecture information for the RD Watch Android TV
 - **Database**: Room with SQLite
 - **Network**: Retrofit with OkHttp
 - **Async**: Coroutines with StateFlow/SharedFlow
+- **External APIs**: TMDb API 3.0 for movie/TV metadata
+- **Data Serialization**: Moshi with Kotlin reflection
 
 ### Current Architecture State
 
@@ -36,6 +38,20 @@ app/src/main/java/com/rdwatch/androidtv/
 │   ├── theme/                  # Material3 theme configuration
 │   │   ├── Theme.kt            # Theme definitions
 │   │   └── Type.kt             # TV-optimized typography
+│   ├── details/                # Content Details System
+│   │   ├── components/         # Content detail UI components
+│   │   │   ├── HeroSection.kt  # Media header with backdrop, poster, metadata
+│   │   │   ├── InfoSection.kt  # Content information display
+│   │   │   ├── ActionSection.kt # Action buttons (play, add to list, etc.)
+│   │   │   └── RelatedSection.kt # Related content recommendations
+│   │   ├── layouts/            # Layout containers
+│   │   │   └── BaseDetailLayout.kt # Base layout for content detail screens
+│   │   ├── models/             # Content detail data models
+│   │   │   ├── ContentDetail.kt # Interface for content representation
+│   │   │   ├── DetailUiState.kt # UI state for detail screens
+│   │   │   ├── MovieContentDetail.kt # Movie-specific implementation
+│   │   │   └── TMDbContentDetail.kt # TMDb-enhanced content details
+│   │   └── MovieDetailsScreen.kt # Main movie detail screen
 │   ├── filebrowser/            # Account File Browser System
 │   │   ├── AccountFileBrowserScreen.kt     # Main UI screen
 │   │   ├── AccountFileBrowserViewModel.kt  # State management
@@ -92,6 +108,152 @@ app/src/main/java/com/rdwatch/androidtv/
 │   └── [other modules]
 └── [legacy leanback files]     # Being phased out
 ```
+
+## Content Details System Architecture
+
+### Overview
+
+The Content Details System provides a unified architecture for displaying detailed information about movies, TV shows, and other media content. It features a modular component-based design, TMDb integration, and TV-optimized UI patterns.
+
+### Core Components
+
+#### 1. HeroSection Component (`HeroSection.kt`)
+- **Purpose**: Media header component with backdrop, floating poster, and metadata
+- **Key Features**:
+  - Backdrop image with subtle blur effect for better text readability
+  - Floating poster image with shadow elevation and rounded corners
+  - Content-type specific metadata display (movie vs TV show vs episode)
+  - Rating badges with star icons and quality indicators (4K, HDR, HD)
+  - Progress indicators for partially watched content
+  - Enhanced typography hierarchy with proper contrast
+  - TV-optimized action buttons with focus states
+
+#### 2. BaseDetailLayout (`BaseDetailLayout.kt`)
+- **Purpose**: Layout container for content detail screens
+- **Key Features**:
+  - Modular section-based layout system
+  - Loading, error, and content states
+  - TV-optimized overscan margin handling
+  - Lazy loading with proper focus management
+  - Integration with DetailUiState for reactive updates
+
+#### 3. ContentDetail Model System (`models/`)
+- **ContentDetail.kt**: Interface for unified content representation
+- **DetailUiState.kt**: UI state management with progress tracking
+- **TMDbContentDetail.kt**: TMDb-enhanced content implementations
+- **Key Features**:
+  - Content-type specific metadata handling
+  - Action system for user interactions
+  - Progress tracking for watch history
+  - Extensible metadata system with custom fields
+
+### Media Header Component Features
+
+#### Visual Elements
+- **Backdrop Image**: Full-width background with blur effect
+- **Floating Poster**: Overlay positioned poster with shadow
+- **Title Typography**: Large, bold text with proper contrast
+- **Metadata Badges**: Color-coded quality and rating indicators
+- **Action Buttons**: Primary play/resume buttons with focus states
+
+#### Content-Type Variations
+- **Movies**: Runtime, director, studio, year, rating
+- **TV Shows**: Seasons, episodes, network, year, rating
+- **Episodes**: Season/episode number, runtime, air date
+
+#### Rating System
+- **Star Rating**: Gold star icons with numeric ratings
+- **Quality Badges**: Color-coded 4K (green), HDR (orange), HD (blue)
+- **Custom Metadata**: Extensible system for additional info
+
+### Integration Patterns
+
+#### TMDb Integration
+```kotlin
+// TMDb-specific ContentDetail with enhanced metadata
+data class TMDbMovieContentDetail(
+    private val tmdbMovie: TMDbMovieResponse,
+    private val credits: TMDbCreditsResponse? = null
+) : ContentDetail {
+    
+    override val metadata: ContentMetadata = ContentMetadata(
+        year = tmdbMovie.releaseDate?.take(4),
+        duration = formatRuntime(tmdbMovie.runtime),
+        rating = formatTMDbRating(tmdbMovie.voteAverage),
+        cast = credits?.cast?.take(5)?.map { it.name } ?: emptyList(),
+        director = credits?.crew?.find { it.job == "Director" }?.name
+    )
+}
+```
+
+#### Progress Tracking
+```kotlin
+// ContentProgress integration with HeroSection
+data class ContentProgress(
+    val watchPercentage: Float = 0f,
+    val isCompleted: Boolean = false,
+    val resumePosition: Long = 0L,
+    val totalDuration: Long = 0L
+)
+
+// Usage in HeroSection
+if (progress.isPartiallyWatched) {
+    // Show "Resume Playing" button
+    // Display progress indicator
+}
+```
+
+#### TV-Optimized UI Patterns
+```kotlin
+// Enhanced action button with focus states
+@Composable
+private fun HeroActionButton(
+    action: ContentAction,
+    onClick: () -> Unit,
+    isResume: Boolean = false
+) {
+    var isFocused by remember { mutableStateOf(false) }
+    
+    TVFocusIndicator(isFocused = isFocused) {
+        Button(
+            onClick = onClick,
+            modifier = Modifier
+                .tvFocusable(onFocusChanged = { isFocused = it.isFocused })
+                .height(52.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = if (isFocused) {
+                    MaterialTheme.colorScheme.primary
+                } else {
+                    MaterialTheme.colorScheme.primary.copy(alpha = 0.95f)
+                }
+            ),
+            shape = RoundedCornerShape(26.dp),
+            elevation = ButtonDefaults.buttonElevation(
+                defaultElevation = if (isFocused) 8.dp else 4.dp
+            )
+        ) {
+            // Button content with icon and text
+        }
+    }
+}
+```
+
+### Testing Strategy
+
+#### Component Testing
+- **HeroSection**: Content display, metadata rendering, action handling
+- **BaseDetailLayout**: State management, section visibility, navigation
+- **ContentDetail**: Data transformation, content-type specifics
+
+#### Integration Testing
+- **TMDb Integration**: API data to ContentDetail transformation
+- **Progress Tracking**: Watch history integration
+- **Navigation**: Screen transitions and focus management
+
+#### TV-Specific Testing
+- **Focus Management**: D-pad navigation, focus restoration
+- **Visual Regression**: Typography, layout, color contrast
+- **Performance**: Image loading, blur effects, animations
 
 ## AccountFileBrowser System Architecture
 
@@ -565,6 +727,426 @@ fun `when API call succeeds, should cache and return results`() = runTest {
 }
 ```
 
+## TMDb Integration Architecture
+
+### Overview
+
+The TMDb (The Movie Database) integration provides comprehensive movie and TV show metadata to enhance the content experience. The system implements an offline-first approach with intelligent caching and seamless ContentDetail integration.
+
+### TMDb Service Layer Structure
+
+```
+network/
+├── api/
+│   ├── TMDbMovieService.kt         # Movie-specific endpoints
+│   ├── TMDbTVService.kt            # TV show-specific endpoints
+│   └── TMDbSearchService.kt        # Search and discovery endpoints
+├── models/tmdb/
+│   ├── TMDbMovieResponse.kt        # Movie data structures
+│   ├── TMDbTVResponse.kt           # TV show data structures
+│   ├── TMDbCreditsResponse.kt      # Cast and crew data
+│   ├── TMDbSearchResponse.kt       # Search results
+│   └── [additional response models]
+└── interceptors/
+    └── TMDbApiKeyInterceptor.kt    # API key injection
+```
+
+### Repository Pattern Implementation
+
+The TMDb integration follows the NetworkBoundResource pattern for offline-first data access:
+
+```kotlin
+// Repository interface with caching support
+interface TMDbMovieRepository {
+    fun getMovieDetails(movieId: Int, forceRefresh: Boolean = false): Flow<Result<TMDbMovieResponse>>
+    fun getMovieContentDetail(movieId: Int): Flow<Result<ContentDetail>>
+    fun getMovieCredits(movieId: Int): Flow<Result<TMDbCreditsResponse>>
+    fun getMovieRecommendations(movieId: Int, page: Int = 1): Flow<Result<TMDbRecommendationsResponse>>
+    // ... additional methods
+}
+
+// Implementation with NetworkBoundResource
+class TMDbMovieRepositoryImpl @Inject constructor(
+    private val tmdbMovieService: TMDbMovieService,
+    private val tmdbMovieDao: TMDbMovieDao,
+    private val tmdbSearchDao: TMDbSearchDao,
+    private val contentDetailMapper: TMDbToContentDetailMapper
+) : TMDbMovieRepository {
+    
+    override fun getMovieDetails(movieId: Int, forceRefresh: Boolean): Flow<Result<TMDbMovieResponse>> = 
+        networkBoundResource(
+            loadFromDb = { tmdbMovieDao.getMovieById(movieId) },
+            shouldFetch = { cached -> forceRefresh || shouldRefreshCache(cached) },
+            createCall = { tmdbMovieService.getMovieDetails(movieId) },
+            saveCallResult = { response -> tmdbMovieDao.insertMovie(response.toEntity()) }
+        )
+}
+```
+
+### Database Schema
+
+TMDb data is stored in Room entities with comprehensive caching support:
+
+```kotlin
+@Entity(tableName = "tmdb_movies")
+data class TMDbMovieEntity(
+    @PrimaryKey val id: Int,
+    val title: String,
+    val overview: String?,
+    val releaseDate: String?,
+    val posterPath: String?,
+    val backdropPath: String?,
+    val voteAverage: Float,
+    val voteCount: Int,
+    val genres: List<String>?,
+    val lastUpdated: Long = System.currentTimeMillis()
+)
+
+@Entity(tableName = "tmdb_credits")
+data class TMDbCreditsEntity(
+    @PrimaryKey val id: String, // contentId + contentType
+    val contentId: Int,
+    val contentType: String,
+    val cast: List<TMDbCastMemberEntity>,
+    val crew: List<TMDbCrewMemberEntity>,
+    val lastUpdated: Long = System.currentTimeMillis()
+)
+
+@Entity(tableName = "tmdb_search_results")
+data class TMDbSearchResultEntity(
+    @PrimaryKey val id: String, // query + page + type
+    val query: String,
+    val page: Int,
+    val results: List<TMDbSearchItemEntity>,
+    val lastUpdated: Long = System.currentTimeMillis()
+)
+```
+
+### ContentDetail Integration
+
+TMDb data seamlessly integrates with the ContentDetail system through specialized implementations:
+
+```kotlin
+// TMDb-specific ContentDetail implementation
+data class TMDbMovieContentDetail(
+    private val tmdbMovie: TMDbMovieResponse,
+    private val credits: TMDbCreditsResponse? = null,
+    private val progress: ContentProgress = ContentProgress()
+) : ContentDetail {
+    
+    override val id: String = tmdbMovie.id.toString()
+    override val title: String = tmdbMovie.title
+    override val description: String? = tmdbMovie.overview
+    override val backgroundImageUrl: String? = getBackdropUrl(tmdbMovie.backdropPath)
+    override val cardImageUrl: String? = getPosterUrl(tmdbMovie.posterPath)
+    override val contentType: ContentType = ContentType.MOVIE
+    
+    override val metadata: ContentMetadata = ContentMetadata(
+        year = formatYear(tmdbMovie.releaseDate),
+        duration = formatRuntime(tmdbMovie.runtime),
+        rating = formatRating(tmdbMovie.voteAverage),
+        genre = tmdbMovie.genres.map { it.name },
+        cast = credits?.cast?.take(5)?.map { it.name } ?: emptyList(),
+        director = credits?.crew?.firstOrNull { it.job == "Director" }?.name
+    )
+    
+    override val actions: List<ContentAction> = createContentActions()
+}
+```
+
+### Caching Strategy
+
+The TMDb integration implements a sophisticated caching strategy optimized for TV usage:
+
+#### Cache Timelines
+- **Movie Details**: 24 hours
+- **Credits**: 24 hours  
+- **Recommendations**: 24 hours
+- **Search Results**: 30 minutes (frequently changing)
+- **Popular/Trending**: 1 hour (frequently changing)
+
+#### Cache Types
+- **Primary Cache**: Movie and TV show details
+- **Secondary Cache**: Credits, images, videos
+- **Ephemeral Cache**: Search results and trending content
+- **Pagination Cache**: Independent caching per page
+
+#### Cache Management
+```kotlin
+// Cache expiration logic
+private fun shouldRefreshCache(contentId: Int, type: String): Boolean {
+    val lastUpdated = when (type) {
+        "movie" -> tmdbMovieDao.getMovieLastUpdated(contentId)
+        "credits" -> tmdbSearchDao.getCreditsLastUpdated(contentId)
+        else -> null
+    }
+    return lastUpdated?.let { 
+        System.currentTimeMillis() - it > CACHE_TIMEOUT_MS 
+    } ?: true
+}
+
+// Cache clearing methods
+suspend fun clearCache() // Clear all TMDb cached data
+suspend fun clearMovieCache(movieId: Int) // Clear specific movie cache
+```
+
+### API Configuration
+
+TMDb API integration is configured through dedicated DI modules:
+
+```kotlin
+@Module
+@InstallIn(SingletonComponent::class)
+object TMDbModule {
+    
+    @Provides
+    @Singleton
+    @TMDbApi
+    fun provideTMDbOkHttpClient(
+        tmdbApiKeyInterceptor: TMDbApiKeyInterceptor
+    ): OkHttpClient {
+        return OkHttpClient.Builder()
+            .addInterceptor(tmdbApiKeyInterceptor)
+            .cache(Cache(cacheDir, 20 * 1024 * 1024L)) // 20MB cache
+            .build()
+    }
+    
+    @Provides
+    @Singleton
+    fun provideTMDbMovieService(@TMDbApi retrofit: Retrofit): TMDbMovieService {
+        return retrofit.create(TMDbMovieService::class.java)
+    }
+}
+```
+
+### API Key Management
+
+TMDb API keys are securely managed through:
+
+```kotlin
+class TMDbApiKeyInterceptor @Inject constructor() : Interceptor {
+    override fun intercept(chain: Interceptor.Chain): Response {
+        val original = chain.request()
+        val url = original.url.newBuilder()
+            .addQueryParameter("api_key", BuildConfig.TMDB_API_KEY)
+            .build()
+        
+        val request = original.newBuilder()
+            .url(url)
+            .build()
+            
+        return chain.proceed(request)
+    }
+}
+```
+
+### Data Flow: API → Repository → ContentDetail
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                        UI Layer                                 │
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐ │
+│  │   Movie Detail  │  │   Search Screen │  │ Content Browser │ │
+│  │     Screen      │  │                 │  │                 │ │
+│  └─────────────────┘  └─────────────────┘  └─────────────────┘ │
+└─────────────────────────┬───────────────────────────────────────┘
+                          │ ContentDetail
+                          ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                    Repository Layer                             │
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐ │
+│  │TMDbMovieRepository│  │ TMDbTVRepository│  │TMDbSearchRepository│ │
+│  │                 │  │                 │  │                 │ │
+│  └─────────────────┘  └─────────────────┘  └─────────────────┘ │
+└─────────────────────────┬───────────────────────────────────────┘
+                          │ NetworkBoundResource
+                          ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                    Database Layer                               │
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐ │
+│  │ TMDbMovieEntity │  │ TMDbCreditsEntity│  │TMDbSearchEntity │ │
+│  │                 │  │                 │  │                 │ │
+│  └─────────────────┘  └─────────────────┘  └─────────────────┘ │
+└─────────────────────────┬───────────────────────────────────────┘
+                          │ Room DAOs
+                          ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                     Network Layer                               │
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐ │
+│  │TMDbMovieService │  │  TMDbTVService  │  │TMDbSearchService│ │
+│  │                 │  │                 │  │                 │ │
+│  └─────────────────┘  └─────────────────┘  └─────────────────┘ │
+└─────────────────────────┬───────────────────────────────────────┘
+                          │ Retrofit + OkHttp
+                          ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                      TMDb API v3                               │
+│            (Movies, TV Shows, Search, Credits)                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Error Handling and Resilience
+
+The TMDb integration implements comprehensive error handling:
+
+```kotlin
+// Repository error handling
+networkBoundResource(
+    loadFromDb = { /* Cache lookup */ },
+    shouldFetch = { /* Cache validation */ },
+    createCall = { /* API call */ },
+    saveCallResult = { /* Cache update */ },
+    onFetchFailed = { throwable ->
+        // Log error, handle rate limiting, fallback to cache
+        when (throwable) {
+            is HttpException -> handleHttpError(throwable)
+            is IOException -> handleNetworkError(throwable)
+            else -> handleUnknownError(throwable)
+        }
+    }
+)
+
+// API response handling
+fun <T> handleApiResponse(response: Response<ApiResponse<T>>): ApiResponse<T> {
+    return if (response.isSuccessful) {
+        response.body() ?: ApiResponse.Error(Exception("Empty response"))
+    } else {
+        ApiResponse.Error(Exception("HTTP ${response.code()}: ${response.message()}"))
+    }
+}
+```
+
+### Testing Strategy
+
+The TMDb integration includes comprehensive testing coverage:
+
+#### Unit Tests
+- **Repository Tests**: NetworkBoundResource behavior, caching logic
+- **Service Tests**: API endpoint mapping, response parsing
+- **Mapper Tests**: ContentDetail transformation accuracy
+- **Entity Tests**: Database schema validation
+
+#### Integration Tests
+- **Database Tests**: Room entity relationships, query optimization
+- **Network Tests**: API integration, error scenarios
+- **Cache Tests**: Expiration policies, cache invalidation
+- **DI Tests**: Module configuration validation
+
+#### Test Coverage Areas
+- Cache hit/miss scenarios
+- API error handling
+- Data transformation accuracy
+- Performance benchmarks
+- Network failure resilience
+
+### Performance Optimization
+
+The TMDb integration is optimized for TV performance:
+
+#### Network Optimization
+- **Connection Pooling**: Shared OkHttp client
+- **Request Deduplication**: Avoid duplicate concurrent requests
+- **Compression**: Gzip/Brotli support
+- **Timeout Configuration**: Optimized for TV networks
+
+#### Memory Management
+- **Image Caching**: Glide integration with TMDb image URLs
+- **Data Pagination**: Efficient large dataset handling
+- **Cache Size Limits**: Configurable cache boundaries
+- **Background Processing**: Non-blocking data updates
+
+#### TV-Specific Optimizations
+- **Preloading**: Related content prefetching
+- **Image Sizes**: TV-optimized image dimensions
+- **Focus Performance**: Smooth D-pad navigation
+- **Offline Graceful Degradation**: Cached content fallback
+
+### Usage Examples
+
+#### Basic Movie Details
+```kotlin
+// ViewModel usage
+class MovieDetailViewModel @Inject constructor(
+    private val tmdbMovieRepository: TMDbMovieRepository
+) : ViewModel() {
+    
+    fun loadMovieDetails(movieId: Int) {
+        viewModelScope.launch {
+            tmdbMovieRepository.getMovieContentDetail(movieId)
+                .collect { result ->
+                    when (result) {
+                        is Result.Success -> {
+                            val contentDetail = result.data
+                            // Update UI with ContentDetail
+                        }
+                        is Result.Error -> {
+                            // Handle error
+                        }
+                        is Result.Loading -> {
+                            // Show loading indicator
+                        }
+                    }
+                }
+        }
+    }
+}
+```
+
+#### Search Integration
+```kotlin
+// Search with caching
+fun searchMovies(query: String) {
+    viewModelScope.launch {
+        tmdbSearchRepository.searchMovies(query)
+            .collect { result ->
+                when (result) {
+                    is Result.Success -> {
+                        val searchResults = result.data.results
+                        // Convert to ContentDetail list
+                        val contentDetails = searchResults.map { searchResult ->
+                            contentDetailMapper.mapSearchResultToContentDetail(searchResult)
+                        }
+                        // Update UI
+                    }
+                    // Handle other states
+                }
+            }
+    }
+}
+```
+
+#### ContentDetail Integration
+```kotlin
+// ContentDetail screen usage
+@Composable
+fun ContentDetailScreen(
+    contentDetail: ContentDetail,
+    onActionClick: (ContentAction) -> Unit
+) {
+    when (contentDetail) {
+        is TMDbMovieContentDetail -> {
+            // Access TMDb-specific data
+            val tmdbMovie = contentDetail.getTMDbMovie()
+            val credits = contentDetail.getCredits()
+            
+            // Display TMDb-enhanced content
+            ContentDetailLayout(
+                contentDetail = contentDetail,
+                onActionClick = onActionClick,
+                customSections = listOf(
+                    "cast" to { CastSection(credits?.cast ?: emptyList()) },
+                    "crew" to { CrewSection(credits?.crew ?: emptyList()) }
+                )
+            )
+        }
+        else -> {
+            // Standard ContentDetail rendering
+            ContentDetailLayout(contentDetail, onActionClick)
+        }
+    }
+}
+```
+
 ## Future Development Roadmap
 
 ### Completed Features
@@ -574,6 +1156,8 @@ fun `when API call succeeds, should cache and return results`() = runTest {
 3. **Dependency Injection**: Hilt integration with modular architecture
 4. **Repository Pattern**: Abstract data access with caching support
 5. **Navigation**: Type-safe Compose Navigation integration
+6. **TMDb Integration**: Complete movie/TV metadata service with offline-first caching
+7. **ContentDetail System**: Unified content representation with TMDb enhancement
 
 ### Immediate Opportunities
 
@@ -581,6 +1165,8 @@ fun `when API call succeeds, should cache and return results`() = runTest {
 2. **Multi-Account Support**: Support for Premiumize, AllDebrid
 3. **Offline Mode**: Enhanced caching and offline file access
 4. **Performance Optimization**: Image preloading and list virtualization
+5. **TMDb Discovery**: Implement trending, discovery, and personalized recommendations
+6. **Content Matching**: Smart matching between file names and TMDb content
 
 ### Architectural Improvements
 
@@ -588,6 +1174,8 @@ fun `when API call succeeds, should cache and return results`() = runTest {
 2. **Advanced Caching**: Implement multi-layer caching with expiration policies
 3. **Background Sync**: WorkManager integration for background downloads
 4. **Analytics**: Usage tracking and performance monitoring
+5. **TMDb Sync**: Background synchronization of popular content metadata
+6. **Content Enrichment**: Enhanced metadata with reviews, ratings, and recommendations
 
 ## Maintenance Notes
 
@@ -608,6 +1196,17 @@ When modifying the AccountFileBrowser system:
 3. **Repository Layer**: Update API integration patterns and caching strategies
 4. **Model Layer**: Document new data models and transformation patterns
 5. **Testing**: Update testing examples with new features
+
+### TMDb Integration Maintenance
+
+When modifying the TMDb integration:
+
+1. **Service Layer**: Update API endpoint documentation and response models
+2. **Repository Layer**: Document new caching strategies and data access patterns
+3. **Database Layer**: Update entity schemas and migration documentation
+4. **Mapper Layer**: Document ContentDetail transformation patterns
+5. **Testing**: Update test coverage and integration examples
+6. **Performance**: Update optimization strategies and benchmarks
 
 ---
 

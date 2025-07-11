@@ -8,6 +8,12 @@ import com.rdwatch.androidtv.repository.RealDebridContentRepository
 import com.rdwatch.androidtv.repository.RealDebridContentRepositoryImpl
 import com.rdwatch.androidtv.repository.TorrentRepository
 import com.rdwatch.androidtv.repository.base.BaseRepository
+import com.rdwatch.androidtv.data.repository.TMDbMovieRepository
+import com.rdwatch.androidtv.data.repository.TMDbMovieRepositoryImpl
+import com.rdwatch.androidtv.data.repository.TMDbTVRepository
+import com.rdwatch.androidtv.data.repository.TMDbTVRepositoryImpl
+import com.rdwatch.androidtv.data.repository.TMDbSearchRepository
+import com.rdwatch.androidtv.data.repository.TMDbSearchRepositoryImpl
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -30,6 +36,24 @@ abstract class RepositoryModule {
     abstract fun bindRealDebridContentRepository(
         realDebridContentRepositoryImpl: RealDebridContentRepositoryImpl
     ): RealDebridContentRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindTMDbMovieRepository(
+        tmdbMovieRepositoryImpl: TMDbMovieRepositoryImpl
+    ): TMDbMovieRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindTMDbTVRepository(
+        tmdbTVRepositoryImpl: TMDbTVRepositoryImpl
+    ): TMDbTVRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindTMDbSearchRepository(
+        tmdbSearchRepositoryImpl: TMDbSearchRepositoryImpl
+    ): TMDbSearchRepository
 
     companion object {
         @Provides

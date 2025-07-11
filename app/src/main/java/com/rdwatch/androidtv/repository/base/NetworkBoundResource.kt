@@ -18,14 +18,17 @@ abstract class NetworkBoundResource<ResultType, RequestType> {
             
             when (val apiResponse = safeCall { createCall() }) {
                 is Result.Success -> {
+                    android.util.Log.d("NetworkBoundResource", "API call success, saving data")
                     saveCallResult(apiResponse.data)
                     emitAll(loadFromDb().map { Result.Success(it) })
                 }
                 is Result.Error -> {
+                    android.util.Log.e("NetworkBoundResource", "API call failed", apiResponse.exception)
                     onFetchFailed(apiResponse.exception)
                     emitAll(loadFromDb().map { Result.Success(it) })
                 }
                 is Result.Loading -> {
+                    android.util.Log.d("NetworkBoundResource", "API call still loading")
                     emitAll(loadFromDb().map { Result.Success(it) })
                 }
             }

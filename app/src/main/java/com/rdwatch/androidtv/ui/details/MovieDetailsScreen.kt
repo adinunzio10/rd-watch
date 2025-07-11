@@ -33,11 +33,18 @@ import com.rdwatch.androidtv.ui.components.ImagePriority
 import com.rdwatch.androidtv.ui.focus.tvFocusable
 import com.rdwatch.androidtv.ui.focus.TVFocusIndicator
 import com.rdwatch.androidtv.ui.viewmodel.PlaybackViewModel
+import com.rdwatch.androidtv.ui.details.components.ActionSection
+import com.rdwatch.androidtv.ui.details.components.ContentDetailTabs
+import com.rdwatch.androidtv.ui.components.CastCrewSection
+import com.rdwatch.androidtv.ui.details.models.*
+import com.rdwatch.androidtv.ui.details.MovieDetailsUiState
+import androidx.media3.common.util.UnstableApi
 
 /**
  * Movie Details Screen with hero layout and metadata
  * Optimized for Android TV 10-foot UI experience
  */
+@OptIn(UnstableApi::class)
 @Composable
 fun MovieDetailsScreen(
     movieId: String,
@@ -55,6 +62,8 @@ fun MovieDetailsScreen(
     val uiState by viewModel.uiState.collectAsState()
     val movieState by viewModel.movieState.collectAsState()
     val relatedMoviesState by viewModel.relatedMoviesState.collectAsState()
+    val creditsState by viewModel.creditsState.collectAsState()
+    val selectedTabIndex by viewModel.selectedTabIndex.collectAsState()
     
     // Load movie details when screen is first displayed
     LaunchedEffect(movieId) {
@@ -63,6 +72,7 @@ fun MovieDetailsScreen(
     
     // Get the movie from the ViewModel state
     val movie = uiState.movie
+    
     
     // Get playback progress
     val contentProgress by playbackViewModel.inProgressContent.collectAsState()
@@ -166,70 +176,183 @@ fun MovieDetailsScreen(
                 LazyColumn(
                     modifier = modifier
                         .fillMaxSize()
-                        .background(MaterialTheme.colorScheme.background),
-                    verticalArrangement = Arrangement.spacedBy(24.dp)
+                        .background(MaterialTheme.colorScheme.background)
                 ) {
-        // Hero Section
-        item {
-            MovieHeroSection(
-                movie = movie,
-                watchProgress = watchProgress,
-                isCompleted = isCompleted,
-                onPlayClick = onPlayClick,
-                onBackPressed = onBackPressed,
-                firstFocusRequester = firstFocusRequester,
-                overscanMargin = overscanMargin
-            )
-        }
-        
-        // Movie Info Section
-        item {
-            MovieInfoSection(
-                movie = movie,
-                modifier = Modifier.padding(horizontal = overscanMargin)
-            )
-        }
-        
-        // Action Buttons Section
-        item {
-            ActionButtonsSection(
-                movie = movie,
-                uiState = uiState,
-                viewModel = viewModel,
-                modifier = Modifier.padding(horizontal = overscanMargin)
-            )
-        }
-        
-        // Related Movies Section
-        when (val currentRelatedMoviesState = relatedMoviesState) {
-            is com.rdwatch.androidtv.ui.common.UiState.Success -> {
-                if (currentRelatedMoviesState.data.isNotEmpty()) {
+                    // Hero Section
                     item {
-                        RelatedMoviesSection(
-                            movies = currentRelatedMoviesState.data,
-                            onMovieClick = onMovieClick,
+                        MovieHeroSection(
+                            movie = movie,
+                            uiState = uiState,
+                            watchProgress = watchProgress,
+                            isCompleted = isCompleted,
+                            onPlayClick = onPlayClick,
+                            onBackPressed = onBackPressed,
+                            firstFocusRequester = firstFocusRequester,
+                            overscanMargin = overscanMargin
+                        )
+                    }
+                    
+                    // Action Buttons Section
+                    item {
+                        val movieContentDetail = MovieContentDetail(
+                            movie = movie,
+                            progress = ContentProgress(
+                                watchPercentage = watchProgress,
+                                isCompleted = isCompleted
+                            ),
+                            isInWatchlist = uiState.isInWatchlist,
+                            isLiked = uiState.isLiked,
+                            isDownloaded = uiState.isDownloaded,
+                            isDownloading = uiState.isDownloading,
+                            isFromRealDebrid = uiState.isFromRealDebrid
+                        )
+                        
+                        ActionSection(
+                            content = movieContentDetail,
+                            onActionClick = { action ->
+                                when (action) {
+                                    is ContentAction.Play -> {
+                                        onPlayClick(movie)
+                                    }
+                                    is ContentAction.AddToWatchlist -> {
+                                        if (action.isInWatchlist) {
+                                            viewModel.removeFromWatchlist()
+                                        } else {
+                                            viewModel.addToWatchlist()
+                                        }
+                                    }
+                                    is ContentAction.Like -> {
+                                        viewModel.toggleLike()
+                                    }
+                                    is ContentAction.Share -> {
+                                        viewModel.shareMovie()
+                                    }
+                                    is ContentAction.Download -> {
+                                        if (!action.isDownloaded && !action.isDownloading) {
+                                            viewModel.downloadMovie()
+                                        }
+                                    }
+                                    is ContentAction.Delete -> {
+                                        viewModel.deleteFromRealDebrid()
+                                    }
+                                    else -> {
+                                        // Handle other actions
+                                    }
+                                }
+                            },
+                            modifier = Modifier.padding(horizontal = overscanMargin, vertical = 8.dp)
+                        )
+                    }
+                    
+                    // Tab navigation
+                    item {
+                        ContentDetailTabs(
+                            selectedTabIndex = selectedTabIndex,
+                            contentType = ContentType.MOVIE,
+                            onTabSelected = { tabIndex -> viewModel.selectTab(tabIndex) },
                             modifier = Modifier.padding(horizontal = overscanMargin)
                         )
                     }
-                }
-            }
-            is com.rdwatch.androidtv.ui.common.UiState.Loading -> {
-                item {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = overscanMargin),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator()
+                    
+                    // Tab content based on selected tab
+                    when (selectedTabIndex) {
+                        0 -> {
+                            // Overview Tab
+                            item {
+                                MovieInfoSection(
+                                    movie = movie,
+                                    uiState = uiState,
+                                    isOverview = true,
+                                    modifier = Modifier.padding(horizontal = overscanMargin)
+                                )
+                            }
+                        }
+                        
+                        1 -> {
+                            // Details Tab
+                            item {
+                                MovieInfoSection(
+                                    movie = movie,
+                                    uiState = uiState,
+                                    isOverview = false,
+                                    modifier = Modifier.padding(horizontal = overscanMargin)
+                                )
+                            }
+                            
+                            // Related Movies Section
+                            when (val currentRelatedMoviesState = relatedMoviesState) {
+                                is com.rdwatch.androidtv.ui.common.UiState.Success -> {
+                                    if (currentRelatedMoviesState.data.isNotEmpty()) {
+                                        item {
+                                            RelatedMoviesSection(
+                                                movies = currentRelatedMoviesState.data,
+                                                onMovieClick = onMovieClick,
+                                                modifier = Modifier.padding(horizontal = overscanMargin)
+                                            )
+                                        }
+                                    }
+                                }
+                                is com.rdwatch.androidtv.ui.common.UiState.Loading -> {
+                                    item {
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(horizontal = overscanMargin),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            CircularProgressIndicator()
+                                        }
+                                    }
+                                }
+                                is com.rdwatch.androidtv.ui.common.UiState.Error -> {
+                                    // Don't show error for related movies, just skip section
+                                }
+                            }
+                        }
+                        
+                        2 -> {
+                            // Cast & Crew Tab
+                            when (val currentCreditsState = creditsState) {
+                                is UiState.Success -> {
+                                    item {
+                                        CastCrewSection(
+                                            metadata = currentCreditsState.data,
+                                            modifier = Modifier.padding(horizontal = overscanMargin)
+                                        )
+                                    }
+                                }
+                                is UiState.Loading -> {
+                                    item {
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(horizontal = overscanMargin),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            CircularProgressIndicator()
+                                        }
+                                    }
+                                }
+                                is UiState.Error -> {
+                                    item {
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(horizontal = overscanMargin),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Text(
+                                                text = "Failed to load cast & crew",
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                color = MaterialTheme.colorScheme.error
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
-                }
-            }
-            is com.rdwatch.androidtv.ui.common.UiState.Error -> {
-                // Don't show error for related movies, just skip section
-            }
-        }
-        
+                    
                     // Bottom spacing for TV overscan
                     item {
                         Spacer(modifier = Modifier.height(overscanMargin))
@@ -243,6 +366,7 @@ fun MovieDetailsScreen(
 @Composable
 private fun MovieHeroSection(
     movie: Movie,
+    uiState: MovieDetailsUiState,
     watchProgress: Float,
     isCompleted: Boolean,
     onPlayClick: (Movie) -> Unit,
@@ -333,7 +457,7 @@ private fun MovieHeroSection(
                     MetadataChip(text = movie.studio!!)
                 }
                 MetadataChip(text = "HD") // Placeholder quality
-                MetadataChip(text = "2023") // Placeholder year
+                MetadataChip(text = uiState.getMovieYear())
                 if (isCompleted) {
                     MetadataChip(
                         text = "Watched",
@@ -447,6 +571,8 @@ private fun PlayButton(
 @Composable
 private fun MovieInfoSection(
     movie: Movie,
+    uiState: MovieDetailsUiState,
+    isOverview: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -466,18 +592,34 @@ private fun MovieInfoSection(
                     text = movie.description!!,
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.8f),
-                    lineHeight = MaterialTheme.typography.bodyLarge.lineHeight * 1.2
+                    lineHeight = MaterialTheme.typography.bodyLarge.lineHeight * 1.2,
+                    maxLines = if (isOverview) 3 else Int.MAX_VALUE
                 )
             }
         }
         
         // Additional info (placeholder)
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(32.dp)
-        ) {
-            InfoItem(label = "Duration", value = "2h 15m")
-            InfoItem(label = "Language", value = "English")
-            InfoItem(label = "Rating", value = "PG-13")
+        if (isOverview) {
+            // Overview: Show key metadata only
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(32.dp)
+            ) {
+                InfoItem(label = "Duration", value = uiState.getMovieRuntime())
+                InfoItem(label = "Rating", value = uiState.getMovieRating())
+            }
+        } else {
+            // Details: Show all metadata
+            LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(24.dp),
+                contentPadding = PaddingValues(horizontal = 4.dp)
+            ) {
+                item { InfoItem(label = "Duration", value = uiState.getMovieRuntime()) }
+                item { InfoItem(label = "Language", value = "English") }
+                item { InfoItem(label = "Rating", value = uiState.getMovieRating()) }
+                item { InfoItem(label = "Studio", value = movie.studio ?: "Unknown") }
+                item { InfoItem(label = "Year", value = uiState.getMovieYear()) }
+                item { InfoItem(label = "Quality", value = "HD") }
+            }
         }
     }
 }
@@ -502,134 +644,6 @@ private fun InfoItem(
     }
 }
 
-@Composable
-private fun ActionButtonsSection(
-    movie: Movie,
-    uiState: MovieDetailsUiState,
-    viewModel: MovieDetailsViewModel,
-    modifier: Modifier = Modifier
-) {
-    LazyRow(
-        modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
-        contentPadding = PaddingValues(horizontal = 4.dp)
-    ) {
-        items(
-            listOf(
-                ActionButton(
-                    title = if (uiState.isInWatchlist) "Remove from Watchlist" else "Add to Watchlist",
-                    icon = if (uiState.isInWatchlist) Icons.Default.Remove else Icons.Default.Add,
-                    onClick = { 
-                        if (uiState.isInWatchlist) {
-                            viewModel.removeFromWatchlist()
-                        } else {
-                            viewModel.addToWatchlist()
-                        }
-                    }
-                ),
-                ActionButton(
-                    title = if (uiState.isLiked) "Unlike" else "Like",
-                    icon = if (uiState.isLiked) Icons.Default.Favorite else Icons.Default.ThumbUp,
-                    onClick = { viewModel.toggleLike() }
-                ),
-                ActionButton(
-                    title = "Share",
-                    icon = Icons.Default.Share,
-                    onClick = { viewModel.shareMovie() }
-                ),
-                ActionButton(
-                    title = if (uiState.isDownloaded) "Downloaded" else if (uiState.isDownloading) "Downloading..." else "Download",
-                    icon = if (uiState.isDownloaded) Icons.Default.CloudDone else Icons.Default.Download,
-                    onClick = { 
-                        if (!uiState.isDownloaded && !uiState.isDownloading) {
-                            viewModel.downloadMovie()
-                        }
-                    }
-                )
-            )
-        ) { actionButton ->
-            ActionButtonItem(
-                title = actionButton.title,
-                icon = actionButton.icon,
-                onClick = actionButton.onClick
-            )
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun ActionButtonItem(
-    title: String,
-    icon: ImageVector,
-    onClick: () -> Unit
-) {
-    var isFocused by remember { mutableStateOf(false) }
-    val hapticFeedback = LocalHapticFeedback.current
-    
-    TVFocusIndicator(isFocused = isFocused) {
-        OutlinedCard(
-            onClick = {
-                hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-                onClick()
-            },
-            modifier = Modifier
-                .width(140.dp)
-                .tvFocusable(
-                    onFocusChanged = { isFocused = it.isFocused }
-                ),
-            colors = CardDefaults.outlinedCardColors(
-                containerColor = if (isFocused) {
-                    MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
-                } else {
-                    MaterialTheme.colorScheme.surface
-                }
-            ),
-            border = if (isFocused) {
-                CardDefaults.outlinedCardBorder().copy(
-                    brush = Brush.linearGradient(
-                        colors = listOf(
-                            MaterialTheme.colorScheme.primary,
-                            MaterialTheme.colorScheme.primary
-                        )
-                    ),
-                    width = 2.dp
-                )
-            } else {
-                CardDefaults.outlinedCardBorder()
-            }
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    tint = if (isFocused) {
-                        MaterialTheme.colorScheme.primary
-                    } else {
-                        MaterialTheme.colorScheme.onSurface
-                    },
-                    modifier = Modifier.size(24.dp)
-                )
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.labelLarge,
-                    color = if (isFocused) {
-                        MaterialTheme.colorScheme.primary
-                    } else {
-                        MaterialTheme.colorScheme.onSurface
-                    },
-                    fontWeight = FontWeight.Medium
-                )
-            }
-        }
-    }
-}
 
 @Composable
 private fun RelatedMoviesSection(
@@ -720,8 +734,3 @@ private fun RelatedMovieCard(
     }
 }
 
-private data class ActionButton(
-    val title: String,
-    val icon: ImageVector,
-    val onClick: () -> Unit
-)

@@ -1,3 +1,5 @@
+@file:OptIn(androidx.media3.common.util.UnstableApi::class)
+
 package com.rdwatch.androidtv.ui.home
 
 import androidx.compose.foundation.background
@@ -32,7 +34,9 @@ import com.rdwatch.androidtv.ui.components.TVBackgroundImage
 import com.rdwatch.androidtv.ui.focus.tvFocusable
 import com.rdwatch.androidtv.ui.focus.TVFocusIndicator
 import com.rdwatch.androidtv.ui.viewmodel.PlaybackViewModel
+import androidx.media3.common.util.UnstableApi
 
+@OptIn(UnstableApi::class)
 @Composable
 fun TVContentRow(
     title: String,
@@ -125,7 +129,7 @@ fun TVContentRow(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, UnstableApi::class)
 @Composable
 fun StandardContentCard(
     movie: Movie,
@@ -316,7 +320,7 @@ fun FeaturedContentCard(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, UnstableApi::class)
 @Composable
 fun ContinueWatchingCard(
     movie: Movie,
@@ -466,6 +470,7 @@ enum class ContentRowType {
     CONTINUE_WATCHING
 }
 
+@OptIn(UnstableApi::class)
 @Preview
 @Composable
 fun ContentRowPreview() {

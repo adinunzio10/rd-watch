@@ -2,10 +2,12 @@ package com.rdwatch.androidtv.player.subtitle
 
 import androidx.media3.common.text.Cue
 import android.text.Layout
+import androidx.media3.common.util.UnstableApi
 
 /**
  * Represents a subtitle cue with timing information and formatting
  */
+@UnstableApi
 data class SubtitleCue(
     val startTimeMs: Long,
     val endTimeMs: Long,

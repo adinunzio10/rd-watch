@@ -1,3 +1,5 @@
+@file:OptIn(androidx.media3.common.util.UnstableApi::class)
+
 package com.rdwatch.androidtv.presentation.navigation
 
 import androidx.compose.animation.AnimatedContentTransitionScope
@@ -16,10 +18,15 @@ import com.rdwatch.androidtv.ui.settings.SettingsScreen
 import com.rdwatch.androidtv.ui.settings.scrapers.ScraperSettingsScreen
 import com.rdwatch.androidtv.ui.details.MovieDetailsScreen
 import com.rdwatch.androidtv.ui.details.MovieDetailsViewModel
+import com.rdwatch.androidtv.ui.details.TVDetailsScreen
+import com.rdwatch.androidtv.ui.details.TVDetailsViewModel
 import com.rdwatch.androidtv.ui.profile.ProfileScreen
 import com.rdwatch.androidtv.ui.home.TVHomeScreen
 import com.rdwatch.androidtv.ui.search.SearchScreen
 import com.rdwatch.androidtv.ui.filebrowser.AccountFileBrowserScreen
+import androidx.media3.common.util.UnstableApi
+import com.rdwatch.androidtv.ui.navigation.ContentTypeDetector
+import com.rdwatch.androidtv.ui.details.models.ContentType
 
 @Composable
 fun AppNavigation(
@@ -77,8 +84,16 @@ fun AppNavigation(
                         onNavigateToScreen = { screen ->
                             navController.navigate(screen)
                         },
-                        onMovieClick = { movie ->
-                            navController.navigate(Screen.MovieDetails(movie.id.toString()))
+                        onContentClick = { movie, contentType ->
+                            // Route based on actual content type from HomeViewModel
+                            when (contentType) {
+                                ContentType.TV_SHOW -> {
+                                    navController.navigate(Screen.TVDetails(movie.id.toString()))
+                                }
+                                else -> {
+                                    navController.navigate(Screen.MovieDetails(movie.id.toString()))
+                                }
+                            }
                         }
                     )
                 },
@@ -109,7 +124,16 @@ fun AppNavigation(
                 content = {
                     BrowseScreen(
                         onMovieClick = { movie ->
-                            navController.navigate(Screen.MovieDetails(movie.id.toString()))
+                            // Detect content type and route accordingly
+                            val contentType = ContentTypeDetector.detectContentType(movie)
+                            when (contentType) {
+                                ContentType.TV_SHOW -> {
+                                    navController.navigate(Screen.TVDetails(movie.id.toString()))
+                                }
+                                else -> {
+                                    navController.navigate(Screen.MovieDetails(movie.id.toString()))
+                                }
+                            }
                         },
                         onBackPressed = {
                             navController.popBackStack()
@@ -149,7 +173,53 @@ fun AppNavigation(
                     )
                 },
                 onMovieClick = { movie ->
-                    navController.navigate(Screen.MovieDetails(movie.id.toString()))
+                    // Detect content type and route accordingly
+                    val contentType = ContentTypeDetector.detectContentType(movie)
+                    when (contentType) {
+                        ContentType.TV_SHOW -> {
+                            navController.navigate(Screen.TVDetails(movie.id.toString()))
+                        }
+                        else -> {
+                            navController.navigate(Screen.MovieDetails(movie.id.toString()))
+                        }
+                    }
+                },
+                onBackPressed = {
+                    navController.popBackStack()
+                }
+            )
+        }
+        
+        composable<Screen.TVDetails>(
+            enterTransition = {
+                slideIntoContainer(
+                    AnimatedContentTransitionScope.SlideDirection.Left,
+                    animationSpec = tween(300)
+                )
+            },
+            popExitTransition = {
+                slideOutOfContainer(
+                    AnimatedContentTransitionScope.SlideDirection.Right,
+                    animationSpec = tween(300)
+                )
+            }
+        ) { backStackEntry ->
+            val tvDetails = backStackEntry.toRoute<Screen.TVDetails>()
+            val viewModel: TVDetailsViewModel = hiltViewModel()
+            
+            TVDetailsScreen(
+                tvShowId = tvDetails.tvShowId,
+                viewModel = viewModel,
+                onPlayClick = { selectedEpisode ->
+                    navController.navigate(
+                        Screen.VideoPlayer(
+                            videoUrl = selectedEpisode.videoUrl ?: "",
+                            title = selectedEpisode.title
+                        )
+                    )
+                },
+                onEpisodeClick = { episode ->
+                    // Handle episode click if needed
                 },
                 onBackPressed = {
                     navController.popBackStack()
@@ -159,12 +229,13 @@ fun AppNavigation(
         
         composable<Screen.VideoPlayer> { backStackEntry ->
             val videoPlayer = backStackEntry.toRoute<Screen.VideoPlayer>()
-            // TODO: Implement VideoPlayerScreen composable
-            // VideoPlayerScreen(
-            //     videoUrl = videoPlayer.videoUrl,
-            //     title = videoPlayer.title,
-            //     navController = navController
-            // )
+            com.rdwatch.androidtv.ui.videoplayer.VideoPlayerScreen(
+                videoUrl = videoPlayer.videoUrl,
+                title = videoPlayer.title,
+                onBackPressed = {
+                    navController.popBackStack()
+                }
+            )
         }
         
         composable<Screen.Search>(
@@ -192,8 +263,31 @@ fun AppNavigation(
                         onNavigateBack = {
                             navController.popBackStack()
                         },
-                        onItemSelected = { movieId ->
-                            navController.navigate(Screen.MovieDetails(movieId))
+                        onItemSelected = { contentId ->
+                            // Parse content ID format: "movie:123" or "tv:456"
+                            android.util.Log.d("AppNavigation", "Navigating to content: '$contentId'")
+                            
+                            when {
+                                contentId.startsWith("movie:") -> {
+                                    val movieId = contentId.removePrefix("movie:")
+                                    android.util.Log.d("AppNavigation", "Navigating to movie: '$movieId'")
+                                    navController.navigate(Screen.MovieDetails(movieId))
+                                }
+                                contentId.startsWith("tv:") -> {
+                                    val tvShowId = contentId.removePrefix("tv:")
+                                    android.util.Log.d("AppNavigation", "Navigating to TV show: '$tvShowId'")
+                                    navController.navigate(Screen.TVDetails(tvShowId))
+                                }
+                                contentId.startsWith("unknown:") -> {
+                                    android.util.Log.w("AppNavigation", "Content ID marked as unknown: '$contentId' - skipping navigation")
+                                    // Don't navigate for unknown content types to prevent crashes
+                                }
+                                else -> {
+                                    android.util.Log.w("AppNavigation", "Unknown content ID format: '$contentId' - falling back to movie details")
+                                    // Fallback to movie details for unknown format
+                                    navController.navigate(Screen.MovieDetails(contentId))
+                                }
+                            }
                         }
                     )
                 }
@@ -277,7 +371,16 @@ fun AppNavigation(
                 content = {
                     ProfileScreen(
                         onMovieClick = { movie ->
-                            navController.navigate(Screen.MovieDetails(movie.id.toString()))
+                            // Detect content type and route accordingly
+                            val contentType = ContentTypeDetector.detectContentType(movie)
+                            when (contentType) {
+                                ContentType.TV_SHOW -> {
+                                    navController.navigate(Screen.TVDetails(movie.id.toString()))
+                                }
+                                else -> {
+                                    navController.navigate(Screen.MovieDetails(movie.id.toString()))
+                                }
+                            }
                         },
                         onNavigateToScreen = { screen ->
                             navController.navigate(screen)
@@ -332,12 +435,17 @@ fun AppNavigation(
         
         composable<Screen.Error> { backStackEntry ->
             val error = backStackEntry.toRoute<Screen.Error>()
-            // TODO: Implement ErrorScreen composable
-            // ErrorScreen(
-            //     message = error.message,
-            //     canRetry = error.canRetry,
-            //     navController = navController
-            // )
+            com.rdwatch.androidtv.ui.error.ErrorScreen(
+                message = error.message,
+                canRetry = error.canRetry,
+                onRetry = {
+                    // Navigate back and let the previous screen handle retry
+                    navController.popBackStack()
+                },
+                onBackPressed = {
+                    navController.popBackStack()
+                }
+            )
         }
     }
 }

@@ -6,15 +6,20 @@ import com.rdwatch.androidtv.di.qualifiers.MainApi
 import com.rdwatch.androidtv.di.qualifiers.OAuthApi
 import com.rdwatch.androidtv.di.qualifiers.PublicClient
 import com.rdwatch.androidtv.di.qualifiers.RealDebridApi
+import com.rdwatch.androidtv.di.qualifiers.TMDbApi
 import com.rdwatch.androidtv.network.ApiService
 import com.rdwatch.androidtv.network.api.RealDebridApiService
 import com.rdwatch.androidtv.network.api.OAuth2ApiService
+import com.rdwatch.androidtv.network.api.TMDbMovieService
+import com.rdwatch.androidtv.network.api.TMDbTVService
+import com.rdwatch.androidtv.network.api.TMDbSearchService
 import com.rdwatch.androidtv.network.interceptors.AuthInterceptor
 import com.rdwatch.androidtv.network.interceptors.TokenAuthenticator
 import com.rdwatch.androidtv.network.interceptors.TokenProvider
 import com.rdwatch.androidtv.network.interceptors.TokenProviderImpl
 import com.rdwatch.androidtv.network.interceptors.NetworkMonitoringInterceptor
 import com.rdwatch.androidtv.network.interceptors.IPv4DnsResolver
+import com.rdwatch.androidtv.network.interceptors.TMDbApiKeyInterceptor
 import com.rdwatch.androidtv.BuildConfig
 import android.content.Context
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -191,6 +196,63 @@ abstract class NetworkModule {
         @Singleton
         fun provideOAuth2ApiService(@OAuthApi retrofit: Retrofit): OAuth2ApiService {
             return retrofit.create(OAuth2ApiService::class.java)
+        }
+        
+        @Provides
+        @Singleton
+        @TMDbApi
+        fun provideTMDbOkHttpClient(
+            @ApplicationContext context: Context,
+            loggingInterceptor: HttpLoggingInterceptor,
+            monitoringInterceptor: NetworkMonitoringInterceptor,
+            tmdbApiKeyInterceptor: TMDbApiKeyInterceptor
+        ): OkHttpClient {
+            val cacheSize = 20 * 1024 * 1024L // 20 MB cache for TMDb data
+            val cacheDir = File(context.cacheDir, "tmdb_cache")
+            val cache = Cache(cacheDir, cacheSize)
+            
+            return OkHttpClient.Builder()
+                .addInterceptor(tmdbApiKeyInterceptor) // Add API key to all requests
+                .addInterceptor(monitoringInterceptor)
+                .addInterceptor(loggingInterceptor)
+                .cache(cache)
+                .connectTimeout(30, TimeUnit.SECONDS)
+                .readTimeout(30, TimeUnit.SECONDS)
+                .writeTimeout(30, TimeUnit.SECONDS)
+                .build()
+        }
+        
+        @Provides
+        @Singleton
+        @TMDbApi
+        fun provideTMDbRetrofit(
+            @TMDbApi okHttpClient: OkHttpClient,
+            moshi: Moshi
+        ): Retrofit {
+            return Retrofit.Builder()
+                .baseUrl(TMDbMovieService.BASE_URL)
+                .client(okHttpClient)
+                .addCallAdapterFactory(ApiResponseCallAdapterFactory())
+                .addConverterFactory(MoshiConverterFactory.create(moshi))
+                .build()
+        }
+        
+        @Provides
+        @Singleton
+        fun provideTMDbMovieService(@TMDbApi retrofit: Retrofit): TMDbMovieService {
+            return retrofit.create(TMDbMovieService::class.java)
+        }
+        
+        @Provides
+        @Singleton
+        fun provideTMDbTVService(@TMDbApi retrofit: Retrofit): TMDbTVService {
+            return retrofit.create(TMDbTVService::class.java)
+        }
+        
+        @Provides
+        @Singleton
+        fun provideTMDbSearchService(@TMDbApi retrofit: Retrofit): TMDbSearchService {
+            return retrofit.create(TMDbSearchService::class.java)
         }
     }
 }

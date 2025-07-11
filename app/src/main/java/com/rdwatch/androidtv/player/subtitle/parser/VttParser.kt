@@ -2,6 +2,7 @@ package com.rdwatch.androidtv.player.subtitle.parser
 
 import androidx.media3.common.text.Cue
 import com.rdwatch.androidtv.player.subtitle.SubtitleCue
+import androidx.media3.common.util.UnstableApi
 import com.rdwatch.androidtv.player.subtitle.SubtitleFormat
 import com.rdwatch.androidtv.player.subtitle.SubtitleTrackData
 import kotlinx.coroutines.Dispatchers
@@ -23,6 +24,7 @@ import javax.inject.Singleton
  * This is the second subtitle
  * with positioning
  */
+@UnstableApi
 @Singleton
 class VttParser @Inject constructor() : SubtitleParser {
     

@@ -2,6 +2,7 @@ package com.rdwatch.androidtv.player.subtitle
 
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.common.util.UnstableApi
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -18,6 +19,7 @@ import javax.inject.Singleton
 /**
  * Handles synchronization of external subtitles with ExoPlayer timeline
  */
+@UnstableApi
 @Singleton
 class SubtitleSynchronizer @Inject constructor() {
     

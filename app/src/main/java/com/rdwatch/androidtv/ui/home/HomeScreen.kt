@@ -1,3 +1,5 @@
+@file:OptIn(androidx.media3.common.util.UnstableApi::class)
+
 package com.rdwatch.androidtv.ui.home
 
 import androidx.compose.animation.AnimatedVisibility
@@ -41,13 +43,17 @@ import com.rdwatch.androidtv.ui.components.ResumeDialogOverlay
 import com.rdwatch.androidtv.ui.components.ContinueWatchingManager
 import com.rdwatch.androidtv.navigation.PlaybackNavigationHelper
 import com.rdwatch.androidtv.presentation.navigation.Screen
+import androidx.media3.common.util.UnstableApi
+import com.rdwatch.androidtv.ui.details.models.ContentType
 
+@OptIn(UnstableApi::class)
 @Composable
 fun TVHomeScreen(
     playbackViewModel: PlaybackViewModel = hiltViewModel(),
     homeViewModel: HomeViewModel = hiltViewModel(),
     onNavigateToScreen: ((Any) -> Unit)? = null,
-    onMovieClick: ((Movie) -> Unit)? = null
+    onMovieClick: ((Movie) -> Unit)? = null,
+    onContentClick: ((Movie, ContentType) -> Unit)? = null
 ) {
     var isDrawerOpen by remember { mutableStateOf(false) }
     var showContinueWatchingManager by remember { mutableStateOf(false) }
@@ -113,7 +119,8 @@ fun TVHomeScreen(
             homeContentState = homeContentState,
             homeUiState = homeUiState,
             onShowContinueWatching = { showContinueWatchingManager = true },
-            onMovieClick = onMovieClick
+            onMovieClick = onMovieClick,
+            onContentClick = onContentClick
         )
         
         // Navigation drawer
@@ -169,7 +176,7 @@ fun TVHomeScreen(
             // Get movies from current content state for continue watching
             val currentContentState = homeContentState
             val movies = when (currentContentState) {
-                is UiState.Success -> currentContentState.data.allContent
+                is UiState.Success -> currentContentState.data.allContentAsMovies()
                 else -> emptyList()
             }
             
@@ -325,7 +332,8 @@ fun SafeAreaContent(
     homeContentState: UiState<HomeContent>,
     homeUiState: HomeUiState,
     onShowContinueWatching: () -> Unit,
-    onMovieClick: ((Movie) -> Unit)? = null
+    onMovieClick: ((Movie) -> Unit)? = null,
+    onContentClick: ((Movie, ContentType) -> Unit)? = null
 ) {
     val overscanMargin = 32.dp // 5% for most TVs
     
@@ -365,21 +373,26 @@ fun SafeAreaContent(
         // Content rows placeholder
         TVContentGrid(
             playbackViewModel = playbackViewModel,
+            homeViewModel = homeViewModel,
             homeContentState = homeContentState,
             homeUiState = homeUiState,
             onShowContinueWatching = onShowContinueWatching,
-            onMovieClick = onMovieClick
+            onMovieClick = onMovieClick,
+            onContentClick = onContentClick
         )
     }
 }
 
+@OptIn(UnstableApi::class)
 @Composable
 fun TVContentGrid(
     playbackViewModel: PlaybackViewModel = hiltViewModel(),
+    homeViewModel: HomeViewModel = hiltViewModel(),
     homeContentState: UiState<HomeContent>,
     homeUiState: HomeUiState,
     onShowContinueWatching: () -> Unit = {},
-    onMovieClick: ((Movie) -> Unit)? = null
+    onMovieClick: ((Movie) -> Unit)? = null,
+    onContentClick: ((Movie, ContentType) -> Unit)? = null
 ) {
     val firstRowFocusRequester = remember { FocusRequester() }
     
@@ -402,7 +415,7 @@ fun TVContentGrid(
                     if (inProgressContent.isNotEmpty()) {
                         val continueWatchingMovies = inProgressContent.mapNotNull { progress ->
                             // Map content IDs back to movies - in a real app this would be more sophisticated
-                            homeContent.allContent.find { it.videoUrl == progress.contentId }
+                            homeContent.allContentAsMovies().find { it.videoUrl == progress.contentId }
                         }.take(10)
                         
                         if (continueWatchingMovies.isNotEmpty()) {
@@ -422,7 +435,7 @@ fun TVContentGrid(
                         add(
                             ContentRowData(
                                 title = "Featured",
-                                movies = homeContent.featured,
+                                movies = homeContent.featuredAsMovies(),
                                 type = ContentRowType.FEATURED
                             )
                         )
@@ -432,14 +445,14 @@ fun TVContentGrid(
                         add(
                             ContentRowData(
                                 title = "Recently Added",
-                                movies = homeContent.recentlyAdded,
+                                movies = homeContent.recentlyAddedAsMovies(),
                                 type = ContentRowType.STANDARD
                             )
                         )
                     }
                     
                     // Add genre-based rows
-                    homeContent.byGenre.forEach { (genre, movies) ->
+                    homeContent.byGenreAsMovies().forEach { (genre, movies) ->
                         if (movies.isNotEmpty()) {
                             add(
                                 ContentRowData(
@@ -456,7 +469,7 @@ fun TVContentGrid(
                         add(
                             ContentRowData(
                                 title = "My Library",
-                                movies = homeContent.allContent,
+                                movies = homeContent.allContentAsMovies(),
                                 type = ContentRowType.STANDARD
                             )
                         )
@@ -571,7 +584,13 @@ fun TVContentGrid(
                                 { onShowContinueWatching() }
                             } else null,
                             onItemClick = { movie ->
-                                onMovieClick?.invoke(movie)
+                                // Use new content-aware callback if available, otherwise fallback to old callback
+                                if (onContentClick != null) {
+                                    val contentType = homeViewModel.getContentTypeByMovieId(movie.id.toString())
+                                    onContentClick.invoke(movie, contentType)
+                                } else {
+                                    onMovieClick?.invoke(movie)
+                                }
                             }
                         )
                     }

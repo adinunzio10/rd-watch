@@ -97,4 +97,23 @@ object DatabaseModule {
     fun provideFileHashDao(@MainDatabase database: AppDatabase): FileHashDao {
         return database.fileHashDao()
     }
+
+    // TMDb DAOs
+    @Provides
+    @Singleton
+    fun provideTMDbMovieDao(@MainDatabase database: AppDatabase): TMDbMovieDao {
+        return database.tmdbMovieDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideTMDbTVDao(@MainDatabase database: AppDatabase): TMDbTVDao {
+        return database.tmdbTVDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideTMDbSearchDao(@MainDatabase database: AppDatabase): TMDbSearchDao {
+        return database.tmdbSearchDao()
+    }
 }
