@@ -500,6 +500,18 @@ class MovieDetailsViewModel @Inject constructor(
      */
     fun loadSourcesForMovie(tmdbId: String, imdbId: String?) {
         println("DEBUG [MovieDetailsViewModel]: loadSourcesForMovie called with tmdbId: $tmdbId, imdbId: $imdbId")
+        
+        // Run scraper integration test first
+        println("🧪 RUNNING SCRAPER INTEGRATION TEST:")
+        try {
+            val testResults = com.rdwatch.androidtv.scraper.api.ScraperTestRunner.runAllTests()
+            println(testResults)
+        } catch (e: Exception) {
+            println("❌ Test runner failed: ${e.message}")
+        }
+        println("🧪 END SCRAPER INTEGRATION TEST")
+        println()
+        
         viewModelScope.launch {
             _sourcesState.value = UiState.Loading
             updateState { copy(sourcesLoading = true, sourcesError = null) }

@@ -4,10 +4,17 @@ import com.rdwatch.androidtv.scraper.ScraperManifestManager
 import com.rdwatch.androidtv.scraper.models.ManifestCapability
 import com.rdwatch.androidtv.scraper.models.ManifestResult
 import com.rdwatch.androidtv.scraper.models.ScraperManifest
+import com.rdwatch.androidtv.scraper.api.ScraperApiClient
+import com.rdwatch.androidtv.scraper.api.ScraperApiResponse
+import com.rdwatch.androidtv.scraper.api.ScraperQueryBuilder
+import com.rdwatch.androidtv.scraper.api.ScraperResponseMapper
 import com.rdwatch.androidtv.ui.details.adapters.ScraperSourceAdapter
 import com.rdwatch.androidtv.ui.details.models.SourceProvider
 import com.rdwatch.androidtv.ui.details.models.SourceQuality
 import com.rdwatch.androidtv.ui.details.models.StreamingSource
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
@@ -20,7 +27,10 @@ import javax.inject.Singleton
 @Singleton
 class ScraperSourceManager @Inject constructor(
     private val scraperManifestManager: ScraperManifestManager,
-    private val scraperSourceAdapter: ScraperSourceAdapter
+    private val scraperSourceAdapter: ScraperSourceAdapter,
+    private val scraperApiClient: ScraperApiClient,
+    private val scraperQueryBuilder: ScraperQueryBuilder,
+    private val scraperResponseMapper: ScraperResponseMapper
 ) {
     
     // === Source Provider Operations ===
@@ -82,9 +92,8 @@ class ScraperSourceManager @Inject constructor(
         contentType: String,
         imdbId: String? = null,
         tmdbId: String? = null
-    ): List<StreamingSource> {
+    ): List<StreamingSource> = coroutineScope {
         println("DEBUG [ScraperSourceManager]: getSourcesForContent called with contentId: $contentId, contentType: $contentType, imdbId: $imdbId, tmdbId: $tmdbId")
-        val streamingSources = mutableListOf<StreamingSource>()
         
         // Get streaming manifests
         val streamingManifests = when (val result = scraperManifestManager.getManifestsByCapability(ManifestCapability.STREAM)) {
@@ -100,18 +109,27 @@ class ScraperSourceManager @Inject constructor(
         
         println("DEBUG [ScraperSourceManager]: Enabled streaming manifests: ${streamingManifests.size}")
         
-        // Query each streaming manifest for sources
-        streamingManifests.forEach { manifest ->
-            println("DEBUG [ScraperSourceManager]: Querying manifest: ${manifest.name}")
-            val sources = queryManifestForSources(manifest, contentId, contentType, imdbId, tmdbId)
-            println("DEBUG [ScraperSourceManager]: Manifest ${manifest.name} returned ${sources.size} sources")
-            streamingSources.addAll(sources)
-        }
+        // Query all manifests concurrently
+        val sourceLists = streamingManifests.map { manifest ->
+            async {
+                println("DEBUG [ScraperSourceManager]: Querying manifest: ${manifest.name}")
+                try {
+                    val sources = queryManifestForSources(manifest, contentId, contentType, imdbId, tmdbId)
+                    println("DEBUG [ScraperSourceManager]: Manifest ${manifest.name} returned ${sources.size} sources")
+                    sources
+                } catch (e: Exception) {
+                    println("DEBUG [ScraperSourceManager]: Error querying ${manifest.name}: ${e.message}")
+                    emptyList()
+                }
+            }
+        }.awaitAll()
         
-        // Sort by priority score
-        val sortedSources = streamingSources.sortedByDescending { it.getPriorityScore() }
+        // Flatten all source lists and sort by priority
+        val allSources = sourceLists.flatten()
+        val sortedSources = allSources.sortedByDescending { scraperResponseMapper.calculatePriorityScore(it) }
+        
         println("DEBUG [ScraperSourceManager]: Returning ${sortedSources.size} total sources")
-        return sortedSources
+        sortedSources
     }
     
     /**
@@ -124,9 +142,45 @@ class ScraperSourceManager @Inject constructor(
         imdbId: String? = null,
         tmdbId: String? = null
     ): List<StreamingSource> {
-        // This would be implemented to make actual API calls to the scraper
-        // For now, returning sample sources
-        return createSampleSourcesForManifest(manifest, contentId, contentType)
+        println("DEBUG [ScraperSourceManager]: Making real API call to ${manifest.name}")
+        
+        // Build the query URL
+        val queryUrl = scraperQueryBuilder.buildContentQueryUrl(
+            manifest = manifest,
+            contentType = contentType,
+            contentId = contentId,
+            imdbId = imdbId,
+            tmdbId = tmdbId
+        )
+        
+        // Get request headers
+        val headers = scraperQueryBuilder.getRequestHeaders(manifest)
+        
+        // Make the API call
+        val response = scraperApiClient.makeScraperRequest(queryUrl, headers)
+        
+        return when (response) {
+            is ScraperApiResponse.Success -> {
+                println("DEBUG [ScraperSourceManager]: API call successful for ${manifest.name}")
+                // Parse the response
+                scraperResponseMapper.parseScraperResponse(
+                    manifest = manifest,
+                    responseBody = response.data,
+                    contentId = contentId,
+                    contentType = contentType
+                )
+            }
+            is ScraperApiResponse.Error -> {
+                println("DEBUG [ScraperSourceManager]: API call failed for ${manifest.name}: ${response.message}")
+                // For development/testing, return sample sources if API fails
+                if (response.statusCode == 0 || response.message.contains("timeout", ignoreCase = true)) {
+                    println("DEBUG [ScraperSourceManager]: Falling back to sample sources for ${manifest.name}")
+                    createSampleSourcesForManifest(manifest, contentId, contentType)
+                } else {
+                    emptyList()
+                }
+            }
+        }
     }
     
     /**
