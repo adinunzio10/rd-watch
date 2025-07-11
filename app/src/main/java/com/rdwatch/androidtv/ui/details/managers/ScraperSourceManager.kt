@@ -83,22 +83,35 @@ class ScraperSourceManager @Inject constructor(
         imdbId: String? = null,
         tmdbId: String? = null
     ): List<StreamingSource> {
+        println("DEBUG [ScraperSourceManager]: getSourcesForContent called with contentId: $contentId, contentType: $contentType, imdbId: $imdbId, tmdbId: $tmdbId")
         val streamingSources = mutableListOf<StreamingSource>()
         
         // Get streaming manifests
         val streamingManifests = when (val result = scraperManifestManager.getManifestsByCapability(ManifestCapability.STREAM)) {
-            is ManifestResult.Success -> scraperSourceAdapter.getEnabledManifests(result.data)
-            is ManifestResult.Error -> emptyList()
+            is ManifestResult.Success -> {
+                println("DEBUG [ScraperSourceManager]: Found ${result.data.size} streaming manifests")
+                scraperSourceAdapter.getEnabledManifests(result.data)
+            }
+            is ManifestResult.Error -> {
+                println("DEBUG [ScraperSourceManager]: Error getting streaming manifests: ${result.exception.message}")
+                emptyList()
+            }
         }
+        
+        println("DEBUG [ScraperSourceManager]: Enabled streaming manifests: ${streamingManifests.size}")
         
         // Query each streaming manifest for sources
         streamingManifests.forEach { manifest ->
+            println("DEBUG [ScraperSourceManager]: Querying manifest: ${manifest.name}")
             val sources = queryManifestForSources(manifest, contentId, contentType, imdbId, tmdbId)
+            println("DEBUG [ScraperSourceManager]: Manifest ${manifest.name} returned ${sources.size} sources")
             streamingSources.addAll(sources)
         }
         
         // Sort by priority score
-        return streamingSources.sortedByDescending { it.getPriorityScore() }
+        val sortedSources = streamingSources.sortedByDescending { it.getPriorityScore() }
+        println("DEBUG [ScraperSourceManager]: Returning ${sortedSources.size} total sources")
+        return sortedSources
     }
     
     /**

@@ -499,11 +499,13 @@ class MovieDetailsViewModel @Inject constructor(
      * Load streaming sources for the movie from scrapers
      */
     fun loadSourcesForMovie(tmdbId: String, imdbId: String?) {
+        println("DEBUG [MovieDetailsViewModel]: loadSourcesForMovie called with tmdbId: $tmdbId, imdbId: $imdbId")
         viewModelScope.launch {
             _sourcesState.value = UiState.Loading
             updateState { copy(sourcesLoading = true, sourcesError = null) }
             
             try {
+                println("DEBUG [MovieDetailsViewModel]: Starting scraper query for movie $tmdbId")
                 val sources = scraperSourceManager.getSourcesForContent(
                     contentId = tmdbId,
                     contentType = "movie",
@@ -511,9 +513,17 @@ class MovieDetailsViewModel @Inject constructor(
                     tmdbId = tmdbId
                 )
                 
+                println("DEBUG [MovieDetailsViewModel]: Scrapers returned ${sources.size} sources")
+                sources.forEach { source ->
+                    println("DEBUG [MovieDetailsViewModel]: Source: ${source.provider.displayName} - ${source.quality.displayName} - ${source.url}")
+                }
+                
                 _sourcesState.value = UiState.Success(sources)
                 updateState { copy(availableSources = sources, sourcesLoading = false) }
             } catch (e: Exception) {
+                println("DEBUG [MovieDetailsViewModel]: Exception loading sources: ${e.message}")
+                e.printStackTrace()
+                
                 val errorMessage = when {
                     e.message?.contains("timeout", ignoreCase = true) == true -> "Request timed out. Please try again."
                     e.message?.contains("network", ignoreCase = true) == true -> "Network error. Check your connection."
