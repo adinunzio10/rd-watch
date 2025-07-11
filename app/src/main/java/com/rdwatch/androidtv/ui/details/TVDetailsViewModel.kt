@@ -36,6 +36,9 @@ class TVDetailsViewModel @Inject constructor(
     private val _selectedTabIndex = MutableStateFlow(0)
     val selectedTabIndex: StateFlow<Int> = _selectedTabIndex.asStateFlow()
     
+    private val _creditsState = MutableStateFlow<UiState<ExtendedContentMetadata>>(UiState.Loading)
+    val creditsState: StateFlow<UiState<ExtendedContentMetadata>> = _creditsState.asStateFlow()
+    
     override fun createInitialState(): TVDetailsUiState {
         return TVDetailsUiState()
     }
@@ -206,6 +209,9 @@ class TVDetailsViewModel @Inject constructor(
                             
                             // Load related shows
                             loadRelatedShows(tvShowDetail)
+                            
+                            // Load credits
+                            loadTVCredits(tmdbId)
                         }
                         is com.rdwatch.androidtv.repository.base.Result.Error -> {
                             updateState { 
@@ -410,6 +416,76 @@ class TVDetailsViewModel @Inject constructor(
     }
     
     /**
+     * Load TV show credits (cast and crew) from TMDb
+     */
+    private fun loadTVCredits(tmdbId: Int) {
+        viewModelScope.launch {
+            _creditsState.value = UiState.Loading
+            
+            tmdbTVRepository.getTVCredits(tmdbId).collect { result ->
+                when (result) {
+                    is com.rdwatch.androidtv.repository.base.Result.Loading -> {
+                        _creditsState.value = UiState.Loading
+                    }
+                    is com.rdwatch.androidtv.repository.base.Result.Success -> {
+                        val creditsResponse = result.data
+                        
+                        // Convert TMDb cast to CastMember objects
+                        val castMembers = creditsResponse.cast.take(20).map { tmdbCast ->
+                            CastMember(
+                                id = tmdbCast.id,
+                                name = tmdbCast.name,
+                                character = tmdbCast.character,
+                                profileImageUrl = CastMember.buildProfileImageUrl(tmdbCast.profilePath),
+                                order = tmdbCast.order
+                            )
+                        }
+                        
+                        // Convert TMDb crew to CrewMember objects
+                        val crewMembers = creditsResponse.crew.map { tmdbCrew ->
+                            CrewMember(
+                                id = tmdbCrew.id,
+                                name = tmdbCrew.name,
+                                job = tmdbCrew.job,
+                                department = tmdbCrew.department,
+                                profileImageUrl = CrewMember.buildProfileImageUrl(tmdbCrew.profilePath)
+                            )
+                        }
+                        
+                        // Create ExtendedContentMetadata with cast and crew
+                        val extendedMetadata = ExtendedContentMetadata(
+                            fullCast = castMembers,
+                            crew = crewMembers
+                        )
+                        
+                        _creditsState.value = UiState.Success(extendedMetadata)
+                        
+                        // Update the TV show detail with cast and crew
+                        _tvShowState.value?.let { tvShow ->
+                            val tvShowDetail = tvShow.getTVShowDetail()
+                            val updatedTvShowDetail = tvShowDetail.copy(
+                                fullCast = castMembers,
+                                crew = crewMembers,
+                                cast = castMembers.take(5).map { it.name } // Keep top 5 for legacy compatibility
+                            )
+                            val updatedTvShow = tvShow.withTVShowDetail(updatedTvShowDetail)
+                            
+                            _tvShowState.value = updatedTvShow
+                            updateState { copy(tvShow = updatedTvShow) }
+                        }
+                    }
+                    is com.rdwatch.androidtv.repository.base.Result.Error -> {
+                        _creditsState.value = UiState.Error(
+                            message = "Failed to load TV show credits: ${result.exception.message}",
+                            throwable = result.exception
+                        )
+                    }
+                }
+            }
+        }
+    }
+    
+    /**
      * Refresh TV show data
      */
     fun refresh() {
@@ -433,6 +509,7 @@ class TVDetailsViewModel @Inject constructor(
         _selectedSeason.value = null
         _selectedEpisode.value = null
         _relatedShowsState.value = UiState.Loading
+        _creditsState.value = UiState.Loading
         _selectedTabIndex.value = 0
         
         updateState { createInitialState() }
