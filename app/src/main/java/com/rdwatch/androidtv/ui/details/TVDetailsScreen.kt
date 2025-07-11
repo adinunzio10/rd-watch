@@ -83,6 +83,7 @@ fun TVDetailsScreen(
                     creditsState = creditsState,
                     sourcesState = sourcesState,
                     viewModel = viewModel,
+                    playbackViewModel = playbackViewModel,
                     onActionClick = { action ->
                         when (action) {
                             is ContentAction.Play -> {
@@ -143,6 +144,7 @@ private fun TVDetailsContent(
     creditsState: UiState<ExtendedContentMetadata>,
     sourcesState: UiState<List<StreamingSource>>,
     viewModel: TVDetailsViewModel,
+    playbackViewModel: PlaybackViewModel,
     onActionClick: (ContentAction) -> Unit,
     onSeasonSelected: (TVSeason) -> Unit,
     onEpisodeSelected: (TVEpisode) -> Unit,
@@ -244,7 +246,7 @@ private fun TVDetailsContent(
                                     // Play the selected episode with the chosen source
                                     selectedEpisode?.let { episode ->
                                         playbackViewModel.startEpisodePlayback(
-                                            tvShow = tvShowDetail,
+                                            tvShow = tvShow,
                                             episode = episode,
                                             source = source
                                         )
@@ -264,7 +266,7 @@ private fun TVDetailsContent(
                                         // Play the selected episode with the chosen source
                                         selectedEpisode?.let { episode ->
                                             playbackViewModel.startEpisodePlayback(
-                                                tvShow = tvShowDetail,
+                                                tvShow = tvShow,
                                                 episode = episode,
                                                 source = source
                                             )
