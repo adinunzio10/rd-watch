@@ -222,48 +222,6 @@ private fun TVDetailsContent(
                     )
                 }
                 
-                // Cast and Crew section
-                item {
-                    when (creditsState) {
-                        is UiState.Success -> {
-                            CastCrewSection(
-                                metadata = creditsState.data,
-                                onCastMemberClick = { /* TODO: Handle cast member click */ },
-                                onCrewMemberClick = { /* TODO: Handle crew member click */ },
-                                modifier = Modifier.padding(horizontal = 32.dp, vertical = 16.dp)
-                            )
-                        }
-                        is UiState.Error -> {
-                            // Show error message for cast/crew loading failure
-                            Surface(
-                                modifier = Modifier.padding(horizontal = 32.dp, vertical = 16.dp),
-                                shape = RoundedCornerShape(8.dp),
-                                color = MaterialTheme.colorScheme.errorContainer
-                            ) {
-                                Text(
-                                    text = "Failed to load cast and crew information",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onErrorContainer,
-                                    modifier = Modifier.padding(16.dp)
-                                )
-                            }
-                        }
-                        is UiState.Loading -> {
-                            // Show loading indicator for cast/crew
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 32.dp, vertical = 16.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                CircularProgressIndicator(
-                                    modifier = Modifier.size(24.dp)
-                                )
-                            }
-                        }
-                    }
-                }
-                
                 // Related content section
                 item {
                     RelatedSection(
@@ -307,6 +265,50 @@ private fun TVDetailsContent(
                                 onEpisodeClick = onEpisodeSelected,
                                 modifier = Modifier.padding(horizontal = 32.dp, vertical = 16.dp)
                             )
+                        }
+                    }
+                }
+            }
+            
+            3 -> {
+                // Cast & Crew Tab
+                item {
+                    when (creditsState) {
+                        is UiState.Success -> {
+                            CastCrewSection(
+                                metadata = creditsState.data,
+                                onCastMemberClick = { /* TODO: Handle cast member click */ },
+                                onCrewMemberClick = { /* TODO: Handle crew member click */ },
+                                modifier = Modifier.padding(horizontal = 32.dp, vertical = 16.dp)
+                            )
+                        }
+                        is UiState.Error -> {
+                            // Show error message for cast/crew loading failure
+                            Surface(
+                                modifier = Modifier.padding(horizontal = 32.dp, vertical = 16.dp),
+                                shape = RoundedCornerShape(8.dp),
+                                color = MaterialTheme.colorScheme.errorContainer
+                            ) {
+                                Text(
+                                    text = "Failed to load cast and crew information",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onErrorContainer,
+                                    modifier = Modifier.padding(16.dp)
+                                )
+                            }
+                        }
+                        is UiState.Loading -> {
+                            // Show loading indicator for cast/crew
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 32.dp, vertical = 16.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            }
                         }
                     }
                 }
