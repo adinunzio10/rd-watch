@@ -45,8 +45,14 @@ fun SourceSelectionSection(
     groupByProvider: Boolean = false
 ) {
     val availableSources = remember(sources) {
-        sources.filter { it.isCurrentlyAvailable() }
+        println("DEBUG [SourceSelectionSection]: Total sources received: ${sources.size}")
+        sources.forEachIndexed { index, source ->
+            println("DEBUG [SourceSelectionSection]: Source $index: ${source.provider.displayName} - Available: ${source.isAvailable}, Provider Available: ${source.provider.isAvailable}, Currently Available: ${source.isCurrentlyAvailable()}")
+        }
+        val filtered = sources.filter { it.isCurrentlyAvailable() }
             .sortedByDescending { it.getPriorityScore() }
+        println("DEBUG [SourceSelectionSection]: Filtered to ${filtered.size} available sources")
+        filtered
     }
     
     val displaySources = remember(availableSources, groupByProvider) {
