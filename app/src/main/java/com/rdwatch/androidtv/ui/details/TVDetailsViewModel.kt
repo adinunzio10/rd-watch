@@ -113,7 +113,7 @@ class TVDetailsViewModel @Inject constructor(
                                         originCountry = contentDetail.originCountry,
                                         numberOfSeasons = contentDetail.numberOfSeasons ?: 1,
                                         numberOfEpisodes = contentDetail.numberOfEpisodes ?: 0,
-                                        seasons = getDefaultSeasons(), // Load seasons separately
+                                        seasons = emptyList(), // Will be populated after loading season details
                                         networks = contentDetail.networks,
                                         productionCompanies = contentDetail.productionCompanies,
                                         creators = emptyList(), // TODO: Load from TMDb credits
@@ -218,10 +218,8 @@ class TVDetailsViewModel @Inject constructor(
                             // Load credits
                             loadTVCredits(tmdbId)
                             
-                            // Load sources for first episode
-                            firstEpisode?.let { episode ->
-                                loadSourcesForEpisode(tvShowDetail, episode)
-                            }
+                            // Load detailed season data with episodes
+                            loadSeasonsWithEpisodes(tmdbId, tvShowDetail)
                         }
                         is com.rdwatch.androidtv.repository.base.Result.Error -> {
                             updateState { 
@@ -264,7 +262,7 @@ class TVDetailsViewModel @Inject constructor(
     }
     
     /**
-     * Select an episode
+     * Select an episode and load sources
      */
     fun selectEpisode(episode: TVEpisode) {
         _selectedEpisode.value = episode
@@ -431,6 +429,112 @@ class TVDetailsViewModel @Inject constructor(
     }
     
     /**
+     * Load detailed season data with episodes from TMDb
+     */
+    private fun loadSeasonsWithEpisodes(tmdbId: Int, tvShowDetail: TVShowContentDetail) {
+        viewModelScope.launch {
+            try {
+                val numberOfSeasons = tvShowDetail.getTVShowDetail().numberOfSeasons
+                val loadedSeasons = mutableListOf<TVSeason>()
+                
+                // Load each season's details concurrently
+                val seasonJobs = (1..numberOfSeasons).map { seasonNumber ->
+                    viewModelScope.launch {
+                        tmdbTVRepository.getSeasonDetails(tmdbId, seasonNumber).collect { result ->
+                            when (result) {
+                                is com.rdwatch.androidtv.repository.base.Result.Success -> {
+                                    val seasonResponse = result.data
+                                    if (seasonResponse != null && seasonResponse.id != 0) {
+                                        val tvSeason = mapTMDbSeasonResponseToTVSeason(seasonResponse)
+                                        synchronized(loadedSeasons) {
+                                            loadedSeasons.add(tvSeason)
+                                        }
+                                        
+                                        // Update UI state when we have all seasons
+                                        if (loadedSeasons.size == numberOfSeasons) {
+                                            val sortedSeasons = loadedSeasons.sortedBy { it.seasonNumber }
+                                            updateTVShowWithSeasons(tvShowDetail, sortedSeasons)
+                                        }
+                                    }
+                                }
+                                is com.rdwatch.androidtv.repository.base.Result.Error -> {
+                                    android.util.Log.e("TVDetailsViewModel", "Failed to load season $seasonNumber: ${result.exception.message}")
+                                    // Continue loading other seasons
+                                }
+                                is com.rdwatch.androidtv.repository.base.Result.Loading -> {
+                                    // Loading state - we'll show loading until all seasons are loaded
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                // Wait for all season loading jobs to complete
+                seasonJobs.forEach { it.join() }
+                
+                // If no seasons were loaded, use default seasons as fallback
+                if (loadedSeasons.isEmpty()) {
+                    android.util.Log.w("TVDetailsViewModel", "No seasons loaded from TMDb, using default seasons")
+                    val defaultSeasons = getDefaultSeasons()
+                    updateTVShowWithSeasons(tvShowDetail, defaultSeasons)
+                }
+                
+            } catch (e: Exception) {
+                android.util.Log.e("TVDetailsViewModel", "Error loading seasons: ${e.message}")
+                // Use default seasons as fallback
+                val defaultSeasons = getDefaultSeasons()
+                updateTVShowWithSeasons(tvShowDetail, defaultSeasons)
+            }
+        }
+    }
+    
+    /**
+     * Update the TV show with loaded seasons and select first episode
+     */
+    private fun updateTVShowWithSeasons(originalTvShow: TVShowContentDetail, seasons: List<TVSeason>) {
+        val updatedTvShowDetail = originalTvShow.getTVShowDetail().copy(seasons = seasons)
+        val updatedTvShow = originalTvShow.withTVShowDetail(updatedTvShowDetail)
+        
+        _tvShowState.value = updatedTvShow
+        
+        // Select first season and episode
+        val firstSeason = seasons.firstOrNull()
+        _selectedSeason.value = firstSeason
+        
+        val firstEpisode = firstSeason?.episodes?.firstOrNull()
+        _selectedEpisode.value = firstEpisode
+        
+        updateState { 
+            copy(
+                tvShow = updatedTvShow,
+                currentSeason = firstSeason,
+                currentEpisode = firstEpisode
+            )
+        }
+        
+        // Don't auto-load sources on TV show load - wait for episode selection
+        // This addresses the user's feedback about premature source loading
+        android.util.Log.d("TVDetailsViewModel", "Loaded ${seasons.size} seasons with episodes. First episode: ${firstEpisode?.title}")
+    }
+    
+    /**
+     * Map TMDb season response to TVSeason
+     */
+    private fun mapTMDbSeasonResponseToTVSeason(seasonResponse: com.rdwatch.androidtv.network.models.tmdb.TMDbSeasonResponse): TVSeason {
+        return TVSeason(
+            id = seasonResponse.id.toString(),
+            seasonNumber = seasonResponse.seasonNumber,
+            name = seasonResponse.name,
+            overview = seasonResponse.overview,
+            posterPath = seasonResponse.posterPath?.let { "https://image.tmdb.org/t/p/w500$it" },
+            airDate = seasonResponse.airDate,
+            episodeCount = seasonResponse.episodeCount,
+            episodes = mapTMDbEpisodesToTVEpisodes(seasonResponse.episodes, seasonResponse.seasonNumber),
+            voteAverage = seasonResponse.voteAverage.toFloat()
+        )
+    }
+    
+    /**
      * Load TV show credits (cast and crew) from TMDb
      */
     private fun loadTVCredits(tmdbId: Int) {
@@ -525,12 +629,17 @@ class TVDetailsViewModel @Inject constructor(
             updateState { copy(sourcesLoading = true, sourcesError = null) }
             
             try {
-                val sources = scraperSourceManager.getSourcesForContent(
-                    contentId = "${tvShow.id}:${episode.seasonNumber}:${episode.episodeNumber}",
-                    contentType = "series",
+                android.util.Log.d("TVDetailsViewModel", "Loading sources for episode: S${episode.seasonNumber}E${episode.episodeNumber} - ${episode.title}")
+                
+                val sources = scraperSourceManager.getSourcesForTVEpisode(
+                    tvShowId = tvShow.id,
+                    seasonNumber = episode.seasonNumber,
+                    episodeNumber = episode.episodeNumber,
                     imdbId = null, // TMDb TV shows don't have IMDb IDs in this model
                     tmdbId = tvShow.id
                 )
+                
+                android.util.Log.d("TVDetailsViewModel", "Loaded ${sources.size} sources for episode")
                 
                 _sourcesState.value = UiState.Success(sources)
                 updateState { copy(availableSources = sources, sourcesLoading = false) }
@@ -542,6 +651,8 @@ class TVDetailsViewModel @Inject constructor(
                     e.message?.contains("not found", ignoreCase = true) == true -> "Episode not found in scrapers."
                     else -> "Failed to load sources: ${e.message}"
                 }
+                
+                android.util.Log.e("TVDetailsViewModel", "Failed to load sources for episode: $errorMessage")
                 
                 _sourcesState.value = UiState.Error(
                     message = errorMessage,

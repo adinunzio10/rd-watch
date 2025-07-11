@@ -85,6 +85,62 @@ class ScraperSourceManager @Inject constructor(
     // === Source Operations ===
     
     /**
+     * Get sources for TV episode from scrapers
+     */
+    suspend fun getSourcesForTVEpisode(
+        tvShowId: String,
+        seasonNumber: Int,
+        episodeNumber: Int,
+        imdbId: String? = null,
+        tmdbId: String? = null
+    ): List<StreamingSource> = coroutineScope {
+        println("DEBUG [ScraperSourceManager]: getSourcesForTVEpisode called - tvShowId: $tvShowId, season: $seasonNumber, episode: $episodeNumber")
+        
+        // Get streaming manifests
+        val streamingManifests = when (val result = scraperManifestManager.getManifestsByCapability(ManifestCapability.STREAM)) {
+            is ManifestResult.Success -> {
+                println("DEBUG [ScraperSourceManager]: Found ${result.data.size} streaming manifests for TV episode")
+                scraperSourceAdapter.getEnabledManifests(result.data)
+            }
+            is ManifestResult.Error -> {
+                println("DEBUG [ScraperSourceManager]: Error getting streaming manifests for TV episode: ${result.exception.message}")
+                emptyList()
+            }
+        }
+        
+        println("DEBUG [ScraperSourceManager]: Enabled streaming manifests for TV episode: ${streamingManifests.size}")
+        
+        // Query all manifests concurrently for the specific episode
+        val sourceLists = streamingManifests.map { manifest ->
+            async {
+                println("DEBUG [ScraperSourceManager]: Querying manifest for TV episode: ${manifest.name}")
+                try {
+                    val sources = queryManifestForTVEpisode(
+                        manifest = manifest,
+                        tvShowId = tvShowId,
+                        seasonNumber = seasonNumber,
+                        episodeNumber = episodeNumber,
+                        imdbId = imdbId,
+                        tmdbId = tmdbId
+                    )
+                    println("DEBUG [ScraperSourceManager]: Manifest ${manifest.name} returned ${sources.size} sources for TV episode")
+                    sources
+                } catch (e: Exception) {
+                    println("DEBUG [ScraperSourceManager]: Error querying ${manifest.name} for TV episode: ${e.message}")
+                    emptyList()
+                }
+            }
+        }.awaitAll()
+        
+        // Flatten all source lists and sort by priority
+        val allSources = sourceLists.flatten()
+        val sortedSources = allSources.sortedByDescending { scraperResponseMapper.calculatePriorityScore(it) }
+        
+        println("DEBUG [ScraperSourceManager]: Returning ${sortedSources.size} total sources for TV episode")
+        sortedSources
+    }
+    
+    /**
      * Get sources for content from scrapers
      */
     suspend fun getSourcesForContent(
@@ -130,6 +186,61 @@ class ScraperSourceManager @Inject constructor(
         
         println("DEBUG [ScraperSourceManager]: Returning ${sortedSources.size} total sources")
         sortedSources
+    }
+    
+    /**
+     * Query a specific manifest for TV episode sources
+     */
+    private suspend fun queryManifestForTVEpisode(
+        manifest: ScraperManifest,
+        tvShowId: String,
+        seasonNumber: Int,
+        episodeNumber: Int,
+        imdbId: String? = null,
+        tmdbId: String? = null
+    ): List<StreamingSource> {
+        println("DEBUG [ScraperSourceManager]: Making real API call to ${manifest.name} for TV episode")
+        
+        // Build the query URL with season and episode parameters
+        val queryUrl = scraperQueryBuilder.buildContentQueryUrl(
+            manifest = manifest,
+            contentType = "series",
+            contentId = imdbId ?: tvShowId,
+            imdbId = imdbId,
+            tmdbId = tmdbId,
+            seasonNumber = seasonNumber,
+            episodeNumber = episodeNumber
+        )
+        
+        // Get request headers
+        val headers = scraperQueryBuilder.getRequestHeaders(manifest)
+        
+        // Make the API call
+        val response = scraperApiClient.makeScraperRequest(queryUrl, headers)
+        
+        return when (response) {
+            is ScraperApiResponse.Success -> {
+                println("DEBUG [ScraperSourceManager]: API call successful for ${manifest.name} TV episode")
+                // Parse the response with episode-specific content ID
+                val episodeContentId = "${tvShowId}:${seasonNumber}:${episodeNumber}"
+                scraperResponseMapper.parseScraperResponse(
+                    manifest = manifest,
+                    responseBody = response.data,
+                    contentId = episodeContentId,
+                    contentType = "series"
+                )
+            }
+            is ScraperApiResponse.Error -> {
+                println("DEBUG [ScraperSourceManager]: API call failed for ${manifest.name} TV episode: ${response.message}")
+                // For development/testing, return sample sources if API fails
+                if (response.statusCode == 0 || response.message.contains("timeout", ignoreCase = true)) {
+                    println("DEBUG [ScraperSourceManager]: Falling back to sample sources for ${manifest.name} TV episode")
+                    createSampleSourcesForTVEpisode(manifest, tvShowId, seasonNumber, episodeNumber)
+                } else {
+                    emptyList()
+                }
+            }
+        }
     }
     
     /**
@@ -184,6 +295,51 @@ class ScraperSourceManager @Inject constructor(
     }
     
     /**
+     * Create sample sources for TV episode (for testing/development)
+     */
+    private fun createSampleSourcesForTVEpisode(
+        manifest: ScraperManifest,
+        tvShowId: String,
+        seasonNumber: Int,
+        episodeNumber: Int
+    ): List<StreamingSource> {
+        println("DEBUG [ScraperSourceManager]: Creating sample sources for TV episode: ${manifest.name} - S${seasonNumber}E${episodeNumber}")
+        val sources = mutableListOf<StreamingSource>()
+        
+        // Create different quality sources for the episode
+        val qualities = listOf(
+            SourceQuality.QUALITY_4K,
+            SourceQuality.QUALITY_1080P,
+            SourceQuality.QUALITY_720P
+        )
+        
+        val episodeContentId = "${tvShowId}:${seasonNumber}:${episodeNumber}"
+        
+        qualities.forEach { quality ->
+            val url = generateSampleTVEpisodeUrl(manifest, tvShowId, seasonNumber, episodeNumber, quality)
+            println("DEBUG [ScraperSourceManager]: Creating TV episode source for quality: ${quality.displayName}, URL: $url")
+            
+            val source = scraperSourceAdapter.createStreamingSource(
+                manifest = manifest,
+                url = url,
+                quality = quality,
+                title = "${manifest.displayName} S${seasonNumber}E${episodeNumber} ${quality.shortName}",
+                seeders = if (manifest.metadata.capabilities.contains(ManifestCapability.P2P)) {
+                    (30..150).random() // Generally fewer seeders for TV episodes
+                } else null,
+                leechers = if (manifest.metadata.capabilities.contains(ManifestCapability.P2P)) {
+                    (2..15).random()
+                } else null
+            )
+            sources.add(source)
+            println("DEBUG [ScraperSourceManager]: Added TV episode source: ${source.id}")
+        }
+        
+        println("DEBUG [ScraperSourceManager]: Created ${sources.size} sources for TV episode: ${manifest.name}")
+        return sources
+    }
+    
+    /**
      * Create sample sources for a manifest (for testing/development)
      */
     private fun createSampleSourcesForManifest(
@@ -223,6 +379,27 @@ class ScraperSourceManager @Inject constructor(
         
         println("DEBUG [ScraperSourceManager]: Created ${sources.size} sources for manifest: ${manifest.name}")
         return sources
+    }
+    
+    /**
+     * Generate sample URL for TV episode testing
+     */
+    private fun generateSampleTVEpisodeUrl(
+        manifest: ScraperManifest,
+        tvShowId: String,
+        seasonNumber: Int,
+        episodeNumber: Int,
+        quality: SourceQuality
+    ): String {
+        val episodeContentId = "${tvShowId}:${seasonNumber}:${episodeNumber}"
+        return when {
+            manifest.metadata.capabilities.contains(ManifestCapability.P2P) -> {
+                "magnet:?xt=urn:btih:${episodeContentId}_${quality.shortName}"
+            }
+            else -> {
+                "${manifest.baseUrl}/stream/series/${episodeContentId}/${quality.shortName}"
+            }
+        }
     }
     
     /**

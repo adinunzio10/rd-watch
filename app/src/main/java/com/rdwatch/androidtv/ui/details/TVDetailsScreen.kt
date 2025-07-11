@@ -241,7 +241,14 @@ private fun TVDetailsContent(
                                 sources = sources,
                                 onSourceSelected = { source ->
                                     selectedSourceId = source.id
-                                    // TODO: Handle source selection for TV episode playback
+                                    // Play the selected episode with the chosen source
+                                    selectedEpisode?.let { episode ->
+                                        playbackViewModel.startEpisodePlayback(
+                                            tvShow = tvShowDetail,
+                                            episode = episode,
+                                            source = source
+                                        )
+                                    }
                                 },
                                 selectedSourceId = selectedSourceId,
                                 onViewAllClick = { showSourceDialog = true },
@@ -254,7 +261,14 @@ private fun TVDetailsContent(
                                     onSourceSelected = { source ->
                                         selectedSourceId = source.id
                                         showSourceDialog = false
-                                        // TODO: Handle source selection for TV episode playback
+                                        // Play the selected episode with the chosen source
+                                        selectedEpisode?.let { episode ->
+                                            playbackViewModel.startEpisodePlayback(
+                                                tvShow = tvShowDetail,
+                                                episode = episode,
+                                                source = source
+                                            )
+                                        }
                                     },
                                     onDismiss = { showSourceDialog = false },
                                     selectedSourceId = selectedSourceId,
