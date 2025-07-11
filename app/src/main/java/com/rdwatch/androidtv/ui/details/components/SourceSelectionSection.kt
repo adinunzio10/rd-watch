@@ -240,10 +240,8 @@ private fun SourceSummaryInfo(
     selectedSourceId: String?
 ) {
     val selectedSource = sources.find { it.id == selectedSourceId }
-    val freeSourcesCount = sources.count { !it.requiresPayment() }
-    val subscriptionSourcesCount = sources.count { 
-        it.pricing.type == com.rdwatch.androidtv.ui.details.models.SourcePricing.PricingType.SUBSCRIPTION 
-    }
+    val reliableSourcesCount = sources.count { it.isReliable() }
+    val p2pSourcesCount = sources.count { it.isP2P() }
     
     Column(
         verticalArrangement = Arrangement.spacedBy(4.dp)
@@ -265,9 +263,11 @@ private fun SourceSummaryInfo(
                     color = MaterialTheme.colorScheme.onBackground,
                     fontWeight = FontWeight.Medium
                 )
-                PricingBadge(
-                    priceText = source.pricing.getDisplayPrice(),
-                    isFree = !source.requiresPayment(),
+                SourceTypeBadge(
+                    sourceType = source.sourceType.getDisplayType(),
+                    reliability = source.sourceType.getReliabilityText(),
+                    isP2P = source.isP2P(),
+                    seeders = source.features.seeders,
                     size = QualityBadgeSize.SMALL
                 )
             }
@@ -276,17 +276,16 @@ private fun SourceSummaryInfo(
         // Source type summary
         if (sources.size > 1) {
             val summaryText = buildString {
-                if (freeSourcesCount > 0) {
-                    append("$freeSourcesCount free")
+                if (reliableSourcesCount > 0) {
+                    append("$reliableSourcesCount reliable")
                 }
-                if (subscriptionSourcesCount > 0) {
-                    if (freeSourcesCount > 0) append(" • ")
-                    append("$subscriptionSourcesCount subscription")
+                if (p2pSourcesCount > 0) {
+                    if (reliableSourcesCount > 0) append(" • ")
+                    append("$p2pSourcesCount P2P")
                 }
-                val otherCount = sources.size - freeSourcesCount - subscriptionSourcesCount
-                if (otherCount > 0) {
-                    if (freeSourcesCount > 0 || subscriptionSourcesCount > 0) append(" • ")
-                    append("$otherCount rental/purchase")
+                val directSourcesCount = sources.size - p2pSourcesCount
+                if (directSourcesCount > 0 && p2pSourcesCount > 0) {
+                    append(" • $directSourcesCount direct")
                 }
             }
             

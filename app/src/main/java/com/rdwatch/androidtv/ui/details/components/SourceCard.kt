@@ -37,7 +37,7 @@ fun SourceCard(
     onClick: (StreamingSource) -> Unit,
     modifier: Modifier = Modifier,
     isSelected: Boolean = false,
-    showPricing: Boolean = true,
+    showSourceInfo: Boolean = true,
     showQualityBadges: Boolean = true,
     variant: SourceCardVariant = SourceCardVariant.DEFAULT
 ) {
@@ -102,7 +102,7 @@ fun SourceCard(
                 isFocused = isFocused,
                 isSelected = isSelected,
                 isEnabled = isEnabled,
-                showPricing = showPricing,
+                showSourceInfo = showSourceInfo,
                 showQualityBadges = showQualityBadges,
                 variant = variant
             )
@@ -116,7 +116,7 @@ private fun SourceCardContent(
     isFocused: Boolean,
     isSelected: Boolean,
     isEnabled: Boolean,
-    showPricing: Boolean,
+    showSourceInfo: Boolean,
     showQualityBadges: Boolean,
     variant: SourceCardVariant
 ) {
@@ -206,11 +206,13 @@ private fun SourceCardContent(
             )
         }
         
-        // Pricing information
-        if (showPricing) {
-            PricingBadge(
-                priceText = source.pricing.getDisplayPrice(),
-                isFree = source.pricing.type.name.contains("FREE"),
+        // Source type and P2P information
+        if (showSourceInfo) {
+            SourceTypeBadge(
+                sourceType = source.sourceType.getDisplayType(),
+                reliability = source.sourceType.getReliabilityText(),
+                isP2P = source.isP2P(),
+                seeders = source.features.seeders,
                 size = when (variant) {
                     SourceCardVariant.COMPACT -> QualityBadgeSize.SMALL
                     SourceCardVariant.DEFAULT -> QualityBadgeSize.SMALL
@@ -224,20 +226,30 @@ private fun SourceCardContent(
             Column(
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                if (source.features.hasAds) {
+                if (source.features.supportsP2P) {
                     Text(
-                        text = "With ads",
+                        text = "P2P Source",
                         style = MaterialTheme.typography.bodySmall,
                         color = contentColor.copy(alpha = 0.7f)
                     )
                 }
                 
-                if (source.features.supportsDownload) {
+                if (source.features.isConfigurable) {
                     Text(
-                        text = "Download available",
+                        text = "Configurable",
                         style = MaterialTheme.typography.bodySmall,
                         color = contentColor.copy(alpha = 0.7f)
                     )
+                }
+                
+                source.features.seeders?.let { seeders ->
+                    if (seeders > 0) {
+                        Text(
+                            text = "${seeders} seeders",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = contentColor.copy(alpha = 0.7f)
+                        )
+                    }
                 }
                 
                 if (!isEnabled) {
@@ -306,7 +318,7 @@ fun CompactSourceCard(
         onClick = onClick,
         modifier = modifier,
         isSelected = isSelected,
-        showPricing = false,
+        showSourceInfo = false,
         showQualityBadges = true,
         variant = SourceCardVariant.COMPACT
     )
@@ -327,7 +339,7 @@ fun DetailedSourceCard(
         onClick = onClick,
         modifier = modifier,
         isSelected = isSelected,
-        showPricing = true,
+        showSourceInfo = true,
         showQualityBadges = true,
         variant = SourceCardVariant.DETAILED
     )
@@ -370,6 +382,56 @@ fun SourceCardRow(
                 isSelected = source.id == selectedSourceId,
                 variant = variant
             )
+        }
+    }
+}
+
+/**
+ * Source type badge component
+ */
+@Composable
+fun SourceTypeBadge(
+    sourceType: String,
+    reliability: String,
+    isP2P: Boolean,
+    seeders: Int? = null,
+    size: QualityBadgeSize = QualityBadgeSize.SMALL
+) {
+    val badgeColor = when {
+        isP2P && (seeders ?: 0) > 50 -> MaterialTheme.colorScheme.primary
+        isP2P -> MaterialTheme.colorScheme.secondary
+        else -> MaterialTheme.colorScheme.tertiary
+    }
+    
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        Surface(
+            shape = RoundedCornerShape(4.dp),
+            color = badgeColor.copy(alpha = 0.2f),
+            modifier = Modifier.padding(vertical = 2.dp)
+        ) {
+            Text(
+                text = sourceType,
+                style = MaterialTheme.typography.labelSmall,
+                color = badgeColor,
+                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+            )
+        }
+        
+        if (isP2P && seeders != null && seeders > 0) {
+            Surface(
+                shape = RoundedCornerShape(4.dp),
+                color = MaterialTheme.colorScheme.surfaceVariant,
+                modifier = Modifier.padding(vertical = 2.dp)
+            ) {
+                Text(
+                    text = "${seeders}S",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                )
+            }
         }
     }
 }

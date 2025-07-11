@@ -54,15 +54,26 @@ interface ContentDetail {
         getAvailableSources().maxByOrNull { it.quality.priority }
     
     /**
-     * Get free streaming sources
+     * Get reliable streaming sources
      */
-    fun getFreeSources(): List<StreamingSource> = 
-        getAvailableSources().filter { !it.requiresPayment() }
+    fun getReliableSources(): List<StreamingSource> = 
+        getAvailableSources().filter { it.isReliable() }
     
     /**
-     * Check if content has free streaming options
+     * Get P2P streaming sources
      */
-    fun hasFreeStreaming(): Boolean = getFreeSources().isNotEmpty()
+    fun getP2PSources(): List<StreamingSource> = 
+        getAvailableSources().filter { it.isP2P() }
+    
+    /**
+     * Check if content has reliable streaming options
+     */
+    fun hasReliableStreaming(): Boolean = getReliableSources().isNotEmpty()
+    
+    /**
+     * Check if content has P2P streaming options
+     */
+    fun hasP2PStreaming(): Boolean = getP2PSources().isNotEmpty()
 }
 
 /**

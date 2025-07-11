@@ -38,6 +38,8 @@ import com.rdwatch.androidtv.ui.details.components.ContentDetailTabs
 import com.rdwatch.androidtv.ui.components.CastCrewSection
 import com.rdwatch.androidtv.ui.details.models.*
 import com.rdwatch.androidtv.ui.details.MovieDetailsUiState
+import com.rdwatch.androidtv.ui.details.components.SourceSelectionSection
+import com.rdwatch.androidtv.ui.details.components.SourceSelectionDialog
 import androidx.media3.common.util.UnstableApi
 
 /**
@@ -242,6 +244,38 @@ fun MovieDetailsScreen(
                             },
                             modifier = Modifier.padding(horizontal = overscanMargin, vertical = 8.dp)
                         )
+                    }
+                    
+                    // Source Selection Section
+                    item {
+                        val sampleSources = StreamingSource.createSampleSources()
+                        var selectedSourceId by remember { mutableStateOf<String?>(null) }
+                        var showSourceDialog by remember { mutableStateOf(false) }
+                        
+                        SourceSelectionSection(
+                            sources = sampleSources,
+                            onSourceSelected = { source ->
+                                selectedSourceId = source.id
+                                // TODO: Handle source selection for movie playback
+                            },
+                            selectedSourceId = selectedSourceId,
+                            onViewAllClick = { showSourceDialog = true },
+                            modifier = Modifier.padding(horizontal = overscanMargin, vertical = 8.dp)
+                        )
+                        
+                        if (showSourceDialog) {
+                            SourceSelectionDialog(
+                                sources = sampleSources,
+                                onSourceSelected = { source ->
+                                    selectedSourceId = source.id
+                                    showSourceDialog = false
+                                    // TODO: Handle source selection for movie playback
+                                },
+                                onDismiss = { showSourceDialog = false },
+                                selectedSourceId = selectedSourceId,
+                                title = "Select Movie Source"
+                            )
+                        }
                     }
                     
                     // Tab navigation
