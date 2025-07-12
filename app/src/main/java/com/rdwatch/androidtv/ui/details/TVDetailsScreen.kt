@@ -11,34 +11,34 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.media3.common.util.UnstableApi
 import com.rdwatch.androidtv.ui.common.UiState
+import com.rdwatch.androidtv.ui.components.CastCrewSection
 import com.rdwatch.androidtv.ui.details.components.*
 import com.rdwatch.androidtv.ui.details.components.InfoSectionTabMode
-import com.rdwatch.androidtv.ui.details.components.SourceSelectionSection
 import com.rdwatch.androidtv.ui.details.components.SourceSelectionDialog
-import com.rdwatch.androidtv.ui.components.CastCrewSection
+import com.rdwatch.androidtv.ui.details.components.SourceSelectionSection
 import com.rdwatch.androidtv.ui.details.models.*
 import com.rdwatch.androidtv.ui.viewmodel.PlaybackViewModel
-import androidx.media3.common.util.UnstableApi
 
 /**
- * TV Details Screen with hero layout, episode grid, and action buttons
- * Optimized for Android TV 10-foot UI experience
+ * TV Details Screen with hero layout, episode grid, and action buttons Optimized for Android TV
+ * 10-foot UI experience
  */
 @OptIn(UnstableApi::class)
 @Composable
 fun TVDetailsScreen(
-    tvShowId: String,
-    modifier: Modifier = Modifier,
-    onPlayClick: (TVEpisode) -> Unit = {},
-    onEpisodeClick: (TVEpisode) -> Unit = {},
-    onBackPressed: () -> Unit = {},
-    playbackViewModel: PlaybackViewModel = hiltViewModel(),
-    viewModel: TVDetailsViewModel = hiltViewModel()
+        tvShowId: String,
+        modifier: Modifier = Modifier,
+        onPlayClick: (TVEpisode) -> Unit = {},
+        onEpisodeClick: (TVEpisode) -> Unit = {},
+        onBackPressed: () -> Unit = {},
+        playbackViewModel: PlaybackViewModel = hiltViewModel(),
+        viewModel: TVDetailsViewModel = hiltViewModel()
 ) {
     val tvShowState by viewModel.tvShowState.collectAsState()
     val selectedSeason by viewModel.selectedSeason.collectAsState()
@@ -47,28 +47,26 @@ fun TVDetailsScreen(
     val uiState by viewModel.uiState.collectAsState()
     val progress by playbackViewModel.inProgressContent.collectAsState()
     val creditsState by viewModel.creditsState.collectAsState()
-    
+    val sourcesState by viewModel.sourcesState.collectAsState()
+
     // Focus management
     val backButtonFocusRequester = remember { FocusRequester() }
     val tabFocusRequester = remember { FocusRequester() }
     val listState = rememberLazyListState()
-    
+
     // Initialize with TV show ID
-    LaunchedEffect(tvShowId) {
-        viewModel.loadTVShow(tvShowId)
-    }
-    
-    
+    LaunchedEffect(tvShowId) { viewModel.loadTVShow(tvShowId) }
+
     when {
         uiState.isLoading -> {
             TVDetailsLoadingScreen(modifier = modifier)
         }
         uiState.error != null -> {
             TVDetailsErrorScreen(
-                error = uiState.error ?: "Unknown error",
-                onRetry = { viewModel.loadTVShow(tvShowId) },
-                onBackPressed = onBackPressed,
-                modifier = modifier
+                    error = uiState.error ?: "Unknown error",
+                    onRetry = { viewModel.loadTVShow(tvShowId) },
+                    onBackPressed = onBackPressed,
+                    modifier = modifier
             )
         }
         tvShowState != null -> {
@@ -80,16 +78,18 @@ fun TVDetailsScreen(
                     selectedTabIndex = selectedTabIndex,
                     progress = progress,
                     creditsState = creditsState,
+                    sourcesState = sourcesState,
+                    viewModel = viewModel,
+                    playbackViewModel = playbackViewModel,
                     onActionClick = { action ->
                         when (action) {
                             is ContentAction.Play -> {
-                                selectedEpisode?.let { episode ->
-                                    onPlayClick(episode)
-                                } ?: run {
-                                    tvShow.getNextEpisode()?.let { episode ->
-                                        onPlayClick(episode)
-                                    }
-                                }
+                                selectedEpisode?.let { episode -> onPlayClick(episode) }
+                                        ?: run {
+                                            tvShow.getNextEpisode()?.let { episode ->
+                                                onPlayClick(episode)
+                                            }
+                                        }
                             }
                             is ContentAction.AddToWatchlist -> {
                                 viewModel.toggleWatchlist(tvShow.id)
@@ -110,238 +110,436 @@ fun TVDetailsScreen(
                             }
                         }
                     },
-                    onSeasonSelected = { season ->
-                        viewModel.selectSeason(season)
-                    },
+                    onSeasonSelected = { season -> viewModel.selectSeason(season) },
                     onEpisodeSelected = { episode ->
                         viewModel.selectEpisode(episode)
                         onEpisodeClick(episode)
                     },
-                    onTabSelected = { tabIndex ->
-                        viewModel.selectTab(tabIndex)
-                    },
+                    onTabSelected = { tabIndex -> viewModel.selectTab(tabIndex) },
                     onBackPressed = onBackPressed,
                     backButtonFocusRequester = backButtonFocusRequester,
                     tabFocusRequester = tabFocusRequester,
                     listState = listState,
                     modifier = modifier
-                )
+            )
+        }
+        else -> {
+            // Initial state - show loading screen while tvShowState is being loaded
+            TVDetailsLoadingScreen(modifier = modifier)
         }
     }
 }
 
 @Composable
 private fun TVDetailsContent(
-    tvShow: TVShowContentDetail,
-    selectedSeason: TVSeason?,
-    selectedEpisode: TVEpisode?,
-    selectedTabIndex: Int,
-    progress: List<com.rdwatch.androidtv.data.entities.WatchProgressEntity>,
-    creditsState: UiState<ExtendedContentMetadata>,
-    onActionClick: (ContentAction) -> Unit,
-    onSeasonSelected: (TVSeason) -> Unit,
-    onEpisodeSelected: (TVEpisode) -> Unit,
-    onTabSelected: (Int) -> Unit,
-    onBackPressed: () -> Unit,
-    backButtonFocusRequester: FocusRequester,
-    tabFocusRequester: FocusRequester,
-    listState: LazyListState,
-    modifier: Modifier = Modifier
+        tvShow: TVShowContentDetail,
+        selectedSeason: TVSeason?,
+        selectedEpisode: TVEpisode?,
+        selectedTabIndex: Int,
+        progress: List<com.rdwatch.androidtv.data.entities.WatchProgressEntity>,
+        creditsState: UiState<ExtendedContentMetadata>,
+        sourcesState: UiState<List<StreamingSource>>,
+        viewModel: TVDetailsViewModel,
+        playbackViewModel: PlaybackViewModel,
+        onActionClick: (ContentAction) -> Unit,
+        onSeasonSelected: (TVSeason) -> Unit,
+        onEpisodeSelected: (TVEpisode) -> Unit,
+        onTabSelected: (Int) -> Unit,
+        onBackPressed: () -> Unit,
+        backButtonFocusRequester: FocusRequester,
+        tabFocusRequester: FocusRequester,
+        listState: LazyListState,
+        modifier: Modifier = Modifier
 ) {
     LazyColumn(
-        state = listState,
-        modifier = modifier.fillMaxSize(),
-        contentPadding = PaddingValues(bottom = 32.dp)
+            state = listState,
+            modifier = modifier.fillMaxSize(),
+            contentPadding = PaddingValues(bottom = 32.dp)
     ) {
         // Hero section with backdrop, title, and primary action
         item {
             HeroSection(
-                content = tvShow,
-                progress = ContentProgress(
-                    watchPercentage = progress.find { it.contentId == selectedEpisode?.videoUrl }?.watchPercentage ?: 0f,
-                    isCompleted = (progress.find { it.contentId == selectedEpisode?.videoUrl }?.watchPercentage ?: 0f) >= 0.9f
-                ),
-                onActionClick = onActionClick,
-                onBackPressed = onBackPressed,
-                firstFocusRequester = backButtonFocusRequester,
-                modifier = Modifier.padding(bottom = 16.dp)
+                    content = tvShow,
+                    progress =
+                            ContentProgress(
+                                    watchPercentage =
+                                            progress
+                                                    .find {
+                                                        it.contentId == selectedEpisode?.videoUrl
+                                                    }
+                                                    ?.watchPercentage
+                                                    ?: 0f,
+                                    isCompleted =
+                                            (progress
+                                                    .find {
+                                                        it.contentId == selectedEpisode?.videoUrl
+                                                    }
+                                                    ?.watchPercentage
+                                                    ?: 0f) >= 0.9f
+                            ),
+                    onActionClick = onActionClick,
+                    onBackPressed = onBackPressed,
+                    firstFocusRequester = backButtonFocusRequester,
+                    modifier = Modifier.padding(bottom = 16.dp)
             )
         }
-        
+
         // Action buttons row
         item {
             ActionSection(
-                content = tvShow,
-                onActionClick = onActionClick,
-                modifier = Modifier.padding(horizontal = 32.dp, vertical = 8.dp)
+                    content = tvShow,
+                    onActionClick = onActionClick,
+                    modifier = Modifier.padding(horizontal = 32.dp, vertical = 8.dp)
             )
         }
-        
-        // Source Selection Section
-        item {
-            val sampleSources = StreamingSource.createSampleSources()
-            var selectedSourceId by remember { mutableStateOf<String?>(null) }
-            var showSourceDialog by remember { mutableStateOf(false) }
-            
-            SourceSelectionSection(
-                sources = sampleSources,
-                onSourceSelected = { source ->
-                    selectedSourceId = source.id
-                    // TODO: Handle source selection for TV episode playback
-                },
-                selectedSourceId = selectedSourceId,
-                onViewAllClick = { showSourceDialog = true },
-                modifier = Modifier.padding(horizontal = 32.dp, vertical = 8.dp)
-            )
-            
-            if (showSourceDialog) {
-                SourceSelectionDialog(
-                    sources = sampleSources,
-                    onSourceSelected = { source ->
-                        selectedSourceId = source.id
-                        showSourceDialog = false
-                        // TODO: Handle source selection for TV episode playback
-                    },
-                    onDismiss = { showSourceDialog = false },
-                    selectedSourceId = selectedSourceId,
-                    title = "Select TV Show Source"
-                )
+
+        // Source Selection Section - Only show when sources are requested (not Idle)
+        if (sourcesState !is UiState.Idle) {
+            item {
+                var selectedSourceId by remember { mutableStateOf<String?>(null) }
+                var showSourceDialog by remember { mutableStateOf(false) }
+
+                when (val currentSourcesState = sourcesState) {
+                    is UiState.Idle -> {
+                        // This should never happen due to the outer condition, but included for
+                        // completeness
+                    }
+                    is UiState.Loading -> {
+                        // Show loading state for sources
+                        Surface(
+                                modifier = Modifier.padding(horizontal = 32.dp, vertical = 8.dp),
+                                shape = RoundedCornerShape(8.dp),
+                                color = MaterialTheme.colorScheme.surfaceVariant
+                        ) {
+                            Row(
+                                    modifier = Modifier.fillMaxWidth().padding(16.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                CircularProgressIndicator(
+                                        modifier = Modifier.size(24.dp),
+                                        color = MaterialTheme.colorScheme.primary
+                                )
+                                Column {
+                                    Text(
+                                            text = "Loading sources for episode...",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                    selectedEpisode?.let { episode ->
+                                        Text(
+                                                text =
+                                                        "S${episode.seasonNumber}E${episode.episodeNumber} - ${episode.title}",
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color =
+                                                        MaterialTheme.colorScheme.onSurfaceVariant
+                                                                .copy(alpha = 0.7f)
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    is UiState.Success -> {
+                        val sources = currentSourcesState.data
+                        if (sources.isNotEmpty()) {
+                            Column {
+                                // Show current episode info
+                                selectedEpisode?.let { episode ->
+                                    Text(
+                                            text =
+                                                    "Sources for S${episode.seasonNumber}E${episode.episodeNumber} - ${episode.title}",
+                                            style = MaterialTheme.typography.titleMedium,
+                                            color = MaterialTheme.colorScheme.onBackground,
+                                            modifier =
+                                                    Modifier.padding(
+                                                            horizontal = 32.dp,
+                                                            vertical = 8.dp
+                                                    )
+                                    )
+                                }
+
+                                SourceSelectionSection(
+                                        sources = sources,
+                                        onSourceSelected = { source ->
+                                            selectedSourceId = source.id
+                                            // Play the selected episode with the chosen source
+                                            selectedEpisode?.let { episode ->
+                                                playbackViewModel.startEpisodePlayback(
+                                                        tvShow = tvShow,
+                                                        episode = episode,
+                                                        source = source
+                                                )
+                                            }
+                                        },
+                                        selectedSourceId = selectedSourceId,
+                                        onViewAllClick = { showSourceDialog = true },
+                                        modifier =
+                                                Modifier.padding(
+                                                        horizontal = 32.dp,
+                                                        vertical = 8.dp
+                                                )
+                                )
+
+                                if (showSourceDialog) {
+                                    SourceSelectionDialog(
+                                            sources = sources,
+                                            onSourceSelected = { source ->
+                                                selectedSourceId = source.id
+                                                showSourceDialog = false
+                                                // Play the selected episode with the chosen source
+                                                selectedEpisode?.let { episode ->
+                                                    playbackViewModel.startEpisodePlayback(
+                                                            tvShow = tvShow,
+                                                            episode = episode,
+                                                            source = source
+                                                    )
+                                                }
+                                            },
+                                            onDismiss = { showSourceDialog = false },
+                                            selectedSourceId = selectedSourceId,
+                                            title = "Select Episode Source"
+                                    )
+                                }
+                            }
+                        } else {
+                            // No sources available
+                            Surface(
+                                    modifier =
+                                            Modifier.padding(horizontal = 32.dp, vertical = 8.dp),
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = MaterialTheme.colorScheme.surfaceVariant
+                            ) {
+                                Column(
+                                        modifier = Modifier.fillMaxWidth().padding(16.dp),
+                                        horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    selectedEpisode?.let { episode ->
+                                        Text(
+                                                text =
+                                                        "No sources for S${episode.seasonNumber}E${episode.episodeNumber}",
+                                                style = MaterialTheme.typography.bodyLarge,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                    Text(
+                                            text = "Try selecting a different episode or refresh",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color =
+                                                    MaterialTheme.colorScheme.onSurfaceVariant.copy(
+                                                            alpha = 0.7f
+                                                    )
+                                    )
+                                }
+                            }
+                        }
+                    }
+                    is UiState.Error -> {
+                        // Show error state with retry option
+                        Surface(
+                                modifier = Modifier.padding(horizontal = 32.dp, vertical = 8.dp),
+                                shape = RoundedCornerShape(8.dp),
+                                color = MaterialTheme.colorScheme.errorContainer
+                        ) {
+                            Column(
+                                    modifier = Modifier.fillMaxWidth().padding(16.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Text(
+                                        text = "Failed to load episode sources",
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        color = MaterialTheme.colorScheme.onErrorContainer
+                                )
+                                Text(
+                                        text = currentSourcesState.message ?: "Unknown error",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color =
+                                                MaterialTheme.colorScheme.onErrorContainer.copy(
+                                                        alpha = 0.8f
+                                                )
+                                )
+                                selectedEpisode?.let { episode ->
+                                    Text(
+                                            text =
+                                                    "S${episode.seasonNumber}E${episode.episodeNumber} - ${episode.title}",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color =
+                                                    MaterialTheme.colorScheme.onErrorContainer.copy(
+                                                            alpha = 0.7f
+                                                    )
+                                    )
+                                }
+                                Button(
+                                        onClick = { viewModel.retryLoadingSources() },
+                                        colors =
+                                                ButtonDefaults.buttonColors(
+                                                        containerColor =
+                                                                MaterialTheme.colorScheme.error
+                                                )
+                                ) { Text("Retry") }
+                            }
+                        }
+                    }
+                }
             }
         }
-        
+
         // Tab navigation
         item {
-            ContentDetailTabs(
-                selectedTabIndex = selectedTabIndex,
-                contentType = tvShow.contentType,
-                onTabSelected = onTabSelected,
-                firstTabFocusRequester = tabFocusRequester,
-                modifier = Modifier.padding(horizontal = 32.dp)
-            )
-        }
-        
-        // Tab content based on selected tab
-        when (selectedTabIndex) {
-            0 -> {
-                // Overview Tab
-                item {
-                    InfoSection(
-                        content = tvShow,
-                        tabMode = InfoSectionTabMode.OVERVIEW,
-                        modifier = Modifier.padding(horizontal = 32.dp, vertical = 16.dp)
-                    )
-                }
-                
-                // Continue watching for TV shows
-                selectedEpisode?.let { episode ->
+                ContentDetailTabs(
+                        selectedTabIndex = selectedTabIndex,
+                        contentType = tvShow.contentType,
+                        onTabSelected = onTabSelected,
+                        firstTabFocusRequester = tabFocusRequester,
+                        modifier = Modifier.padding(horizontal = 32.dp)
+                )
+            }
+
+            // Tab content based on selected tab
+            when (selectedTabIndex) {
+                0 -> {
+                    // Overview Tab
                     item {
-                        TVNextEpisodeSection(
-                            episode = episode,
-                            season = selectedSeason,
-                            onPlayClick = { onActionClick(ContentAction.Play()) },
-                            modifier = Modifier.padding(horizontal = 32.dp, vertical = 16.dp)
+                        InfoSection(
+                                content = tvShow,
+                                tabMode = InfoSectionTabMode.OVERVIEW,
+                                modifier = Modifier.padding(horizontal = 32.dp, vertical = 16.dp)
+                        )
+                    }
+
+                    // Continue watching for TV shows
+                    selectedEpisode?.let { episode ->
+                        item {
+                            TVNextEpisodeSection(
+                                    episode = episode,
+                                    season = selectedSeason,
+                                    onPlayClick = { onActionClick(ContentAction.Play()) },
+                                    modifier =
+                                            Modifier.padding(horizontal = 32.dp, vertical = 16.dp)
+                            )
+                        }
+                    }
+                }
+                1 -> {
+                    // Details Tab
+                    item {
+                        InfoSection(
+                                content = tvShow,
+                                tabMode = InfoSectionTabMode.DETAILS,
+                                showExpandableDescription = true,
+                                modifier = Modifier.padding(horizontal = 32.dp, vertical = 16.dp)
+                        )
+                    }
+
+                    // Related content section
+                    item {
+                        RelatedSection(
+                                relatedContent = emptyList(),
+                                onContentClick = { /* TODO: Handle related content click */},
+                                modifier = Modifier.padding(horizontal = 32.dp, vertical = 16.dp)
                         )
                     }
                 }
-            }
-            
-            1 -> {
-                // Details Tab
-                item {
-                    InfoSection(
-                        content = tvShow,
-                        tabMode = InfoSectionTabMode.DETAILS,
-                        showExpandableDescription = true,
-                        modifier = Modifier.padding(horizontal = 32.dp, vertical = 16.dp)
-                    )
-                }
-                
-                // Related content section
-                item {
-                    RelatedSection(
-                        relatedContent = emptyList(),
-                        onContentClick = { /* TODO: Handle related content click */ },
-                        modifier = Modifier.padding(horizontal = 32.dp, vertical = 16.dp)
-                    )
-                }
-            }
-            
-            2 -> {
-                // Episodes Tab (TV shows only)
-                if (tvShow.contentType == ContentType.TV_SHOW) {
-                    // Season selector if multiple seasons
-                    if (tvShow.hasMultipleSeasons()) {
-                        item {
-                            SeasonSelector(
-                                seasons = tvShow.getSeasons(),
-                                selectedSeasonNumber = selectedSeason?.seasonNumber ?: 1,
-                                onSeasonSelected = { seasonNumber ->
-                                    tvShow.getSeasonByNumber(seasonNumber)?.let { season ->
-                                        onSeasonSelected(season)
-                                    }
-                                },
-                                modifier = Modifier.padding(horizontal = 32.dp, vertical = 16.dp)
-                            )
-                        }
-                    }
-                    
-                    // Episode grid for selected season
-                    selectedSeason?.let { season ->
-                        item {
-                            EpisodeGridSection(
-                                tvShowDetail = tvShow.getTVShowDetail(),
-                                selectedSeasonNumber = season.seasonNumber,
-                                onSeasonSelected = { seasonNumber ->
-                                    tvShow.getSeasonByNumber(seasonNumber)?.let { selectedSeason ->
-                                        onSeasonSelected(selectedSeason)
-                                    }
-                                },
-                                onEpisodeClick = onEpisodeSelected,
-                                modifier = Modifier.padding(horizontal = 32.dp, vertical = 16.dp)
-                            )
-                        }
-                    }
-                }
-            }
-            
-            3 -> {
-                // Cast & Crew Tab
-                item {
-                    when (creditsState) {
-                        is UiState.Success -> {
-                            CastCrewSection(
-                                metadata = creditsState.data,
-                                onCastMemberClick = { /* TODO: Handle cast member click */ },
-                                onCrewMemberClick = { /* TODO: Handle crew member click */ },
-                                modifier = Modifier.padding(horizontal = 32.dp, vertical = 16.dp)
-                            )
-                        }
-                        is UiState.Error -> {
-                            // Show error message for cast/crew loading failure
-                            Surface(
-                                modifier = Modifier.padding(horizontal = 32.dp, vertical = 16.dp),
-                                shape = RoundedCornerShape(8.dp),
-                                color = MaterialTheme.colorScheme.errorContainer
-                            ) {
-                                Text(
-                                    text = "Failed to load cast and crew information",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onErrorContainer,
-                                    modifier = Modifier.padding(16.dp)
+                2 -> {
+                    // Episodes Tab (TV shows only)
+                    if (tvShow.contentType == ContentType.TV_SHOW) {
+                        // Get authoritative season data to ensure consistency
+                        val authoritativeSeasons = viewModel.getAllSeasonsFromAuthoritativeSource()
+                        val authoritativeSelectedSeason = viewModel.getCurrentSeasonFromAuthoritativeSource()
+                        
+                        // Season selector if multiple seasons
+                        if (tvShow.hasMultipleSeasons()) {
+                            item {
+                                SeasonSelector(
+                                        seasons = authoritativeSeasons,
+                                        selectedSeasonNumber = authoritativeSelectedSeason?.seasonNumber ?: 1,
+                                        selectedSeason = authoritativeSelectedSeason,
+                                        onSeasonSelected = { seasonNumber ->
+                                            // Use authoritative source to get season data
+                                            viewModel.getSeasonByNumberFromAuthoritativeSource(seasonNumber)?.let { season ->
+                                                onSeasonSelected(season)
+                                            }
+                                        },
+                                        modifier =
+                                                Modifier.padding(
+                                                        horizontal = 32.dp,
+                                                        vertical = 16.dp
+                                                )
                                 )
                             }
                         }
-                        is UiState.Loading -> {
-                            // Show loading indicator for cast/crew
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 32.dp, vertical = 16.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                CircularProgressIndicator(
-                                    modifier = Modifier.size(24.dp)
+
+                        // Episode grid for selected season
+                        val seasonToUse = authoritativeSelectedSeason ?: selectedSeason
+                        seasonToUse?.let { season ->
+                            item {
+                                EpisodeGridSection(
+                                        tvShowDetail = tvShow.getTVShowDetail(),
+                                        selectedSeasonNumber = season.seasonNumber,
+                                        onSeasonSelected = { seasonNumber ->
+                                            // Use authoritative source for season selection
+                                            viewModel.getSeasonByNumberFromAuthoritativeSource(seasonNumber)?.let { selectedSeason ->
+                                                onSeasonSelected(selectedSeason)
+                                            }
+                                        },
+                                        onEpisodeClick = onEpisodeSelected,
+                                        modifier =
+                                                Modifier.padding(
+                                                        horizontal = 32.dp,
+                                                        vertical = 16.dp
+                                                )
                                 )
+                            }
+                        }
+                    }
+                }
+                3 -> {
+                    // Cast & Crew Tab
+                    item {
+                        when (creditsState) {
+                            is UiState.Idle, is UiState.Loading -> {
+                                // Show loading indicator for cast/crew
+                                Box(
+                                        modifier =
+                                                Modifier.fillMaxWidth()
+                                                        .padding(
+                                                                horizontal = 32.dp,
+                                                                vertical = 16.dp
+                                                        ),
+                                        contentAlignment = Alignment.Center
+                                ) { CircularProgressIndicator(modifier = Modifier.size(24.dp)) }
+                            }
+                            is UiState.Success -> {
+                                CastCrewSection(
+                                        metadata = creditsState.data,
+                                        onCastMemberClick = { /* TODO: Handle cast member click */},
+                                        onCrewMemberClick = { /* TODO: Handle crew member click */},
+                                        modifier =
+                                                Modifier.padding(
+                                                        horizontal = 32.dp,
+                                                        vertical = 16.dp
+                                                )
+                                )
+                            }
+                            is UiState.Error -> {
+                                // Show error message for cast/crew loading failure
+                                Surface(
+                                        modifier =
+                                                Modifier.padding(
+                                                        horizontal = 32.dp,
+                                                        vertical = 16.dp
+                                                ),
+                                        shape = RoundedCornerShape(8.dp),
+                                        color = MaterialTheme.colorScheme.errorContainer
+                                ) {
+                                    Text(
+                                            text = "Failed to load cast and crew information",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colorScheme.onErrorContainer,
+                                            modifier = Modifier.padding(16.dp)
+                                    )
+                                }
                             }
                         }
                     }
@@ -349,92 +547,84 @@ private fun TVDetailsContent(
             }
         }
     }
-}
 
 @Composable
 private fun TVNextEpisodeSection(
-    episode: TVEpisode,
-    season: TVSeason?,
-    onPlayClick: () -> Unit,
-    modifier: Modifier = Modifier
+        episode: TVEpisode,
+        season: TVSeason?,
+        onPlayClick: () -> Unit,
+        modifier: Modifier = Modifier
 ) {
-    Column(
-        modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
+    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(
-            text = "Continue Watching",
-            style = MaterialTheme.typography.headlineSmall,
-            color = MaterialTheme.colorScheme.onBackground,
-            fontWeight = FontWeight.SemiBold
+                text = "Continue Watching",
+                style = MaterialTheme.typography.headlineSmall,
+                color = MaterialTheme.colorScheme.onBackground,
+                fontWeight = FontWeight.SemiBold
         )
-        
+
         Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surface
-            ),
-            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                modifier = Modifier.fillMaxWidth(),
+                colors =
+                        CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
         ) {
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                verticalAlignment = Alignment.CenterVertically
+                    modifier = Modifier.fillMaxWidth().padding(16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
             ) {
                 // Episode thumbnail placeholder
                 Surface(
-                    modifier = Modifier.size(120.dp, 68.dp),
-                    shape = RoundedCornerShape(8.dp),
-                    color = MaterialTheme.colorScheme.surfaceVariant
+                        modifier = Modifier.size(120.dp, 68.dp),
+                        shape = RoundedCornerShape(8.dp),
+                        color = MaterialTheme.colorScheme.surfaceVariant
                 ) {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Icon(
-                            imageVector = Icons.Default.PlayArrow,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(32.dp)
+                                imageVector = Icons.Default.PlayArrow,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(32.dp)
                         )
                     }
                 }
-                
+
                 // Episode info
                 Column(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     Text(
-                        text = "S${season?.seasonNumber ?: 1}E${episode.episodeNumber} • ${episode.title}",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        fontWeight = FontWeight.Medium
+                            text =
+                                    "S${season?.seasonNumber ?: 1}E${episode.episodeNumber} • ${episode.title}",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontWeight = FontWeight.Medium
                     )
-                    
+
                     episode.description?.let { description ->
                         Text(
-                            text = description,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-                            maxLines = 2
+                                text = description,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                                maxLines = 2
                         )
                     }
                 }
-                
+
                 // Play button
                 Button(
-                    onClick = onPlayClick,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary
-                    )
+                        onClick = onPlayClick,
+                        colors =
+                                ButtonDefaults.buttonColors(
+                                        containerColor = MaterialTheme.colorScheme.primary
+                                )
                 ) {
                     Icon(
-                        imageVector = Icons.Default.PlayArrow,
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp)
+                            imageVector = Icons.Default.PlayArrow,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text("Play")
@@ -445,25 +635,20 @@ private fun TVNextEpisodeSection(
 }
 
 @Composable
-private fun TVDetailsLoadingScreen(
-    modifier: Modifier = Modifier
-) {
-    Box(
-        modifier = modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
+private fun TVDetailsLoadingScreen(modifier: Modifier = Modifier) {
+    Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             CircularProgressIndicator(
-                modifier = Modifier.size(48.dp),
-                color = MaterialTheme.colorScheme.primary
+                    modifier = Modifier.size(48.dp),
+                    color = MaterialTheme.colorScheme.primary
             )
             Text(
-                text = "Loading TV show details...",
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurface
+                    text = "Loading TV show details...",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurface
             )
         }
     }
@@ -471,60 +656,44 @@ private fun TVDetailsLoadingScreen(
 
 @Composable
 private fun TVDetailsErrorScreen(
-    error: String,
-    onRetry: () -> Unit,
-    onBackPressed: () -> Unit,
-    modifier: Modifier = Modifier
+        error: String,
+        onRetry: () -> Unit,
+        onBackPressed: () -> Unit,
+        modifier: Modifier = Modifier
 ) {
-    Box(
-        modifier = modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
+    Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Text(
-                text = "Error loading TV show",
-                style = MaterialTheme.typography.headlineSmall,
-                color = MaterialTheme.colorScheme.error
+                    text = "Error loading TV show",
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = MaterialTheme.colorScheme.error
             )
             Text(
-                text = error,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface
+                    text = error,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface
             )
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
+            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                 Button(
-                    onClick = onRetry,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary
-                    )
-                ) {
-                    Text("Retry")
-                }
-                OutlinedButton(
-                    onClick = onBackPressed
-                ) {
-                    Text("Back")
-                }
+                        onClick = onRetry,
+                        colors =
+                                ButtonDefaults.buttonColors(
+                                        containerColor = MaterialTheme.colorScheme.primary
+                                )
+                ) { Text("Retry") }
+                OutlinedButton(onClick = onBackPressed) { Text("Back") }
             }
         }
     }
 }
 
-/**
- * Preview configurations for TVDetailsScreen
- */
+/** Preview configurations for TVDetailsScreen */
 object TVDetailsScreenPreview {
     @Composable
     fun Preview() {
-        MaterialTheme {
-            TVDetailsScreen(
-                tvShowId = "demo-show"
-            )
-        }
+        MaterialTheme { TVDetailsScreen(tvShowId = "demo-show") }
     }
 }

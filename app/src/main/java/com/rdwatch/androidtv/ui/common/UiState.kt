@@ -5,9 +5,16 @@ package com.rdwatch.androidtv.ui.common
  * Provides common patterns for loading, success, and error states
  */
 sealed class UiState<out T> {
+    object Idle : UiState<Nothing>()
     object Loading : UiState<Nothing>()
     data class Success<T>(val data: T) : UiState<T>()
     data class Error(val message: String, val throwable: Throwable? = null) : UiState<Nothing>()
+    
+    /**
+     * Check if the state is idle
+     */
+    val isIdle: Boolean
+        get() = this is Idle
     
     /**
      * Check if the state is loading
@@ -45,6 +52,7 @@ sealed class UiState<out T> {
  */
 inline fun <T, R> UiState<T>.map(transform: (T) -> R): UiState<R> {
     return when (this) {
+        is UiState.Idle -> UiState.Idle
         is UiState.Loading -> UiState.Loading
         is UiState.Success -> UiState.Success(transform(data))
         is UiState.Error -> this
@@ -70,6 +78,13 @@ inline fun <T> UiState<T>.onError(action: (String, Throwable?) -> Unit): UiState
 
 inline fun <T> UiState<T>.onLoading(action: () -> Unit): UiState<T> {
     if (this is UiState.Loading) {
+        action()
+    }
+    return this
+}
+
+inline fun <T> UiState<T>.onIdle(action: () -> Unit): UiState<T> {
+    if (this is UiState.Idle) {
         action()
     }
     return this

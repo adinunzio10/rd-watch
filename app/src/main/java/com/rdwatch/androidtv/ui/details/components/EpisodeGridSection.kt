@@ -71,6 +71,7 @@ fun EpisodeGridSection(
                     seasons = tvShowDetail.seasons,
                     selectedSeasonNumber = selectedSeasonNumber,
                     onSeasonSelected = onSeasonSelected,
+                    selectedSeason = tvShowDetail.seasons.find { it.seasonNumber == selectedSeasonNumber },
                     showProgress = showProgress,
                     isLoading = uiState.isLoading,
                     modifier = Modifier.padding(bottom = 24.dp)
@@ -120,32 +121,62 @@ private fun EpisodeGridContent(
         uiState.shouldShowLoading() -> {
             EpisodeGridLoadingState(
                 layout = gridLayout,
+                loadingMessage = uiState.getLoadingMessage(),
                 modifier = Modifier.height(400.dp)
             )
         }
         
         // Empty state
         episodes.isEmpty() && !uiState.isLoading -> {
+            val emptyMessage = when {
+                uiState.selectedSeasonNumber > 0 -> "No episodes found for Season ${uiState.selectedSeasonNumber}"
+                else -> "No episodes available for this season"
+            }
             EpisodeGridEmptyState(
-                message = "No episodes available for this season",
+                message = emptyMessage,
                 modifier = Modifier.height(400.dp)
             )
         }
         
-        // Content state
+        // Content state - show episodes with optional refresh indicator
         else -> {
-            EpisodeGrid(
-                episodes = episodes,
-                onEpisodeClick = onEpisodeClick,
-                layout = gridLayout,
-                showProgress = showProgress,
-                isLoading = uiState.isLoading,
-                paginationState = paginationState,
-                onLoadMore = onLoadMore,
-                focusedEpisodeId = uiState.focusedEpisodeId,
-                onFocusedEpisodeChanged = { /* Handle focus change if needed */ },
-                requestInitialFocus = false
-            )
+            Column {
+                // Show refresh indicator when loading additional episodes
+                if (uiState.isRefreshingEpisodes()) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 8.dp),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(16.dp),
+                            color = MaterialTheme.colorScheme.primary,
+                            strokeWidth = 2.dp
+                        )
+                        Text(
+                            text = "Refreshing episodes...",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                            modifier = Modifier.padding(start = 8.dp)
+                        )
+                    }
+                }
+                
+                EpisodeGrid(
+                    episodes = episodes,
+                    onEpisodeClick = onEpisodeClick,
+                    layout = gridLayout,
+                    showProgress = showProgress,
+                    isLoading = uiState.isLoadingCurrentSeason(),
+                    paginationState = paginationState,
+                    onLoadMore = onLoadMore,
+                    focusedEpisodeId = uiState.focusedEpisodeId,
+                    onFocusedEpisodeChanged = { /* Handle focus change if needed */ },
+                    requestInitialFocus = false
+                )
+            }
         }
     }
 }
@@ -156,7 +187,8 @@ private fun EpisodeGridContent(
 @Composable
 private fun EpisodeGridLoadingState(
     layout: EpisodeGridLayout,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    loadingMessage: String = "Loading episodes..."
 ) {
     Column(
         modifier = modifier.fillMaxWidth(),
@@ -169,7 +201,7 @@ private fun EpisodeGridLoadingState(
         )
         
         Text(
-            text = "Loading episodes...",
+            text = loadingMessage,
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
             textAlign = TextAlign.Center,
@@ -317,6 +349,7 @@ fun EpisodeGridSectionWithStats(
                 seasons = tvShowDetail.seasons,
                 selectedSeasonNumber = selectedSeasonNumber,
                 onSeasonSelected = onSeasonSelected,
+                selectedSeason = tvShowDetail.seasons.find { it.seasonNumber == selectedSeasonNumber },
                 showProgress = showProgress,
                 isLoading = uiState.isLoading,
                 modifier = Modifier.padding(bottom = 24.dp)

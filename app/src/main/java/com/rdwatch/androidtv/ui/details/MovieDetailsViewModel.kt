@@ -13,6 +13,8 @@ import com.rdwatch.androidtv.network.models.tmdb.TMDbCreditsResponse
 import com.rdwatch.androidtv.ui.details.models.ExtendedContentMetadata
 import com.rdwatch.androidtv.ui.details.models.CastMember
 import com.rdwatch.androidtv.ui.details.models.CrewMember
+import com.rdwatch.androidtv.ui.details.models.StreamingSource
+import com.rdwatch.androidtv.ui.details.managers.ScraperSourceManager
 import kotlinx.coroutines.withContext
 import com.rdwatch.androidtv.ui.common.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -27,7 +29,8 @@ import javax.inject.Inject
 @HiltViewModel
 class MovieDetailsViewModel @Inject constructor(
     private val tmdbMovieRepository: TMDbMovieRepository,
-    private val tmdbMovieService: com.rdwatch.androidtv.network.api.TMDbMovieService
+    private val tmdbMovieService: com.rdwatch.androidtv.network.api.TMDbMovieService,
+    private val scraperSourceManager: ScraperSourceManager
 ) : BaseViewModel<MovieDetailsUiState>() {
     
     private val _movieState = MutableStateFlow<UiState<Movie>>(UiState.Loading)
@@ -41,6 +44,9 @@ class MovieDetailsViewModel @Inject constructor(
     
     private val _selectedTabIndex = MutableStateFlow(0)
     val selectedTabIndex: StateFlow<Int> = _selectedTabIndex.asStateFlow()
+    
+    private val _sourcesState = MutableStateFlow<UiState<List<StreamingSource>>>(UiState.Loading)
+    val sourcesState: StateFlow<UiState<List<StreamingSource>>> = _sourcesState.asStateFlow()
     
     override fun createInitialState(): MovieDetailsUiState {
         return MovieDetailsUiState()
@@ -111,6 +117,9 @@ class MovieDetailsViewModel @Inject constructor(
                         // Load related movies and credits
                         loadRelatedMovies(tmdbId)
                         loadMovieCredits(tmdbId)
+                        
+                        // Load scraper sources
+                        loadSourcesForMovie(tmdbId.toString(), movieResponse.imdbId)
                         return@launch
                     } else {
                         println("DEBUG [MovieDetailsViewModel]: API call failed: ${response.code()} - ${response.message()}")
@@ -170,6 +179,9 @@ class MovieDetailsViewModel @Inject constructor(
                                 // Load related movies and credits
                                 loadRelatedMovies(tmdbId)
                                 loadMovieCredits(tmdbId)
+                                
+                                // Load scraper sources
+                                loadSourcesForMovie(tmdbId.toString(), movieResponse.imdbId)
                             }
                             is Result.Error -> {
                                 println("DEBUG [MovieDetailsViewModel]: Error result received: ${result.exception.message}")
@@ -226,6 +238,9 @@ class MovieDetailsViewModel @Inject constructor(
             val tmdbId = movie.id.toInt()
             loadRelatedMovies(tmdbId)
             loadMovieCredits(tmdbId)
+            
+            // Load scraper sources
+            loadSourcesForMovie(tmdbId.toString(), null)
         }
     }
     
@@ -481,6 +496,97 @@ class MovieDetailsViewModel @Inject constructor(
     }
     
     /**
+     * Load streaming sources for the movie from scrapers
+     */
+    fun loadSourcesForMovie(tmdbId: String, imdbId: String?) {
+        println("DEBUG [MovieDetailsViewModel]: loadSourcesForMovie called with tmdbId: $tmdbId, imdbId: $imdbId")
+        
+        // Run scraper integration test first
+        println("🧪 RUNNING SCRAPER INTEGRATION TEST:")
+        try {
+            val testResults = com.rdwatch.androidtv.scraper.api.ScraperTestRunner.runAllTests()
+            println(testResults)
+        } catch (e: Exception) {
+            println("❌ Test runner failed: ${e.message}")
+        }
+        println("🧪 END SCRAPER INTEGRATION TEST")
+        println()
+        
+        viewModelScope.launch {
+            _sourcesState.value = UiState.Loading
+            updateState { copy(sourcesLoading = true, sourcesError = null) }
+            
+            try {
+                println("DEBUG [MovieDetailsViewModel]: Starting scraper query for movie $tmdbId")
+                val sources = scraperSourceManager.getSourcesForContent(
+                    contentId = tmdbId,
+                    contentType = "movie",
+                    imdbId = imdbId,
+                    tmdbId = tmdbId
+                )
+                
+                println("DEBUG [MovieDetailsViewModel]: Scrapers returned ${sources.size} sources")
+                sources.forEach { source ->
+                    println("DEBUG [MovieDetailsViewModel]: Source: ${source.provider.displayName} - ${source.quality.displayName} - ${source.url}")
+                }
+                
+                _sourcesState.value = UiState.Success(sources)
+                updateState { copy(availableSources = sources, sourcesLoading = false) }
+                
+                println("DEBUG [MovieDetailsViewModel]: Updated sourcesState with ${sources.size} sources")
+                println("DEBUG [MovieDetailsViewModel]: Updated uiState.availableSources with ${sources.size} sources")
+            } catch (e: Exception) {
+                println("DEBUG [MovieDetailsViewModel]: Exception loading sources: ${e.message}")
+                e.printStackTrace()
+                
+                val errorMessage = when {
+                    e.message?.contains("timeout", ignoreCase = true) == true -> "Request timed out. Please try again."
+                    e.message?.contains("network", ignoreCase = true) == true -> "Network error. Check your connection."
+                    e.message?.contains("unauthorized", ignoreCase = true) == true -> "Scraper authentication failed."
+                    else -> "Failed to load sources: ${e.message}"
+                }
+                
+                _sourcesState.value = UiState.Error(
+                    message = errorMessage,
+                    throwable = e
+                )
+                updateState { 
+                    copy(
+                        sourcesLoading = false,
+                        sourcesError = errorMessage
+                    )
+                }
+            }
+        }
+    }
+    
+    /**
+     * Retry loading sources
+     */
+    fun retryLoadingSources() {
+        val currentMovie = uiState.value.movie ?: return
+        val tmdbId = currentMovie.id.toString()
+        val imdbId = uiState.value.tmdbResponse?.imdbId
+        
+        updateState { copy(sourcesError = null) }
+        loadSourcesForMovie(tmdbId, imdbId)
+    }
+    
+    /**
+     * Refresh sources (clear cache and reload)
+     */
+    fun refreshSources() {
+        viewModelScope.launch {
+            try {
+                scraperSourceManager.refreshProviders()
+                retryLoadingSources()
+            } catch (e: Exception) {
+                updateState { copy(sourcesError = "Failed to refresh providers: ${e.message}") }
+            }
+        }
+    }
+    
+    /**
      * Select a tab
      */
     fun selectTab(tabIndex: Int) {
@@ -526,11 +632,17 @@ data class MovieDetailsUiState(
     val isDeleting: Boolean = false,
     val isDeleted: Boolean = false,
     val error: String? = null,
-    val tmdbResponse: TMDbMovieResponse? = null
+    val tmdbResponse: TMDbMovieResponse? = null,
+    val availableSources: List<StreamingSource> = emptyList(),
+    val sourcesLoading: Boolean = false,
+    val sourcesError: String? = null
 ) {
     val hasMovie: Boolean get() = movie != null
     val canPlay: Boolean get() = movie?.videoUrl != null && !isDeleted
     val canDelete: Boolean get() = isFromRealDebrid && !isDeleted && !isDeleting
+    val hasSourcesError: Boolean get() = sourcesError != null
+    val isSourcesLoading: Boolean get() = sourcesLoading
+    val hasAvailableSources: Boolean get() = availableSources.isNotEmpty()
     
     // Helper methods to extract metadata from TMDb response
     fun getMovieYear(): String {

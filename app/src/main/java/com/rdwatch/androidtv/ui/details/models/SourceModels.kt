@@ -199,7 +199,9 @@ data class StreamingSource(
      * Check if this source is currently available
      */
     fun isCurrentlyAvailable(): Boolean {
-        return isAvailable && provider.isAvailable
+        val result = isAvailable && provider.isAvailable
+        println("DEBUG [StreamingSource.isCurrentlyAvailable]: ${provider.displayName} - isAvailable: $isAvailable, provider.isAvailable: ${provider.isAvailable}, result: $result")
+        return result
     }
     
     /**

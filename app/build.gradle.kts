@@ -51,6 +51,13 @@ android {
     lint {
         abortOnError = false
     }
+    
+    packaging {
+        resources {
+            excludes += "META-INF/LICENSE.md"
+            excludes += "META-INF/LICENSE-notice.md"
+        }
+    }
 }
 
 dependencies {
@@ -135,6 +142,7 @@ dependencies {
     
     // Testing dependencies
     testImplementation(libs.junit)
+    testImplementation(libs.kotlin.test)
     testImplementation(libs.mockk)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.hilt.android.testing)

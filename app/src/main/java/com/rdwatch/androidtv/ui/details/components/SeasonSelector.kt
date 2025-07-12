@@ -44,6 +44,7 @@ fun SeasonSelector(
     selectedSeasonNumber: Int,
     onSeasonSelected: (Int) -> Unit,
     modifier: Modifier = Modifier,
+    selectedSeason: TVSeason? = null,
     showProgress: Boolean = true,
     isLoading: Boolean = false
 ) {
@@ -78,9 +79,9 @@ fun SeasonSelector(
                 fontWeight = FontWeight.Bold
             )
             
-            // Episode count for selected season
-            val selectedSeason = seasons.find { it.seasonNumber == selectedSeasonNumber }
-            selectedSeason?.let { season ->
+            // Episode count for selected season - using authoritative data
+            val displaySeason = selectedSeason ?: seasons.find { it.seasonNumber == selectedSeasonNumber }
+            displaySeason?.let { season ->
                 Text(
                     text = season.getFormattedEpisodeCount(),
                     style = MaterialTheme.typography.bodyMedium,

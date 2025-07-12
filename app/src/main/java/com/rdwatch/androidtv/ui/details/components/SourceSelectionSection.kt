@@ -42,11 +42,22 @@ fun SourceSelectionSection(
     onViewAllClick: () -> Unit = {},
     maxVisibleSources: Int = 6,
     cardVariant: SourceCardVariant = SourceCardVariant.DEFAULT,
-    groupByProvider: Boolean = false
+    groupByProvider: Boolean = false,
+    showAllSources: Boolean = false
 ) {
-    val availableSources = remember(sources) {
-        sources.filter { it.isCurrentlyAvailable() }
-            .sortedByDescending { it.getPriorityScore() }
+    val availableSources = remember(sources, showAllSources) {
+        println("DEBUG [SourceSelectionSection]: Total sources received: ${sources.size}, showAllSources: $showAllSources")
+        sources.forEachIndexed { index, source ->
+            println("DEBUG [SourceSelectionSection]: Source $index: ${source.provider.displayName} - Available: ${source.isAvailable}, Provider Available: ${source.provider.isAvailable}, Currently Available: ${source.isCurrentlyAvailable()}")
+        }
+        val filtered = if (showAllSources) {
+            sources.sortedByDescending { it.getPriorityScore() }
+        } else {
+            sources.filter { it.isCurrentlyAvailable() }
+                .sortedByDescending { it.getPriorityScore() }
+        }
+        println("DEBUG [SourceSelectionSection]: Filtered to ${filtered.size} ${if (showAllSources) "total" else "available"} sources")
+        filtered
     }
     
     val displaySources = remember(availableSources, groupByProvider) {
