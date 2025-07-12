@@ -66,6 +66,11 @@ fun MovieDetailsScreen(
     val relatedMoviesState by viewModel.relatedMoviesState.collectAsState()
     val creditsState by viewModel.creditsState.collectAsState()
     val selectedTabIndex by viewModel.selectedTabIndex.collectAsState()
+    val sourcesState by viewModel.sourcesState.collectAsState()
+    
+    // Debug logging for UI state
+    println("DEBUG [MovieDetailsScreen]: UI state availableSources count: ${uiState.availableSources.size}")
+    println("DEBUG [MovieDetailsScreen]: Sources state: ${sourcesState.javaClass.simpleName}")
     
     // Load movie details when screen is first displayed
     LaunchedEffect(movieId) {
@@ -248,33 +253,127 @@ fun MovieDetailsScreen(
                     
                     // Source Selection Section
                     item {
-                        val sampleSources = StreamingSource.createSampleSources()
                         var selectedSourceId by remember { mutableStateOf<String?>(null) }
                         var showSourceDialog by remember { mutableStateOf(false) }
                         
-                        SourceSelectionSection(
-                            sources = sampleSources,
-                            onSourceSelected = { source ->
-                                selectedSourceId = source.id
-                                // TODO: Handle source selection for movie playback
-                            },
-                            selectedSourceId = selectedSourceId,
-                            onViewAllClick = { showSourceDialog = true },
-                            modifier = Modifier.padding(horizontal = overscanMargin, vertical = 8.dp)
-                        )
-                        
-                        if (showSourceDialog) {
-                            SourceSelectionDialog(
-                                sources = sampleSources,
-                                onSourceSelected = { source ->
-                                    selectedSourceId = source.id
-                                    showSourceDialog = false
-                                    // TODO: Handle source selection for movie playback
-                                },
-                                onDismiss = { showSourceDialog = false },
-                                selectedSourceId = selectedSourceId,
-                                title = "Select Movie Source"
-                            )
+                        when (sourcesState) {
+                            is UiState.Loading -> {
+                                // Show loading state for sources
+                                Surface(
+                                    modifier = Modifier.padding(horizontal = overscanMargin, vertical = 8.dp),
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = MaterialTheme.colorScheme.surfaceVariant
+                                ) {
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(16.dp),
+                                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        CircularProgressIndicator(
+                                            modifier = Modifier.size(24.dp),
+                                            color = MaterialTheme.colorScheme.primary
+                                        )
+                                        Text(
+                                            text = "Loading streaming sources...",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                }
+                            }
+                            is UiState.Success -> {
+                                val sources = (sourcesState as UiState.Success).data
+                                println("DEBUG [MovieDetailsScreen]: UiState.Success received with ${sources.size} sources")
+                                sources.forEach { source ->
+                                    println("DEBUG [MovieDetailsScreen]: UI Source: ${source.provider.displayName} - ${source.quality.displayName} - ${source.id}")
+                                }
+                                if (sources.isNotEmpty()) {
+                                    SourceSelectionSection(
+                                        sources = sources,
+                                        onSourceSelected = { source ->
+                                            selectedSourceId = source.id
+                                            // TODO: Handle source selection for movie playback
+                                        },
+                                        selectedSourceId = selectedSourceId,
+                                        onViewAllClick = { showSourceDialog = true },
+                                        modifier = Modifier.padding(horizontal = overscanMargin, vertical = 8.dp),
+                                        showAllSources = true // DEBUG: Temporarily show all sources to test
+                                    )
+                                    
+                                    if (showSourceDialog) {
+                                        SourceSelectionDialog(
+                                            sources = sources,
+                                            onSourceSelected = { source ->
+                                                selectedSourceId = source.id
+                                                showSourceDialog = false
+                                                // TODO: Handle source selection for movie playback
+                                            },
+                                            onDismiss = { showSourceDialog = false },
+                                            selectedSourceId = selectedSourceId,
+                                            title = "Select Movie Source"
+                                        )
+                                    }
+                                } else {
+                                    // No sources available
+                                    Surface(
+                                        modifier = Modifier.padding(horizontal = overscanMargin, vertical = 8.dp),
+                                        shape = RoundedCornerShape(8.dp),
+                                        color = MaterialTheme.colorScheme.surfaceVariant
+                                    ) {
+                                        Column(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(16.dp),
+                                            horizontalAlignment = Alignment.CenterHorizontally
+                                        ) {
+                                            Text(
+                                                text = "No streaming sources available",
+                                                style = MaterialTheme.typography.bodyLarge,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                            Text(
+                                                text = "Check back later or try refreshing",
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                            is UiState.Error -> {
+                                // Show error state for sources
+                                Surface(
+                                    modifier = Modifier.padding(horizontal = overscanMargin, vertical = 8.dp),
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = MaterialTheme.colorScheme.errorContainer
+                                ) {
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(16.dp),
+                                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Error,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(24.dp),
+                                            tint = MaterialTheme.colorScheme.error
+                                        )
+                                        Text(
+                                            text = "Failed to load streaming sources",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colorScheme.onErrorContainer
+                                        )
+                                    }
+                                }
+                            }
+                            else -> {
+                                // Idle state or any other state
+                                // No UI to show
+                            }
                         }
                     }
                     
@@ -341,6 +440,9 @@ fun MovieDetailsScreen(
                                 is com.rdwatch.androidtv.ui.common.UiState.Error -> {
                                     // Don't show error for related movies, just skip section
                                 }
+                                else -> {
+                                    // Handle UiState.Idle or any other state - just skip section
+                                }
                             }
                         }
                         
@@ -383,6 +485,9 @@ fun MovieDetailsScreen(
                                         }
                                     }
                                 }
+                                else -> {
+                                    // Handle UiState.Idle or any other state - just skip section
+                                }
                             }
                         }
                     }
@@ -392,6 +497,15 @@ fun MovieDetailsScreen(
                         Spacer(modifier = Modifier.height(overscanMargin))
                     }
                 }
+            }
+        }
+        else -> {
+            // Handle UiState.Idle or any other state
+            Box(
+                modifier = modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
             }
         }
     }

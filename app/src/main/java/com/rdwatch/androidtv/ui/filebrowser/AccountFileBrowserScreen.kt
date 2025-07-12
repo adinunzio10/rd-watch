@@ -611,6 +611,15 @@ private fun FileBrowserContent(
                 }
             }
         }
+        else -> {
+            // Handle UiState.Idle or any other state
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
+        }
     }
 }
 

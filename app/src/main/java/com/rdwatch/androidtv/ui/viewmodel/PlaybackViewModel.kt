@@ -88,6 +88,39 @@ class PlaybackViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(showResumeDialog = false)
     }
     
+    // Episode Playback Methods
+    fun startEpisodePlayback(
+        tvShow: com.rdwatch.androidtv.ui.details.models.TVShowContentDetail,
+        episode: com.rdwatch.androidtv.ui.details.models.TVEpisode,
+        source: com.rdwatch.androidtv.ui.details.models.StreamingSource
+    ) {
+        viewModelScope.launch {
+            try {
+                // Create a unique content ID for the episode
+                val episodeContentId = "${tvShow.id}:${episode.seasonNumber}:${episode.episodeNumber}"
+                
+                // Log the playback attempt
+                android.util.Log.d("PlaybackViewModel", "Starting episode playback: ${episode.title} from ${source.provider.displayName}")
+                
+                // Start playback with the source URL
+                exoPlayerManager.startPlaybackSession(
+                    mediaUrl = source.url,
+                    title = "${tvShow.title} - S${episode.seasonNumber}E${episode.episodeNumber}: ${episode.title}"
+                )
+                
+                android.util.Log.d("PlaybackViewModel", "Episode playback started successfully")
+                
+            } catch (e: Exception) {
+                android.util.Log.e("PlaybackViewModel", "Failed to start episode playback: ${e.message}")
+                // Update UI state to show error
+                _uiState.value = _uiState.value.copy(
+                    hasError = true,
+                    errorMessage = "Failed to start playback: ${e.message}"
+                )
+            }
+        }
+    }
+    
     // Content Management Methods
     fun markAsWatched(contentId: String? = null) {
         exoPlayerManager.markAsWatched(contentId)

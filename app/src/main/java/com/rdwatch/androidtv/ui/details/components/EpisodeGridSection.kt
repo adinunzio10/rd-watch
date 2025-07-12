@@ -118,16 +118,25 @@ private fun EpisodeGridContent(
         
         // Loading state (when no episodes are available)
         uiState.shouldShowLoading() -> {
+            val loadingMessage = when {
+                episodes.isEmpty() -> "Loading season details and episodes..."
+                else -> "Loading more episodes..."
+            }
             EpisodeGridLoadingState(
                 layout = gridLayout,
+                loadingMessage = loadingMessage,
                 modifier = Modifier.height(400.dp)
             )
         }
         
         // Empty state
         episodes.isEmpty() && !uiState.isLoading -> {
+            val emptyMessage = when {
+                uiState.selectedSeasonNumber > 0 -> "No episodes found for Season ${uiState.selectedSeasonNumber}"
+                else -> "No episodes available for this season"
+            }
             EpisodeGridEmptyState(
-                message = "No episodes available for this season",
+                message = emptyMessage,
                 modifier = Modifier.height(400.dp)
             )
         }
@@ -156,7 +165,8 @@ private fun EpisodeGridContent(
 @Composable
 private fun EpisodeGridLoadingState(
     layout: EpisodeGridLayout,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    loadingMessage: String = "Loading episodes..."
 ) {
     Column(
         modifier = modifier.fillMaxWidth(),
@@ -169,7 +179,7 @@ private fun EpisodeGridLoadingState(
         )
         
         Text(
-            text = "Loading episodes...",
+            text = loadingMessage,
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
             textAlign = TextAlign.Center,

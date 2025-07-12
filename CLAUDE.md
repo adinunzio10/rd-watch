@@ -37,6 +37,9 @@ This project uses modular documentation for optimal context management:
 - **[claude-taskmaster.md](claude-taskmaster.md)**: Task-Master CLI integration, commands, and workflow patterns
 - **[claude-tests.md](claude-tests.md)**: Testing strategy, test commands, and test maintenance
 - **[claude-development.md](claude-development.md)**: Debugging tips, common tasks, troubleshooting
+- **[claude-debugging-methodology.md](claude-debugging-methodology.md)**: Systematic problem-solving approaches
+- **[claude-android-patterns.md](claude-android-patterns.md)**: Android TV app specific debugging patterns
+- **[claude-session-management.md](claude-session-management.md)**: Best practices for effective development sessions
 - **[planning-docs/](planning-docs/)**: Planning mode outputs for major changes
 
 ## Self-Maintenance Rules

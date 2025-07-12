@@ -21,13 +21,21 @@ class ScraperSourceAdapter @Inject constructor() {
      * Convert a ScraperManifest to a SourceProvider
      */
     fun manifestToProvider(manifest: ScraperManifest): SourceProvider {
+        println("DEBUG [ScraperSourceAdapter]: Creating provider for manifest: ${manifest.displayName}")
+        println("DEBUG [ScraperSourceAdapter]: Validation status: ${manifest.metadata.validationStatus.name}")
+        println("DEBUG [ScraperSourceAdapter]: Is enabled: ${manifest.isEnabled}")
+        
+        // For development, be more lenient with validation status
+        val isAvailable = manifest.metadata.validationStatus.name in listOf("VALID", "OUTDATED", "UNKNOWN", "PENDING")
+        println("DEBUG [ScraperSourceAdapter]: Provider isAvailable: $isAvailable (allowing VALID, OUTDATED, UNKNOWN, PENDING)")
+        
         return SourceProvider(
             id = manifest.id,
             name = manifest.name,
             displayName = manifest.displayName,
             logoUrl = manifest.logo,
             logoResource = null, // Could be mapped from manifest metadata
-            isAvailable = manifest.metadata.validationStatus.name == "VALID",
+            isAvailable = isAvailable,
             isEnabled = manifest.isEnabled,
             capabilities = manifest.metadata.capabilities.map { it.name.lowercase() },
             color = getScraperColor(manifest),
@@ -55,19 +63,27 @@ class ScraperSourceAdapter @Inject constructor() {
         leechers: Int? = null
     ): StreamingSource {
         val provider = manifestToProvider(manifest)
+        val sourceId = "${manifest.id}_${quality.name}_${url.hashCode()}"
         
-        return StreamingSource(
-            id = "${manifest.id}_${System.currentTimeMillis()}",
+        val sourceIsAvailable = manifest.isEnabled && provider.isAvailable
+        println("DEBUG [ScraperSourceAdapter]: Source availability calculation: manifest.isEnabled=${manifest.isEnabled}, provider.isAvailable=${provider.isAvailable}, result=$sourceIsAvailable")
+        
+        val streamingSource = StreamingSource(
+            id = sourceId,
             provider = provider,
             quality = quality,
             url = url,
-            isAvailable = manifest.isEnabled && provider.isAvailable,
+            isAvailable = sourceIsAvailable,
             features = createSourceFeatures(manifest, seeders, leechers),
             sourceType = determineSourceType(manifest, url),
             title = title,
             size = size,
             metadata = createSourceMetadata(manifest)
         )
+        
+        println("DEBUG [ScraperSourceAdapter]: Created streaming source - ID: $sourceId, Provider: ${provider.displayName}, Quality: ${quality.displayName}, URL: $url, Available: $sourceIsAvailable")
+        
+        return streamingSource
     }
     
     /**
