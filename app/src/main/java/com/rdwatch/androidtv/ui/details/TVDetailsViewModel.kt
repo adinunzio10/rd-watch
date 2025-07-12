@@ -468,8 +468,10 @@ class TVDetailsViewModel @Inject constructor(
                 
                 // Load just the first season's details
                 tmdbTVRepository.getSeasonDetails(tmdbId, initialSeasonToLoad)
-                    .take(1) // Take only the first emission (Success or Error) to avoid continuous collection
-                    .collect { result ->
+                    .first { result -> 
+                        // Wait for Success or Error, skip Loading states
+                        result !is com.rdwatch.androidtv.repository.base.Result.Loading
+                    }.let { result ->
                         when (result) {
                             is com.rdwatch.androidtv.repository.base.Result.Success -> {
                                 val seasonResponse = result.data
@@ -527,8 +529,9 @@ class TVDetailsViewModel @Inject constructor(
                                 useDefaultOrExistingSeasons(tvShowDetail, existingSeasons)
                             }
                             is com.rdwatch.androidtv.repository.base.Result.Loading -> {
-                                // This shouldn't happen with take(1), but handle it anyway
-                                android.util.Log.d("TVDetailsViewModel", "Season $initialSeasonToLoad is loading...")
+                                // This shouldn't happen with first{}, but handle it anyway
+                                android.util.Log.w("TVDetailsViewModel", "Unexpected loading state received")
+                                useDefaultOrExistingSeasons(tvShowDetail, existingSeasons)
                             }
                         }
                     }
@@ -565,8 +568,10 @@ class TVDetailsViewModel @Inject constructor(
             android.util.Log.d("TVDetailsViewModel", "Loading season $seasonNumber on demand")
             
             tmdbTVRepository.getSeasonDetails(tmdbId, seasonNumber)
-                .take(1)
-                .collect { result ->
+                .first { result -> 
+                    // Wait for Success or Error, skip Loading states
+                    result !is com.rdwatch.androidtv.repository.base.Result.Loading
+                }.let { result ->
                     when (result) {
                         is com.rdwatch.androidtv.repository.base.Result.Success -> {
                             val seasonResponse = result.data
@@ -596,7 +601,8 @@ class TVDetailsViewModel @Inject constructor(
                             android.util.Log.e("TVDetailsViewModel", "Failed to load season $seasonNumber on demand: ${result.exception.message}")
                         }
                         is com.rdwatch.androidtv.repository.base.Result.Loading -> {
-                            // Loading state
+                            // This shouldn't happen with first{}, but handle it anyway
+                            android.util.Log.w("TVDetailsViewModel", "Unexpected loading state received for season $seasonNumber")
                         }
                     }
                 }
@@ -636,6 +642,7 @@ class TVDetailsViewModel @Inject constructor(
      * Map TMDb season response to TVSeason
      */
     private fun mapTMDbSeasonResponseToTVSeason(seasonResponse: com.rdwatch.androidtv.network.models.tmdb.TMDbSeasonResponse): TVSeason {
+        val episodes = mapTMDbEpisodesToTVEpisodes(seasonResponse.episodes, seasonResponse.seasonNumber)
         return TVSeason(
             id = seasonResponse.id.toString(),
             seasonNumber = seasonResponse.seasonNumber,
@@ -643,8 +650,8 @@ class TVDetailsViewModel @Inject constructor(
             overview = seasonResponse.overview,
             posterPath = seasonResponse.posterPath?.let { "https://image.tmdb.org/t/p/w500$it" },
             airDate = seasonResponse.airDate,
-            episodeCount = seasonResponse.episodeCount,
-            episodes = mapTMDbEpisodesToTVEpisodes(seasonResponse.episodes, seasonResponse.seasonNumber),
+            episodeCount = episodes.size, // Use actual loaded episodes count
+            episodes = episodes,
             voteAverage = seasonResponse.voteAverage.toFloat()
         )
     }

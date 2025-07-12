@@ -235,7 +235,7 @@ class TMDbTVRepositoryImpl @Inject constructor(
         },
         shouldFetch = { cachedSeason ->
             // Always fetch season details as they may contain episode data not in TV response
-            forceRefresh || cachedSeason?.episodes?.isEmpty() ?: true
+            forceRefresh || cachedSeason == null || cachedSeason.episodes.isEmpty()
         },
         createCall = {
             awaitApiResponse(tmdbTVService.getSeasonDetails(tvId, seasonNumber, language))
