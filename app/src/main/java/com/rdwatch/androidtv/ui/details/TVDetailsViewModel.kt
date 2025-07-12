@@ -529,7 +529,7 @@ class TVDetailsViewModel @Inject constructor(
                             val seasonResponse = result.data
                             android.util.Log.d("TVDetailsViewModel", "Season $initialSeasonToLoad response: id=${seasonResponse.id}, episodes=${seasonResponse.episodes.size}")
                             
-                            if (seasonResponse.id != 0 && seasonResponse.episodes.isNotEmpty()) {
+                            if (seasonResponse.id != 0 && (seasonResponse.episodes.isNotEmpty() || seasonResponse.episodeCount > 0)) {
                                 val tvSeason = mapTMDbSeasonResponseToTVSeason(seasonResponse)
                                 android.util.Log.d("TVDetailsViewModel", "Mapped season $initialSeasonToLoad: ${tvSeason.name} with ${tvSeason.episodes.size} episodes")
                                 
@@ -684,7 +684,7 @@ class TVDetailsViewModel @Inject constructor(
                 when (result) {
                     is com.rdwatch.androidtv.repository.base.Result.Success -> {
                         val seasonResponse = result.data
-                        if (seasonResponse.id != 0 && seasonResponse.episodes.isNotEmpty()) {
+                        if (seasonResponse.id != 0 && (seasonResponse.episodes.isNotEmpty() || seasonResponse.episodeCount > 0)) {
                             val tvSeason = mapTMDbSeasonResponseToTVSeason(seasonResponse)
                             
                             // Get the current TV show state again in case it changed
