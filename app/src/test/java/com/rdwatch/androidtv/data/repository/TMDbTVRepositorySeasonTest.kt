@@ -119,11 +119,15 @@ class TMDbTVRepositorySeasonTest {
     
     @Test
     fun `getSeasonDetails - cache miss triggers API call and saves result`() = runTest {
-        // Given: No cached data
-        every { mockTmdbTVDao.getTVShowById(TEST_TV_ID) } returns flowOf(null)
-        
+        // Given: No cached data initially, updated data after API call
         val apiSeason = createValidSeasonResponse()
         val apiResponse = createSuccessApiResponse(apiSeason)
+        val updatedTV = createTVEntityWithSeason(apiSeason)
+        
+        every { mockTmdbTVDao.getTVShowById(TEST_TV_ID) } returnsMany listOf(
+            flowOf(null),       // First call returns no data
+            flowOf(updatedTV)   // After API call, returns updated data
+        )
         
         every { mockTmdbTVService.getSeasonDetails(TEST_TV_ID, TEST_SEASON_NUMBER, TEST_LANGUAGE) } returns mockSeasonCall
         every { mockSeasonCall.enqueue(any()) } answers {
@@ -136,18 +140,17 @@ class TMDbTVRepositorySeasonTest {
         coEvery { mockTmdbTVDao.insertTVShow(any()) } just Runs
         
         // When: Getting season details
-        val result = withTimeoutOrNull(5000) {
-            repository.getSeasonDetails(
-                tvId = TEST_TV_ID,
-                seasonNumber = TEST_SEASON_NUMBER,
-                forceRefresh = false,
-                language = TEST_LANGUAGE
-            ).first { it is Result.Success } // Wait for success result
-        } ?: throw RuntimeException("Flow collection timed out")
+        val results = repository.getSeasonDetails(
+            tvId = TEST_TV_ID,
+            seasonNumber = TEST_SEASON_NUMBER,
+            forceRefresh = false,
+            language = TEST_LANGUAGE
+        ).take(3).toList() // Collect first 3 emissions (Loading, Loading, Success)
         
         // Then: Makes API call and returns data
-        assertTrue(result is Result.Success)
-        assertEquals(apiSeason.id, (result as Result.Success).data.id)
+        val successResult = results.last()
+        assertTrue(successResult is Result.Success)
+        assertEquals(apiSeason.id, (successResult as Result.Success).data!!.id)
         
         // Verify API call was made
         verify(exactly = 1) { mockTmdbTVService.getSeasonDetails(TEST_TV_ID, TEST_SEASON_NUMBER, TEST_LANGUAGE) }
@@ -184,19 +187,25 @@ class TMDbTVRepositorySeasonTest {
         coEvery { mockTmdbTVDao.getTVShowByIdSuspend(TEST_TV_ID) } returns existingTV
         coEvery { mockTmdbTVDao.insertTVShow(any()) } just Runs
         
+        // Mock the DAO to return updated data after API call
+        val updatedTV = createTVEntityWithSeason(validApiSeason)
+        every { mockTmdbTVDao.getTVShowById(TEST_TV_ID) } returnsMany listOf(
+            flowOf(existingTV), // First call returns invalid data
+            flowOf(updatedTV)   // After API call, returns updated data
+        )
+        
         // When: Getting season details
-        val result = withTimeoutOrNull(5000) {
-            repository.getSeasonDetails(
-                tvId = TEST_TV_ID,
-                seasonNumber = TEST_SEASON_NUMBER,
-                forceRefresh = false,
-                language = TEST_LANGUAGE
-            ).first { it is Result.Success } // Wait for success result
-        } ?: throw RuntimeException("Flow collection timed out")
+        val results = repository.getSeasonDetails(
+            tvId = TEST_TV_ID,
+            seasonNumber = TEST_SEASON_NUMBER,
+            forceRefresh = false,
+            language = TEST_LANGUAGE
+        ).take(3).toList() // Collect first 3 emissions
         
         // Then: API call is made despite having cached data
-        assertTrue(result is Result.Success)
-        assertEquals(validApiSeason.id, (result as Result.Success).data.id)
+        val successResult = results.last()
+        assertTrue(successResult is Result.Success)
+        assertEquals(validApiSeason.id, (successResult as Result.Success).data!!.id)
         
         verify(exactly = 1) { mockTmdbTVService.getSeasonDetails(TEST_TV_ID, TEST_SEASON_NUMBER, TEST_LANGUAGE) }
     }
@@ -232,19 +241,25 @@ class TMDbTVRepositorySeasonTest {
         coEvery { mockTmdbTVDao.getTVShowByIdSuspend(TEST_TV_ID) } returns existingTV
         coEvery { mockTmdbTVDao.insertTVShow(any()) } just Runs
         
+        // Mock the DAO to return updated data after API call
+        val updatedTV = createTVEntityWithSeason(freshApiSeason)
+        every { mockTmdbTVDao.getTVShowById(TEST_TV_ID) } returnsMany listOf(
+            flowOf(existingTV), // First call returns stale data
+            flowOf(updatedTV)   // After API call, returns updated data
+        )
+        
         // When: Getting season details
-        val result = withTimeoutOrNull(5000) {
-            repository.getSeasonDetails(
-                tvId = TEST_TV_ID,
-                seasonNumber = TEST_SEASON_NUMBER,
-                forceRefresh = false,
-                language = TEST_LANGUAGE
-            ).first { it is Result.Success } // Wait for success result
-        } ?: throw RuntimeException("Flow collection timed out")
+        val results = repository.getSeasonDetails(
+            tvId = TEST_TV_ID,
+            seasonNumber = TEST_SEASON_NUMBER,
+            forceRefresh = false,
+            language = TEST_LANGUAGE
+        ).take(3).toList() // Collect first 3 emissions
         
         // Then: API call is made to refresh stale data
-        assertTrue(result is Result.Success)
-        assertEquals(freshApiSeason.episodes.size, (result as Result.Success).data.episodes.size)
+        val successResult = results.last()
+        assertTrue(successResult is Result.Success)
+        assertEquals(freshApiSeason.episodes.size, (successResult as Result.Success).data!!.episodes.size)
         
         verify(exactly = 1) { mockTmdbTVService.getSeasonDetails(TEST_TV_ID, TEST_SEASON_NUMBER, TEST_LANGUAGE) }
     }
@@ -270,19 +285,25 @@ class TMDbTVRepositorySeasonTest {
         coEvery { mockTmdbTVDao.getTVShowByIdSuspend(TEST_TV_ID) } returns existingTV
         coEvery { mockTmdbTVDao.insertTVShow(any()) } just Runs
         
+        // Mock the DAO to return updated data after API call
+        val updatedTV = createTVEntityWithSeason(apiSeason)
+        every { mockTmdbTVDao.getTVShowById(TEST_TV_ID) } returnsMany listOf(
+            flowOf(existingTV), // First call returns cached data
+            flowOf(updatedTV)   // After API call, returns updated data
+        )
+        
         // When: Force refreshing season details
-        val result = withTimeoutOrNull(5000) {
-            repository.getSeasonDetails(
-                tvId = TEST_TV_ID,
-                seasonNumber = TEST_SEASON_NUMBER,
-                forceRefresh = true, // Force refresh
-                language = TEST_LANGUAGE
-            ).first { it is Result.Success } // Wait for success result
-        } ?: throw RuntimeException("Flow collection timed out")
+        val results = repository.getSeasonDetails(
+            tvId = TEST_TV_ID,
+            seasonNumber = TEST_SEASON_NUMBER,
+            forceRefresh = true, // Force refresh
+            language = TEST_LANGUAGE
+        ).take(3).toList() // Collect first 3 emissions
         
         // Then: API call is made even with valid cache
-        assertTrue(result is Result.Success)
-        assertEquals(999, (result as Result.Success).data.id) // Should return API data, not cached
+        val successResult = results.last()
+        assertTrue(successResult is Result.Success)
+        assertEquals(999, (successResult as Result.Success).data!!.id) // Should return API data, not cached
         
         verify(exactly = 1) { mockTmdbTVService.getSeasonDetails(TEST_TV_ID, TEST_SEASON_NUMBER, TEST_LANGUAGE) }
     }
@@ -339,19 +360,25 @@ class TMDbTVRepositorySeasonTest {
             callback.onResponse(mockSeasonCall, Response.success(createSuccessApiResponse(updatedSeason)))
         }
         
-        val result = withTimeoutOrNull(5000) {
-            repository.getSeasonDetails(
-                tvId = TEST_TV_ID,
-                seasonNumber = TEST_SEASON_NUMBER,
-                forceRefresh = false,
-                language = TEST_LANGUAGE
-            ).first { it is Result.Success } // Wait for success result
-        } ?: throw RuntimeException("Flow collection timed out")
+        // Mock the DAO to return updated data after API call
+        val updatedTV = createTVEntityWithSeason(updatedSeason)
+        every { mockTmdbTVDao.getTVShowById(TEST_TV_ID) } returnsMany listOf(
+            flowOf(null),       // First call returns no data
+            flowOf(updatedTV)   // After API call, returns updated data
+        )
+        
+        val results = repository.getSeasonDetails(
+            tvId = TEST_TV_ID,
+            seasonNumber = TEST_SEASON_NUMBER,
+            forceRefresh = false,
+            language = TEST_LANGUAGE
+        ).take(3).toList() // Collect first 3 emissions
         
         // Then: Database is updated with new season data
-        assertTrue(result is Result.Success)
-        assertEquals(12, (result as Result.Success).data.episodeCount)
-        assertEquals(12, result.data.episodes.size)
+        val successResult = results.last()
+        assertTrue(successResult is Result.Success)
+        assertEquals(12, (successResult as Result.Success).data!!.episodeCount)
+        assertEquals(12, successResult.data!!.episodes.size)
         
         coVerify(exactly = 1) { mockTmdbTVDao.insertTVShow(any()) }
     }

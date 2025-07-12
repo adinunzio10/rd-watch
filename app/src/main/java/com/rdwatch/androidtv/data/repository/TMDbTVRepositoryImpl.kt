@@ -11,6 +11,7 @@ import com.rdwatch.androidtv.network.response.ApiResponse
 import com.rdwatch.androidtv.network.response.ApiException
 import com.rdwatch.androidtv.repository.base.Result
 import com.rdwatch.androidtv.repository.base.networkBoundResource
+import com.rdwatch.androidtv.repository.base.safeCall
 import com.rdwatch.androidtv.ui.details.models.ContentDetail
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -605,15 +606,16 @@ class TMDbTVRepositoryImpl @Inject constructor(
     /**
      * Check if cached season data is invalid and needs to be refetched
      */
-    private fun isSeasonDataInvalid(cachedSeason: TMDbSeasonResponse): Boolean {
-        return (cachedSeason.id > 0 && cachedSeason.episodeCount > 0 && cachedSeason.episodes.isEmpty())
+    private fun isSeasonDataInvalid(cachedSeason: TMDbSeasonResponse?): Boolean {
+        return cachedSeason != null && (cachedSeason.id > 0 && cachedSeason.episodeCount > 0 && cachedSeason.episodes.isEmpty())
     }
     
     /**
      * Check if cached season data is stale based on cache timeout and data completeness
      * Uses multiple heuristics to determine if the cached data needs refreshing
      */
-    private fun isSeasonDataStale(cachedSeason: TMDbSeasonResponse): Boolean {
+    private fun isSeasonDataStale(cachedSeason: TMDbSeasonResponse?): Boolean {
+        if (cachedSeason == null) return false
         // Primary check: if episodes are missing when they should exist
         if (cachedSeason.episodes.isEmpty() && cachedSeason.episodeCount > 0) {
             return true
