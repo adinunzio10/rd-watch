@@ -249,6 +249,11 @@ class TVDetailsViewModel @Inject constructor(
     fun selectSeason(season: TVSeason) {
         _selectedSeason.value = season
         
+        // If the season has no episodes, try to load them on demand
+        if (season.episodes.isEmpty() && season.episodeCount > 0) {
+            loadSeasonOnDemand(season.seasonNumber)
+        }
+        
         // Select first episode of the season or next unwatched episode
         val nextEpisode = season.episodes.find { !it.isWatched } ?: season.episodes.firstOrNull()
         _selectedEpisode.value = nextEpisode
@@ -433,58 +438,168 @@ class TVDetailsViewModel @Inject constructor(
      */
     private fun loadSeasonsWithEpisodes(tmdbId: Int, tvShowDetail: TVShowContentDetail) {
         viewModelScope.launch {
+            val tvShowDetails = tvShowDetail.getTVShowDetail()
+            val numberOfSeasons = tvShowDetails.numberOfSeasons
+            val existingSeasons = tvShowDetails.seasons
+            
             try {
-                val numberOfSeasons = tvShowDetail.getTVShowDetail().numberOfSeasons
-                val loadedSeasons = mutableListOf<TVSeason>()
                 
-                // Load each season's details concurrently
-                val seasonJobs = (1..numberOfSeasons).map { seasonNumber ->
-                    viewModelScope.launch {
-                        tmdbTVRepository.getSeasonDetails(tmdbId, seasonNumber).collect { result ->
-                            when (result) {
-                                is com.rdwatch.androidtv.repository.base.Result.Success -> {
-                                    val seasonResponse = result.data
-                                    if (seasonResponse != null && seasonResponse.id != 0) {
-                                        val tvSeason = mapTMDbSeasonResponseToTVSeason(seasonResponse)
-                                        synchronized(loadedSeasons) {
-                                            loadedSeasons.add(tvSeason)
-                                        }
-                                        
-                                        // Update UI state when we have all seasons
-                                        if (loadedSeasons.size == numberOfSeasons) {
-                                            val sortedSeasons = loadedSeasons.sortedBy { it.seasonNumber }
-                                            updateTVShowWithSeasons(tvShowDetail, sortedSeasons)
+                android.util.Log.d("TVDetailsViewModel", "=== Season Loading Debug ===")
+                android.util.Log.d("TVDetailsViewModel", "TV Show: ${tvShowDetails.title} (ID: $tmdbId)")
+                android.util.Log.d("TVDetailsViewModel", "Number of seasons from initial data: $numberOfSeasons")
+                android.util.Log.d("TVDetailsViewModel", "Existing seasons count: ${existingSeasons.size}")
+                
+                // Check if we already have episodes from the initial API response
+                val hasEpisodesInInitialData = existingSeasons.any { it.episodes.isNotEmpty() }
+                if (hasEpisodesInInitialData) {
+                    android.util.Log.d("TVDetailsViewModel", "Initial data already contains episodes, using existing data")
+                    updateTVShowWithSeasons(tvShowDetail, existingSeasons)
+                    return@launch
+                }
+                
+                // Only load season 1 initially to avoid excessive API calls
+                val initialSeasonToLoad = if (existingSeasons.isNotEmpty()) {
+                    existingSeasons.filter { it.seasonNumber > 0 }.minByOrNull { it.seasonNumber }?.seasonNumber ?: 1
+                } else {
+                    1
+                }
+                
+                android.util.Log.d("TVDetailsViewModel", "Loading only season $initialSeasonToLoad initially")
+                
+                // Load just the first season's details
+                tmdbTVRepository.getSeasonDetails(tmdbId, initialSeasonToLoad)
+                    .take(1) // Take only the first emission (Success or Error) to avoid continuous collection
+                    .collect { result ->
+                        when (result) {
+                            is com.rdwatch.androidtv.repository.base.Result.Success -> {
+                                val seasonResponse = result.data
+                                android.util.Log.d("TVDetailsViewModel", "Season $initialSeasonToLoad response: id=${seasonResponse.id}, episodes=${seasonResponse.episodes.size}")
+                                
+                                if (seasonResponse.id != 0 && seasonResponse.episodes.isNotEmpty()) {
+                                    val tvSeason = mapTMDbSeasonResponseToTVSeason(seasonResponse)
+                                    android.util.Log.d("TVDetailsViewModel", "Mapped season $initialSeasonToLoad: ${tvSeason.name} with ${tvSeason.episodes.size} episodes")
+                                    
+                                    // Create a list with the loaded season and placeholder info for other seasons
+                                    val allSeasons = mutableListOf<TVSeason>()
+                                    
+                                    // Add all seasons with basic info, but only the loaded one has episodes
+                                    existingSeasons.forEach { existingSeason ->
+                                        if (existingSeason.seasonNumber == initialSeasonToLoad) {
+                                            allSeasons.add(tvSeason)
+                                        } else {
+                                            // Keep the basic season info without episodes
+                                            allSeasons.add(existingSeason)
                                         }
                                     }
+                                    
+                                    // If we don't have existing seasons info, create placeholders
+                                    if (existingSeasons.isEmpty()) {
+                                        allSeasons.add(tvSeason)
+                                        // Add placeholders for other seasons
+                                        (1..numberOfSeasons).forEach { seasonNum ->
+                                            if (seasonNum != initialSeasonToLoad) {
+                                                allSeasons.add(
+                                                    TVSeason(
+                                                        id = "season_$seasonNum",
+                                                        seasonNumber = seasonNum,
+                                                        name = "Season $seasonNum",
+                                                        overview = "",
+                                                        posterPath = null,
+                                                        airDate = null,
+                                                        episodeCount = 1, // Show at least 1 to indicate there are episodes to load
+                                                        episodes = emptyList()
+                                                    )
+                                                )
+                                            }
+                                        }
+                                    }
+                                    
+                                    val sortedSeasons = allSeasons.sortedBy { it.seasonNumber }
+                                    android.util.Log.d("TVDetailsViewModel", "Updating UI with season $initialSeasonToLoad loaded and ${sortedSeasons.size} total seasons")
+                                    updateTVShowWithSeasons(tvShowDetail, sortedSeasons)
+                                } else {
+                                    android.util.Log.w("TVDetailsViewModel", "Season $initialSeasonToLoad response was invalid")
+                                    useDefaultOrExistingSeasons(tvShowDetail, existingSeasons)
                                 }
-                                is com.rdwatch.androidtv.repository.base.Result.Error -> {
-                                    android.util.Log.e("TVDetailsViewModel", "Failed to load season $seasonNumber: ${result.exception.message}")
-                                    // Continue loading other seasons
-                                }
-                                is com.rdwatch.androidtv.repository.base.Result.Loading -> {
-                                    // Loading state - we'll show loading until all seasons are loaded
-                                }
+                            }
+                            is com.rdwatch.androidtv.repository.base.Result.Error -> {
+                                android.util.Log.e("TVDetailsViewModel", "Failed to load season $initialSeasonToLoad: ${result.exception.message}")
+                                useDefaultOrExistingSeasons(tvShowDetail, existingSeasons)
+                            }
+                            is com.rdwatch.androidtv.repository.base.Result.Loading -> {
+                                // This shouldn't happen with take(1), but handle it anyway
+                                android.util.Log.d("TVDetailsViewModel", "Season $initialSeasonToLoad is loading...")
                             }
                         }
                     }
-                }
-                
-                // Wait for all season loading jobs to complete
-                seasonJobs.forEach { it.join() }
-                
-                // If no seasons were loaded, use default seasons as fallback
-                if (loadedSeasons.isEmpty()) {
-                    android.util.Log.w("TVDetailsViewModel", "No seasons loaded from TMDb, using default seasons")
-                    val defaultSeasons = getDefaultSeasons()
-                    updateTVShowWithSeasons(tvShowDetail, defaultSeasons)
-                }
                 
             } catch (e: Exception) {
                 android.util.Log.e("TVDetailsViewModel", "Error loading seasons: ${e.message}")
-                // Use default seasons as fallback
-                val defaultSeasons = getDefaultSeasons()
-                updateTVShowWithSeasons(tvShowDetail, defaultSeasons)
+                useDefaultOrExistingSeasons(tvShowDetail, existingSeasons)
             }
+        }
+    }
+    
+    /**
+     * Helper method to use default or existing seasons when loading fails
+     */
+    private fun useDefaultOrExistingSeasons(tvShowDetail: TVShowContentDetail, existingSeasons: List<TVSeason>) {
+        if (existingSeasons.isNotEmpty()) {
+            android.util.Log.d("TVDetailsViewModel", "Using existing seasons from initial data")
+            updateTVShowWithSeasons(tvShowDetail, existingSeasons)
+        } else {
+            android.util.Log.w("TVDetailsViewModel", "Using default seasons as fallback")
+            val defaultSeasons = getDefaultSeasons()
+            updateTVShowWithSeasons(tvShowDetail, defaultSeasons)
+        }
+    }
+    
+    /**
+     * Load additional seasons on demand (when user navigates to them)
+     */
+    fun loadSeasonOnDemand(seasonNumber: Int) {
+        val currentTvShow = _tvShowState.value ?: return
+        val tmdbId = currentTvShow.id.toIntOrNull() ?: return
+        
+        viewModelScope.launch {
+            android.util.Log.d("TVDetailsViewModel", "Loading season $seasonNumber on demand")
+            
+            tmdbTVRepository.getSeasonDetails(tmdbId, seasonNumber)
+                .take(1)
+                .collect { result ->
+                    when (result) {
+                        is com.rdwatch.androidtv.repository.base.Result.Success -> {
+                            val seasonResponse = result.data
+                            if (seasonResponse.id != 0 && seasonResponse.episodes.isNotEmpty()) {
+                                val tvSeason = mapTMDbSeasonResponseToTVSeason(seasonResponse)
+                                
+                                // Update the specific season in the current data
+                                val currentTvShowDetail = currentTvShow.getTVShowDetail()
+                                val updatedSeasons = currentTvShowDetail.seasons.map { season ->
+                                    if (season.seasonNumber == seasonNumber) {
+                                        tvSeason
+                                    } else {
+                                        season
+                                    }
+                                }
+                                
+                                val updatedTvShowDetail = currentTvShowDetail.copy(seasons = updatedSeasons)
+                                val updatedTvShow = currentTvShow.withTVShowDetail(updatedTvShowDetail)
+                                
+                                _tvShowState.value = updatedTvShow
+                                updateState { copy(tvShow = updatedTvShow) }
+                                
+                                android.util.Log.d("TVDetailsViewModel", "Season $seasonNumber loaded on demand with ${tvSeason.episodes.size} episodes")
+                            }
+                        }
+                        is com.rdwatch.androidtv.repository.base.Result.Error -> {
+                            android.util.Log.e("TVDetailsViewModel", "Failed to load season $seasonNumber on demand: ${result.exception.message}")
+                        }
+                        is com.rdwatch.androidtv.repository.base.Result.Loading -> {
+                            // Loading state
+                        }
+                    }
+                }
         }
     }
     
