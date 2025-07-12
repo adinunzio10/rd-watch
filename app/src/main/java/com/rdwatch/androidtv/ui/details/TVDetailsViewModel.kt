@@ -48,7 +48,7 @@ class TVDetailsViewModel @Inject constructor(
     private val _creditsState = MutableStateFlow<UiState<ExtendedContentMetadata>>(UiState.Loading)
     val creditsState: StateFlow<UiState<ExtendedContentMetadata>> = _creditsState.asStateFlow()
     
-    private val _sourcesState = MutableStateFlow<UiState<List<StreamingSource>>>(UiState.Loading)
+    private val _sourcesState = MutableStateFlow<UiState<List<StreamingSource>>>(UiState.Idle)
     val sourcesState: StateFlow<UiState<List<StreamingSource>>> = _sourcesState.asStateFlow()
     
     override fun createInitialState(): TVDetailsUiState {
@@ -1033,7 +1033,7 @@ class TVDetailsViewModel @Inject constructor(
         selectEpisodeInternal(null)
         _relatedShowsState.value = UiState.Loading
         _creditsState.value = UiState.Loading
-        _sourcesState.value = UiState.Loading
+        _sourcesState.value = UiState.Idle
         _selectedTabIndex.value = 0
         
         updateState { createInitialState() }

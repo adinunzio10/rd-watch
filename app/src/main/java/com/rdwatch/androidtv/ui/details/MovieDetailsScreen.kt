@@ -343,39 +343,36 @@ fun MovieDetailsScreen(
                                 }
                             }
                             is UiState.Error -> {
-                                // Show error state with retry option
+                                // Show error state for sources
                                 Surface(
                                     modifier = Modifier.padding(horizontal = overscanMargin, vertical = 8.dp),
                                     shape = RoundedCornerShape(8.dp),
                                     color = MaterialTheme.colorScheme.errorContainer
                                 ) {
-                                    Column(
+                                    Row(
                                         modifier = Modifier
                                             .fillMaxWidth()
                                             .padding(16.dp),
-                                        horizontalAlignment = Alignment.CenterHorizontally,
-                                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                        verticalAlignment = Alignment.CenterVertically
                                     ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Error,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(24.dp),
+                                            tint = MaterialTheme.colorScheme.error
+                                        )
                                         Text(
-                                            text = "Failed to load sources",
-                                            style = MaterialTheme.typography.bodyLarge,
+                                            text = "Failed to load streaming sources",
+                                            style = MaterialTheme.typography.bodyMedium,
                                             color = MaterialTheme.colorScheme.onErrorContainer
                                         )
-                                        Text(
-                                            text = (sourcesState as UiState.Error).message ?: "Unknown error",
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            color = MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.8f)
-                                        )
-                                        Button(
-                                            onClick = { viewModel.retryLoadingSources() },
-                                            colors = ButtonDefaults.buttonColors(
-                                                containerColor = MaterialTheme.colorScheme.error
-                                            )
-                                        ) {
-                                            Text("Retry")
-                                        }
                                     }
                                 }
+                            }
+                            else -> {
+                                // Idle state or any other state
+                                // No UI to show
                             }
                         }
                     }
@@ -443,6 +440,9 @@ fun MovieDetailsScreen(
                                 is com.rdwatch.androidtv.ui.common.UiState.Error -> {
                                     // Don't show error for related movies, just skip section
                                 }
+                                else -> {
+                                    // Handle UiState.Idle or any other state - just skip section
+                                }
                             }
                         }
                         
@@ -485,6 +485,9 @@ fun MovieDetailsScreen(
                                         }
                                     }
                                 }
+                                else -> {
+                                    // Handle UiState.Idle or any other state - just skip section
+                                }
                             }
                         }
                     }
@@ -494,6 +497,15 @@ fun MovieDetailsScreen(
                         Spacer(modifier = Modifier.height(overscanMargin))
                     }
                 }
+            }
+        }
+        else -> {
+            // Handle UiState.Idle or any other state
+            Box(
+                modifier = modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
             }
         }
     }
