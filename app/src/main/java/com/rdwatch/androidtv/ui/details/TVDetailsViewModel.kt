@@ -206,7 +206,7 @@ class TVDetailsViewModel @Inject constructor(
                             
                             // Select first episode of first season by default
                             val firstEpisode = firstSeason?.episodes?.firstOrNull()
-                            _selectedEpisode.value = firstEpisode
+                            selectEpisodeInternal(firstEpisode)
                             
                             updateState { 
                                 copy(
@@ -214,8 +214,7 @@ class TVDetailsViewModel @Inject constructor(
                                     isLoading = false,
                                     error = null,
                                     isLoaded = true,
-                                    currentSeason = firstSeason,
-                                    currentEpisode = firstEpisode
+                                    currentSeason = firstSeason
                                 )
                             }
                             
@@ -254,41 +253,68 @@ class TVDetailsViewModel @Inject constructor(
      * Select a season and update the selected episode
      */
     fun selectSeason(season: TVSeason) {
-        android.util.Log.d("TVDetailsViewModel", "Selecting season ${season.seasonNumber}: ${season.name} with ${season.episodes.size} episodes (episodeCount=${season.episodeCount})")
+        android.util.Log.d("TVDetailsViewModel", "=== Season Selection Debug ===")
+        android.util.Log.d("TVDetailsViewModel", "Selecting season ${season.seasonNumber}: ${season.name}")
+        android.util.Log.d("TVDetailsViewModel", "  - Episodes loaded: ${season.episodes.size}")
+        android.util.Log.d("TVDetailsViewModel", "  - Episode count claimed: ${season.episodeCount}")
+        android.util.Log.d("TVDetailsViewModel", "  - Episodes have valid data: ${season.episodes.any { it.id != "0" && it.title.isNotBlank() }}")
         
         _selectedSeason.value = season
         
-        // If the season has no episodes but claims to have some, try to load them on demand
-        if (season.episodes.isEmpty() && season.episodeCount > 0) {
-            android.util.Log.d("TVDetailsViewModel", "Season ${season.seasonNumber} has no episodes but episodeCount=${season.episodeCount}, loading on demand")
+        // Only load season on demand if ALL conditions are met:
+        // 1. No episodes are currently loaded
+        // 2. Season claims to have episodes (episodeCount > 0)
+        // 3. Season is not already being loaded (to prevent duplicate requests)
+        val shouldLoadOnDemand = season.episodes.isEmpty() && 
+                                 season.episodeCount > 0 && 
+                                 !activeSeasonRequests.contains(season.seasonNumber)
+        
+        if (shouldLoadOnDemand) {
+            android.util.Log.d("TVDetailsViewModel", "Season ${season.seasonNumber} needs on-demand loading: no episodes loaded but episodeCount=${season.episodeCount}")
             loadSeasonOnDemand(season.seasonNumber)
-        }
-        
-        // Select first episode of the season or next unwatched episode
-        val nextEpisode = season.episodes.find { !it.isWatched } ?: season.episodes.firstOrNull()
-        _selectedEpisode.value = nextEpisode
-        
-        android.util.Log.d("TVDetailsViewModel", "Selected episode: ${nextEpisode?.title ?: "None"} (S${season.seasonNumber}E${nextEpisode?.episodeNumber ?: 0})")
-        
-        updateState { 
-            copy(
-                currentSeason = season,
-                currentEpisode = nextEpisode
-            )
+            
+            // Don't set selected episode yet since we're loading data
+            selectEpisodeInternal(null)
+        } else {
+            android.util.Log.d("TVDetailsViewModel", "Season ${season.seasonNumber} using existing episode data")
+            
+            // Select first episode of the season or next unwatched episode
+            val nextEpisode = season.episodes.find { !it.isWatched } ?: season.episodes.firstOrNull()
+            selectEpisodeInternal(nextEpisode)
+            
+            android.util.Log.d("TVDetailsViewModel", "Selected episode: ${nextEpisode?.title ?: "None"} (S${season.seasonNumber}E${nextEpisode?.episodeNumber ?: 0})")
         }
     }
     
     /**
-     * Select an episode and load sources
+     * Select an episode and load sources (called by user interaction)
      */
     fun selectEpisode(episode: TVEpisode) {
+        android.util.Log.d("TVDetailsViewModel", "=== Episode Selection (User) ===")
+        android.util.Log.d("TVDetailsViewModel", "User selected episode: S${episode.seasonNumber}E${episode.episodeNumber} - ${episode.title}")
+        
         _selectedEpisode.value = episode
         updateState { copy(currentEpisode = episode) }
         
-        // Load sources for the selected episode
+        // Load sources for the selected episode (only on explicit user selection)
         _tvShowState.value?.let { tvShow ->
+            android.util.Log.d("TVDetailsViewModel", "Loading sources for user-selected episode")
             loadSourcesForEpisode(tvShow, episode)
         }
+    }
+    
+    /**
+     * Internal method to select episode without loading sources (for system updates)
+     */
+    private fun selectEpisodeInternal(episode: TVEpisode?) {
+        android.util.Log.d("TVDetailsViewModel", "=== Episode Selection (Internal) ===")
+        android.util.Log.d("TVDetailsViewModel", "System selected episode: ${episode?.let { "S${it.seasonNumber}E${it.episodeNumber} - ${it.title}" } ?: "None"}")
+        
+        _selectedEpisode.value = episode
+        updateState { copy(currentEpisode = episode) }
+        
+        // Do NOT load sources - this is for internal state management only
+        android.util.Log.d("TVDetailsViewModel", "NOT loading sources for system-selected episode")
     }
     
     /**
@@ -600,11 +626,24 @@ class TVDetailsViewModel @Inject constructor(
      * Load additional seasons on demand (when user navigates to them)
      */
     fun loadSeasonOnDemand(seasonNumber: Int) {
-        val currentTvShow = _tvShowState.value ?: return
-        val tmdbId = currentTvShow.id.toIntOrNull() ?: return
+        android.util.Log.d("TVDetailsViewModel", "=== Load Season On Demand Debug ===")
+        android.util.Log.d("TVDetailsViewModel", "Requested season: $seasonNumber")
+        
+        val currentTvShow = _tvShowState.value
+        if (currentTvShow == null) {
+            android.util.Log.w("TVDetailsViewModel", "No TV show loaded, cannot load season $seasonNumber")
+            return
+        }
+        
+        val tmdbId = currentTvShow.id.toIntOrNull()
+        if (tmdbId == null) {
+            android.util.Log.w("TVDetailsViewModel", "Invalid TMDb ID '${currentTvShow.id}', cannot load season $seasonNumber")
+            return
+        }
         
         // Cancel any existing job for this season to prevent duplicates
         onDemandSeasonJobs[seasonNumber]?.cancel()
+        android.util.Log.d("TVDetailsViewModel", "Cancelled any existing job for season $seasonNumber")
         
         // Check if we're already loading this season
         if (activeSeasonRequests.contains(seasonNumber)) {
@@ -612,12 +651,21 @@ class TVDetailsViewModel @Inject constructor(
             return
         }
         
-        // Check if season already has episodes loaded
+        // Check if season already has valid episodes loaded
         val currentSeason = currentTvShow.getTVShowDetail().seasons.find { it.seasonNumber == seasonNumber }
-        if (currentSeason?.episodes?.isNotEmpty() == true) {
-            android.util.Log.d("TVDetailsViewModel", "Season $seasonNumber already has ${currentSeason.episodes.size} episodes, skipping load")
+        val hasValidEpisodes = currentSeason?.episodes?.isNotEmpty() == true && 
+                              currentSeason.episodes.any { it.id != "0" && it.title.isNotBlank() }
+        
+        if (hasValidEpisodes) {
+            android.util.Log.d("TVDetailsViewModel", "Season $seasonNumber already has ${currentSeason?.episodes?.size} valid episodes, skipping load")
             return
         }
+        
+        android.util.Log.d("TVDetailsViewModel", "Season $seasonNumber validation passed:")
+        android.util.Log.d("TVDetailsViewModel", "  - Current episodes: ${currentSeason?.episodes?.size ?: 0}")
+        android.util.Log.d("TVDetailsViewModel", "  - Has valid episodes: $hasValidEpisodes")
+        android.util.Log.d("TVDetailsViewModel", "  - Episode count claimed: ${currentSeason?.episodeCount ?: 0}")
+        android.util.Log.d("TVDetailsViewModel", "  - Proceeding with API call")
         
         onDemandSeasonJobs[seasonNumber] = viewModelScope.launch {
             android.util.Log.d("TVDetailsViewModel", "Loading season $seasonNumber on demand for TV $tmdbId")
@@ -698,38 +746,92 @@ class TVDetailsViewModel @Inject constructor(
         
         _tvShowState.value = updatedTvShow
         
-        // Only update season/episode selection if we don't already have them selected
+        // Smart state synchronization: preserve user selections while updating with new data
         val currentSeason = _selectedSeason.value
         val currentEpisode = _selectedEpisode.value
         
-        val firstSeason = seasons.firstOrNull()
-        val firstEpisode = firstSeason?.episodes?.firstOrNull()
+        android.util.Log.d("TVDetailsViewModel", "=== State Synchronization Debug ===")
+        android.util.Log.d("TVDetailsViewModel", "Current season: ${currentSeason?.seasonNumber} (${currentSeason?.episodes?.size} episodes)")
+        android.util.Log.d("TVDetailsViewModel", "Current episode: ${currentEpisode?.episodeNumber}")
+        android.util.Log.d("TVDetailsViewModel", "New seasons available: ${seasons.map { "${it.seasonNumber}(${it.episodes.size}ep)" }}")
         
-        // If no season is currently selected, or current season is now loaded with episodes, update selection
-        if (currentSeason == null || (currentSeason.episodes.isEmpty() && seasons.find { it.seasonNumber == currentSeason.seasonNumber }?.episodes?.isNotEmpty() == true)) {
-            val seasonToSelect = currentSeason?.let { selected ->
-                // Find updated version of currently selected season
-                seasons.find { it.seasonNumber == selected.seasonNumber }
-            } ?: firstSeason
-            
+        // Check if current season selection is still valid and has been updated with new data
+        val updatedCurrentSeason = currentSeason?.let { selected ->
+            seasons.find { it.seasonNumber == selected.seasonNumber }
+        }
+        
+        // Determine the best season to select
+        val seasonToSelect = when {
+            // Case 1: Current season is valid and now has episodes (was just loaded)
+            updatedCurrentSeason != null && currentSeason?.episodes?.isEmpty() == true && updatedCurrentSeason.episodes.isNotEmpty() -> {
+                android.util.Log.d("TVDetailsViewModel", "Case 1: Current season ${updatedCurrentSeason.seasonNumber} now has episodes")
+                updatedCurrentSeason
+            }
+            // Case 2: Current season is valid and still has the same or more episodes (no change needed)
+            updatedCurrentSeason != null && updatedCurrentSeason.episodes.size >= (currentSeason?.episodes?.size ?: 0) -> {
+                android.util.Log.d("TVDetailsViewModel", "Case 2: Current season ${updatedCurrentSeason.seasonNumber} data is stable")
+                updatedCurrentSeason
+            }
+            // Case 3: No current season selected, select first available season with episodes
+            currentSeason == null -> {
+                val firstSeasonWithEpisodes = seasons.find { it.episodes.isNotEmpty() } ?: seasons.firstOrNull()
+                android.util.Log.d("TVDetailsViewModel", "Case 3: No current season, selecting ${firstSeasonWithEpisodes?.seasonNumber}")
+                firstSeasonWithEpisodes
+            }
+            // Case 4: Current season no longer exists, select first available
+            updatedCurrentSeason == null -> {
+                val fallbackSeason = seasons.firstOrNull()
+                android.util.Log.d("TVDetailsViewModel", "Case 4: Current season ${currentSeason?.seasonNumber} no longer exists, selecting ${fallbackSeason?.seasonNumber}")
+                fallbackSeason
+            }
+            // Default: keep current season
+            else -> {
+                android.util.Log.d("TVDetailsViewModel", "Default: Keeping current season ${currentSeason?.seasonNumber}")
+                updatedCurrentSeason
+            }
+        }
+        
+        // Update season selection if it changed
+        if (seasonToSelect != currentSeason) {
+            android.util.Log.d("TVDetailsViewModel", "Updating season selection from ${currentSeason?.seasonNumber} to ${seasonToSelect?.seasonNumber}")
             _selectedSeason.value = seasonToSelect
             
-            val episodeToSelect = seasonToSelect?.episodes?.firstOrNull()
-            _selectedEpisode.value = episodeToSelect
+            // Select appropriate episode for the new season
+            val episodeToSelect = when {
+                // Try to preserve current episode if it exists in the new season
+                currentEpisode != null && seasonToSelect?.episodes?.any { it.episodeNumber == currentEpisode.episodeNumber } == true -> {
+                    seasonToSelect.episodes.find { it.episodeNumber == currentEpisode.episodeNumber }
+                }
+                // Otherwise select first unwatched or first episode
+                else -> {
+                    seasonToSelect?.episodes?.find { !it.isWatched } ?: seasonToSelect?.episodes?.firstOrNull()
+                }
+            }
             
-            android.util.Log.d("TVDetailsViewModel", "Updated selection - Season: ${seasonToSelect?.name}, Episode: ${episodeToSelect?.title}")
+            selectEpisodeInternal(episodeToSelect)
+            android.util.Log.d("TVDetailsViewModel", "Updated episode selection to: ${episodeToSelect?.title}")
             
             updateState { 
                 copy(
                     tvShow = updatedTvShow,
-                    currentSeason = seasonToSelect,
-                    currentEpisode = episodeToSelect
+                    currentSeason = seasonToSelect
                 )
             }
         } else {
-            // Just update the TV show data without changing selection
+            // Season didn't change, but update the season data and preserve episode selection
+            android.util.Log.d("TVDetailsViewModel", "Season selection unchanged, updating data only")
+            
+            // Check if current episode is still valid in the updated season data
+            val updatedCurrentEpisode = currentEpisode?.let { selected ->
+                seasonToSelect?.episodes?.find { it.episodeNumber == selected.episodeNumber }
+            }
+            
+            if (updatedCurrentEpisode != null && updatedCurrentEpisode != currentEpisode) {
+                android.util.Log.d("TVDetailsViewModel", "Updating episode data but preserving selection")
+                selectEpisodeInternal(updatedCurrentEpisode)
+            }
+            
             updateState { copy(tvShow = updatedTvShow) }
-            android.util.Log.d("TVDetailsViewModel", "Kept existing selection - Season: ${currentSeason?.name}, Episode: ${currentEpisode?.title}")
         }
         
         // Don't auto-load sources on TV show load - wait for episode selection
@@ -928,7 +1030,7 @@ class TVDetailsViewModel @Inject constructor(
         
         _tvShowState.value = null
         _selectedSeason.value = null
-        _selectedEpisode.value = null
+        selectEpisodeInternal(null)
         _relatedShowsState.value = UiState.Loading
         _creditsState.value = UiState.Loading
         _sourcesState.value = UiState.Loading
