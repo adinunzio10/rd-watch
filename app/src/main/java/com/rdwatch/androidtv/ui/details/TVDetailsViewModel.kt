@@ -851,7 +851,7 @@ class TVDetailsViewModel @Inject constructor(
             overview = seasonResponse.overview,
             posterPath = seasonResponse.posterPath?.let { "https://image.tmdb.org/t/p/w500$it" },
             airDate = seasonResponse.airDate,
-            episodeCount = episodes.size, // Use actual loaded episodes count
+            episodeCount = seasonResponse.episodeCount, // Use TMDb episode count to preserve metadata
             episodes = episodes,
             voteAverage = seasonResponse.voteAverage.toFloat()
         )
