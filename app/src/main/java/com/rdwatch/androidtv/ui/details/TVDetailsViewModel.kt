@@ -258,6 +258,16 @@ class TVDetailsViewModel @Inject constructor(
         android.util.Log.d("TVDetailsViewModel", "  - Episodes loaded: ${season.episodes.size}")
         android.util.Log.d("TVDetailsViewModel", "  - Episode count claimed: ${season.episodeCount}")
         android.util.Log.d("TVDetailsViewModel", "  - Episodes have valid data: ${season.episodes.any { it.id != "0" && it.title.isNotBlank() }}")
+        android.util.Log.d("TVDetailsViewModel", "  - getFormattedEpisodeCount(): ${season.getFormattedEpisodeCount()}")
+        
+        // Log current seasons state for comparison
+        val currentTvShow = _tvShowState.value
+        currentTvShow?.let { tvShow ->
+            val currentSeasons = tvShow.getSeasons()
+            val matchingSeason = currentSeasons.find { it.seasonNumber == season.seasonNumber }
+            android.util.Log.d("TVDetailsViewModel", "  - Seasons in current state: ${currentSeasons.size}")
+            android.util.Log.d("TVDetailsViewModel", "  - Matching season in state: ${matchingSeason?.name} (episodeCount=${matchingSeason?.episodeCount})")
+        }
         
         _selectedSeason.value = season
         
@@ -570,6 +580,7 @@ class TVDetailsViewModel @Inject constructor(
                                 
                                 val sortedSeasons = allSeasons.sortedBy { it.seasonNumber }
                                 android.util.Log.d("TVDetailsViewModel", "Updating UI with season $initialSeasonToLoad loaded and ${sortedSeasons.size} total seasons")
+                                android.util.Log.d("TVDetailsViewModel", "Initial loaded season $initialSeasonToLoad episodeCount: ${tvSeason.episodeCount}")
                                 updateTVShowWithSeasons(tvShowDetail, sortedSeasons)
                             } else {
                                 android.util.Log.w("TVDetailsViewModel", "Season $initialSeasonToLoad response was invalid")
@@ -706,7 +717,15 @@ class TVDetailsViewModel @Inject constructor(
                                 _tvShowState.value = updatedTvShow
                                 updateState { copy(tvShow = updatedTvShow) }
                                 
+                                // CRITICAL FIX: Update the selected season state if it matches the loaded season
+                                val currentSelectedSeason = _selectedSeason.value
+                                if (currentSelectedSeason?.seasonNumber == seasonNumber) {
+                                    android.util.Log.d("TVDetailsViewModel", "Updating selected season state with loaded data")
+                                    _selectedSeason.value = tvSeason
+                                }
+                                
                                 android.util.Log.d("TVDetailsViewModel", "Season $seasonNumber loaded on demand with ${tvSeason.episodes.size} episodes")
+                                android.util.Log.d("TVDetailsViewModel", "Updated season episodeCount: ${tvSeason.episodeCount}")
                             }
                         } else {
                             android.util.Log.w("TVDetailsViewModel", "Season $seasonNumber response was invalid (id=${seasonResponse.id}, episodes=${seasonResponse.episodes.size})")

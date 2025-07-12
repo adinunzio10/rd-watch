@@ -81,6 +81,12 @@ fun SeasonSelector(
             // Episode count for selected season
             val selectedSeason = seasons.find { it.seasonNumber == selectedSeasonNumber }
             selectedSeason?.let { season ->
+                android.util.Log.d("SeasonSelector", "=== SeasonSelector UI Debug ===")
+                android.util.Log.d("SeasonSelector", "Selected season: ${season.name} (S${season.seasonNumber})")
+                android.util.Log.d("SeasonSelector", "  - episodeCount: ${season.episodeCount}")
+                android.util.Log.d("SeasonSelector", "  - episodes.size: ${season.episodes.size}")
+                android.util.Log.d("SeasonSelector", "  - getFormattedEpisodeCount(): ${season.getFormattedEpisodeCount()}")
+                
                 Text(
                     text = season.getFormattedEpisodeCount(),
                     style = MaterialTheme.typography.bodyMedium,

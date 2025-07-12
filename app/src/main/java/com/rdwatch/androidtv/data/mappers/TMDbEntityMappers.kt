@@ -567,16 +567,20 @@ fun TMDbTVEntity.toTVResponse(): TMDbTVResponse {
         seasons = seasons?.map { seasonString ->
             val parts = seasonString.split(":")
             if (parts.size >= 4) {
-                TMDbSeasonResponse(
+                val season = TMDbSeasonResponse(
                     id = parts[0].toIntOrNull() ?: 0,
                     seasonNumber = parts[1].toIntOrNull() ?: 0,
                     name = parts[2],
                     episodeCount = parts[3].toIntOrNull() ?: 0,
                     episodes = emptyList() // Episodes are loaded separately via season details API
                 )
+                android.util.Log.d("TMDbEntityMappers", "Mapped season from DB: ${season.name} (S${season.seasonNumber}) - episodeCount=${season.episodeCount}")
+                season
             } else {
                 // Fallback for old format (just name)
-                TMDbSeasonResponse(name = seasonString)
+                val fallbackSeason = TMDbSeasonResponse(name = seasonString)
+                android.util.Log.w("TMDbEntityMappers", "Using fallback season mapping for: '$seasonString' - episodeCount will be 0")
+                fallbackSeason
             }
         } ?: emptyList(),
         episodeRunTime = emptyList(),
