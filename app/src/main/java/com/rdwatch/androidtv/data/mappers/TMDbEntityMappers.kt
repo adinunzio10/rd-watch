@@ -528,7 +528,7 @@ fun TMDbTVResponse.toEntity(): TMDbTVEntity {
         productionCompanies = productionCompanies.map { it.name },
         productionCountries = productionCountries.map { it.name },
         spokenLanguages = spokenLanguages.map { it.name },
-        seasons = seasons.map { it.name },
+        seasons = seasons.map { "${it.id}:${it.seasonNumber}:${it.name}:${it.episodeCount}" },
         lastEpisodeToAir = lastEpisodeToAir?.name,
         nextEpisodeToAir = nextEpisodeToAir?.name,
         lastUpdated = System.currentTimeMillis()
@@ -564,7 +564,21 @@ fun TMDbTVEntity.toTVResponse(): TMDbTVResponse {
         productionCompanies = productionCompanies?.map { TMDbProductionCompanyResponse(name = it) } ?: emptyList(),
         productionCountries = productionCountries?.map { TMDbProductionCountryResponse(name = it) } ?: emptyList(),
         spokenLanguages = spokenLanguages?.map { TMDbSpokenLanguageResponse(name = it) } ?: emptyList(),
-        seasons = seasons?.map { TMDbSeasonResponse(name = it) } ?: emptyList(),
+        seasons = seasons?.map { seasonString ->
+            val parts = seasonString.split(":")
+            if (parts.size >= 4) {
+                TMDbSeasonResponse(
+                    id = parts[0].toIntOrNull() ?: 0,
+                    seasonNumber = parts[1].toIntOrNull() ?: 0,
+                    name = parts[2],
+                    episodeCount = parts[3].toIntOrNull() ?: 0,
+                    episodes = emptyList() // Episodes are loaded separately via season details API
+                )
+            } else {
+                // Fallback for old format (just name)
+                TMDbSeasonResponse(name = seasonString)
+            }
+        } ?: emptyList(),
         episodeRunTime = emptyList(),
         createdBy = networks?.map { TMDbCreatedByResponse(name = it) } ?: emptyList(),
         lastEpisodeToAir = null,
