@@ -123,6 +123,10 @@ fun TVDetailsScreen(
                     modifier = modifier
             )
         }
+        else -> {
+            // Initial state - show loading screen while tvShowState is being loaded
+            TVDetailsLoadingScreen(modifier = modifier)
+        }
     }
 }
 
