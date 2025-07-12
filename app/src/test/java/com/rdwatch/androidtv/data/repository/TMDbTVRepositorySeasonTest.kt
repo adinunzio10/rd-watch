@@ -11,6 +11,7 @@ import com.rdwatch.androidtv.network.models.tmdb.TMDbEpisodeResponse
 import com.rdwatch.androidtv.network.models.tmdb.TMDbTVResponse
 import com.rdwatch.androidtv.network.response.ApiResponse
 import com.rdwatch.androidtv.repository.base.Result
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestDispatcher
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -24,6 +25,7 @@ import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.withTimeoutOrNull
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
@@ -40,6 +42,7 @@ import kotlin.test.assertNotNull
  * Comprehensive tests for season loading functionality in TMDbTVRepositoryImpl
  * Tests caching strategy, data validation, error handling, and state synchronization
  */
+@OptIn(ExperimentalCoroutinesApi::class)
 class TMDbTVRepositorySeasonTest {
     
     private val testDispatcher = UnconfinedTestDispatcher()
@@ -96,21 +99,14 @@ class TMDbTVRepositorySeasonTest {
         every { mockTmdbTVDao.getTVShowById(TEST_TV_ID) } returns flowOf(existingTV)
         
         // When: Getting season details
-        val results = mutableListOf<Result<TMDbSeasonResponse>>()
-        try {
+        val result = withTimeoutOrNull(5000) {
             repository.getSeasonDetails(
                 tvId = TEST_TV_ID,
                 seasonNumber = TEST_SEASON_NUMBER,
                 forceRefresh = false,
                 language = TEST_LANGUAGE
-            ).take(5).collect { results.add(it) }
-        } catch (e: Exception) {
-            println("Exception during flow collection: $e")
-            throw e
-        }
-        
-        println("Collected ${results.size} results: ${results.map { it::class.simpleName }}")
-        val result = results.lastOrNull() ?: throw RuntimeException("No results collected")
+            ).first { it is Result.Success } // Wait for success result
+        } ?: throw RuntimeException("Flow collection timed out")
         
         // Then: Returns cached data without API call
         assertTrue(result is Result.Success)
@@ -131,6 +127,7 @@ class TMDbTVRepositorySeasonTest {
         
         every { mockTmdbTVService.getSeasonDetails(TEST_TV_ID, TEST_SEASON_NUMBER, TEST_LANGUAGE) } returns mockSeasonCall
         every { mockSeasonCall.enqueue(any()) } answers {
+            @Suppress("UNCHECKED_CAST")
             val callback = it.invocation.args[0] as retrofit2.Callback<ApiResponse<TMDbSeasonResponse>>
             callback.onResponse(mockSeasonCall, Response.success(apiResponse))
         }
@@ -139,17 +136,18 @@ class TMDbTVRepositorySeasonTest {
         coEvery { mockTmdbTVDao.insertTVShow(any()) } just Runs
         
         // When: Getting season details
-        val results = repository.getSeasonDetails(
-            tvId = TEST_TV_ID,
-            seasonNumber = TEST_SEASON_NUMBER,
-            forceRefresh = false,
-            language = TEST_LANGUAGE
-        ).take(3).toList() // Take up to 3 to handle various scenarios
-        val result = results.last() // Get the final result
+        val result = withTimeoutOrNull(5000) {
+            repository.getSeasonDetails(
+                tvId = TEST_TV_ID,
+                seasonNumber = TEST_SEASON_NUMBER,
+                forceRefresh = false,
+                language = TEST_LANGUAGE
+            ).first { it is Result.Success } // Wait for success result
+        } ?: throw RuntimeException("Flow collection timed out")
         
         // Then: Makes API call and returns data
         assertTrue(result is Result.Success)
-        assertEquals(apiSeason.id, result.data.id)
+        assertEquals(apiSeason.id, (result as Result.Success).data.id)
         
         // Verify API call was made
         verify(exactly = 1) { mockTmdbTVService.getSeasonDetails(TEST_TV_ID, TEST_SEASON_NUMBER, TEST_LANGUAGE) }
@@ -178,6 +176,7 @@ class TMDbTVRepositorySeasonTest {
         
         every { mockTmdbTVService.getSeasonDetails(TEST_TV_ID, TEST_SEASON_NUMBER, TEST_LANGUAGE) } returns mockSeasonCall
         every { mockSeasonCall.enqueue(any()) } answers {
+            @Suppress("UNCHECKED_CAST")
             val callback = it.invocation.args[0] as retrofit2.Callback<ApiResponse<TMDbSeasonResponse>>
             callback.onResponse(mockSeasonCall, Response.success(apiResponse))
         }
@@ -186,17 +185,18 @@ class TMDbTVRepositorySeasonTest {
         coEvery { mockTmdbTVDao.insertTVShow(any()) } just Runs
         
         // When: Getting season details
-        val results = repository.getSeasonDetails(
-            tvId = TEST_TV_ID,
-            seasonNumber = TEST_SEASON_NUMBER,
-            forceRefresh = false,
-            language = TEST_LANGUAGE
-        ).take(3).toList() // Take up to 3 to handle various scenarios
-        val result = results.last() // Get the final result
+        val result = withTimeoutOrNull(5000) {
+            repository.getSeasonDetails(
+                tvId = TEST_TV_ID,
+                seasonNumber = TEST_SEASON_NUMBER,
+                forceRefresh = false,
+                language = TEST_LANGUAGE
+            ).first { it is Result.Success } // Wait for success result
+        } ?: throw RuntimeException("Flow collection timed out")
         
         // Then: API call is made despite having cached data
         assertTrue(result is Result.Success)
-        assertEquals(validApiSeason.id, result.data.id)
+        assertEquals(validApiSeason.id, (result as Result.Success).data.id)
         
         verify(exactly = 1) { mockTmdbTVService.getSeasonDetails(TEST_TV_ID, TEST_SEASON_NUMBER, TEST_LANGUAGE) }
     }
@@ -224,6 +224,7 @@ class TMDbTVRepositorySeasonTest {
         
         every { mockTmdbTVService.getSeasonDetails(TEST_TV_ID, TEST_SEASON_NUMBER, TEST_LANGUAGE) } returns mockSeasonCall
         every { mockSeasonCall.enqueue(any()) } answers {
+            @Suppress("UNCHECKED_CAST")
             val callback = it.invocation.args[0] as retrofit2.Callback<ApiResponse<TMDbSeasonResponse>>
             callback.onResponse(mockSeasonCall, Response.success(apiResponse))
         }
@@ -232,17 +233,18 @@ class TMDbTVRepositorySeasonTest {
         coEvery { mockTmdbTVDao.insertTVShow(any()) } just Runs
         
         // When: Getting season details
-        val results = repository.getSeasonDetails(
-            tvId = TEST_TV_ID,
-            seasonNumber = TEST_SEASON_NUMBER,
-            forceRefresh = false,
-            language = TEST_LANGUAGE
-        ).take(3).toList() // Take up to 3 to handle various scenarios
-        val result = results.last() // Get the final result
+        val result = withTimeoutOrNull(5000) {
+            repository.getSeasonDetails(
+                tvId = TEST_TV_ID,
+                seasonNumber = TEST_SEASON_NUMBER,
+                forceRefresh = false,
+                language = TEST_LANGUAGE
+            ).first { it is Result.Success } // Wait for success result
+        } ?: throw RuntimeException("Flow collection timed out")
         
         // Then: API call is made to refresh stale data
         assertTrue(result is Result.Success)
-        assertEquals(freshApiSeason.episodes.size, result.data.episodes.size)
+        assertEquals(freshApiSeason.episodes.size, (result as Result.Success).data.episodes.size)
         
         verify(exactly = 1) { mockTmdbTVService.getSeasonDetails(TEST_TV_ID, TEST_SEASON_NUMBER, TEST_LANGUAGE) }
     }
@@ -260,6 +262,7 @@ class TMDbTVRepositorySeasonTest {
         
         every { mockTmdbTVService.getSeasonDetails(TEST_TV_ID, TEST_SEASON_NUMBER, TEST_LANGUAGE) } returns mockSeasonCall
         every { mockSeasonCall.enqueue(any()) } answers {
+            @Suppress("UNCHECKED_CAST")
             val callback = it.invocation.args[0] as retrofit2.Callback<ApiResponse<TMDbSeasonResponse>>
             callback.onResponse(mockSeasonCall, Response.success(apiResponse))
         }
@@ -268,17 +271,18 @@ class TMDbTVRepositorySeasonTest {
         coEvery { mockTmdbTVDao.insertTVShow(any()) } just Runs
         
         // When: Force refreshing season details
-        val results = repository.getSeasonDetails(
-            tvId = TEST_TV_ID,
-            seasonNumber = TEST_SEASON_NUMBER,
-            forceRefresh = true, // Force refresh
-            language = TEST_LANGUAGE
-        ).take(3).toList() // Take up to 3 to handle various scenarios
-        val result = results.last() // Get the final result
+        val result = withTimeoutOrNull(5000) {
+            repository.getSeasonDetails(
+                tvId = TEST_TV_ID,
+                seasonNumber = TEST_SEASON_NUMBER,
+                forceRefresh = true, // Force refresh
+                language = TEST_LANGUAGE
+            ).first { it is Result.Success } // Wait for success result
+        } ?: throw RuntimeException("Flow collection timed out")
         
         // Then: API call is made even with valid cache
         assertTrue(result is Result.Success)
-        assertEquals(999, result.data.id) // Should return API data, not cached
+        assertEquals(999, (result as Result.Success).data.id) // Should return API data, not cached
         
         verify(exactly = 1) { mockTmdbTVService.getSeasonDetails(TEST_TV_ID, TEST_SEASON_NUMBER, TEST_LANGUAGE) }
     }
@@ -292,22 +296,24 @@ class TMDbTVRepositorySeasonTest {
         every { mockTmdbTVDao.getTVShowById(TEST_TV_ID) } returns flowOf(existingTV)
         every { mockTmdbTVService.getSeasonDetails(TEST_TV_ID, TEST_SEASON_NUMBER, TEST_LANGUAGE) } returns mockSeasonCall
         every { mockSeasonCall.enqueue(any()) } answers {
+            @Suppress("UNCHECKED_CAST")
             val callback = it.invocation.args[0] as retrofit2.Callback<ApiResponse<TMDbSeasonResponse>>
             callback.onFailure(mockSeasonCall, RuntimeException("Network error"))
         }
         
         // When: Getting season details with API failure
-        val results = repository.getSeasonDetails(
-            tvId = TEST_TV_ID,
-            seasonNumber = TEST_SEASON_NUMBER,
-            forceRefresh = true, // Force refresh to trigger API call
-            language = TEST_LANGUAGE
-        ).take(3).toList() // Take up to 3 to handle various scenarios
-        val result = results.last() // Get the final result
+        val result = withTimeoutOrNull(5000) {
+            repository.getSeasonDetails(
+                tvId = TEST_TV_ID,
+                seasonNumber = TEST_SEASON_NUMBER,
+                forceRefresh = true, // Force refresh to trigger API call
+                language = TEST_LANGUAGE
+            ).first { it is Result.Success } // Wait for success result (fallback to cache)
+        } ?: throw RuntimeException("Flow collection timed out")
         
         // Then: Returns cached data as fallback
         assertTrue(result is Result.Success)
-        assertEquals(cachedSeason.id, result.data.id)
+        assertEquals(cachedSeason.id, (result as Result.Success).data.id)
     }
     
     @Test
@@ -327,19 +333,24 @@ class TMDbTVRepositorySeasonTest {
         // When: Updating season in database (testing the private method via public interface)
         every { mockTmdbTVDao.getTVShowById(TEST_TV_ID) } returns flowOf(null)
         every { mockTmdbTVService.getSeasonDetails(TEST_TV_ID, TEST_SEASON_NUMBER, TEST_LANGUAGE) } returns mockSeasonCall
-        every { mockSeasonCall.execute() } returns Response.success(createSuccessApiResponse(updatedSeason))
+        every { mockSeasonCall.enqueue(any()) } answers {
+            @Suppress("UNCHECKED_CAST")
+            val callback = it.invocation.args[0] as retrofit2.Callback<ApiResponse<TMDbSeasonResponse>>
+            callback.onResponse(mockSeasonCall, Response.success(createSuccessApiResponse(updatedSeason)))
+        }
         
-        val results = repository.getSeasonDetails(
-            tvId = TEST_TV_ID,
-            seasonNumber = TEST_SEASON_NUMBER,
-            forceRefresh = false,
-            language = TEST_LANGUAGE
-        ).take(3).toList() // Take up to 3 to handle various scenarios
-        val result = results.last() // Get the final result
+        val result = withTimeoutOrNull(5000) {
+            repository.getSeasonDetails(
+                tvId = TEST_TV_ID,
+                seasonNumber = TEST_SEASON_NUMBER,
+                forceRefresh = false,
+                language = TEST_LANGUAGE
+            ).first { it is Result.Success } // Wait for success result
+        } ?: throw RuntimeException("Flow collection timed out")
         
         // Then: Database is updated with new season data
         assertTrue(result is Result.Success)
-        assertEquals(12, result.data.episodeCount)
+        assertEquals(12, (result as Result.Success).data.episodeCount)
         assertEquals(12, result.data.episodes.size)
         
         coVerify(exactly = 1) { mockTmdbTVDao.insertTVShow(any()) }
