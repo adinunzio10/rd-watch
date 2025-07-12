@@ -448,31 +448,20 @@ private fun TVDetailsContent(
                         val authoritativeSeasons = viewModel.getAllSeasonsFromAuthoritativeSource()
                         val authoritativeSelectedSeason = viewModel.getCurrentSeasonFromAuthoritativeSource()
                         
-                        // Season selector if multiple seasons
-                        if (tvShow.hasMultipleSeasons()) {
-                            item {
-                                SeasonSelector(
-                                        seasons = authoritativeSeasons,
-                                        selectedSeasonNumber = authoritativeSelectedSeason?.seasonNumber ?: 1,
-                                        selectedSeason = authoritativeSelectedSeason,
-                                        onSeasonSelected = { seasonNumber ->
-                                            // Use authoritative source to get season data
-                                            viewModel.getSeasonByNumberFromAuthoritativeSource(seasonNumber)?.let { season ->
-                                                onSeasonSelected(season)
-                                            }
-                                        },
-                                        modifier =
-                                                Modifier.padding(
-                                                        horizontal = 32.dp,
-                                                        vertical = 16.dp
-                                                )
-                                )
-                            }
-                        }
-
                         // Episode grid for selected season
                         val seasonToUse = authoritativeSelectedSeason ?: selectedSeason
                         seasonToUse?.let { season ->
+                            // Create proper UI state with current season episodes
+                            val episodeGridUiState = EpisodeGridUiState(
+                                isLoading = false,
+                                selectedSeasonNumber = season.seasonNumber,
+                                availableSeasons = authoritativeSeasons,
+                                currentSeasonEpisodes = season.episodes,
+                                focusedEpisodeId = null,
+                                error = null,
+                                isRefreshing = false
+                            )
+                            
                             item {
                                 EpisodeGridSection(
                                         tvShowDetail = tvShow.getTVShowDetail(),
@@ -484,6 +473,7 @@ private fun TVDetailsContent(
                                             }
                                         },
                                         onEpisodeClick = onEpisodeSelected,
+                                        uiState = episodeGridUiState,
                                         modifier =
                                                 Modifier.padding(
                                                         horizontal = 32.dp,
