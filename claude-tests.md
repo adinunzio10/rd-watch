@@ -4,7 +4,7 @@ This file contains testing strategy, commands, and maintenance procedures for th
 
 ## Current Testing Status
 
-**Status**: No tests currently configured - this represents a development opportunity
+**Status**: Partial test configuration with Android Log mocking enabled
 
 **Target Test Coverage**: 
 - Unit Tests: 80%+ for business logic and data models
@@ -253,12 +253,26 @@ jobs:
 
 ## Current Test Inventory
 
-*No tests currently exist - this section will be auto-updated as tests are added*
+**Unit Tests**: 13 (8 passing, 5 failing)
+- TMDbTVRepositorySeasonTest: 8 tests (3 passing, 5 failing - async flow issues)  
+- TVDetailsViewModelSeasonTest: 5 tests (5 passing)
 
-**Unit Tests**: 0
 **Integration Tests**: 0  
 **UI Tests**: 0
 **TV-Specific Tests**: 0
+
+### Test Configuration
+
+Android Log mocking is now properly configured in `app/build.gradle.kts`:
+```kotlin
+testOptions {
+    unitTests {
+        isReturnDefaultValues = true
+    }
+}
+```
+
+This resolves RuntimeExceptions from unmocked Android framework calls in unit tests.
 
 ---
 

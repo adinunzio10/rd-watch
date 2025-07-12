@@ -528,7 +528,17 @@ fun TMDbTVResponse.toEntity(): TMDbTVEntity {
         productionCompanies = productionCompanies.map { it.name },
         productionCountries = productionCountries.map { it.name },
         spokenLanguages = spokenLanguages.map { it.name },
-        seasons = seasons.map { "${it.id}:${it.seasonNumber}:${it.name}:${it.episodeCount}" },
+        seasons = seasons.map { season ->
+            // Serialize episodes as JSON-like string for database storage
+            val episodesData = if (season.episodes.isNotEmpty()) {
+                season.episodes.joinToString("|") { episode ->
+                    "${episode.id},${episode.episodeNumber},${episode.name.replace(",", "\\,").replace("|", "\\|")}"
+                }
+            } else {
+                ""
+            }
+            "${season.id}:${season.seasonNumber}:${season.name}:${season.episodeCount}:$episodesData"
+        },
         lastEpisodeToAir = lastEpisodeToAir?.name,
         nextEpisodeToAir = nextEpisodeToAir?.name,
         lastUpdated = System.currentTimeMillis()
@@ -567,14 +577,31 @@ fun TMDbTVEntity.toTVResponse(): TMDbTVResponse {
         seasons = seasons?.map { seasonString ->
             val parts = seasonString.split(":")
             if (parts.size >= 4) {
+                // Parse episodes from part 4 if it exists and is not empty
+                val episodes = if (parts.size >= 5 && parts[4].isNotEmpty()) {
+                    parts[4].split("|").mapNotNull { episodeData ->
+                        val episodeParts = episodeData.split(",")
+                        if (episodeParts.size >= 3) {
+                            TMDbEpisodeResponse(
+                                id = episodeParts[0].toIntOrNull() ?: 0,
+                                episodeNumber = episodeParts[1].toIntOrNull() ?: 0,
+                                name = episodeParts[2].replace("\\,", ",").replace("\\|", "|"),
+                                seasonNumber = parts[1].toIntOrNull() ?: 0
+                            )
+                        } else null
+                    }
+                } else {
+                    emptyList()
+                }
+                
                 val season = TMDbSeasonResponse(
                     id = parts[0].toIntOrNull() ?: 0,
                     seasonNumber = parts[1].toIntOrNull() ?: 0,
                     name = parts[2],
                     episodeCount = parts[3].toIntOrNull() ?: 0,
-                    episodes = emptyList() // Episodes are loaded separately via season details API
+                    episodes = episodes
                 )
-                android.util.Log.d("TMDbEntityMappers", "Mapped season from DB: ${season.name} (S${season.seasonNumber}) - episodeCount=${season.episodeCount}")
+                android.util.Log.d("TMDbEntityMappers", "Mapped season from DB: ${season.name} (S${season.seasonNumber}) - episodeCount=${season.episodeCount}, episodes=${episodes.size}")
                 season
             } else {
                 // Fallback for old format (just name)
