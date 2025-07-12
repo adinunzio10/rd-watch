@@ -447,12 +447,17 @@ private fun TVDetailsContent(
                         // Season selector if multiple seasons
                         if (tvShow.hasMultipleSeasons()) {
                             item {
+                                // Get authoritative season data to ensure consistency
+                                val authoritativeSeasons = viewModel.getAllSeasonsFromAuthoritativeSource()
+                                val authoritativeSelectedSeason = viewModel.getCurrentSeasonFromAuthoritativeSource()
+                                
                                 SeasonSelector(
-                                        seasons = tvShow.getSeasons(),
-                                        selectedSeasonNumber = selectedSeason?.seasonNumber ?: 1,
-                                        selectedSeason = selectedSeason,
+                                        seasons = authoritativeSeasons,
+                                        selectedSeasonNumber = authoritativeSelectedSeason?.seasonNumber ?: 1,
+                                        selectedSeason = authoritativeSelectedSeason,
                                         onSeasonSelected = { seasonNumber ->
-                                            tvShow.getSeasonByNumber(seasonNumber)?.let { season ->
+                                            // Use authoritative source to get season data
+                                            viewModel.getSeasonByNumberFromAuthoritativeSource(seasonNumber)?.let { season ->
                                                 onSeasonSelected(season)
                                             }
                                         },
@@ -466,14 +471,33 @@ private fun TVDetailsContent(
                         }
 
                         // Episode grid for selected season
-                        selectedSeason?.let { season ->
+                        authoritativeSelectedSeason?.let { season ->
                             item {
                                 EpisodeGridSection(
                                         tvShowDetail = tvShow.getTVShowDetail(),
                                         selectedSeasonNumber = season.seasonNumber,
                                         onSeasonSelected = { seasonNumber ->
-                                            tvShow.getSeasonByNumber(seasonNumber)?.let {
-                                                    selectedSeason ->
+                                            // Use authoritative source for season selection
+                                            viewModel.getSeasonByNumberFromAuthoritativeSource(seasonNumber)?.let { selectedSeason ->
+                                                onSeasonSelected(selectedSeason)
+                                            }
+                                        },
+                                        onEpisodeClick = onEpisodeSelected,
+                                        modifier =
+                                                Modifier.padding(
+                                                        horizontal = 32.dp,
+                                                        vertical = 16.dp
+                                                )
+                                )
+                            }
+                        } ?: selectedSeason?.let { season ->
+                            // Fallback to selectedSeason if authoritativeSelectedSeason is null
+                            item {
+                                EpisodeGridSection(
+                                        tvShowDetail = tvShow.getTVShowDetail(),
+                                        selectedSeasonNumber = season.seasonNumber,
+                                        onSeasonSelected = { seasonNumber ->
+                                            viewModel.getSeasonByNumberFromAuthoritativeSource(seasonNumber)?.let { selectedSeason ->
                                                 onSeasonSelected(selectedSeason)
                                             }
                                         },

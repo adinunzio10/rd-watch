@@ -1,0 +1,282 @@
+=== LOG SUMMARY ===
+Total lines after cleanup: 271
+Season selections: 4
+API calls: 4
+Errors/Warnings: 2
+
+=== ERRORS/WARNINGS ===
+2025-07-12 02:19:23.273  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                E  Error loading seasons: StandaloneCoroutine was cancelled
+2025-07-12 02:19:25.505  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                E  Error loading seasons: StandaloneCoroutine was cancelled
+
+=== CLEANED LOG DATA ===
+2025-07-12 02:19:10.293  4196-4196  SeasonSelector          com.rdwatch.androidtv                D  === SeasonSelector UI Debug ===
+2025-07-12 02:19:10.293  4196-4196  SeasonSelector          com.rdwatch.androidtv                D  Selected season: Season 1 (S1)
+2025-07-12 02:19:10.293  4196-4196  SeasonSelector          com.rdwatch.androidtv                D    - episodeCount: 0
+2025-07-12 02:19:10.293  4196-4196  SeasonSelector          com.rdwatch.androidtv                D    - episodes.size: 0
+2025-07-12 02:19:10.293  4196-4196  SeasonSelector          com.rdwatch.androidtv                D    - getFormattedEpisodeCount(): 0 episodes
+2025-07-12 02:19:23.062  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                D  === Season Selection Debug ===
+2025-07-12 02:19:23.062  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                D  Selecting season 2: Season 2
+2025-07-12 02:19:23.062  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                D    - Episodes loaded: 0
+2025-07-12 02:19:23.062  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                D    - Episode count claimed: 10
+2025-07-12 02:19:23.062  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                D    - Episodes have valid data: false
+2025-07-12 02:19:23.062  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                D    - getFormattedEpisodeCount(): 10 episodes
+2025-07-12 02:19:23.062  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                D    - Seasons in current state: 3
+2025-07-12 02:19:23.062  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                D    - Matching season in state: Season 2 (episodeCount=10)
+2025-07-12 02:19:23.063  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                D  Season 2 needs on-demand loading: no episodes loaded but episodeCount=10
+2025-07-12 02:19:23.063  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                D  === Load Season On Demand Debug ===
+2025-07-12 02:19:23.063  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                D  Requested season: 2
+2025-07-12 02:19:23.063  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                D  Cancelled any existing job for season 2
+2025-07-12 02:19:23.063  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                D  Season 2 validation passed:
+2025-07-12 02:19:23.063  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                D    - Current episodes: 0
+2025-07-12 02:19:23.063  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                D    - Has valid episodes: false
+2025-07-12 02:19:23.063  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                D    - Episode count claimed: 10
+2025-07-12 02:19:23.063  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                D    - Proceeding with API call
+2025-07-12 02:19:23.063  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                D  Loading season 2 on demand for TV 93740
+2025-07-12 02:19:23.065  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                D  === Episode Selection (Internal) ===
+2025-07-12 02:19:23.065  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                D  System selected episode: None
+2025-07-12 02:19:23.065  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                D  NOT loading sources for system-selected episode
+2025-07-12 02:19:23.068  4196-4196  TMDbEntityMappers       com.rdwatch.androidtv                D  Mapped season from DB: Season 1 (S1) - episodeCount=0
+2025-07-12 02:19:23.068  4196-4196  TMDbEntityMappers       com.rdwatch.androidtv                D  Mapped season from DB: Season 2 (S2) - episodeCount=10
+2025-07-12 02:19:23.068  4196-4196  TMDbEntityMappers       com.rdwatch.androidtv                D  Mapped season from DB: Season 3 (S3) - episodeCount=10
+2025-07-12 02:19:23.068  4196-4196  TMDbTVRepository        com.rdwatch.androidtv                D  Loaded cached season 2 for TV 93740: episodes=0
+2025-07-12 02:19:23.069  4196-4196  TMDbTVRepository        com.rdwatch.androidtv                D  shouldFetch season 2 for TV 93740: true
+2025-07-12 02:19:23.069  4196-4196  TMDbTVRepository        com.rdwatch.androidtv                D    - forceRefresh: false
+2025-07-12 02:19:23.069  4196-4196  TMDbTVRepository        com.rdwatch.androidtv                D    - cachedSeason: EXISTS (id=322843)
+2025-07-12 02:19:23.070  4196-4196  TMDbTVRepository        com.rdwatch.androidtv                D    - episodes: 0
+2025-07-12 02:19:23.070  4196-4196  TMDbTVRepository        com.rdwatch.androidtv                D    - episode IDs: []
+2025-07-12 02:19:23.070  4196-4196  TMDbTVRepository        com.rdwatch.androidtv                D  API CALL: Fetching season 2 details for TV 93740
+2025-07-12 02:19:23.071  4196-4355  TMDbApiKeyInterceptor   com.rdwatch.androidtv                D  === API Key Debug Info ===
+2025-07-12 02:19:23.078  4196-4196  SeasonSelector          com.rdwatch.androidtv                D  === SeasonSelector UI Debug ===
+2025-07-12 02:19:23.078  4196-4196  SeasonSelector          com.rdwatch.androidtv                D  Selected season: Season 2 (S2)
+2025-07-12 02:19:23.078  4196-4196  SeasonSelector          com.rdwatch.androidtv                D    - episodeCount: 10
+2025-07-12 02:19:23.078  4196-4196  SeasonSelector          com.rdwatch.androidtv                D    - episodes.size: 0
+2025-07-12 02:19:23.078  4196-4196  SeasonSelector          com.rdwatch.androidtv                D    - getFormattedEpisodeCount(): 10 episodes
+2025-07-12 02:19:23.144  4196-4196  NetworkBoundResource    com.rdwatch.androidtv                D  API call success, saving data
+2025-07-12 02:19:23.144  4196-4196  TMDbTVRepository        com.rdwatch.androidtv                D  API RESULT: Saving season 2 for TV 93740 with 10 episodes
+2025-07-12 02:19:23.147  4196-4196  TMDbEntityMappers       com.rdwatch.androidtv                D  Mapped season from DB: Season 1 (S1) - episodeCount=0
+2025-07-12 02:19:23.147  4196-4196  TMDbEntityMappers       com.rdwatch.androidtv                D  Mapped season from DB: Season 2 (S2) - episodeCount=10
+2025-07-12 02:19:23.147  4196-4196  TMDbEntityMappers       com.rdwatch.androidtv                D  Mapped season from DB: Season 3 (S3) - episodeCount=10
+2025-07-12 02:19:23.147  4196-4196  TMDbEntityMappers       com.rdwatch.androidtv                D  Mapped season from DB: Season 1 (S1) - episodeCount=0
+2025-07-12 02:19:23.147  4196-4196  TMDbEntityMappers       com.rdwatch.androidtv                D  Mapped season from DB: Season 2 (S2) - episodeCount=10
+2025-07-12 02:19:23.147  4196-4196  TMDbEntityMappers       com.rdwatch.androidtv                D  Mapped season from DB: Season 3 (S3) - episodeCount=10
+2025-07-12 02:19:23.148  4196-4196  TMDbTVRepository        com.rdwatch.androidtv                D  Saved season 2 for TV 93740 to database
+2025-07-12 02:19:23.150  4196-4196  TMDbEntityMappers       com.rdwatch.androidtv                D  Mapped season from DB: Season 1 (S1) - episodeCount=0
+2025-07-12 02:19:23.150  4196-4196  TMDbEntityMappers       com.rdwatch.androidtv                D  Mapped season from DB: Season 2 (S2) - episodeCount=0
+2025-07-12 02:19:23.150  4196-4196  TMDbEntityMappers       com.rdwatch.androidtv                D  Mapped season from DB: Season 3 (S3) - episodeCount=10
+2025-07-12 02:19:23.151  4196-4196  TMDbTVRepository        com.rdwatch.androidtv                D  Loaded cached season 2 for TV 93740: episodes=0
+2025-07-12 02:19:23.152  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                W  Season 2 response was invalid (id=322843, episodes=0)
+2025-07-12 02:19:23.152  4196-4196  TMDbEntityMappers       com.rdwatch.androidtv                D  Mapped season from DB: Season 1 (S1) - episodeCount=0
+2025-07-12 02:19:23.152  4196-4196  TMDbEntityMappers       com.rdwatch.androidtv                D  Mapped season from DB: Season 2 (S2) - episodeCount=0
+2025-07-12 02:19:23.152  4196-4196  TMDbEntityMappers       com.rdwatch.androidtv                D  Mapped season from DB: Season 3 (S3) - episodeCount=10
+2025-07-12 02:19:23.154  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                D  === Episode Selection (Internal) ===
+2025-07-12 02:19:23.154  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                D  System selected episode: None
+2025-07-12 02:19:23.154  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                D  NOT loading sources for system-selected episode
+2025-07-12 02:19:23.155  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                D  === Season Loading Debug ===
+2025-07-12 02:19:23.155  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                D  Number of seasons from initial data: 3
+2025-07-12 02:19:23.155  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                D  Existing seasons count: 3
+2025-07-12 02:19:23.155  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                D  Loading only season 1 initially
+2025-07-12 02:19:23.163  4196-4196  SeasonSelector          com.rdwatch.androidtv                D  === SeasonSelector UI Debug ===
+2025-07-12 02:19:23.163  4196-4196  SeasonSelector          com.rdwatch.androidtv                D  Selected season: Season 1 (S1)
+2025-07-12 02:19:23.163  4196-4196  SeasonSelector          com.rdwatch.androidtv                D    - episodeCount: 0
+2025-07-12 02:19:23.163  4196-4196  SeasonSelector          com.rdwatch.androidtv                D    - episodes.size: 0
+2025-07-12 02:19:23.163  4196-4196  SeasonSelector          com.rdwatch.androidtv                D    - getFormattedEpisodeCount(): 0 episodes
+2025-07-12 02:19:23.187  4196-4196  TMDbEntityMappers       com.rdwatch.androidtv                D  Mapped season from DB: Season 1 (S1) - episodeCount=0
+2025-07-12 02:19:23.187  4196-4196  TMDbEntityMappers       com.rdwatch.androidtv                D  Mapped season from DB: Season 2 (S2) - episodeCount=0
+2025-07-12 02:19:23.187  4196-4196  TMDbEntityMappers       com.rdwatch.androidtv                D  Mapped season from DB: Season 3 (S3) - episodeCount=10
+2025-07-12 02:19:23.187  4196-4196  TMDbTVRepository        com.rdwatch.androidtv                D  Loaded cached season 1 for TV 93740: episodes=0
+2025-07-12 02:19:23.188  4196-4196  TMDbTVRepository        com.rdwatch.androidtv                D  shouldFetch season 1 for TV 93740: true
+2025-07-12 02:19:23.188  4196-4196  TMDbTVRepository        com.rdwatch.androidtv                D    - forceRefresh: false
+2025-07-12 02:19:23.188  4196-4196  TMDbTVRepository        com.rdwatch.androidtv                D    - cachedSeason: EXISTS (id=154362)
+2025-07-12 02:19:23.188  4196-4196  TMDbTVRepository        com.rdwatch.androidtv                D    - episodes: 0
+2025-07-12 02:19:23.188  4196-4196  TMDbTVRepository        com.rdwatch.androidtv                D    - episode IDs: []
+2025-07-12 02:19:23.188  4196-4196  TMDbTVRepository        com.rdwatch.androidtv                D  API CALL: Fetching season 1 details for TV 93740
+2025-07-12 02:19:23.189  4196-4354  TMDbApiKeyInterceptor   com.rdwatch.androidtv                D  === API Key Debug Info ===
+2025-07-12 02:19:23.190  4196-4357  TMDbApiKeyInterceptor   com.rdwatch.androidtv                D  === API Key Debug Info ===
+2025-07-12 02:19:23.191  4196-4355  TMDbApiKeyInterceptor   com.rdwatch.androidtv                D  === API Key Debug Info ===
+2025-07-12 02:19:23.205  4196-4196  NetworkBoundResource    com.rdwatch.androidtv                D  API call success, saving data
+2025-07-12 02:19:23.206  4196-4196  NetworkBoundResource    com.rdwatch.androidtv                D  API call success, saving data
+2025-07-12 02:19:23.209  4196-4196  NetworkBoundResource    com.rdwatch.androidtv                D  API call success, saving data
+2025-07-12 02:19:23.209  4196-4196  TMDbTVRepository        com.rdwatch.androidtv                D  API RESULT: Saving season 1 for TV 93740 with 10 episodes
+2025-07-12 02:19:23.216  4196-4196  TMDbEntityMappers       com.rdwatch.androidtv                D  Mapped season from DB: Season 1 (S1) - episodeCount=0
+2025-07-12 02:19:23.216  4196-4196  TMDbEntityMappers       com.rdwatch.androidtv                D  Mapped season from DB: Season 2 (S2) - episodeCount=0
+2025-07-12 02:19:23.216  4196-4196  TMDbEntityMappers       com.rdwatch.androidtv                D  Mapped season from DB: Season 3 (S3) - episodeCount=10
+2025-07-12 02:19:23.216  4196-4196  TMDbEntityMappers       com.rdwatch.androidtv                D  Mapped season from DB: Season 1 (S1) - episodeCount=0
+2025-07-12 02:19:23.216  4196-4196  TMDbEntityMappers       com.rdwatch.androidtv                D  Mapped season from DB: Season 2 (S2) - episodeCount=0
+2025-07-12 02:19:23.216  4196-4196  TMDbEntityMappers       com.rdwatch.androidtv                D  Mapped season from DB: Season 3 (S3) - episodeCount=10
+2025-07-12 02:19:23.235  4196-4196  SeasonSelector          com.rdwatch.androidtv                D  === SeasonSelector UI Debug ===
+2025-07-12 02:19:23.236  4196-4196  SeasonSelector          com.rdwatch.androidtv                D  Selected season: Season 1 (S1)
+2025-07-12 02:19:23.236  4196-4196  SeasonSelector          com.rdwatch.androidtv                D    - episodeCount: 0
+2025-07-12 02:19:23.236  4196-4196  SeasonSelector          com.rdwatch.androidtv                D    - episodes.size: 0
+2025-07-12 02:19:23.236  4196-4196  SeasonSelector          com.rdwatch.androidtv                D    - getFormattedEpisodeCount(): 0 episodes
+2025-07-12 02:19:23.249  4196-4196  TMDbTVRepository        com.rdwatch.androidtv                D  Saved season 1 for TV 93740 to database
+2025-07-12 02:19:23.250  4196-4196  TMDbEntityMappers       com.rdwatch.androidtv                D  Mapped season from DB: Season 1 (S1) - episodeCount=0
+2025-07-12 02:19:23.251  4196-4196  TMDbEntityMappers       com.rdwatch.androidtv                D  Mapped season from DB: Season 2 (S2) - episodeCount=0
+2025-07-12 02:19:23.251  4196-4196  TMDbEntityMappers       com.rdwatch.androidtv                D  Mapped season from DB: Season 3 (S3) - episodeCount=10
+2025-07-12 02:19:23.252  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                D  === Episode Selection (Internal) ===
+2025-07-12 02:19:23.252  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                D  System selected episode: None
+2025-07-12 02:19:23.252  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                D  NOT loading sources for system-selected episode
+2025-07-12 02:19:23.254  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                D  === Season Loading Debug ===
+2025-07-12 02:19:23.254  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                D  Number of seasons from initial data: 3
+2025-07-12 02:19:23.254  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                D  Existing seasons count: 3
+2025-07-12 02:19:23.254  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                D  Loading only season 1 initially
+2025-07-12 02:19:23.254  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                D  Season 1 already being loaded, skipping duplicate request
+2025-07-12 02:19:23.262  4196-4196  SeasonSelector          com.rdwatch.androidtv                D  === SeasonSelector UI Debug ===
+2025-07-12 02:19:23.262  4196-4196  SeasonSelector          com.rdwatch.androidtv                D  Selected season: Season 1 (S1)
+2025-07-12 02:19:23.262  4196-4196  SeasonSelector          com.rdwatch.androidtv                D    - episodeCount: 0
+2025-07-12 02:19:23.262  4196-4196  SeasonSelector          com.rdwatch.androidtv                D    - episodes.size: 0
+2025-07-12 02:19:23.262  4196-4196  SeasonSelector          com.rdwatch.androidtv                D    - getFormattedEpisodeCount(): 0 episodes
+2025-07-12 02:19:23.273  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                E  Error loading seasons: StandaloneCoroutine was cancelled
+2025-07-12 02:19:23.273  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                D  Using existing seasons from initial data
+2025-07-12 02:19:23.273  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                D  === Updating TV Show with Seasons ===
+2025-07-12 02:19:23.273  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                D  Season 1: Season 1 - 0 episodes loaded (claimed: 0)
+2025-07-12 02:19:23.273  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                D  Season 2: Season 2 - 0 episodes loaded (claimed: 0)
+2025-07-12 02:19:23.273  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                D  Season 3: Season 3 - 0 episodes loaded (claimed: 10)
+2025-07-12 02:19:23.273  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                D  === State Synchronization Debug ===
+2025-07-12 02:19:23.273  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                D  Current season: 1 (0 episodes)
+2025-07-12 02:19:23.273  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                D  Current episode: null
+2025-07-12 02:19:23.273  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                D  New seasons available: [1(0ep), 2(0ep), 3(0ep)]
+2025-07-12 02:19:23.273  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                D  Case 2: Current season 1 data is stable
+2025-07-12 02:19:23.273  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                D  Season selection unchanged, updating data only
+2025-07-12 02:19:23.273  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                D  Updated TV show with 3 seasons
+2025-07-12 02:19:23.275  4196-4357  TMDbApiKeyInterceptor   com.rdwatch.androidtv                D  === API Key Debug Info ===
+2025-07-12 02:19:23.278  4196-4354  TMDbApiKeyInterceptor   com.rdwatch.androidtv                D  === API Key Debug Info ===
+2025-07-12 02:19:23.290  4196-4196  NetworkBoundResource    com.rdwatch.androidtv                D  API call success, saving data
+2025-07-12 02:19:23.292  4196-4196  NetworkBoundResource    com.rdwatch.androidtv                D  API call success, saving data
+2025-07-12 02:19:23.311  4196-4196  SeasonSelector          com.rdwatch.androidtv                D  === SeasonSelector UI Debug ===
+2025-07-12 02:19:23.311  4196-4196  SeasonSelector          com.rdwatch.androidtv                D  Selected season: Season 1 (S1)
+2025-07-12 02:19:23.311  4196-4196  SeasonSelector          com.rdwatch.androidtv                D    - episodeCount: 0
+2025-07-12 02:19:23.311  4196-4196  SeasonSelector          com.rdwatch.androidtv                D    - episodes.size: 0
+2025-07-12 02:19:23.311  4196-4196  SeasonSelector          com.rdwatch.androidtv                D    - getFormattedEpisodeCount(): 0 episodes
+2025-07-12 02:19:25.264  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                D  === Season Selection Debug ===
+2025-07-12 02:19:25.264  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                D  Selecting season 3: Season 3
+2025-07-12 02:19:25.264  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                D    - Episodes loaded: 0
+2025-07-12 02:19:25.264  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                D    - Episode count claimed: 10
+2025-07-12 02:19:25.264  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                D    - Episodes have valid data: false
+2025-07-12 02:19:25.264  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                D    - getFormattedEpisodeCount(): 10 episodes
+2025-07-12 02:19:25.264  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                D    - Seasons in current state: 3
+2025-07-12 02:19:25.264  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                D    - Matching season in state: Season 3 (episodeCount=10)
+2025-07-12 02:19:25.264  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                D  Season 3 needs on-demand loading: no episodes loaded but episodeCount=10
+2025-07-12 02:19:25.264  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                D  === Load Season On Demand Debug ===
+2025-07-12 02:19:25.264  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                D  Requested season: 3
+2025-07-12 02:19:25.264  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                D  Cancelled any existing job for season 3
+2025-07-12 02:19:25.264  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                D  Season 3 validation passed:
+2025-07-12 02:19:25.264  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                D    - Current episodes: 0
+2025-07-12 02:19:25.264  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                D    - Has valid episodes: false
+2025-07-12 02:19:25.264  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                D    - Episode count claimed: 10
+2025-07-12 02:19:25.264  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                D    - Proceeding with API call
+2025-07-12 02:19:25.265  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                D  Loading season 3 on demand for TV 93740
+2025-07-12 02:19:25.267  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                D  === Episode Selection (Internal) ===
+2025-07-12 02:19:25.267  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                D  System selected episode: None
+2025-07-12 02:19:25.267  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                D  NOT loading sources for system-selected episode
+2025-07-12 02:19:25.274  4196-4196  SeasonSelector          com.rdwatch.androidtv                D  === SeasonSelector UI Debug ===
+2025-07-12 02:19:25.274  4196-4196  SeasonSelector          com.rdwatch.androidtv                D  Selected season: Season 3 (S3)
+2025-07-12 02:19:25.274  4196-4196  SeasonSelector          com.rdwatch.androidtv                D    - episodeCount: 10
+2025-07-12 02:19:25.274  4196-4196  SeasonSelector          com.rdwatch.androidtv                D    - episodes.size: 0
+2025-07-12 02:19:25.274  4196-4196  SeasonSelector          com.rdwatch.androidtv                D    - getFormattedEpisodeCount(): 10 episodes
+2025-07-12 02:19:25.299  4196-4196  TMDbEntityMappers       com.rdwatch.androidtv                D  Mapped season from DB: Season 1 (S1) - episodeCount=0
+2025-07-12 02:19:25.299  4196-4196  TMDbEntityMappers       com.rdwatch.androidtv                D  Mapped season from DB: Season 2 (S2) - episodeCount=0
+2025-07-12 02:19:25.299  4196-4196  TMDbEntityMappers       com.rdwatch.androidtv                D  Mapped season from DB: Season 3 (S3) - episodeCount=10
+2025-07-12 02:19:25.299  4196-4196  TMDbTVRepository        com.rdwatch.androidtv                D  Loaded cached season 3 for TV 93740: episodes=0
+2025-07-12 02:19:25.300  4196-4196  TMDbTVRepository        com.rdwatch.androidtv                D  shouldFetch season 3 for TV 93740: true
+2025-07-12 02:19:25.300  4196-4196  TMDbTVRepository        com.rdwatch.androidtv                D    - forceRefresh: false
+2025-07-12 02:19:25.300  4196-4196  TMDbTVRepository        com.rdwatch.androidtv                D    - cachedSeason: EXISTS (id=455160)
+2025-07-12 02:19:25.300  4196-4196  TMDbTVRepository        com.rdwatch.androidtv                D    - episodes: 0
+2025-07-12 02:19:25.300  4196-4196  TMDbTVRepository        com.rdwatch.androidtv                D    - episode IDs: []
+2025-07-12 02:19:25.300  4196-4196  TMDbTVRepository        com.rdwatch.androidtv                D  API CALL: Fetching season 3 details for TV 93740
+2025-07-12 02:19:25.301  4196-4354  TMDbApiKeyInterceptor   com.rdwatch.androidtv                D  === API Key Debug Info ===
+2025-07-12 02:19:25.364  4196-4196  NetworkBoundResource    com.rdwatch.androidtv                D  API call success, saving data
+2025-07-12 02:19:25.364  4196-4196  TMDbTVRepository        com.rdwatch.androidtv                D  API RESULT: Saving season 3 for TV 93740 with 10 episodes
+2025-07-12 02:19:25.366  4196-4196  TMDbEntityMappers       com.rdwatch.androidtv                D  Mapped season from DB: Season 1 (S1) - episodeCount=0
+2025-07-12 02:19:25.366  4196-4196  TMDbEntityMappers       com.rdwatch.androidtv                D  Mapped season from DB: Season 2 (S2) - episodeCount=0
+2025-07-12 02:19:25.366  4196-4196  TMDbEntityMappers       com.rdwatch.androidtv                D  Mapped season from DB: Season 3 (S3) - episodeCount=10
+2025-07-12 02:19:25.366  4196-4196  TMDbEntityMappers       com.rdwatch.androidtv                D  Mapped season from DB: Season 1 (S1) - episodeCount=0
+2025-07-12 02:19:25.366  4196-4196  TMDbEntityMappers       com.rdwatch.androidtv                D  Mapped season from DB: Season 2 (S2) - episodeCount=0
+2025-07-12 02:19:25.366  4196-4196  TMDbEntityMappers       com.rdwatch.androidtv                D  Mapped season from DB: Season 3 (S3) - episodeCount=10
+2025-07-12 02:19:25.368  4196-4196  TMDbTVRepository        com.rdwatch.androidtv                D  Saved season 3 for TV 93740 to database
+2025-07-12 02:19:25.371  4196-4196  TMDbEntityMappers       com.rdwatch.androidtv                D  Mapped season from DB: Season 1 (S1) - episodeCount=0
+2025-07-12 02:19:25.371  4196-4196  TMDbEntityMappers       com.rdwatch.androidtv                D  Mapped season from DB: Season 2 (S2) - episodeCount=0
+2025-07-12 02:19:25.371  4196-4196  TMDbEntityMappers       com.rdwatch.androidtv                D  Mapped season from DB: Season 3 (S3) - episodeCount=0
+2025-07-12 02:19:25.371  4196-4196  TMDbTVRepository        com.rdwatch.androidtv                D  Loaded cached season 3 for TV 93740: episodes=0
+2025-07-12 02:19:25.374  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                W  Season 3 response was invalid (id=455160, episodes=0)
+2025-07-12 02:19:25.374  4196-4196  TMDbEntityMappers       com.rdwatch.androidtv                D  Mapped season from DB: Season 1 (S1) - episodeCount=0
+2025-07-12 02:19:25.374  4196-4196  TMDbEntityMappers       com.rdwatch.androidtv                D  Mapped season from DB: Season 2 (S2) - episodeCount=0
+2025-07-12 02:19:25.374  4196-4196  TMDbEntityMappers       com.rdwatch.androidtv                D  Mapped season from DB: Season 3 (S3) - episodeCount=0
+2025-07-12 02:19:25.375  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                D  === Episode Selection (Internal) ===
+2025-07-12 02:19:25.375  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                D  System selected episode: None
+2025-07-12 02:19:25.375  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                D  NOT loading sources for system-selected episode
+2025-07-12 02:19:25.378  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                D  === Season Loading Debug ===
+2025-07-12 02:19:25.379  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                D  Number of seasons from initial data: 3
+2025-07-12 02:19:25.379  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                D  Existing seasons count: 3
+2025-07-12 02:19:25.379  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                D  Loading only season 1 initially
+2025-07-12 02:19:25.384  4196-4354  TMDbApiKeyInterceptor   com.rdwatch.androidtv                D  === API Key Debug Info ===
+2025-07-12 02:19:25.385  4196-4196  TMDbEntityMappers       com.rdwatch.androidtv                D  Mapped season from DB: Season 1 (S1) - episodeCount=0
+2025-07-12 02:19:25.385  4196-4196  TMDbEntityMappers       com.rdwatch.androidtv                D  Mapped season from DB: Season 2 (S2) - episodeCount=0
+2025-07-12 02:19:25.385  4196-4196  TMDbEntityMappers       com.rdwatch.androidtv                D  Mapped season from DB: Season 3 (S3) - episodeCount=0
+2025-07-12 02:19:25.385  4196-4196  TMDbTVRepository        com.rdwatch.androidtv                D  Loaded cached season 1 for TV 93740: episodes=0
+2025-07-12 02:19:25.385  4196-4357  TMDbApiKeyInterceptor   com.rdwatch.androidtv                D  === API Key Debug Info ===
+2025-07-12 02:19:25.389  4196-4196  TMDbTVRepository        com.rdwatch.androidtv                D  shouldFetch season 1 for TV 93740: true
+2025-07-12 02:19:25.390  4196-4196  TMDbTVRepository        com.rdwatch.androidtv                D    - forceRefresh: false
+2025-07-12 02:19:25.390  4196-4196  TMDbTVRepository        com.rdwatch.androidtv                D    - cachedSeason: EXISTS (id=154362)
+2025-07-12 02:19:25.390  4196-4196  TMDbTVRepository        com.rdwatch.androidtv                D    - episodes: 0
+2025-07-12 02:19:25.390  4196-4196  TMDbTVRepository        com.rdwatch.androidtv                D    - episode IDs: []
+2025-07-12 02:19:25.392  4196-4196  TMDbTVRepository        com.rdwatch.androidtv                D  API CALL: Fetching season 1 details for TV 93740
+2025-07-12 02:19:25.393  4196-4355  TMDbApiKeyInterceptor   com.rdwatch.androidtv                D  === API Key Debug Info ===
+2025-07-12 02:19:25.400  4196-4196  SeasonSelector          com.rdwatch.androidtv                D  === SeasonSelector UI Debug ===
+2025-07-12 02:19:25.400  4196-4196  SeasonSelector          com.rdwatch.androidtv                D  Selected season: Season 1 (S1)
+2025-07-12 02:19:25.400  4196-4196  SeasonSelector          com.rdwatch.androidtv                D    - episodeCount: 0
+2025-07-12 02:19:25.400  4196-4196  SeasonSelector          com.rdwatch.androidtv                D    - episodes.size: 0
+2025-07-12 02:19:25.400  4196-4196  SeasonSelector          com.rdwatch.androidtv                D    - getFormattedEpisodeCount(): 0 episodes
+2025-07-12 02:19:25.430  4196-4196  NetworkBoundResource    com.rdwatch.androidtv                D  API call success, saving data
+2025-07-12 02:19:25.431  4196-4196  NetworkBoundResource    com.rdwatch.androidtv                D  API call success, saving data
+2025-07-12 02:19:25.433  4196-4196  NetworkBoundResource    com.rdwatch.androidtv                D  API call success, saving data
+2025-07-12 02:19:25.433  4196-4196  TMDbTVRepository        com.rdwatch.androidtv                D  API RESULT: Saving season 1 for TV 93740 with 10 episodes
+2025-07-12 02:19:25.435  4196-4196  TMDbEntityMappers       com.rdwatch.androidtv                D  Mapped season from DB: Season 1 (S1) - episodeCount=0
+2025-07-12 02:19:25.435  4196-4196  TMDbEntityMappers       com.rdwatch.androidtv                D  Mapped season from DB: Season 2 (S2) - episodeCount=0
+2025-07-12 02:19:25.435  4196-4196  TMDbEntityMappers       com.rdwatch.androidtv                D  Mapped season from DB: Season 3 (S3) - episodeCount=0
+2025-07-12 02:19:25.435  4196-4196  TMDbEntityMappers       com.rdwatch.androidtv                D  Mapped season from DB: Season 1 (S1) - episodeCount=0
+2025-07-12 02:19:25.435  4196-4196  TMDbEntityMappers       com.rdwatch.androidtv                D  Mapped season from DB: Season 2 (S2) - episodeCount=0
+2025-07-12 02:19:25.435  4196-4196  TMDbEntityMappers       com.rdwatch.androidtv                D  Mapped season from DB: Season 3 (S3) - episodeCount=0
+2025-07-12 02:19:25.474  4196-4196  TMDbTVRepository        com.rdwatch.androidtv                D  Saved season 1 for TV 93740 to database
+2025-07-12 02:19:25.484  4196-4196  SeasonSelector          com.rdwatch.androidtv                D  === SeasonSelector UI Debug ===
+2025-07-12 02:19:25.484  4196-4196  SeasonSelector          com.rdwatch.androidtv                D  Selected season: Season 1 (S1)
+2025-07-12 02:19:25.484  4196-4196  SeasonSelector          com.rdwatch.androidtv                D    - episodeCount: 0
+2025-07-12 02:19:25.484  4196-4196  SeasonSelector          com.rdwatch.androidtv                D    - episodes.size: 0
+2025-07-12 02:19:25.484  4196-4196  SeasonSelector          com.rdwatch.androidtv                D    - getFormattedEpisodeCount(): 0 episodes
+2025-07-12 02:19:25.499  4196-4196  TMDbEntityMappers       com.rdwatch.androidtv                D  Mapped season from DB: Season 1 (S1) - episodeCount=0
+2025-07-12 02:19:25.499  4196-4196  TMDbEntityMappers       com.rdwatch.androidtv                D  Mapped season from DB: Season 2 (S2) - episodeCount=0
+2025-07-12 02:19:25.499  4196-4196  TMDbEntityMappers       com.rdwatch.androidtv                D  Mapped season from DB: Season 3 (S3) - episodeCount=0
+2025-07-12 02:19:25.500  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                D  === Episode Selection (Internal) ===
+2025-07-12 02:19:25.500  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                D  System selected episode: None
+2025-07-12 02:19:25.500  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                D  NOT loading sources for system-selected episode
+2025-07-12 02:19:25.503  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                D  === Season Loading Debug ===
+2025-07-12 02:19:25.503  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                D  Number of seasons from initial data: 3
+2025-07-12 02:19:25.503  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                D  Existing seasons count: 3
+2025-07-12 02:19:25.503  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                D  Loading only season 1 initially
+2025-07-12 02:19:25.503  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                D  Season 1 already being loaded, skipping duplicate request
+2025-07-12 02:19:25.505  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                E  Error loading seasons: StandaloneCoroutine was cancelled
+2025-07-12 02:19:25.505  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                D  Using existing seasons from initial data
+2025-07-12 02:19:25.505  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                D  === Updating TV Show with Seasons ===
+2025-07-12 02:19:25.505  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                D  Season 1: Season 1 - 0 episodes loaded (claimed: 0)
+2025-07-12 02:19:25.505  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                D  Season 2: Season 2 - 0 episodes loaded (claimed: 0)
+2025-07-12 02:19:25.505  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                D  Season 3: Season 3 - 0 episodes loaded (claimed: 0)
+2025-07-12 02:19:25.506  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                D  === State Synchronization Debug ===
+2025-07-12 02:19:25.506  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                D  Current season: 1 (0 episodes)
+2025-07-12 02:19:25.506  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                D  Current episode: null
+2025-07-12 02:19:25.506  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                D  New seasons available: [1(0ep), 2(0ep), 3(0ep)]
+2025-07-12 02:19:25.506  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                D  Case 2: Current season 1 data is stable
+2025-07-12 02:19:25.506  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                D  Season selection unchanged, updating data only
+2025-07-12 02:19:25.506  4196-4196  TVDetailsViewModel      com.rdwatch.androidtv                D  Updated TV show with 3 seasons
+2025-07-12 02:19:25.513  4196-4196  SeasonSelector          com.rdwatch.androidtv                D  === SeasonSelector UI Debug ===
+2025-07-12 02:19:25.513  4196-4196  SeasonSelector          com.rdwatch.androidtv                D  Selected season: Season 1 (S1)
+2025-07-12 02:19:25.513  4196-4196  SeasonSelector          com.rdwatch.androidtv                D    - episodeCount: 0
+2025-07-12 02:19:25.513  4196-4196  SeasonSelector          com.rdwatch.androidtv                D    - episodes.size: 0
+2025-07-12 02:19:25.513  4196-4196  SeasonSelector          com.rdwatch.androidtv                D    - getFormattedEpisodeCount(): 0 episodes
+2025-07-12 02:19:25.527  4196-4355  TMDbApiKeyInterceptor   com.rdwatch.androidtv                D  === API Key Debug Info ===
+2025-07-12 02:19:25.527  4196-4354  TMDbApiKeyInterceptor   com.rdwatch.androidtv                D  === API Key Debug Info ===
+2025-07-12 02:19:25.542  4196-4196  NetworkBoundResource    com.rdwatch.androidtv                D  API call success, saving data
+2025-07-12 02:19:25.547  4196-4196  NetworkBoundResource    com.rdwatch.androidtv                D  API call success, saving data
+2025-07-12 02:19:25.591  4196-4196  SeasonSelector          com.rdwatch.androidtv                D  === SeasonSelector UI Debug ===
+2025-07-12 02:19:25.591  4196-4196  SeasonSelector          com.rdwatch.androidtv                D  Selected season: Season 1 (S1)
+2025-07-12 02:19:25.591  4196-4196  SeasonSelector          com.rdwatch.androidtv                D    - episodeCount: 0
+2025-07-12 02:19:25.591  4196-4196  SeasonSelector          com.rdwatch.androidtv                D    - episodes.size: 0
+2025-07-12 02:19:25.591  4196-4196  SeasonSelector          com.rdwatch.androidtv                D    - getFormattedEpisodeCount(): 0 episodes

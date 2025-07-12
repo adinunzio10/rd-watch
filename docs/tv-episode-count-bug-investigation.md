@@ -87,43 +87,31 @@ State synchronization issue - the selected season object becomes stale when epis
 **Expected Result:** ✅ Should now work - selected season will be updated with loaded episode data
 
 ## Current Status
-- **Commits:** 2 fixes attempted and pushed to `feature/scraper-source-selection` branch
-- **Status:** Issue persists, need deeper investigation
+- **Commits:** 4 fixes attempted, latest in commit `ff6e5c8`
+- **Status:** ⏳ TESTING REQUIRED - Latest fix needs verification
 
-## Next Investigation Steps
+### Session 4: Latest Fix Attempt (2025-07-12)
 
-### Areas to Investigate:
+**New Theory:** 
+The SeasonSelector component was displaying stale data because it was finding the selected season from the original `seasons` list instead of using the updated `selectedSeason` state that contains freshly loaded episode data.
 
-1. **UI Layer Issue:** 
-   - Check if `getFormattedEpisodeCount()` in TVSeason model is using the right data source
-   - Verify SeasonSelector component is displaying the correct field
+**Fix Applied:**
+1. **SeasonSelector.kt** - Added `selectedSeason: TVSeason?` parameter
+   - Component now accepts fresh season data directly
+   - Prioritizes passed `selectedSeason` over finding in seasons list
+   - Added debug logging to track data source
 
-2. **State Management:**
-   - Investigate season state updates during selection
-   - Check if there's a race condition between UI updates and data loading
+2. **TVDetailsScreen.kt** - Pass `selectedSeason` state to SeasonSelector
+   - Ensures UI receives the most up-to-date season data
+   - Maintains proper state flow from ViewModel to UI
 
-3. **Database Layer:**
-   - Verify if episodes are actually being saved to database correctly
-   - Check if there's a mismatch between what's saved and what's retrieved
+**Expected Result:** This should resolve the state synchronization issue
+- Episode count should correctly display after season selection
+- Debug logs will show whether passed selectedSeason is being used
 
-4. **Repository Layer:**
-   - Investigate the NetworkBoundResource flow
-   - Check if cached data is being properly updated after API fetch
+**Commit:** `ff6e5c8` - "fix: pass selectedSeason state to SeasonSelector for accurate episode count display"
 
-### Debugging Approach:
-
-1. **Add more detailed logging** to track data flow:
-   - Log `episodeCount` vs `episodes.size` at each step
-   - Log the actual season data being passed to UI
-   - Log SeasonSelector data source
-
-2. **Check UI component data binding:**
-   - Verify what data `getFormattedEpisodeCount()` actually uses
-   - Check if UI is recomposing with updated data
-
-3. **Verify database operations:**
-   - Check if season episodes are properly saved after API fetch
-   - Verify database query results
+**Status:** Awaiting testing to confirm if this fix works
 
 ## Code Locations
 
@@ -149,6 +137,27 @@ State synchronization issue - the selected season object becomes stale when epis
 ## Logs Reference
 See investigation logs from 2025-07-12 01:54:42 for detailed API response and state changes.
 
+## Solution Summary
+
+The bug was caused by a state synchronization issue where the SeasonSelector component was reading from stale data in the seasons list instead of the updated selectedSeason state. The fix ensures the component receives and displays the fresh season data with loaded episodes by:
+
+1. Adding a `selectedSeason` parameter to the SeasonSelector component
+2. Passing the selectedSeason state from TVDetailsScreen
+3. Prioritizing the passed selectedSeason data over searching the seasons list
+
+This maintains proper data flow: API → ViewModel State → UI Component
+
+## Testing Instructions
+
+To verify if the fix works:
+1. Navigate to TV show "Chuck" (or any show with multiple seasons)
+2. Check initial episode counts display correctly
+3. Select "Season 1" 
+4. Watch the debug logs for "SeasonSelector" - should show "Using passed selectedSeason"
+5. Verify episode count shows "13 episodes" (not "0 episodes")
+6. Try switching between different seasons to ensure counts update correctly
+
 ---
 *Document created: 2025-07-12*
 *Last updated: 2025-07-12*
+*Status: ⏳ Testing required - 4th fix attempt*

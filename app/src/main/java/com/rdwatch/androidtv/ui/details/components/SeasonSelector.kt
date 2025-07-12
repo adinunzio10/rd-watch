@@ -79,15 +79,16 @@ fun SeasonSelector(
                 fontWeight = FontWeight.Bold
             )
             
-            // Episode count for selected season
+            // Episode count for selected season - using authoritative data
             val displaySeason = selectedSeason ?: seasons.find { it.seasonNumber == selectedSeasonNumber }
             displaySeason?.let { season ->
                 android.util.Log.d("SeasonSelector", "=== SeasonSelector UI Debug ===")
-                android.util.Log.d("SeasonSelector", "Using ${if (selectedSeason != null) "passed selectedSeason" else "found season from list"}")
+                android.util.Log.d("SeasonSelector", "Using ${if (selectedSeason != null) "authoritative selectedSeason" else "found season from authoritative list"}")
                 android.util.Log.d("SeasonSelector", "Selected season: ${season.name} (S${season.seasonNumber})")
                 android.util.Log.d("SeasonSelector", "  - episodeCount: ${season.episodeCount}")
                 android.util.Log.d("SeasonSelector", "  - episodes.size: ${season.episodes.size}")
                 android.util.Log.d("SeasonSelector", "  - getFormattedEpisodeCount(): ${season.getFormattedEpisodeCount()}")
+                android.util.Log.d("SeasonSelector", "  - Data source: ${if (selectedSeason != null) "Authoritative ViewModel State" else "Fallback from list"}")
                 
                 Text(
                     text = season.getFormattedEpisodeCount(),
