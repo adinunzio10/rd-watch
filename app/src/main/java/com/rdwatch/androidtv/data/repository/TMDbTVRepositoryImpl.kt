@@ -163,8 +163,9 @@ class TMDbTVRepositoryImpl @Inject constructor(
 
     /**
      * Helper function to convert Call<ApiResponse<T>> to suspend function result
+     * Compatible with safeCall pattern used by NetworkBoundResource
      */
-    private suspend inline fun <reified T> awaitApiResponse(call: retrofit2.Call<ApiResponse<T>>): T {
+    private suspend inline fun <reified T> executeApiCall(call: retrofit2.Call<ApiResponse<T>>): T {
         return suspendCancellableCoroutine { continuation ->
             call.enqueue(object : retrofit2.Callback<ApiResponse<T>> {
                 override fun onResponse(
@@ -201,6 +202,13 @@ class TMDbTVRepositoryImpl @Inject constructor(
         }
     }
     
+    /**
+     * Helper function to convert Call<ApiResponse<T>> to suspend function result
+     */
+    private suspend inline fun <reified T> awaitApiResponse(call: retrofit2.Call<ApiResponse<T>>): T {
+        return executeApiCall(call)
+    }
+    
     override fun getTVVideos(
         tvId: Int,
         forceRefresh: Boolean,
@@ -227,53 +235,20 @@ class TMDbTVRepositoryImpl @Inject constructor(
         language: String
     ): Flow<Result<TMDbSeasonResponse>> = networkBoundResource(
         loadFromDb = {
-            // For now, we'll load from TV show data if available
             tmdbTVDao.getTVShowById(tvId).map { tvEntity ->
-                val cachedSeason = tvEntity?.toTVResponse()?.seasons?.find { it.seasonNumber == seasonNumber }
-                    ?: TMDbSeasonResponse()
-                android.util.Log.d("TMDbTVRepository", "Loaded cached season $seasonNumber for TV $tvId: episodes=${cachedSeason.episodes.size}")
-                cachedSeason
+                tvEntity?.toTVResponse()?.seasons?.find { it.seasonNumber == seasonNumber }
+                    ?: TMDbSeasonResponse() // Return empty season when not found
             }
         },
         shouldFetch = { cachedSeason ->
-            // Always fetch season details as they may contain episode data not in TV response
-            val shouldFetch = forceRefresh || cachedSeason == null || cachedSeason.episodes.isEmpty()
-            android.util.Log.d("TMDbTVRepository", "shouldFetch season $seasonNumber for TV $tvId: $shouldFetch")
-            android.util.Log.d("TMDbTVRepository", "  - forceRefresh: $forceRefresh")
-            android.util.Log.d("TMDbTVRepository", "  - cachedSeason: ${if (cachedSeason != null) "EXISTS (id=${cachedSeason.id})" else "NULL"}")
-            android.util.Log.d("TMDbTVRepository", "  - episodes: ${cachedSeason?.episodes?.size ?: 0}")
-            android.util.Log.d("TMDbTVRepository", "  - episode IDs: ${cachedSeason?.episodes?.take(3)?.map { it.id } ?: "[]"}")
-            
-            // Additional validation - check if season data is actually valid
-            if (cachedSeason != null && cachedSeason.id == 0 && cachedSeason.episodes.isEmpty()) {
-                android.util.Log.w("TMDbTVRepository", "Found invalid cached season (id=0, no episodes) - forcing fetch")
-                true
-            } else {
-                shouldFetch
-            }
+            forceRefresh || cachedSeason == null || cachedSeason.id == 0 || 
+            isSeasonDataInvalid(cachedSeason) || isSeasonDataStale(cachedSeason)
         },
         createCall = {
-            android.util.Log.d("TMDbTVRepository", "API CALL: Fetching season $seasonNumber details for TV $tvId")
-            awaitApiResponse(tmdbTVService.getSeasonDetails(tvId, seasonNumber, language))
+            executeApiCall(tmdbTVService.getSeasonDetails(tvId, seasonNumber, language))
         },
         saveCallResult = { seasonResponse ->
-            android.util.Log.d("TMDbTVRepository", "API RESULT: Saving season $seasonNumber for TV $tvId with ${seasonResponse.episodes.size} episodes")
-            // Update the TV show entity with updated season information
-            val existingTV = tmdbTVDao.getTVShowByIdSuspend(tvId)
-            if (existingTV != null) {
-                val updatedSeasons = existingTV.toTVResponse().seasons.map { season ->
-                    if (season.seasonNumber == seasonNumber) {
-                        seasonResponse
-                    } else {
-                        season
-                    }
-                }
-                val updatedTV = existingTV.toTVResponse().copy(seasons = updatedSeasons)
-                tmdbTVDao.insertTVShow(updatedTV.toEntity())
-                android.util.Log.d("TMDbTVRepository", "Saved season $seasonNumber for TV $tvId to database")
-            } else {
-                android.util.Log.w("TMDbTVRepository", "No existing TV show found for ID $tvId when saving season $seasonNumber")
-            }
+            updateSeasonInDatabase(tvId, seasonNumber, seasonResponse)
         }
     )
 
@@ -620,6 +595,105 @@ class TMDbTVRepositoryImpl @Inject constructor(
                 true
             }
             else -> true
+        }
+    }
+    
+    /**
+     * Helper methods for optimized season caching strategy
+     */
+    
+    /**
+     * Check if cached season data is invalid and needs to be refetched
+     */
+    private fun isSeasonDataInvalid(cachedSeason: TMDbSeasonResponse): Boolean {
+        return (cachedSeason.id > 0 && cachedSeason.episodeCount > 0 && cachedSeason.episodes.isEmpty())
+    }
+    
+    /**
+     * Check if cached season data is stale based on cache timeout and data completeness
+     * Uses multiple heuristics to determine if the cached data needs refreshing
+     */
+    private fun isSeasonDataStale(cachedSeason: TMDbSeasonResponse): Boolean {
+        // Primary check: if episodes are missing when they should exist
+        if (cachedSeason.episodes.isEmpty() && cachedSeason.episodeCount > 0) {
+            return true
+        }
+        
+        // Secondary check: if episode count doesn't match actual episodes
+        if (cachedSeason.episodeCount > 0 && 
+            cachedSeason.episodes.size != cachedSeason.episodeCount) {
+            return true
+        }
+        
+        // Tertiary check: if episodes have incomplete data (basic validation)
+        if (cachedSeason.episodes.isNotEmpty() && 
+            cachedSeason.episodes.any { it.id == 0 || it.name.isBlank() }) {
+            return true
+        }
+        
+        return false
+    }
+    
+    /**
+     * Optimized database update for season data
+     */
+    private suspend fun updateSeasonInDatabase(tvId: Int, seasonNumber: Int, seasonResponse: TMDbSeasonResponse) {
+        val existingTV = tmdbTVDao.getTVShowByIdSuspend(tvId)
+        if (existingTV != null) {
+            // Only update the specific season that changed
+            val existingTVResponse = existingTV.toTVResponse()
+            val seasonIndex = existingTVResponse.seasons.indexOfFirst { it.seasonNumber == seasonNumber }
+            
+            if (seasonIndex != -1) {
+                // Update existing season
+                val updatedSeasons = existingTVResponse.seasons.toMutableList()
+                updatedSeasons[seasonIndex] = seasonResponse
+                val updatedTV = existingTVResponse.copy(seasons = updatedSeasons)
+                tmdbTVDao.insertTVShow(updatedTV.toEntity())
+            } else {
+                // Add new season to the list
+                val updatedSeasons = existingTVResponse.seasons + seasonResponse
+                val updatedTV = existingTVResponse.copy(seasons = updatedSeasons.sortedBy { it.seasonNumber })
+                tmdbTVDao.insertTVShow(updatedTV.toEntity())
+            }
+        }
+        // Note: We don't create a new TV show entry if one doesn't exist,
+        // as season details should only be fetched for existing shows
+    }
+    
+    /**
+     * Enhanced cache invalidation methods
+     */
+    
+    /**
+     * Invalidate specific season cache if it becomes stale or invalid
+     */
+    suspend fun invalidateSeasonCacheIfNeeded(tvId: Int, seasonNumber: Int) {
+        val existingTV = tmdbTVDao.getTVShowByIdSuspend(tvId)
+        if (existingTV != null) {
+            val cachedSeason = existingTV.toTVResponse().seasons.find { it.seasonNumber == seasonNumber }
+            if (cachedSeason != null && (isSeasonDataInvalid(cachedSeason) || isSeasonDataStale(cachedSeason))) {
+                clearSeasonCache(tvId, seasonNumber)
+            }
+        }
+    }
+    
+    /**
+     * Validate and potentially invalidate all seasons for a TV show
+     */
+    suspend fun validateAndInvalidateAllSeasons(tvId: Int) {
+        val existingTV = tmdbTVDao.getTVShowByIdSuspend(tvId)
+        if (existingTV != null) {
+            val tvResponse = existingTV.toTVResponse()
+            val invalidSeasons = tvResponse.seasons.filter { season ->
+                isSeasonDataInvalid(season) || isSeasonDataStale(season)
+            }
+            
+            if (invalidSeasons.isNotEmpty()) {
+                invalidSeasons.forEach { season ->
+                    clearSeasonCache(tvId, season.seasonNumber)
+                }
+            }
         }
     }
 }

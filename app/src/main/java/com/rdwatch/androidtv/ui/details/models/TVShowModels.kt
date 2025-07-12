@@ -268,6 +268,30 @@ data class EpisodeGridUiState(
     fun shouldShowLoading(): Boolean = isLoading && currentSeasonEpisodes.isEmpty()
     
     /**
+     * Check if loading episodes for current season
+     */
+    fun isLoadingCurrentSeason(): Boolean = isLoading && currentSeasonEpisodes.isEmpty()
+    
+    /**
+     * Check if refreshing episodes (already has some episodes)
+     */
+    fun isRefreshingEpisodes(): Boolean = (isLoading || isRefreshing) && currentSeasonEpisodes.isNotEmpty()
+    
+    /**
+     * Check if has episodes to display
+     */
+    fun hasEpisodesToDisplay(): Boolean = currentSeasonEpisodes.isNotEmpty()
+    
+    /**
+     * Get loading message based on current state
+     */
+    fun getLoadingMessage(): String = when {
+        isRefreshingEpisodes() -> "Refreshing episodes..."
+        currentSeasonEpisodes.isEmpty() -> "Loading season details and episodes..."
+        else -> "Loading more episodes..."
+    }
+    
+    /**
      * Get formatted season title for selector
      */
     fun getSeasonSelectorTitle(): String {

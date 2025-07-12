@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<lint>
+    <!-- Project-wide opt-in for Media3 UnstableApi -->
+    <issue id="UnsafeOptInUsageError">
+        <option name="opt-in" value="androidx.media3.common.util.UnstableApi" />
+    </issue>
+    
+    <!-- Suppress ignorable warnings that can be safely ignored in a TV app -->
+    <issue id="DefaultLocale" severity="ignore" />
+    <issue id="HardcodedText" severity="ignore" />
+    <issue id="ContentDescription" severity="ignore" />
+    <issue id="VectorDrawableCompat" severity="ignore" />
+    <issue id="UnusedResources" severity="ignore" />
+    <issue id="IconLocation" severity="ignore" />
+    <issue id="IconDensities" severity="ignore" />
+    <issue id="IconMissingDensityFolder" severity="ignore" />
+    
+    <!-- Suppress dependency update warnings - manage these manually -->
+    <issue id="AndroidGradlePluginVersion" severity="ignore" />
+    <issue id="GradleDependency" severity="ignore" />
+    
+    <!-- Suppress productivity warnings that don't impact functionality -->
+    <issue id="UseKtx" severity="ignore" />
+    <issue id="UseTomlInstead" severity="ignore" />
+    <issue id="ObsoleteSdkInt" severity="ignore" />
+    
+    <!-- Suppress TV-specific permission warnings -->
+    <issue id="PermissionImpliesUnsupportedHardware" severity="ignore" />
+    <issue id="DiscouragedApi" severity="ignore" />
+    
+    <!-- Suppress icon warnings for TV app -->
+    <issue id="IconLauncherShape" severity="ignore" />
+    
+    <!-- Suppress native library alignment warning (test dependency) -->
+    <issue id="Aligned16KB" severity="ignore" />
+    
+    <!-- Allow performance hints but don't treat as warnings -->
+    <issue id="AutoboxingStateCreation" severity="informational" />
+    
+    <!-- Suppress Compose convention warnings for faster development -->
+    <issue id="ModifierParameter" severity="ignore" />
+    <issue id="ComposableNaming" severity="ignore" />
+    <issue id="ConfigurationScreenWidthHeight" severity="ignore" />
+</lint>

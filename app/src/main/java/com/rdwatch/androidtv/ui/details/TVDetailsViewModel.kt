@@ -1053,21 +1053,134 @@ class TVDetailsViewModel @Inject constructor(
     }
     
     /**
-     * Map TMDb season response to TVSeason
+     * Consolidated TMDb to UI model mapper - handles both single seasons and season lists
      */
+    object TMDbMapper {
+        /**
+         * Map TMDb season response to TVSeason (handles both detailed and basic season data)
+         */
+        fun mapSeasonToTVSeason(seasonResponse: com.rdwatch.androidtv.network.models.tmdb.TMDbSeasonResponse): TVSeason {
+            // Validate essential data before mapping
+            validateSeasonData(seasonResponse)
+            
+            val mappedEpisodes = mapEpisodesToTVEpisodes(seasonResponse.episodes, seasonResponse.seasonNumber)
+            
+            // Validate episode count consistency after mapping
+            validateEpisodeCountConsistency(seasonResponse, mappedEpisodes)
+            
+            return TVSeason(
+                id = seasonResponse.id.toString(),
+                seasonNumber = seasonResponse.seasonNumber,
+                name = seasonResponse.name.ifBlank { "Season ${seasonResponse.seasonNumber}" },
+                overview = seasonResponse.overview,
+                posterPath = seasonResponse.posterPath?.let { buildImageUrl(it) },
+                airDate = seasonResponse.airDate,
+                episodeCount = seasonResponse.episodeCount,
+                episodes = mappedEpisodes,
+                voteAverage = seasonResponse.voteAverage.toFloat()
+            )
+        }
+        
+        /**
+         * Map list of TMDb seasons to UI TVSeason models
+         */
+        fun mapSeasonsToTVSeasons(tmdbSeasons: List<com.rdwatch.androidtv.network.models.tmdb.TMDbSeasonResponse>): List<TVSeason> {
+            return tmdbSeasons.map { mapSeasonToTVSeason(it) }
+        }
+        
+        /**
+         * Map TMDb episodes to UI TVEpisode models with enhanced data preservation
+         */
+        fun mapEpisodesToTVEpisodes(tmdbEpisodes: List<com.rdwatch.androidtv.network.models.tmdb.TMDbEpisodeResponse>, seasonNumber: Int): List<TVEpisode> {
+            return tmdbEpisodes.map { mapEpisodeToTVEpisode(it, seasonNumber) }
+        }
+        
+        /**
+         * Map single TMDb episode to UI TVEpisode model with complete data preservation
+         */
+        fun mapEpisodeToTVEpisode(tmdbEpisode: com.rdwatch.androidtv.network.models.tmdb.TMDbEpisodeResponse, seasonNumber: Int? = null): TVEpisode {
+            // Validate episode data before mapping
+            val finalSeasonNumber = seasonNumber ?: tmdbEpisode.seasonNumber
+            validateEpisodeData(tmdbEpisode, finalSeasonNumber)
+            
+            return TVEpisode(
+                id = tmdbEpisode.id.toString(),
+                seasonNumber = finalSeasonNumber,
+                episodeNumber = tmdbEpisode.episodeNumber,
+                title = tmdbEpisode.name.ifBlank { "Episode ${tmdbEpisode.episodeNumber}" },
+                description = tmdbEpisode.overview,
+                thumbnailUrl = tmdbEpisode.stillPath?.let { buildImageUrl(it) },
+                airDate = tmdbEpisode.airDate,
+                runtime = tmdbEpisode.runtime,
+                stillPath = tmdbEpisode.stillPath?.let { buildImageUrl(it) },
+                voteAverage = tmdbEpisode.voteAverage.toFloat(),
+                voteCount = tmdbEpisode.voteCount,
+                overview = tmdbEpisode.overview,
+                isWatched = false,
+                watchProgress = 0f,
+                resumePosition = 0L,
+                videoUrl = null // Will be populated later with streaming sources
+            )
+        }
+        
+        /**
+         * Data preservation validation methods
+         */
+        
+        /**
+         * Validate essential season data to prevent data loss
+         */
+        private fun validateSeasonData(seasonResponse: com.rdwatch.androidtv.network.models.tmdb.TMDbSeasonResponse) {
+            // Log warnings for potential data issues that could cause loss
+            if (seasonResponse.id == 0) {
+                android.util.Log.w("TMDbMapper", "Season ${seasonResponse.seasonNumber} has invalid ID (0)")
+            }
+            if (seasonResponse.name.isBlank()) {
+                android.util.Log.w("TMDbMapper", "Season ${seasonResponse.seasonNumber} has blank name")
+            }
+            if (seasonResponse.episodeCount > 0 && seasonResponse.episodes.isEmpty()) {
+                android.util.Log.w("TMDbMapper", "Season ${seasonResponse.seasonNumber} claims ${seasonResponse.episodeCount} episodes but has no episode data")
+            }
+        }
+        
+        /**
+         * Validate episode count consistency to prevent data loss
+         */
+        private fun validateEpisodeCountConsistency(
+            seasonResponse: com.rdwatch.androidtv.network.models.tmdb.TMDbSeasonResponse,
+            mappedEpisodes: List<TVEpisode>
+        ) {
+            if (seasonResponse.episodeCount > 0 && mappedEpisodes.size != seasonResponse.episodeCount) {
+                android.util.Log.w("TMDbMapper", 
+                    "Episode count mismatch for season ${seasonResponse.seasonNumber}: " +
+                    "claimed ${seasonResponse.episodeCount}, mapped ${mappedEpisodes.size}"
+                )
+            }
+        }
+        
+        /**
+         * Validate episode data completeness
+         */
+        private fun validateEpisodeData(tmdbEpisode: com.rdwatch.androidtv.network.models.tmdb.TMDbEpisodeResponse, seasonNumber: Int) {
+            if (tmdbEpisode.id == 0) {
+                android.util.Log.w("TMDbMapper", "Episode S${seasonNumber}E${tmdbEpisode.episodeNumber} has invalid ID (0)")
+            }
+            if (tmdbEpisode.name.isBlank()) {
+                android.util.Log.w("TMDbMapper", "Episode S${seasonNumber}E${tmdbEpisode.episodeNumber} has blank title")
+            }
+        }
+        
+        /**
+         * Centralized image URL builder for consistency
+         */
+        private fun buildImageUrl(path: String): String {
+            return "https://image.tmdb.org/t/p/w500$path"
+        }
+    }
+    
+    // Legacy wrapper methods for backward compatibility
     private fun mapTMDbSeasonResponseToTVSeason(seasonResponse: com.rdwatch.androidtv.network.models.tmdb.TMDbSeasonResponse): TVSeason {
-        val episodes = mapTMDbEpisodesToTVEpisodes(seasonResponse.episodes, seasonResponse.seasonNumber)
-        return TVSeason(
-            id = seasonResponse.id.toString(),
-            seasonNumber = seasonResponse.seasonNumber,
-            name = seasonResponse.name,
-            overview = seasonResponse.overview,
-            posterPath = seasonResponse.posterPath?.let { "https://image.tmdb.org/t/p/w500$it" },
-            airDate = seasonResponse.airDate,
-            episodeCount = seasonResponse.episodeCount, // Use TMDb episode count to preserve metadata
-            episodes = episodes,
-            voteAverage = seasonResponse.voteAverage.toFloat()
-        )
+        return TMDbMapper.mapSeasonToTVSeason(seasonResponse)
     }
     
     /**
@@ -1293,56 +1406,16 @@ class TVDetailsViewModel @Inject constructor(
         )
     }
     
-    /**
-     * Map TMDb seasons to UI TVSeason models
-     */
     private fun mapTMDbSeasonsToTVSeasons(tmdbSeasons: List<com.rdwatch.androidtv.network.models.tmdb.TMDbSeasonResponse>): List<TVSeason> {
-        return tmdbSeasons.map { tmdbSeason ->
-            TVSeason(
-                id = tmdbSeason.id.toString(),
-                seasonNumber = tmdbSeason.seasonNumber,
-                name = tmdbSeason.name,
-                overview = tmdbSeason.overview,
-                posterPath = tmdbSeason.posterPath?.let { "https://image.tmdb.org/t/p/w500$it" },
-                airDate = tmdbSeason.airDate,
-                episodeCount = tmdbSeason.episodeCount,
-                episodes = mapTMDbEpisodesToTVEpisodes(tmdbSeason.episodes, tmdbSeason.seasonNumber),
-                voteAverage = tmdbSeason.voteAverage.toFloat()
-            )
-        }
+        return TMDbMapper.mapSeasonsToTVSeasons(tmdbSeasons)
     }
     
-    /**
-     * Map TMDb episodes to UI TVEpisode models
-     */
     private fun mapTMDbEpisodesToTVEpisodes(tmdbEpisodes: List<com.rdwatch.androidtv.network.models.tmdb.TMDbEpisodeResponse>, seasonNumber: Int): List<TVEpisode> {
-        return tmdbEpisodes.map { tmdbEpisode ->
-            mapTMDbEpisodeToTVEpisode(tmdbEpisode, seasonNumber)
-        }
+        return TMDbMapper.mapEpisodesToTVEpisodes(tmdbEpisodes, seasonNumber)
     }
     
-    /**
-     * Map a single TMDb episode to UI TVEpisode model
-     */
     private fun mapTMDbEpisodeToTVEpisode(tmdbEpisode: com.rdwatch.androidtv.network.models.tmdb.TMDbEpisodeResponse, seasonNumber: Int? = null): TVEpisode {
-        return TVEpisode(
-            id = tmdbEpisode.id.toString(),
-            seasonNumber = seasonNumber ?: tmdbEpisode.seasonNumber,
-            episodeNumber = tmdbEpisode.episodeNumber,
-            title = tmdbEpisode.name,
-            description = tmdbEpisode.overview,
-            thumbnailUrl = tmdbEpisode.stillPath?.let { "https://image.tmdb.org/t/p/w500$it" },
-            airDate = tmdbEpisode.airDate,
-            runtime = tmdbEpisode.runtime,
-            stillPath = tmdbEpisode.stillPath?.let { "https://image.tmdb.org/t/p/w500$it" },
-            voteAverage = tmdbEpisode.voteAverage.toFloat(),
-            voteCount = tmdbEpisode.voteCount,
-            overview = tmdbEpisode.overview,
-            isWatched = false,
-            watchProgress = 0f,
-            resumePosition = 0L,
-            videoUrl = null // Will be populated later with streaming sources
-        )
+        return TMDbMapper.mapEpisodeToTVEpisode(tmdbEpisode, seasonNumber)
     }
 }
 

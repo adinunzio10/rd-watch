@@ -444,13 +444,13 @@ private fun TVDetailsContent(
                 2 -> {
                     // Episodes Tab (TV shows only)
                     if (tvShow.contentType == ContentType.TV_SHOW) {
+                        // Get authoritative season data to ensure consistency
+                        val authoritativeSeasons = viewModel.getAllSeasonsFromAuthoritativeSource()
+                        val authoritativeSelectedSeason = viewModel.getCurrentSeasonFromAuthoritativeSource()
+                        
                         // Season selector if multiple seasons
                         if (tvShow.hasMultipleSeasons()) {
                             item {
-                                // Get authoritative season data to ensure consistency
-                                val authoritativeSeasons = viewModel.getAllSeasonsFromAuthoritativeSource()
-                                val authoritativeSelectedSeason = viewModel.getCurrentSeasonFromAuthoritativeSource()
-                                
                                 SeasonSelector(
                                         seasons = authoritativeSeasons,
                                         selectedSeasonNumber = authoritativeSelectedSeason?.seasonNumber ?: 1,
@@ -471,32 +471,14 @@ private fun TVDetailsContent(
                         }
 
                         // Episode grid for selected season
-                        authoritativeSelectedSeason?.let { season ->
+                        val seasonToUse = authoritativeSelectedSeason ?: selectedSeason
+                        seasonToUse?.let { season ->
                             item {
                                 EpisodeGridSection(
                                         tvShowDetail = tvShow.getTVShowDetail(),
                                         selectedSeasonNumber = season.seasonNumber,
                                         onSeasonSelected = { seasonNumber ->
                                             // Use authoritative source for season selection
-                                            viewModel.getSeasonByNumberFromAuthoritativeSource(seasonNumber)?.let { selectedSeason ->
-                                                onSeasonSelected(selectedSeason)
-                                            }
-                                        },
-                                        onEpisodeClick = onEpisodeSelected,
-                                        modifier =
-                                                Modifier.padding(
-                                                        horizontal = 32.dp,
-                                                        vertical = 16.dp
-                                                )
-                                )
-                            }
-                        } ?: selectedSeason?.let { season ->
-                            // Fallback to selectedSeason if authoritativeSelectedSeason is null
-                            item {
-                                EpisodeGridSection(
-                                        tvShowDetail = tvShow.getTVShowDetail(),
-                                        selectedSeasonNumber = season.seasonNumber,
-                                        onSeasonSelected = { seasonNumber ->
                                             viewModel.getSeasonByNumberFromAuthoritativeSource(seasonNumber)?.let { selectedSeason ->
                                                 onSeasonSelected(selectedSeason)
                                             }
