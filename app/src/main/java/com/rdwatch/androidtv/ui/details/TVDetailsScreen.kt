@@ -450,6 +450,7 @@ private fun TVDetailsContent(
                                 SeasonSelector(
                                         seasons = tvShow.getSeasons(),
                                         selectedSeasonNumber = selectedSeason?.seasonNumber ?: 1,
+                                        selectedSeason = selectedSeason,
                                         onSeasonSelected = { seasonNumber ->
                                             tvShow.getSeasonByNumber(seasonNumber)?.let { season ->
                                                 onSeasonSelected(season)

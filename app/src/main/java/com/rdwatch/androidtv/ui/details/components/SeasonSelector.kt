@@ -44,6 +44,7 @@ fun SeasonSelector(
     selectedSeasonNumber: Int,
     onSeasonSelected: (Int) -> Unit,
     modifier: Modifier = Modifier,
+    selectedSeason: TVSeason? = null,
     showProgress: Boolean = true,
     isLoading: Boolean = false
 ) {
@@ -79,9 +80,10 @@ fun SeasonSelector(
             )
             
             // Episode count for selected season
-            val selectedSeason = seasons.find { it.seasonNumber == selectedSeasonNumber }
-            selectedSeason?.let { season ->
+            val displaySeason = selectedSeason ?: seasons.find { it.seasonNumber == selectedSeasonNumber }
+            displaySeason?.let { season ->
                 android.util.Log.d("SeasonSelector", "=== SeasonSelector UI Debug ===")
+                android.util.Log.d("SeasonSelector", "Using ${if (selectedSeason != null) "passed selectedSeason" else "found season from list"}")
                 android.util.Log.d("SeasonSelector", "Selected season: ${season.name} (S${season.seasonNumber})")
                 android.util.Log.d("SeasonSelector", "  - episodeCount: ${season.episodeCount}")
                 android.util.Log.d("SeasonSelector", "  - episodes.size: ${season.episodes.size}")
