@@ -383,9 +383,10 @@ private fun TVDetailsContent(
                     }
                 }
             }
+        }
 
-            // Tab navigation
-            item {
+        // Tab navigation
+        item {
                 ContentDetailTabs(
                         selectedTabIndex = selectedTabIndex,
                         contentType = tvShow.contentType,
@@ -539,7 +540,6 @@ private fun TVDetailsContent(
             }
         }
     }
-}
 
 @Composable
 private fun TVNextEpisodeSection(
