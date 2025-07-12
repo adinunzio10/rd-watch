@@ -229,18 +229,35 @@ class TMDbTVRepositoryImpl @Inject constructor(
         loadFromDb = {
             // For now, we'll load from TV show data if available
             tmdbTVDao.getTVShowById(tvId).map { tvEntity ->
-                tvEntity?.toTVResponse()?.seasons?.find { it.seasonNumber == seasonNumber }
+                val cachedSeason = tvEntity?.toTVResponse()?.seasons?.find { it.seasonNumber == seasonNumber }
                     ?: TMDbSeasonResponse()
+                android.util.Log.d("TMDbTVRepository", "Loaded cached season $seasonNumber for TV $tvId: episodes=${cachedSeason.episodes.size}")
+                cachedSeason
             }
         },
         shouldFetch = { cachedSeason ->
             // Always fetch season details as they may contain episode data not in TV response
-            forceRefresh || cachedSeason == null || cachedSeason.episodes.isEmpty()
+            val shouldFetch = forceRefresh || cachedSeason == null || cachedSeason.episodes.isEmpty()
+            android.util.Log.d("TMDbTVRepository", "shouldFetch season $seasonNumber for TV $tvId: $shouldFetch")
+            android.util.Log.d("TMDbTVRepository", "  - forceRefresh: $forceRefresh")
+            android.util.Log.d("TMDbTVRepository", "  - cachedSeason: ${if (cachedSeason != null) "EXISTS (id=${cachedSeason.id})" else "NULL"}")
+            android.util.Log.d("TMDbTVRepository", "  - episodes: ${cachedSeason?.episodes?.size ?: 0}")
+            android.util.Log.d("TMDbTVRepository", "  - episode IDs: ${cachedSeason?.episodes?.take(3)?.map { it.id } ?: "[]"}")
+            
+            // Additional validation - check if season data is actually valid
+            if (cachedSeason != null && cachedSeason.id == 0 && cachedSeason.episodes.isEmpty()) {
+                android.util.Log.w("TMDbTVRepository", "Found invalid cached season (id=0, no episodes) - forcing fetch")
+                true
+            } else {
+                shouldFetch
+            }
         },
         createCall = {
+            android.util.Log.d("TMDbTVRepository", "API CALL: Fetching season $seasonNumber details for TV $tvId")
             awaitApiResponse(tmdbTVService.getSeasonDetails(tvId, seasonNumber, language))
         },
         saveCallResult = { seasonResponse ->
+            android.util.Log.d("TMDbTVRepository", "API RESULT: Saving season $seasonNumber for TV $tvId with ${seasonResponse.episodes.size} episodes")
             // Update the TV show entity with updated season information
             val existingTV = tmdbTVDao.getTVShowByIdSuspend(tvId)
             if (existingTV != null) {
@@ -253,6 +270,9 @@ class TMDbTVRepositoryImpl @Inject constructor(
                 }
                 val updatedTV = existingTV.toTVResponse().copy(seasons = updatedSeasons)
                 tmdbTVDao.insertTVShow(updatedTV.toEntity())
+                android.util.Log.d("TMDbTVRepository", "Saved season $seasonNumber for TV $tvId to database")
+            } else {
+                android.util.Log.w("TMDbTVRepository", "No existing TV show found for ID $tvId when saving season $seasonNumber")
             }
         }
     )
