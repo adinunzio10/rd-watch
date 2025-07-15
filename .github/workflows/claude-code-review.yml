@@ -3,21 +3,9 @@ name: Claude Code Review
 on:
   pull_request:
     types: [opened, synchronize]
-    # Optional: Only run on specific file changes
-    # paths:
-    #   - "src/**/*.ts"
-    #   - "src/**/*.tsx"
-    #   - "src/**/*.js"
-    #   - "src/**/*.jsx"
 
 jobs:
   claude-review:
-    # Optional: Filter by PR author
-    # if: |
-    #   github.event.pull_request.user.login == 'external-contributor' ||
-    #   github.event.pull_request.user.login == 'new-developer' ||
-    #   github.event.pull_request.author_association == 'FIRST_TIME_CONTRIBUTOR'
-    
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -36,43 +24,37 @@ jobs:
         uses: anthropics/claude-code-action@beta
         with:
           anthropic_api_key: ${{ secrets.CLAUDE_API_KEY }}
-
-          # Optional: Specify model (defaults to Claude Sonnet 4, uncomment for Claude Opus 4)
-          # model: "claude-opus-4-20250514"
-          
-          # Direct prompt for automated review (no @claude mention needed)
           direct_prompt: |
-            Please review this pull request and provide feedback on:
-            - Code quality and best practices
-            - Potential bugs or issues
-            - Performance considerations
-            - Security concerns
-            - Test coverage
+            **Overview Analysis:**
+            - What this PR accomplishes
+            - Analysis of code quality and style
+            - Specific suggestions for improvements
+            - Any potential issues or risks
             
-            Be constructive and helpful in your feedback.
-
-          # Optional: Use sticky comments to make Claude reuse the same comment on subsequent pushes to the same PR
-          # use_sticky_comment: true
-          
-          # Optional: Customize review based on file types
-          # direct_prompt: |
-          #   Review this PR focusing on:
-          #   - For TypeScript files: Type safety and proper interface usage
-          #   - For API endpoints: Security, input validation, and error handling
-          #   - For React components: Performance, accessibility, and best practices
-          #   - For tests: Coverage, edge cases, and test quality
-          
-          # Optional: Different prompts for different authors
-          # direct_prompt: |
-          #   ${{ github.event.pull_request.author_association == 'FIRST_TIME_CONTRIBUTOR' && 
-          #   'Welcome! Please review this PR from a first-time contributor. Be encouraging and provide detailed explanations for any suggestions.' ||
-          #   'Please provide a thorough code review focusing on our coding standards and best practices.' }}
-          
-          # Optional: Add specific tools for running tests or linting
-          # allowed_tools: "Bash(npm run test),Bash(npm run lint),Bash(npm run typecheck)"
-          
-          # Optional: Skip review for certain conditions
-          # if: |
-          #   !contains(github.event.pull_request.title, '[skip-review]') &&
-          #   !contains(github.event.pull_request.title, '[WIP]')
-
+            **Multi-Agent Verification:**
+            - Check if Testing Agent deliverables are present (new/updated tests in the diff)
+            - Check if Documentation Agent deliverables are present (updated docs, comments, README changes)
+            - Verify that planned multi-agent coordination actually happened
+            - Note any missing agent deliverables
+            
+            **Focus Areas:**
+            - Code correctness and Android TV/Kotlin best practices
+            - Following Jetpack Compose conventions
+            - Performance implications for TV hardware
+            - Test coverage and quality
+            - Security considerations for Real Debrid integration
+            
+            **Android TV Specific Checks:**
+            - Focus navigation implementation
+            - Leanback library usage
+            - TV-optimized UI patterns
+            - Remote control input handling
+            
+            **TODO/Issue Management:**
+            - Search for TODO, FIXME, HACK comments in changes
+            - Identify incomplete work or follow-up items
+            - Note any technical debt introduced
+            
+            Format your review with clear sections and bullet points. Keep feedback constructive and actionable.
+            
+            Be thorough but concise - focus on meaningful improvements that enhance the Android TV streaming experience.
