@@ -71,57 +71,74 @@ fun TVDetailsScreen(
         }
         tvShowState != null -> {
             val tvShow = tvShowState!!
-            TVDetailsContent(
+            
+            // Conditional rendering: Episodes tab gets dedicated screen to avoid nested scrolling
+            if (selectedTabIndex == 2 && tvShow.contentType == ContentType.TV_SHOW) {
+                EpisodesTabScreen(
                     tvShow = tvShow,
                     selectedSeason = selectedSeason,
                     selectedEpisode = selectedEpisode,
-                    selectedTabIndex = selectedTabIndex,
-                    progress = progress,
-                    creditsState = creditsState,
-                    sourcesState = sourcesState,
-                    viewModel = viewModel,
-                    playbackViewModel = playbackViewModel,
-                    onActionClick = { action ->
-                        when (action) {
-                            is ContentAction.Play -> {
-                                selectedEpisode?.let { episode -> onPlayClick(episode) }
-                                        ?: run {
-                                            tvShow.getNextEpisode()?.let { episode ->
-                                                onPlayClick(episode)
-                                            }
-                                        }
-                            }
-                            is ContentAction.AddToWatchlist -> {
-                                viewModel.toggleWatchlist(tvShow.id)
-                            }
-                            is ContentAction.Like -> {
-                                viewModel.toggleLike(tvShow.id)
-                            }
-                            is ContentAction.Share -> {
-                                viewModel.shareContent(tvShow)
-                            }
-                            is ContentAction.Download -> {
-                                selectedEpisode?.let { episode ->
-                                    viewModel.downloadEpisode(episode)
-                                }
-                            }
-                            else -> {
-                                // Handle other actions
-                            }
-                        }
-                    },
                     onSeasonSelected = { season -> viewModel.selectSeason(season) },
                     onEpisodeSelected = { episode ->
                         viewModel.selectEpisode(episode)
                         onEpisodeClick(episode)
                     },
-                    onTabSelected = { tabIndex -> viewModel.selectTab(tabIndex) },
-                    onBackPressed = onBackPressed,
-                    backButtonFocusRequester = backButtonFocusRequester,
-                    tabFocusRequester = tabFocusRequester,
-                    listState = listState,
+                    onBackToDetails = { viewModel.selectTab(0) }, // Return to Overview tab
                     modifier = modifier
-            )
+                )
+            } else {
+                TVDetailsContent(
+                        tvShow = tvShow,
+                        selectedSeason = selectedSeason,
+                        selectedEpisode = selectedEpisode,
+                        selectedTabIndex = selectedTabIndex,
+                        progress = progress,
+                        creditsState = creditsState,
+                        sourcesState = sourcesState,
+                        viewModel = viewModel,
+                        playbackViewModel = playbackViewModel,
+                        onActionClick = { action ->
+                            when (action) {
+                                is ContentAction.Play -> {
+                                    selectedEpisode?.let { episode -> onPlayClick(episode) }
+                                            ?: run {
+                                                tvShow.getNextEpisode()?.let { episode ->
+                                                    onPlayClick(episode)
+                                                }
+                                            }
+                                }
+                                is ContentAction.AddToWatchlist -> {
+                                    viewModel.toggleWatchlist(tvShow.id)
+                                }
+                                is ContentAction.Like -> {
+                                    viewModel.toggleLike(tvShow.id)
+                                }
+                                is ContentAction.Share -> {
+                                    viewModel.shareContent(tvShow)
+                                }
+                                is ContentAction.Download -> {
+                                    selectedEpisode?.let { episode ->
+                                        viewModel.downloadEpisode(episode)
+                                    }
+                                }
+                                else -> {
+                                    // Handle other actions
+                                }
+                            }
+                        },
+                        onSeasonSelected = { season -> viewModel.selectSeason(season) },
+                        onEpisodeSelected = { episode ->
+                            viewModel.selectEpisode(episode)
+                            onEpisodeClick(episode)
+                        },
+                        onTabSelected = { tabIndex -> viewModel.selectTab(tabIndex) },
+                        onBackPressed = onBackPressed,
+                        backButtonFocusRequester = backButtonFocusRequester,
+                        tabFocusRequester = tabFocusRequester,
+                        listState = listState,
+                        modifier = modifier
+                )
+            }
         }
         else -> {
             // Initial state - show loading screen while tvShowState is being loaded
@@ -442,56 +459,15 @@ private fun TVDetailsContent(
                     }
                 }
                 2 -> {
-                    // Episodes Tab (TV shows only)
-                    if (tvShow.contentType == ContentType.TV_SHOW) {
-                        // Get authoritative season data to ensure consistency
-                        val authoritativeSeasons = viewModel.getAllSeasonsFromAuthoritativeSource()
-                        val authoritativeSelectedSeason = viewModel.getCurrentSeasonFromAuthoritativeSource()
-                        
-                        // Season selector if multiple seasons
-                        if (tvShow.hasMultipleSeasons()) {
-                            item {
-                                SeasonSelector(
-                                        seasons = authoritativeSeasons,
-                                        selectedSeasonNumber = authoritativeSelectedSeason?.seasonNumber ?: 1,
-                                        selectedSeason = authoritativeSelectedSeason,
-                                        onSeasonSelected = { seasonNumber ->
-                                            // Use authoritative source to get season data
-                                            viewModel.getSeasonByNumberFromAuthoritativeSource(seasonNumber)?.let { season ->
-                                                onSeasonSelected(season)
-                                            }
-                                        },
-                                        modifier =
-                                                Modifier.padding(
-                                                        horizontal = 32.dp,
-                                                        vertical = 16.dp
-                                                )
-                                )
-                            }
-                        }
-
-                        // Episode grid for selected season
-                        val seasonToUse = authoritativeSelectedSeason ?: selectedSeason
-                        seasonToUse?.let { season ->
-                            item {
-                                EpisodeGridSection(
-                                        tvShowDetail = tvShow.getTVShowDetail(),
-                                        selectedSeasonNumber = season.seasonNumber,
-                                        onSeasonSelected = { seasonNumber ->
-                                            // Use authoritative source for season selection
-                                            viewModel.getSeasonByNumberFromAuthoritativeSource(seasonNumber)?.let { selectedSeason ->
-                                                onSeasonSelected(selectedSeason)
-                                            }
-                                        },
-                                        onEpisodeClick = onEpisodeSelected,
-                                        modifier =
-                                                Modifier.padding(
-                                                        horizontal = 32.dp,
-                                                        vertical = 16.dp
-                                                )
-                                )
-                            }
-                        }
+                    // Episodes Tab - now handled by dedicated EpisodesTabScreen
+                    // This case should not be reached due to conditional rendering above
+                    item {
+                        Text(
+                            text = "Episodes view moved to dedicated screen",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                            modifier = Modifier.padding(horizontal = 32.dp, vertical = 16.dp)
+                        )
                     }
                 }
                 3 -> {
