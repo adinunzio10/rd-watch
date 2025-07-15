@@ -27,6 +27,7 @@ import androidx.compose.ui.window.DialogProperties
 import com.rdwatch.androidtv.ui.details.models.SourceProvider
 import com.rdwatch.androidtv.ui.details.models.SourceQuality
 import com.rdwatch.androidtv.ui.details.models.StreamingSource
+import com.rdwatch.androidtv.ui.details.models.SourceSortOption
 import com.rdwatch.androidtv.ui.focus.TVFocusIndicator
 import com.rdwatch.androidtv.ui.focus.tvFocusable
 
@@ -545,17 +546,7 @@ private fun DialogActionButton(
     }
 }
 
-/**
- * Sort options for sources
- */
-enum class SourceSortOption(val displayName: String) {
-    PRIORITY("Priority"),
-    QUALITY("Quality"),
-    PROVIDER("Provider"),
-    SEEDERS("Seeders"),
-    RELIABILITY("Reliability"),
-    AVAILABILITY("Availability")
-}
+// SourceSortOption is now imported from com.rdwatch.androidtv.ui.details.models
 
 /**
  * Get sort comparator for sources
@@ -577,6 +568,11 @@ private fun getSortComparator(sortOption: SourceSortOption): Comparator<Streamin
             }
         }
         SourceSortOption.AVAILABILITY -> compareByDescending { it.isCurrentlyAvailable() }
+        // Handle the new advanced options by falling back to reasonable defaults
+        SourceSortOption.QUALITY_SCORE -> compareByDescending { it.getPriorityScore() } // Same as PRIORITY
+        SourceSortOption.FILE_SIZE -> compareByDescending { it.size?.toLongOrNull() ?: 0L }
+        SourceSortOption.ADDED_DATE -> compareByDescending { it.addedDate ?: "" }
+        SourceSortOption.RELEASE_TYPE -> compareBy { it.title ?: "" }
     }
 }
 

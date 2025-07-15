@@ -5,6 +5,7 @@ import org.junit.Before
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import java.util.Date
+import com.rdwatch.androidtv.ui.details.models.SourceSortOption
 
 /**
  * Comprehensive tests for SourceComparators

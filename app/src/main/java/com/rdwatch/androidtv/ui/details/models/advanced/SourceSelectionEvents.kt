@@ -1,94 +1,68 @@
 package com.rdwatch.androidtv.ui.details.models.advanced
 
 /**
- * Events for source selection interactions
+ * Events for tracking source selection user behavior and analytics
  */
-sealed class SourceSelectionEvent {
+sealed class SourceSelectionEvents {
     
-    // Source selection events
-    data class SourceSelected(val source: SourceMetadata) : SourceSelectionEvent()
-    data class SourcePlayRequested(val source: SourceMetadata) : SourceSelectionEvent()
-    data class SourceDownloadRequested(val source: SourceMetadata) : SourceSelectionEvent()
-    data class SourceInfoRequested(val source: SourceMetadata) : SourceSelectionEvent()
+    abstract class SourceEvent
     
-    // Filter events
-    data class FilterApplied(val filter: SourceFilter) : SourceSelectionEvent()
-    data class QuickFilterApplied(val preset: QuickFilterPreset) : SourceSelectionEvent()
-    object FilterReset : SourceSelectionEvent()
-    
-    // Sort events
-    data class SortOptionChanged(val sortOption: SourceSortOption) : SourceSelectionEvent()
-    
-    // View mode events
-    data class ViewModeChanged(val viewMode: SourceSelectionState.ViewMode) : SourceSelectionEvent()
-    
-    // Group events
-    data class GroupToggled(val groupId: String) : SourceSelectionEvent()
-    
-    // Debrid events
-    data class AddToDebridRequested(val source: SourceMetadata) : SourceSelectionEvent()
-    data class CheckCacheRequested(val sources: List<SourceMetadata>) : SourceSelectionEvent()
-    
-    // Refresh events
-    object RefreshRequested : SourceSelectionEvent()
-    data class RefreshHealthRequested(val sources: List<SourceMetadata>) : SourceSelectionEvent()
-    
-    // Navigation events
-    object BackPressed : SourceSelectionEvent()
-    data class ProviderSettingsRequested(val providerId: String) : SourceSelectionEvent()
-    
-    // Error events
-    data class ErrorOccurred(val message: String) : SourceSelectionEvent()
-    object ErrorDismissed : SourceSelectionEvent()
-}
-
-/**
- * UI actions that can be performed on sources
- */
-sealed class SourceAction {
-    data class Play(val source: SourceMetadata) : SourceAction()
-    data class Download(val source: SourceMetadata) : SourceAction()
-    data class ShowInfo(val source: SourceMetadata) : SourceAction()
-    data class AddToDebrid(val source: SourceMetadata) : SourceAction()
-    data class CopyLink(val source: SourceMetadata) : SourceAction()
-    data class Share(val source: SourceMetadata) : SourceAction()
-    data class ReportIssue(val source: SourceMetadata) : SourceAction()
-}
-
-/**
- * Analytics events for source selection
- */
-sealed class SourceSelectionAnalytics {
-    data class SourceViewed(
+    data class SourcePlayEvent(
         val sourceId: String,
         val provider: String,
         val quality: String,
-        val codec: String,
-        val fileSize: Long?
-    ) : SourceSelectionAnalytics()
+        val playTimeMs: Long
+    ) : SourceEvent()
     
-    data class SourcePlayed(
+    data class SourceLoadEvent(
         val sourceId: String,
         val provider: String,
-        val quality: String,
-        val isDebrid: Boolean,
-        val loadTime: Long
-    ) : SourceSelectionAnalytics()
+        val loadTimeMs: Long,
+        val success: Boolean
+    ) : SourceEvent()
     
-    data class FilterUsed(
+    data class SourceErrorEvent(
+        val sourceId: String,
+        val provider: String,
+        val errorType: String,
+        val errorMessage: String
+    ) : SourceEvent()
+    
+    data class SourceSelectedEvent(
+        val sourceId: String,
+        val provider: String,
+        val selectionTimeMs: Long,
+        val position: Int
+    ) : SourceEvent()
+    
+    data class SourceFilterEvent(
         val filterType: String,
         val filterValue: String,
         val resultCount: Int
-    ) : SourceSelectionAnalytics()
+    ) : SourceEvent()
     
-    data class SortUsed(
+    data class SourceSortEvent(
         val sortOption: String,
-        val direction: String
-    ) : SourceSelectionAnalytics()
+        val sortDirection: String
+    ) : SourceEvent()
     
-    data class ErrorEncountered(
-        val errorType: String,
-        val errorMessage: String,
-        val sourceId: String?
-    ) : SourceSelectionAnalytics()
+    data class SourceViewEvent(
+        val viewType: String,
+        val sourceCount: Int,
+        val viewTimeMs: Long
+    ) : SourceEvent()
+    
+    data class SourceDownloadEvent(
+        val sourceId: String,
+        val provider: String,
+        val downloadStarted: Boolean,
+        val downloadTimeMs: Long
+    ) : SourceEvent()
+    
+    data class SourcePlaylistEvent(
+        val action: String,
+        val sourceId: String,
+        val provider: String,
+        val playlistSize: Int
+    ) : SourceEvent()
 }

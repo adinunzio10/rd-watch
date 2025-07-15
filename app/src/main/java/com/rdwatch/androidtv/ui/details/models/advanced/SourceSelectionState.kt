@@ -3,6 +3,7 @@ package com.rdwatch.androidtv.ui.details.models.advanced
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import com.rdwatch.androidtv.ui.details.models.SourceSortOption
 
 /**
  * UI state for advanced source selection
