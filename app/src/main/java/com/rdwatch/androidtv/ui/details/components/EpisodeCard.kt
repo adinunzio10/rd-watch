@@ -43,12 +43,17 @@ fun EpisodeCard(
     showProgress: Boolean = true,
     aspectRatio: Float = 16f / 9f
 ) {
-    var focused by remember { mutableStateOf(isFocused) }
+    var focused by remember(episode.id) { mutableStateOf(isFocused) }
+    
+    // Update focus state when isFocused changes
+    LaunchedEffect(isFocused) {
+        focused = isFocused
+    }
     
     Card(
         modifier = modifier
             .width(280.dp)
-            .height(158.dp) // 16:9 aspect ratio
+            .height(180.dp) // Increased height for better text visibility
             .tvCardFocus(focused, onClick)
             .tvFocusable(onFocusChanged = { focused = it.isFocused })
             .clickable(onClick = onClick),
@@ -172,16 +177,18 @@ fun EpisodeCard(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(12.dp)
+                    .weight(1f) // Take remaining space
+                    .padding(horizontal = 12.dp, vertical = 8.dp)
             ) {
                 // Episode title
                 Text(
                     text = episode.getFormattedTitle(),
                     color = MaterialTheme.colorScheme.onSurface,
-                    fontSize = 14.sp,
+                    fontSize = 15.sp, // Slightly larger for TV viewing
                     fontWeight = FontWeight.SemiBold,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                    maxLines = 2, // Allow 2 lines for episode titles
+                    overflow = TextOverflow.Ellipsis,
+                    lineHeight = 18.sp
                 )
                 
                 // Episode description
@@ -189,10 +196,11 @@ fun EpisodeCard(
                     Text(
                         text = episode.getDisplayDescription(),
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-                        fontSize = 12.sp,
+                        fontSize = 13.sp, // Slightly larger for better readability
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.padding(top = 4.dp)
+                        modifier = Modifier.padding(top = 6.dp),
+                        lineHeight = 16.sp
                     )
                 }
                 

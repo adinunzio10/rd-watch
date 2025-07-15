@@ -165,8 +165,11 @@ private fun EpisodeGridLayout(
             .fillMaxWidth()
             .tvFocusRequester(focusRequester, requestInitialFocus)
     ) {
-        // Episode items
-        itemsIndexed(episodes) { index, episode ->
+        // Episode items with explicit keys for proper recomposition
+        itemsIndexed(
+            items = episodes,
+            key = { _, episode -> episode.id }
+        ) { index, episode ->
             val isFocused = episode.id == focusedEpisodeId
             
             when (layout) {
@@ -220,9 +223,12 @@ private fun EpisodeGridLayout(
             }
         }
         
-        // Loading items
+        // Loading items with explicit keys
         if (isLoading) {
-            items(loadingItemsCount) {
+            items(
+                count = loadingItemsCount,
+                key = { index -> "loading_$index" }
+            ) { index ->
                 when (layout) {
                     EpisodeGridLayout.GRID -> EpisodeCardSkeleton()
                     EpisodeGridLayout.COMPACT -> CompactEpisodeCardSkeleton()
