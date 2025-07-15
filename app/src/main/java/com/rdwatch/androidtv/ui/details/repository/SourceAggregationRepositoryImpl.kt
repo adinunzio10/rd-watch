@@ -2,6 +2,8 @@ package com.rdwatch.androidtv.ui.details.repository
 
 import com.rdwatch.androidtv.ui.details.models.advanced.*
 import com.rdwatch.androidtv.ui.details.models.ContentDetail
+import com.rdwatch.androidtv.ui.details.models.MovieContentDetail
+import com.rdwatch.androidtv.Movie
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.delay
@@ -109,14 +111,16 @@ class SourceAggregationRepositoryImpl : SourceAggregationRepository {
      */
     suspend fun getSourcesForContent(contentId: String): List<SourceMetadata> {
         // Create a basic ContentDetail for compatibility
-        val contentDetail = ContentDetail(
-            id = contentId,
+        val sampleMovie = Movie(
+            id = contentId.toLongOrNull() ?: 0L,
             title = "Sample Content",
-            type = "movie",
-            year = 2023,
-            imdbId = null,
-            tmdbId = null
+            description = "Sample movie for compatibility",
+            backgroundImageUrl = null,
+            cardImageUrl = null,
+            videoUrl = null,
+            studio = null
         )
+        val contentDetail = MovieContentDetail.fromMovie(sampleMovie)
         
         val sourcesList = mutableListOf<SourceMetadata>()
         getSources(contentDetail).collect { sources ->
@@ -289,15 +293,3 @@ class SourceAggregationRepositoryImpl : SourceAggregationRepository {
         )
     }
 }
-
-/**
- * Basic ContentDetail model for compatibility
- */
-data class ContentDetail(
-    val id: String,
-    val title: String,
-    val type: String, // "movie" or "tv"
-    val year: Int?,
-    val imdbId: String?,
-    val tmdbId: String?
-)

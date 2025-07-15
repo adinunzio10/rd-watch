@@ -254,8 +254,8 @@ class PerformanceMonitor(
         } else 0.0
     }
     
-    fun getPerformanceMetrics(): PerformanceMetrics {
-        return PerformanceMetrics(
+    fun getPerformanceMetrics(): ProcessingMetrics {
+        return ProcessingMetrics(
             averageProcessingTime = getAverageProcessingTime(),
             minProcessingTime = processingTimes.minOrNull()?.toDouble() ?: 0.0,
             maxProcessingTime = processingTimes.maxOrNull()?.toDouble() ?: 0.0,
@@ -311,9 +311,9 @@ data class AndroidTVOptimizedResult(
 )
 
 /**
- * Performance metrics for monitoring
+ * Processing metrics for performance monitoring
  */
-data class PerformanceMetrics(
+data class ProcessingMetrics(
     val averageProcessingTime: Double,
     val minProcessingTime: Double,
     val maxProcessingTime: Double,

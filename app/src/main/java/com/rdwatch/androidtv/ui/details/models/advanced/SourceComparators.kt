@@ -1,5 +1,7 @@
 package com.rdwatch.androidtv.ui.details.models.advanced
 
+import com.rdwatch.androidtv.ui.details.models.SourceSortOption
+
 /**
  * Collection of specialized comparators for different sorting scenarios
  */
@@ -127,6 +129,10 @@ object SourceComparators {
             SourceSortOption.ADDED_DATE -> recentComparator
             SourceSortOption.PROVIDER -> providerReliabilityComparator
             SourceSortOption.RELEASE_TYPE -> releaseTypeComparator
+            SourceSortOption.PRIORITY -> qualityComparator  // Use quality for priority sorting
+            SourceSortOption.QUALITY -> qualityComparator   // Same as QUALITY_SCORE
+            SourceSortOption.RELIABILITY -> providerReliabilityComparator
+            SourceSortOption.AVAILABILITY -> healthComparator  // Use health for availability
         }
     }
     
