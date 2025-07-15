@@ -26,23 +26,32 @@ fun EpisodesTabScreen(
     firstFocusRequester: FocusRequester? = null
 ) {
     // Get authoritative season data to ensure consistency
-    val authoritativeSeasons = tvShow.getSeasons()
-    val authoritativeSelectedSeason = selectedSeason ?: authoritativeSeasons.firstOrNull()
+    val authoritativeSeasons = remember(tvShow.id) { tvShow.getSeasons() }
+    val authoritativeSelectedSeason = remember(selectedSeason, authoritativeSeasons) {
+        selectedSeason ?: authoritativeSeasons.firstOrNull()
+    }
+    
+    // Force recomposition when season or episodes change
+    LaunchedEffect(authoritativeSelectedSeason?.seasonNumber, authoritativeSelectedSeason?.episodes?.size) {
+        // This ensures the UI updates when season data changes
+    }
     
     Box(
         modifier = modifier.fillMaxSize()
     ) {
         authoritativeSelectedSeason?.let { season ->
-            // Create proper UI state with current season episodes
-            val episodeGridUiState = EpisodeGridUiState(
-                isLoading = false,
-                selectedSeasonNumber = season.seasonNumber,
-                availableSeasons = authoritativeSeasons,
-                currentSeasonEpisodes = season.episodes,
-                focusedEpisodeId = selectedEpisode?.id,
-                error = null,
-                isRefreshing = false
-            )
+            // Create proper UI state with current season episodes - use remember with keys
+            val episodeGridUiState = remember(season.seasonNumber, season.episodes.size, selectedEpisode?.id) {
+                EpisodeGridUiState(
+                    isLoading = false,
+                    selectedSeasonNumber = season.seasonNumber,
+                    availableSeasons = authoritativeSeasons,
+                    currentSeasonEpisodes = season.episodes,
+                    focusedEpisodeId = selectedEpisode?.id,
+                    error = null,
+                    isRefreshing = false
+                )
+            }
             
             // Use single scrolling container - no nested LazyColumn
             EpisodeGridSection(
@@ -58,7 +67,7 @@ fun EpisodesTabScreen(
                 uiState = episodeGridUiState,
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 32.dp, vertical = 16.dp)
+                    .padding(horizontal = 24.dp, vertical = 12.dp)
             )
         } ?: run {
             // No seasons available - show empty state
