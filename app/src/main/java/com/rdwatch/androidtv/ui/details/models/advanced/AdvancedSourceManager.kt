@@ -97,33 +97,35 @@ class AdvancedSourceManager(private val context: Context) {
         val cachedHealthData = cacheManager.preloadHealthData(sourceIds)
         
         // Process sources in parallel with limited concurrency
-        val processedSources = sources.chunked(10).flatMap { chunk ->
-            chunk.map { source ->
-                async {
-                    try {
-                        processSource(source)
-                    } catch (e: Exception) {
-                        // Create minimal processed data for failed sources
-                        ProcessedSourceData(
-                            sourceMetadata = source,
-                            healthData = null,
-                            seasonPackInfo = seasonPackDetector.analyzeSeasonPack(
-                                source.file.name ?: "", 
-                                source.file.sizeInBytes
-                            ),
-                            reliabilityPrediction = null,
-                            downloadTimeEstimation = null,
-                            riskAssessment = null,
-                            enhancedQualityScore = source.getQualityScore(),
-                            qualityBadges = source.getQualityBadges(),
-                            processingTimeMs = 0L,
-                            lastUpdated = java.util.Date(),
-                            hasError = true,
-                            errorMessage = e.message
-                        )
+        val processedSources = sources.chunked(10).flatMap { chunk: List<SourceMetadata> ->
+            coroutineScope {
+                chunk.map { source: SourceMetadata ->
+                    async {
+                        try {
+                            processSource(source)
+                        } catch (e: Exception) {
+                            // Create minimal processed data for failed sources
+                            ProcessedSourceData(
+                                sourceMetadata = source,
+                                healthData = null,
+                                seasonPackInfo = seasonPackDetector.analyzeSeasonPack(
+                                    source.file.name ?: "", 
+                                    source.file.sizeInBytes
+                                ),
+                                reliabilityPrediction = null,
+                                downloadTimeEstimation = null,
+                                riskAssessment = null,
+                                enhancedQualityScore = source.getQualityScore(),
+                                qualityBadges = source.getQualityBadges(),
+                                processingTimeMs = 0L,
+                                lastUpdated = java.util.Date(),
+                                hasError = true,
+                                errorMessage = e.message
+                            )
+                        }
                     }
-                }
-            }.awaitAll()
+                }.awaitAll()
+            }
         }
         
         val totalTime = System.currentTimeMillis() - startTime
@@ -148,13 +150,15 @@ class AdvancedSourceManager(private val context: Context) {
             val reasoning = generateRecommendationReasoning(processed, recommendationScore)
             
             SourceRecommendation(
-                processedSource = processed,
-                recommendationScore = recommendationScore,
-                reasoning = reasoning,
-                userCompatibility = calculateUserCompatibility(processed, userProfile),
-                downloadPriority = calculateDownloadPriority(processed, preferences)
+                type = com.rdwatch.androidtv.ui.details.models.advanced.RecommendationType.QUALITY_IMPROVEMENT,
+                message = reasoning.firstOrNull() ?: "Recommended source",
+                priority = when {
+                    recommendationScore >= 80 -> com.rdwatch.androidtv.ui.details.models.advanced.RecommendationPriority.HIGH
+                    recommendationScore >= 60 -> com.rdwatch.androidtv.ui.details.models.advanced.RecommendationPriority.MEDIUM
+                    else -> com.rdwatch.androidtv.ui.details.models.advanced.RecommendationPriority.LOW
+                }
             )
-        }.sortedByDescending { it.recommendationScore }
+        }
     }
     
     /**
@@ -179,11 +183,11 @@ class AdvancedSourceManager(private val context: Context) {
     /**
      * Get comprehensive analytics
      */
-    suspend fun getAnalytics(): SourceAnalytics {
+    suspend fun getAnalytics(): SourceManagerAnalytics {
         val cacheStats = cacheManager.getCacheStatistics()
         val monitoringStats = monitoringService?.getPerformanceMetrics()?.getMetricsSummary()
         
-        return SourceAnalytics(
+        return SourceManagerAnalytics(
             cacheStatistics = cacheStats,
             monitoringStatistics = monitoringStats,
             totalSourcesProcessed = 0, // TODO: Track this
@@ -442,16 +446,6 @@ data class ProcessedSourceData(
     val errorMessage: String? = null
 )
 
-/**
- * Source recommendation with scoring and reasoning
- */
-data class SourceRecommendation(
-    val processedSource: ProcessedSourceData,
-    val recommendationScore: Int,
-    val reasoning: List<String>,
-    val userCompatibility: Float, // 0.0-1.0
-    val downloadPriority: DownloadPriority
-)
 
 /**
  * User preferences for source recommendations
@@ -486,14 +480,4 @@ sealed class SourceUpdate {
     data class DownloadResultUpdated(val sourceId: String, val success: Boolean) : SourceUpdate()
 }
 
-/**
- * Comprehensive analytics data
- */
-data class SourceAnalytics(
-    val cacheStatistics: CacheStatistics,
-    val monitoringStatistics: MetricsSummary?,
-    val totalSourcesProcessed: Int,
-    val averageProcessingTimeMs: Long,
-    val healthPredictionAccuracy: Float,
-    val recommendationEffectiveness: Float
-)
+

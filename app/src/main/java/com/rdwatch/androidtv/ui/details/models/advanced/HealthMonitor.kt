@@ -1,6 +1,7 @@
 package com.rdwatch.androidtv.ui.details.models.advanced
 
 import kotlinx.coroutines.*
+import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -382,11 +383,11 @@ class HealthMonitor {
         val n = values.size
         val xSum = (1..n).sum()
         val ySum = values.sum()
-        val xySum = values.withIndex().sumOf { (i, y) -> (i + 1) * y }
+        val xySum = values.withIndex().sumOf { (i: Int, y: Float) -> (i + 1) * y.toDouble() }
         val xSquareSum = (1..n).sumOf { it * it }
         
         val slope = (n * xySum - xSum * ySum) / (n * xSquareSum - xSum * xSum)
-        return slope
+        return slope.toFloat()
     }
     
     /**
@@ -542,7 +543,7 @@ data class HealthData(
     val estimatedDownloadTimeMinutes: Int, // -1 if unknown
     val predictedReliability: Int, // 0-100
     val healthTrend: HealthTrend,
-    val lastUpdated: Date,
+    @Contextual val lastUpdated: Date,
     val isStale: Boolean,
     val needsRefresh: Boolean
 ) {

@@ -557,10 +557,10 @@ class HealthPredictor {
         val n = values.size
         val xSum = (1..n).sum()
         val ySum = values.sum()
-        val xySum = values.withIndex().sumOf { (i, y) -> (i + 1) * y }
+        val xySum = values.withIndex().sumOf { (i, y) -> (i + 1) * y.toDouble() }
         val xSquareSum = (1..n).sumOf { it * it }
         
-        return (n * xySum - xSum * ySum) / (n * xSquareSum - xSum * xSum)
+        return ((n * xySum - xSum * ySum) / (n * xSquareSum - xSum * xSum)).toFloat()
     }
     
     private fun calculateVariance(values: List<Float>): Float {

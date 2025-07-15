@@ -3,6 +3,8 @@ package com.rdwatch.androidtv.ui.details.viewmodels
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.rdwatch.androidtv.ui.details.models.advanced.*
+import com.rdwatch.androidtv.ui.details.models.SourceSortOption
+import com.rdwatch.androidtv.ui.details.models.MovieContentDetail
 import com.rdwatch.androidtv.ui.details.repository.SourceAggregationRepository
 import com.rdwatch.androidtv.ui.details.repository.SourceAggregationRepositoryImpl
 import kotlinx.coroutines.flow.*
@@ -60,15 +62,17 @@ class SourceListViewModel(
                 val sources = if (sourceRepository is SourceAggregationRepositoryImpl) {
                     sourceRepository.getSourcesForContent(movieId)
                 } else {
-                    // Fallback for interface - create basic ContentDetail
-                    val contentDetail = com.rdwatch.androidtv.ui.details.repository.ContentDetail(
-                        id = movieId,
+                    // Fallback for interface - create basic Movie and ContentDetail
+                    val sampleMovie = com.rdwatch.androidtv.Movie(
+                        id = movieId.toLongOrNull() ?: 0L,
                         title = "Content",
-                        type = "movie",
-                        year = null,
-                        imdbId = null,
-                        tmdbId = null
+                        description = "Sample content",
+                        backgroundImageUrl = null,
+                        cardImageUrl = null,
+                        videoUrl = null,
+                        studio = null
                     )
+                    val contentDetail = MovieContentDetail.fromMovie(sampleMovie)
                     val sourcesList = mutableListOf<SourceMetadata>()
                     sourceRepository.getSources(contentDetail).collect { sourcesList.addAll(it) }
                     sourcesList
@@ -79,8 +83,9 @@ class SourceListViewModel(
                 
                 // Track successful load event
                 trackEvent(SourceSelectionEvents.SourceLoadEvent(
-                    contentId = movieId,
-                    sourceCount = sources.size,
+                    sourceId = movieId,
+                    provider = "aggregated",
+                    success = true,
                     loadTimeMs = System.currentTimeMillis()
                 ))
                 
@@ -89,9 +94,10 @@ class SourceListViewModel(
                 
                 // Track error event
                 trackEvent(SourceSelectionEvents.SourceErrorEvent(
-                    contentId = movieId,
-                    error = e.message ?: "Unknown error",
-                    timestamp = System.currentTimeMillis()
+                    sourceId = movieId,
+                    provider = "aggregated",
+                    errorType = "LoadError",
+                    errorMessage = e.message ?: "Unknown error"
                 ))
             }
         }
@@ -134,7 +140,7 @@ class SourceListViewModel(
         trackEvent(SourceSelectionEvents.SourceSelectedEvent(
             sourceId = source.id,
             provider = source.provider.name,
-            quality = source.quality.resolution.displayName,
+            position = 0, // TODO: Track actual position in list
             selectionTimeMs = System.currentTimeMillis()
         ))
     }
@@ -152,7 +158,7 @@ class SourceListViewModel(
         trackEvent(SourceSelectionEvents.SourceFilterEvent(
             filterType = getFilterType(filter),
             filterValue = getFilterValue(filter),
-            timestamp = System.currentTimeMillis()
+            resultCount = 0 // TODO: Track actual result count
         ))
     }
     
@@ -167,8 +173,8 @@ class SourceListViewModel(
         
         // Track sort event
         trackEvent(SourceSelectionEvents.SourceSortEvent(
-            sortType = sortOption.name,
-            timestamp = System.currentTimeMillis()
+            sortOption = sortOption.name,
+            sortDirection = "ASC" // TODO: Track actual sort direction
         ))
     }
     
@@ -182,7 +188,7 @@ class SourceListViewModel(
         trackEvent(SourceSelectionEvents.SourceFilterEvent(
             filterType = "quick_filter",
             filterValue = preset.name,
-            timestamp = System.currentTimeMillis()
+            resultCount = 0 // TODO: Track actual result count
         ))
     }
     
@@ -201,8 +207,9 @@ class SourceListViewModel(
         
         // Track view mode preference
         trackEvent(SourceSelectionEvents.SourceViewEvent(
-            viewMode = viewMode.name,
-            timestamp = System.currentTimeMillis()
+            viewType = viewMode.name,
+            sourceCount = 0, // TODO: Track actual source count
+            viewTimeMs = System.currentTimeMillis()
         ))
     }
     
@@ -233,8 +240,8 @@ class SourceListViewModel(
         trackEvent(SourceSelectionEvents.SourceDownloadEvent(
             sourceId = source.id,
             provider = source.provider.name,
-            quality = source.quality.resolution.displayName,
-            timestamp = System.currentTimeMillis()
+            downloadStarted = true,
+            downloadTimeMs = 0L // TODO: Track actual download time
         ))
         
         // In a real implementation, this would trigger the download manager
@@ -248,10 +255,10 @@ class SourceListViewModel(
     fun addToPlaylist(source: SourceMetadata) {
         // Track playlist event
         trackEvent(SourceSelectionEvents.SourcePlaylistEvent(
+            action = "add",
             sourceId = source.id,
             provider = source.provider.name,
-            quality = source.quality.resolution.displayName,
-            timestamp = System.currentTimeMillis()
+            playlistSize = 1 // TODO: Track actual playlist size
         ))
         
         // Learn from playlist addition
@@ -290,18 +297,17 @@ class SourceListViewModel(
     
     private fun setupDefaultPreferences() {
         val defaultPreferences = UserSortingPreferences(
-            preferredQuality = VideoResolution.RESOLUTION_1080P,
-            preferredCodecs = listOf(VideoCodec.HEVC, VideoCodec.H264),
-            preferredReleaseTypes = listOf(ReleaseType.WEB_DL, ReleaseType.BLURAY),
-            preferredProviders = emptyList(), // Will be learned from usage
-            qualityWeight = 0.3f,
-            reliabilityWeight = 0.25f,
-            sizeWeight = 0.15f,
-            speedWeight = 0.15f,
-            popularityWeight = 0.15f,
-            preferCached = true,
-            maxSizeGB = null, // No size limit by default
-            minSeeders = 5 // Minimum seeders for P2P
+            preferredResolution = VideoResolution.RESOLUTION_1080P,
+            preferredCodecs = setOf(VideoCodec.HEVC, VideoCodec.H264),
+            preferredReleaseTypes = setOf(ReleaseType.WEB_DL, ReleaseType.BLURAY),
+            preferHDR = false,
+            preferHighQualityAudio = false,
+            preferDebrid = true,
+            preferDirect = false,
+            preferP2P = false,
+            fileSizePreference = FileSizePreference.OPTIMAL,
+            preferredFileSizeGB = 8.0,
+            prioritizeCached = true
         )
         
         _userPreferences.value = defaultPreferences
@@ -313,57 +319,45 @@ class SourceListViewModel(
         
         // Learn quality preferences
         filter.minQuality?.let { minQuality ->
-            if (minQuality.ordinal > currentPrefs.preferredQuality.ordinal) {
-                updateUserPreferences(currentPrefs.copy(preferredQuality = minQuality))
+            if (minQuality.ordinal > currentPrefs.preferredResolution.ordinal) {
+                updateUserPreferences(currentPrefs.copy(preferredResolution = minQuality))
             }
         }
         
         // Learn codec preferences
         if (filter.codecs.isNotEmpty()) {
-            val updatedCodecs = (currentPrefs.preferredCodecs + filter.codecs).distinct()
+            val updatedCodecs = (currentPrefs.preferredCodecs + filter.codecs).toSet()
             updateUserPreferences(currentPrefs.copy(preferredCodecs = updatedCodecs))
         }
         
         // Learn release type preferences
         if (filter.releaseTypes.isNotEmpty()) {
-            val updatedReleaseTypes = (currentPrefs.preferredReleaseTypes + filter.releaseTypes).distinct()
+            val updatedReleaseTypes = (currentPrefs.preferredReleaseTypes + filter.releaseTypes).toSet()
             updateUserPreferences(currentPrefs.copy(preferredReleaseTypes = updatedReleaseTypes))
         }
         
         // Learn size preferences
         filter.maxSizeGB?.let { maxSize ->
-            updateUserPreferences(currentPrefs.copy(maxSizeGB = maxSize))
+            updateUserPreferences(currentPrefs.copy(preferredFileSizeGB = maxSize.toDouble()))
         }
         
-        // Learn seeder preferences
-        filter.minSeeders?.let { minSeeders ->
-            updateUserPreferences(currentPrefs.copy(minSeeders = minSeeders))
-        }
-        
-        // Learn caching preferences
+        // Learn caching preferences  
         if (filter.requireCached) {
-            updateUserPreferences(currentPrefs.copy(preferCached = true))
+            updateUserPreferences(currentPrefs.copy(prioritizeCached = true))
         }
     }
     
     private fun learnFromPlaySuccess(source: SourceMetadata) {
         val currentPrefs = _userPreferences.value
         
-        // Boost preference for this provider
-        val updatedProviders = currentPrefs.preferredProviders.toMutableList()
-        if (!updatedProviders.contains(source.provider.id)) {
-            updatedProviders.add(source.provider.id)
-            updateUserPreferences(currentPrefs.copy(preferredProviders = updatedProviders))
-        }
-        
         // Learn quality preference
-        if (source.quality.resolution.ordinal >= currentPrefs.preferredQuality.ordinal) {
-            updateUserPreferences(currentPrefs.copy(preferredQuality = source.quality.resolution))
+        if (source.quality.resolution.ordinal >= currentPrefs.preferredResolution.ordinal) {
+            updateUserPreferences(currentPrefs.copy(preferredResolution = source.quality.resolution))
         }
         
         // Learn codec preference
         if (!currentPrefs.preferredCodecs.contains(source.codec.type)) {
-            val updatedCodecs = (currentPrefs.preferredCodecs + source.codec.type).distinct()
+            val updatedCodecs = (currentPrefs.preferredCodecs + source.codec.type).toSet()
             updateUserPreferences(currentPrefs.copy(preferredCodecs = updatedCodecs))
         }
     }
@@ -372,30 +366,43 @@ class SourceListViewModel(
         val currentPrefs = _userPreferences.value
         
         // Users who download likely prefer higher quality
-        if (source.quality.resolution.ordinal > currentPrefs.preferredQuality.ordinal) {
-            updateUserPreferences(currentPrefs.copy(preferredQuality = source.quality.resolution))
+        if (source.quality.resolution.ordinal > currentPrefs.preferredResolution.ordinal) {
+            updateUserPreferences(currentPrefs.copy(preferredResolution = source.quality.resolution))
         }
-        
-        // Increase size weight for users who download
-        updateUserPreferences(currentPrefs.copy(sizeWeight = currentPrefs.sizeWeight * 1.1f))
     }
     
     private fun learnFromPlaylistAddition(source: SourceMetadata) {
         val currentPrefs = _userPreferences.value
         
-        // Users who add to playlists likely prefer reliability
-        updateUserPreferences(currentPrefs.copy(reliabilityWeight = currentPrefs.reliabilityWeight * 1.1f))
+        // Users who add to playlists likely prefer reliability - no specific parameter for this
+        // Could learn codec/resolution preferences instead
+        if (!currentPrefs.preferredCodecs.contains(source.codec.type)) {
+            val updatedCodecs = (currentPrefs.preferredCodecs + source.codec.type).toSet()
+            updateUserPreferences(currentPrefs.copy(preferredCodecs = updatedCodecs))
+        }
     }
     
     private fun updateUserSortPreference(sortOption: SourceSortOption) {
         val currentPrefs = _userPreferences.value
         
-        // Adjust weights based on sort preference
+        // Learn preferences based on sort option - no weight parameters available
         val updatedPrefs = when (sortOption) {
-            SourceSortOption.QUALITY_SCORE -> currentPrefs.copy(qualityWeight = 0.4f)
-            SourceSortOption.FILE_SIZE -> currentPrefs.copy(sizeWeight = 0.3f)
-            SourceSortOption.SEEDERS -> currentPrefs.copy(speedWeight = 0.3f)
-            SourceSortOption.PROVIDER -> currentPrefs.copy(reliabilityWeight = 0.3f)
+            SourceSortOption.QUALITY_SCORE -> {
+                // User prefers quality, enable HDR preference
+                currentPrefs.copy(preferHDR = true, preferHighQualityAudio = true)
+            }
+            SourceSortOption.FILE_SIZE -> {
+                // User cares about file size
+                currentPrefs.copy(fileSizePreference = FileSizePreference.OPTIMAL)
+            }
+            SourceSortOption.SEEDERS -> {
+                // User prefers P2P sources
+                currentPrefs.copy(preferP2P = true)
+            }
+            SourceSortOption.PROVIDER -> {
+                // User cares about providers
+                currentPrefs.copy(preferDebrid = true)
+            }
             else -> currentPrefs
         }
         
@@ -474,9 +481,9 @@ class SourceListViewModel(
             .groupBy { it.provider }
             .mapValues { it.value.size }
             .toList()
-            .sortedByDescending { it.second }
+            .sortedByDescending { (_, count) -> count }
             .take(5)
-            .map { it.first }
+            .map { (provider, _) -> provider }
     }
     
     private fun getPreferredQualities(): List<String> {
@@ -484,9 +491,9 @@ class SourceListViewModel(
             .groupBy { it.quality }
             .mapValues { it.value.size }
             .toList()
-            .sortedByDescending { it.second }
+            .sortedByDescending { (_, count): Pair<String, Int> -> count }
             .take(3)
-            .map { it.first }
+            .map { (quality: String, _: Int) -> quality }
     }
 }
 

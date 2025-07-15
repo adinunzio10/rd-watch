@@ -372,5 +372,17 @@ enum class RecommendationType {
 }
 
 enum class RecommendationPriority {
-    HIGH, MEDIUM, LOW
+    HIGH, MEDIUM, LOW, CRITICAL
 }
+
+/**
+ * Simple analytics data for AdvancedSourceManager
+ */
+data class SourceManagerAnalytics(
+    val cacheStatistics: Any?,
+    val monitoringStatistics: Any?,
+    val totalSourcesProcessed: Int,
+    val averageProcessingTimeMs: Long,
+    val healthPredictionAccuracy: Float,
+    val recommendationEffectiveness: Float
+)

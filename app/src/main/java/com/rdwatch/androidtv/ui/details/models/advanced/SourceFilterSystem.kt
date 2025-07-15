@@ -122,7 +122,7 @@ class SourceFilterSystem {
         filters.minBitrate?.let { minBitrate ->
             source.quality.bitrate?.let { bitrate ->
                 if (bitrate < minBitrate) return false
-            } ?: if (filters.requireBitrateInfo) return false
+            } ?: if (filters.requireBitrateInfo) return false else Unit
         }
         
         filters.maxBitrate?.let { maxBitrate ->
@@ -135,7 +135,7 @@ class SourceFilterSystem {
         filters.minFrameRate?.let { minFps ->
             source.quality.frameRate?.let { fps ->
                 if (fps < minFps) return false
-            } ?: if (filters.requireFrameRateInfo) return false
+            } ?: if (filters.requireFrameRateInfo) return false else Unit
         }
         
         filters.maxFrameRate?.let { maxFps ->
@@ -169,14 +169,14 @@ class SourceFilterSystem {
         if (filters.allowedDebridServices.isNotEmpty()) {
             source.availability.debridService?.let { service ->
                 if (service !in filters.allowedDebridServices) return false
-            } ?: if (filters.requireDebridService) return false
+            } ?: if (filters.requireDebridService) return false else Unit
         }
         
         // Region filters
         if (filters.allowedRegions.isNotEmpty()) {
             source.availability.region?.let { region ->
                 if (region !in filters.allowedRegions) return false
-            } ?: if (filters.requireRegionInfo) return false
+            } ?: if (filters.requireRegionInfo) return false else Unit
         }
         
         return true
@@ -190,7 +190,7 @@ class SourceFilterSystem {
         filters.minSeeders?.let { minSeeders ->
             source.health.seeders?.let { seeders ->
                 if (seeders < minSeeders) return false
-            } ?: if (filters.requireSeederInfo) return false
+            } ?: if (filters.requireSeederInfo) return false else Unit
         }
         
         // Maximum leechers
@@ -218,7 +218,7 @@ class SourceFilterSystem {
         filters.minAvailability?.let { minAvail ->
             source.health.availability?.let { availability ->
                 if (availability < minAvail) return false
-            } ?: if (filters.requireAvailabilityInfo) return false
+            } ?: if (filters.requireAvailabilityInfo) return false else Unit
         }
         
         // Health status filter
@@ -251,7 +251,7 @@ class SourceFilterSystem {
                 if (sizeGB < min || sizeGB > max) return false
             }
             
-        } ?: if (filters.requireSizeInfo) return false
+        } ?: if (filters.requireSizeInfo) return false else Unit
         
         return true
     }
@@ -308,21 +308,21 @@ class SourceFilterSystem {
             source.audio.channels?.let { channels ->
                 val channelCount = extractChannelCount(channels)
                 if (channelCount < minChannels) return false
-            } ?: if (filters.requireChannelInfo) return false
+            } ?: if (filters.requireChannelInfo) return false else Unit
         }
         
         // Audio bitrate filters
         filters.minAudioBitrate?.let { minBitrate ->
             source.audio.bitrate?.let { bitrate ->
                 if (bitrate < minBitrate) return false
-            } ?: if (filters.requireBitrateInfo) return false
+            } ?: if (filters.requireBitrateInfo) return false else Unit
         }
         
         // Language filters
         if (filters.allowedLanguages.isNotEmpty()) {
             source.audio.language?.let { language ->
                 if (language !in filters.allowedLanguages) return false
-            } ?: if (filters.requireLanguageInfo) return false
+            } ?: if (filters.requireLanguageInfo) return false else Unit
         }
         
         return true
@@ -355,7 +355,7 @@ class SourceFilterSystem {
         if (filters.allowedGroups.isNotEmpty()) {
             source.release.group?.let { group ->
                 if (group.uppercase() !in filters.allowedGroups.map { it.uppercase() }) return false
-            } ?: if (filters.requireGroupInfo) return false
+            } ?: if (filters.requireGroupInfo) return false else Unit
         }
         
         if (filters.excludedGroups.isNotEmpty()) {
@@ -418,7 +418,7 @@ class SourceFilterSystem {
                 if (addedDate.before(threeDaysAgo)) return false
             }
             
-        } ?: if (filters.requireDateInfo) return false
+        } ?: if (filters.requireDateInfo) return false else Unit
         
         return true
     }
@@ -501,6 +501,39 @@ class SourceFilterSystem {
                         sourceTypeFilters = filter.sourceTypeFilters.copy(cachedOnly = false),
                         healthFilters = filter.healthFilters.copy(requireSeederInfo = false),
                         fileSizeFilters = filter.fileSizeFilters.copy(requireSizeInfo = false)
+                    )
+                    val relaxedResult = filterSources(originalSources, relaxedFilter).filteredSources
+                    if (relaxedResult.isNotEmpty()) return relaxedResult
+                }
+                
+                ConflictResolutionStrategy.EXPAND_PROVIDERS -> {
+                    // Allow more provider types
+                    val relaxedFilter = filter.copy(
+                        providerFilters = filter.providerFilters.copy(
+                            allowedProviders = emptySet(), // Allow all providers
+                            excludedProviders = emptySet()
+                        )
+                    )
+                    val relaxedResult = filterSources(originalSources, relaxedFilter).filteredSources
+                    if (relaxedResult.isNotEmpty()) return relaxedResult
+                }
+                
+                ConflictResolutionStrategy.IGNORE_MISSING_INFO -> {
+                    // Don't require metadata fields
+                    val relaxedFilter = filter.copy(
+                        qualityFilters = filter.qualityFilters.copy(requireBitrateInfo = false),
+                        healthFilters = filter.healthFilters.copy(
+                            requireSeederInfo = false,
+                            requireAvailabilityInfo = false
+                        ),
+                        fileSizeFilters = filter.fileSizeFilters.copy(requireSizeInfo = false),
+                        audioFilters = filter.audioFilters.copy(
+                            requireChannelInfo = false,
+                            requireBitrateInfo = false,
+                            requireLanguageInfo = false
+                        ),
+                        releaseTypeFilters = filter.releaseTypeFilters.copy(requireGroupInfo = false),
+                        ageFilters = filter.ageFilters.copy(requireDateInfo = false)
                     )
                     val relaxedResult = filterSources(originalSources, relaxedFilter).filteredSources
                     if (relaxedResult.isNotEmpty()) return relaxedResult
