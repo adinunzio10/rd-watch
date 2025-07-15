@@ -24,11 +24,7 @@ jobs:
         uses: anthropics/claude-code-action@beta
         with:
           anthropic_api_key: ${{ secrets.CLAUDE_API_KEY }}
-          
-          # Direct prompt adapted from .claude/commands/review-and-comment.md
           direct_prompt: |
-            You are an expert code reviewer. Analyze this pull request and provide a thorough code review that includes:
-            
             **Overview Analysis:**
             - What this PR accomplishes
             - Analysis of code quality and style
