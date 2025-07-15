@@ -67,7 +67,7 @@ fun EpisodesTabScreen(
                 uiState = episodeGridUiState,
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 32.dp, vertical = 16.dp)
+                    .padding(horizontal = 24.dp, vertical = 12.dp)
             )
         } ?: run {
             // No seasons available - show empty state

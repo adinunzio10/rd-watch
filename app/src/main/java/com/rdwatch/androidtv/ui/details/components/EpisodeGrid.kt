@@ -63,9 +63,9 @@ fun EpisodeGrid(
     // Calculate grid columns based on screen size and layout
     val columns = when (layout) {
         EpisodeGridLayout.GRID -> when {
-            screenWidth >= 1920 -> 4
-            screenWidth >= 1280 -> 3
-            else -> 2
+            screenWidth >= 1920 -> 5
+            screenWidth >= 1280 -> 4
+            else -> 3
         }
         EpisodeGridLayout.COMPACT -> when {
             screenWidth >= 1920 -> 6
@@ -158,9 +158,9 @@ private fun EpisodeGridLayout(
     LazyVerticalGrid(
         columns = GridCells.Fixed(columns),
         state = gridState,
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-        contentPadding = PaddingValues(16.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+        contentPadding = PaddingValues(12.dp),
         modifier = Modifier
             .fillMaxWidth()
             .tvFocusRequester(focusRequester, requestInitialFocus)

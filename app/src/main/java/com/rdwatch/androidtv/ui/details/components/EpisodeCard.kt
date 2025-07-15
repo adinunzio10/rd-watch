@@ -52,8 +52,8 @@ fun EpisodeCard(
     
     Card(
         modifier = modifier
-            .width(280.dp)
-            .height(180.dp) // Increased height for better text visibility
+            .width(240.dp)
+            .height(140.dp) // Optimized for better screen utilization
             .tvCardFocus(focused, onClick)
             .tvFocusable(onFocusChanged = { focused = it.isFocused })
             .clickable(onClick = onClick),
@@ -72,7 +72,7 @@ fun EpisodeCard(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(100.dp)
+                    .height(80.dp)
                     .clip(RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp))
             ) {
                 // Episode thumbnail
@@ -178,7 +178,7 @@ fun EpisodeCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f) // Take remaining space
-                    .padding(horizontal = 12.dp, vertical = 8.dp)
+                    .padding(horizontal = 10.dp, vertical = 6.dp)
             ) {
                 // Episode title
                 Text(

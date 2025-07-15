@@ -45,7 +45,7 @@ fun EpisodeGridSection(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = 16.dp)
+            .padding(vertical = 12.dp)
     ) {
         // Section title
         Text(
@@ -64,7 +64,7 @@ fun EpisodeGridSection(
                     selectedSeasonNumber = selectedSeasonNumber,
                     onSeasonSelected = onSeasonSelected,
                     showProgress = showProgress,
-                    modifier = Modifier.padding(bottom = 16.dp)
+                    modifier = Modifier.padding(bottom = 12.dp)
                 )
             } else {
                 SeasonSelector(
@@ -74,7 +74,7 @@ fun EpisodeGridSection(
                     selectedSeason = tvShowDetail.seasons.find { it.seasonNumber == selectedSeasonNumber },
                     showProgress = showProgress,
                     isLoading = uiState.isLoading,
-                    modifier = Modifier.padding(bottom = 24.dp)
+                    modifier = Modifier.padding(bottom = 18.dp)
                 )
             }
         }
