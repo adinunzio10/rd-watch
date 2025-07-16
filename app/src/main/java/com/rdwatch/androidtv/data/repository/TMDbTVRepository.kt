@@ -8,6 +8,7 @@ import com.rdwatch.androidtv.network.models.tmdb.TMDbTVVideosResponse
 import com.rdwatch.androidtv.network.models.tmdb.TMDbSearchResponse
 import com.rdwatch.androidtv.network.models.tmdb.TMDbSeasonResponse
 import com.rdwatch.androidtv.network.models.tmdb.TMDbEpisodeResponse
+import com.rdwatch.androidtv.network.models.tmdb.TMDbExternalIdsResponse
 import com.rdwatch.androidtv.repository.base.Result
 import com.rdwatch.androidtv.ui.details.models.ContentDetail
 import kotlinx.coroutines.flow.Flow
@@ -112,6 +113,17 @@ interface TMDbTVRepository {
         forceRefresh: Boolean = false,
         language: String = "en-US"
     ): Flow<Result<TMDbTVVideosResponse>>
+    
+    /**
+     * Get TV show external IDs (IMDb ID, TVDB ID, etc.)
+     * @param tvId TMDb TV show ID
+     * @param forceRefresh Force refresh from network
+     * @return Flow of Result containing external IDs
+     */
+    fun getTVExternalIds(
+        tvId: Int,
+        forceRefresh: Boolean = false
+    ): Flow<Result<TMDbExternalIdsResponse>>
     
     /**
      * Get season details

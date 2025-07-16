@@ -67,11 +67,11 @@ class TMDbTVRepositoryImpl @Inject constructor(
         getTVDetails(tvId, forceRefresh, language).map { result ->
             when (result) {
                 is Result.Success -> {
-                    // Use the mappers package version that includes seasons data
+                    // Use the ContentDetailMapper to create the proper ContentDetail with imdbId support
                     val contentDetail = result.data?.let { tvResponse ->
-                        TMDbTVContentDetail(tvResponse)
+                        contentDetailMapper.mapTVToContentDetail(tvResponse)
                     }
-                    Result.Success(contentDetail ?: TMDbTVContentDetail(result.data!!))
+                    Result.Success(contentDetail ?: contentDetailMapper.mapTVToContentDetail(result.data!!))
                 }
                 is Result.Error -> Result.Error(result.exception)
                 is Result.Loading -> Result.Loading
@@ -227,6 +227,20 @@ class TMDbTVRepositoryImpl @Inject constructor(
         saveCallResult = { videosResponse ->
             tmdbSearchDao.insertVideos(videosResponse.toEntity(tvId, "tv"))
         }
+    )
+
+    override fun getTVExternalIds(
+        tvId: Int,
+        forceRefresh: Boolean
+    ): Flow<Result<TMDbExternalIdsResponse>> = networkBoundResource(
+        loadFromDb = {
+            flowOf(TMDbExternalIdsResponse()) // No caching for external IDs for now - lightweight API call
+        },
+        shouldFetch = { true }, // Always fetch for now since we're not caching
+        createCall = {
+            awaitApiResponse(tmdbTVService.getTVExternalIds(tvId))
+        },
+        saveCallResult = { } // No caching for now
     )
 
     override fun getSeasonDetails(

@@ -151,6 +151,7 @@ class TVDetailsViewModel @Inject constructor(
                                         homepage = contentDetail.homepage,
                                         tagline = null, // Not available in this model
                                         inProduction = contentDetail.inProduction ?: false,
+                                        imdbId = contentDetail.imdbId,
                                         episodeRunTime = emptyList(), // TODO: Parse from TMDb data
                                         lastEpisodeToAir = null, // TODO: Load from TMDb
                                         nextEpisodeToAir = null // TODO: Load from TMDb
@@ -186,6 +187,7 @@ class TVDetailsViewModel @Inject constructor(
                                         homepage = contentDetail.getHomepage(),
                                         tagline = contentDetail.getTagline(),
                                         inProduction = contentDetail.isInProduction(),
+                                        imdbId = null, // IMDb ID will be fetched separately below
                                         episodeRunTime = contentDetail.getEpisodeRunTime(),
                                         lastEpisodeToAir = contentDetail.getLastEpisodeToAir()?.let { mapTMDbEpisodeToTVEpisode(it) },
                                         nextEpisodeToAir = contentDetail.getNextEpisodeToAir()?.let { mapTMDbEpisodeToTVEpisode(it) }
@@ -210,7 +212,8 @@ class TVDetailsViewModel @Inject constructor(
                                         seasons = emptyList(),
                                         networks = listOf(contentDetail.metadata.studio ?: "Unknown"),
                                         voteAverage = 0f,
-                                        voteCount = 0
+                                        voteCount = 0,
+                                        imdbId = null
                                     )
                                 }
                             }
@@ -218,6 +221,9 @@ class TVDetailsViewModel @Inject constructor(
                             val tvShowDetail = TVShowContentDetail.from(tmdbTvDetail)
                             
                             _tvShowState.value = tvShowDetail
+                            
+                            // Fetch external IDs to get IMDb ID for source scraping
+                            fetchAndUpdateIMDbId(tvShowId.toInt(), tvShowDetail)
                             
                             // Select first season by default
                             val firstSeason = tvShowDetail.getSeasons().firstOrNull()
@@ -1313,7 +1319,7 @@ class TVDetailsViewModel @Inject constructor(
                     tvShowId = tvShow.id,
                     seasonNumber = episode.seasonNumber,
                     episodeNumber = episode.episodeNumber,
-                    imdbId = null, // TMDb TV shows don't have IMDb IDs in this model
+                    imdbId = tvShow.getTVShowDetail().imdbId,
                     tmdbId = tvShow.id
                 )
                 
@@ -1388,7 +1394,7 @@ class TVDetailsViewModel @Inject constructor(
                     tvShowId = tvShow.id,
                     seasonNumber = episode.seasonNumber,
                     episodeNumber = episode.episodeNumber,
-                    imdbId = null,
+                    imdbId = tvShow.getTVShowDetail().imdbId,
                     tmdbId = tvShow.id
                 )
                 
@@ -1729,6 +1735,37 @@ class TVDetailsViewModel @Inject constructor(
     
     private fun mapTMDbEpisodeToTVEpisode(tmdbEpisode: com.rdwatch.androidtv.network.models.tmdb.TMDbEpisodeResponse, seasonNumber: Int? = null): TVEpisode {
         return TMDbMapper.mapEpisodeToTVEpisode(tmdbEpisode, seasonNumber)
+    }
+    
+    /**
+     * Fetch external IDs from TMDb to get IMDb ID and update TV show detail
+     */
+    private fun fetchAndUpdateIMDbId(tmdbId: Int, currentTvShow: TVShowContentDetail) {
+        viewModelScope.launch {
+            tmdbTVRepository.getTVExternalIds(tmdbId).collect { result ->
+                when (result) {
+                    is Result.Success -> {
+                        result.data?.imdbId?.let { imdbId ->
+                            // Update the TV show with the fetched IMDb ID
+                            val updatedTvShowDetail = currentTvShow.getTVShowDetail().copy(imdbId = imdbId)
+                            val updatedTvShow = currentTvShow.withTVShowDetail(updatedTvShowDetail)
+                            
+                            _tvShowState.value = updatedTvShow
+                            updateState { copy(tvShow = updatedTvShow) }
+                            
+                            android.util.Log.d("TVDetailsViewModel", "Updated TV show ${currentTvShow.getDisplayTitle()} with IMDb ID: $imdbId")
+                        }
+                    }
+                    is Result.Error -> {
+                        android.util.Log.w("TVDetailsViewModel", "Failed to fetch external IDs for TV show: ${result.exception?.message}")
+                        // Continue without IMDb ID - sources may still work with TMDb ID for some providers
+                    }
+                    is Result.Loading -> {
+                        // Continue loading
+                    }
+                }
+            }
+        }
     }
 }
 

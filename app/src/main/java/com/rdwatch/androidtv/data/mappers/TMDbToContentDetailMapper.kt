@@ -56,9 +56,13 @@ class TMDbToContentDetailMapper @Inject constructor() {
     /**
      * Maps TMDb TV response to ContentDetail
      * @param tvResponse TMDb TV response
+     * @param externalIds Optional external IDs response containing IMDb ID
      * @return ContentDetail for UI consumption
      */
-    fun mapTVToContentDetail(tvResponse: TMDbTVResponse): ContentDetail {
+    fun mapTVToContentDetail(
+        tvResponse: TMDbTVResponse, 
+        externalIds: com.rdwatch.androidtv.network.models.tmdb.TMDbExternalIdsResponse? = null
+    ): ContentDetail {
         return TMDbTVContentDetail(
             id = "tmdb_tv_${tvResponse.id}",
             tmdbId = tvResponse.id,
@@ -71,6 +75,7 @@ class TMDbToContentDetailMapper @Inject constructor() {
             cardImageUrl = tvResponse.posterPath?.let { 
                 "${TMDbMovieService.IMAGE_BASE_URL}${TMDbMovieService.POSTER_SIZE}$it" 
             },
+            videoUrl = null, // TMDb doesn't provide direct video URLs
             firstAirDate = tvResponse.firstAirDate,
             lastAirDate = tvResponse.lastAirDate,
             voteAverage = tvResponse.voteAverage.toFloat(),
@@ -85,12 +90,12 @@ class TMDbToContentDetailMapper @Inject constructor() {
             type = tvResponse.type,
             homepage = tvResponse.homepage,
             inProduction = tvResponse.inProduction,
+            imdbId = externalIds?.imdbId, // Now fetched from external IDs endpoint!
             networks = tvResponse.networks.map { it.name },
             originCountry = tvResponse.originCountry,
             productionCompanies = tvResponse.productionCompanies.map { it.name },
             productionCountries = tvResponse.productionCountries.map { it.name },
-            spokenLanguages = tvResponse.spokenLanguages.map { it.name },
-            videoUrl = null // TMDb doesn't provide direct video URLs
+            spokenLanguages = tvResponse.spokenLanguages.map { it.name }
         )
     }
     
@@ -185,6 +190,7 @@ class TMDbToContentDetailMapper @Inject constructor() {
                     cardImageUrl = multiSearchResult.posterPath?.let { 
                         "${TMDbMovieService.IMAGE_BASE_URL}${TMDbMovieService.POSTER_SIZE}$it" 
                     },
+                    videoUrl = null, // TMDb doesn't provide direct video URLs
                     firstAirDate = multiSearchResult.firstAirDate,
                     lastAirDate = null, // Not available in search results
                     voteAverage = multiSearchResult.voteAverage.toFloat(),
@@ -199,12 +205,12 @@ class TMDbToContentDetailMapper @Inject constructor() {
                     type = null, // Not available in search results
                     homepage = null, // Not available in search results
                     inProduction = null, // Not available in search results
+                    imdbId = null, // TODO: Fetch from external IDs endpoint for TV shows
                     networks = emptyList(), // Not available in search results
                     originCountry = multiSearchResult.originCountry,
                     productionCompanies = emptyList(), // Not available in search results
                     productionCountries = emptyList(), // Not available in search results
-                    spokenLanguages = emptyList(), // Not available in search results
-                    videoUrl = null // TMDb doesn't provide direct video URLs
+                    spokenLanguages = emptyList() // Not available in search results
                 )
             }
             "person" -> {
@@ -279,6 +285,7 @@ class TMDbToContentDetailMapper @Inject constructor() {
                 cardImageUrl = searchResult.posterPath?.let { 
                     "${TMDbMovieService.IMAGE_BASE_URL}${TMDbMovieService.POSTER_SIZE}$it" 
                 },
+                videoUrl = null, // TMDb doesn't provide direct video URLs
                 firstAirDate = searchResult.firstAirDate,
                 lastAirDate = null, // Not available in search results
                 voteAverage = searchResult.voteAverage.toFloat(),
@@ -293,12 +300,12 @@ class TMDbToContentDetailMapper @Inject constructor() {
                 type = null, // Not available in search results
                 homepage = null, // Not available in search results
                 inProduction = null, // Not available in search results
+                imdbId = null, // TODO: Fetch from external IDs endpoint for TV shows
                 networks = emptyList(), // Not available in search results
                 originCountry = searchResult.originCountry,
                 productionCompanies = emptyList(), // Not available in search results
                 productionCountries = emptyList(), // Not available in search results
-                spokenLanguages = emptyList(), // Not available in search results
-                videoUrl = null // TMDb doesn't provide direct video URLs
+                spokenLanguages = emptyList() // Not available in search results
             )
         }
     }

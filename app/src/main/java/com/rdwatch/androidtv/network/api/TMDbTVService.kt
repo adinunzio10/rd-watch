@@ -8,6 +8,7 @@ import com.rdwatch.androidtv.network.models.tmdb.TMDbTVImagesResponse
 import com.rdwatch.androidtv.network.models.tmdb.TMDbTVVideosResponse
 import com.rdwatch.androidtv.network.models.tmdb.TMDbSeasonResponse
 import com.rdwatch.androidtv.network.models.tmdb.TMDbEpisodeResponse
+import com.rdwatch.androidtv.network.models.tmdb.TMDbExternalIdsResponse
 import retrofit2.Call
 import retrofit2.http.GET
 import retrofit2.http.Path
@@ -90,6 +91,16 @@ interface TMDbTVService {
         @Path("tv_id") tvId: Int,
         @Query("language") language: String = "en-US"
     ): Call<ApiResponse<TMDbTVVideosResponse>>
+    
+    /**
+     * Get TV show external IDs (IMDb ID, TVDB ID, etc.)
+     * @param tvId TMDb TV show ID
+     * @return External IDs including IMDb ID needed for source scraping
+     */
+    @GET("tv/{tv_id}/external_ids")
+    fun getTVExternalIds(
+        @Path("tv_id") tvId: Int
+    ): Call<ApiResponse<TMDbExternalIdsResponse>>
     
     /**
      * Get TV show season details

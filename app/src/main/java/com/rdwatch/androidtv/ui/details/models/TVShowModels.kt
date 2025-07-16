@@ -162,6 +162,7 @@ data class TVShowDetail(
     val homepage: String? = null,
     val tagline: String? = null,
     val inProduction: Boolean = false,
+    val imdbId: String? = null,
     val episodeRunTime: List<Int> = emptyList(),
     val lastEpisodeToAir: TVEpisode? = null,
     val nextEpisodeToAir: TVEpisode? = null

@@ -157,6 +157,7 @@ data class TMDbTVContentDetail(
     val type: String?,
     val homepage: String?,
     val inProduction: Boolean?,
+    val imdbId: String?,
     val networks: List<String>,
     val originCountry: List<String>,
     val productionCompanies: List<String>,
@@ -203,6 +204,12 @@ data class TMDbTVContentDetail(
                     // Would open homepage URL
                 })
             }
+            
+            imdbId?.let {
+                add(ContentAction.Custom("View on IMDb", "tv") { 
+                    // Would open IMDb page
+                })
+            }
         }
     }
     
@@ -230,6 +237,7 @@ data class TMDbTVContentDetail(
             numberOfEpisodes?.let { put("episodes", it.toString()) }
             inProduction?.let { put("in_production", it.toString()) }
             homepage?.let { put("homepage", it) }
+            imdbId?.let { put("imdb_id", it) }
             originCountry.firstOrNull()?.let { put("country", it) }
             if (networks.isNotEmpty()) put("networks", networks.joinToString(", "))
             if (lastAirDate != null) put("last_air_date", lastAirDate)
