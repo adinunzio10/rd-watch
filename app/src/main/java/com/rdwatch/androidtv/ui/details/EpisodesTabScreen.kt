@@ -76,17 +76,10 @@ fun EpisodesTabScreen(
                     }
                 },
                 onEpisodeClick = { episode ->
-                    // Enhanced episode click handler with source selection
-                    val episodeKey = "${episode.seasonNumber}-${episode.episodeNumber}"
-                    val availableSources = episodeSourcesMap[episodeKey] ?: emptyList()
-                    
-                    if (availableSources.isNotEmpty()) {
-                        // If sources available, show source selection
-                        viewModel.selectSourcesForEpisode(episode)
-                    } else {
-                        // Otherwise, select episode normally and load sources
-                        onEpisodeSelected(episode)
-                    }
+                    // Always trigger advanced source selection on episode click
+                    // The selectSourcesForEpisode method will handle loading sources if needed
+                    onEpisodeSelected(episode) // Update selected episode state
+                    viewModel.selectSourcesForEpisode(episode) // Always show source selection
                 },
                 uiState = episodeGridUiState,
                 episodeSourcesMap = episodeSourcesMap, // Pass source data to grid

@@ -1426,24 +1426,54 @@ class TVDetailsViewModel @Inject constructor(
     
     /**
      * Trigger source selection UI for an episode
+     * Enhanced with defensive checks following movie pattern
      */
     fun selectSourcesForEpisode(episode: TVEpisode) {
-        val sources = getSourcesForEpisode(episode)
-        if (sources.isEmpty()) {
-            // Load sources first if not available
-            _tvShowState.value?.let { tvShow ->
-                loadAdvancedSourcesForEpisode(tvShow, episode)
-            }
+        android.util.Log.d("TVDetailsViewModel", "=== Select Sources for Episode ===")
+        android.util.Log.d("TVDetailsViewModel", "Episode: S${episode.seasonNumber}E${episode.episodeNumber} - ${episode.title}")
+        
+        val tvShow = _tvShowState.value
+        if (tvShow == null) {
+            android.util.Log.w("TVDetailsViewModel", "Cannot select sources: no TV show loaded")
+            return
         }
         
-        // Update source selection state
-        _sourceSelectionState.value = SourceSelectionState(
-            sources = sources,
-            filteredSources = sources,
-            selectedEpisode = episode
-        )
+        // Check if already showing source selection for this episode
+        val currentState = _sourceSelectionState.value
+        if (_showSourceSelection.value && currentState.selectedEpisode?.id == episode.id) {
+            android.util.Log.d("TVDetailsViewModel", "Source selection already showing for this episode")
+            return
+        }
         
+        val sources = getSourcesForEpisode(episode)
+        android.util.Log.d("TVDetailsViewModel", "Available sources: ${sources.size}")
+        
+        if (sources.isEmpty()) {
+            android.util.Log.d("TVDetailsViewModel", "No sources available, loading sources first")
+            // Load sources first, then trigger selection automatically
+            loadAdvancedSourcesForEpisode(tvShow, episode)
+            
+            // Set state to show loading while sources are being fetched
+            _sourceSelectionState.value = SourceSelectionState(
+                sources = emptyList(),
+                filteredSources = emptyList(),
+                selectedEpisode = episode,
+                isLoading = true
+            )
+        } else {
+            android.util.Log.d("TVDetailsViewModel", "Using existing sources for episode")
+            // Update source selection state with available sources
+            _sourceSelectionState.value = SourceSelectionState(
+                sources = sources,
+                filteredSources = sources,
+                selectedEpisode = episode,
+                isLoading = false
+            )
+        }
+        
+        // Always show the source selection UI
         _showSourceSelection.value = true
+        android.util.Log.d("TVDetailsViewModel", "Source selection UI triggered")
     }
     
     /**

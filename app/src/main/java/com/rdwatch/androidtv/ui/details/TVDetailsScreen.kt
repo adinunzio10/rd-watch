@@ -112,14 +112,9 @@ fun TVDetailsScreen(
                         playbackViewModel = playbackViewModel,
                         onActionClick = { action ->
                             when (action) {
-                                is ContentAction.Play -> {
-                                    selectedEpisode?.let { episode -> onPlayClick(episode) }
-                                            ?: run {
-                                                tvShow.getNextEpisode()?.let { episode ->
-                                                    onPlayClick(episode)
-                                                }
-                                            }
-                                }
+                                // TODO: Determine which episode to show advanced source selection for
+                                // Should consider: selected episode, next unwatched episode, or first episode
+                                // Remove ContentAction.Play - now handled by episode-specific source selection
                                 is ContentAction.AddToWatchlist -> {
                                     viewModel.toggleWatchlist(tvShow.id)
                                 }
