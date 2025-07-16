@@ -70,19 +70,28 @@ class TMDbTVRepositoryImpl @Inject constructor(
                     val contentDetail = result.data?.let { tvResponse ->
                         try {
                             // Fetch external IDs concurrently
-                            val externalIdsFlow = getTVExternalIds(tvId, forceRefresh)
-                            var externalIds: com.rdwatch.androidtv.network.models.tmdb.TMDbExternalIdsResponse? = null
-                            runBlocking {
-                                externalIdsFlow.collect { externalIdsResult ->
-                                    when (externalIdsResult) {
-                                        is Result.Success -> externalIds = externalIdsResult.data
-                                        else -> { /* Continue without external IDs */ }
+                            val externalIds = runBlocking {
+                                val externalIdsResult = getTVExternalIds(tvId, forceRefresh).first()
+                                when (externalIdsResult) {
+                                    is Result.Success -> {
+                                        android.util.Log.d("TMDbTVRepository", "External IDs fetched successfully: ${externalIdsResult.data?.imdbId}")
+                                        externalIdsResult.data
+                                    }
+                                    is Result.Error -> {
+                                        android.util.Log.w("TMDbTVRepository", "External IDs fetch failed: ${externalIdsResult.exception?.message}")
+                                        null
+                                    }
+                                    is Result.Loading -> {
+                                        android.util.Log.w("TMDbTVRepository", "External IDs still loading, using null")
+                                        null
                                     }
                                 }
                             }
+                            android.util.Log.d("TMDbTVRepository", "Creating content detail with IMDB ID: ${externalIds?.imdbId}")
                             contentDetailMapper.mapTVToContentDetail(tvResponse, externalIds)
                         } catch (e: Exception) {
                             // Fallback to mapping without external IDs
+                            android.util.Log.w("TMDbTVRepository", "Exception during external IDs fetch: ${e.message}")
                             contentDetailMapper.mapTVToContentDetail(tvResponse)
                         }
                     }
