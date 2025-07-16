@@ -666,6 +666,9 @@ class MovieDetailsViewModel @Inject constructor(
                 
                 android.util.Log.d("MovieDetailsViewModel", "Loaded ${processedSources.size} advanced sources for movie")
                 
+                // Now trigger the advanced source selection UI with the processed sources
+                selectAdvancedSources()
+                
             } catch (e: Exception) {
                 android.util.Log.e("MovieDetailsViewModel", "Failed to load advanced sources: ${e.message}")
             }
@@ -678,6 +681,12 @@ class MovieDetailsViewModel @Inject constructor(
     fun selectAdvancedSources() {
         val sources = _advancedSources.value
         println("DEBUG [MovieDetailsViewModel]: selectAdvancedSources() called with ${sources.size} sources")
+        
+        if (sources.isEmpty()) {
+            println("DEBUG [MovieDetailsViewModel]: WARNING - No advanced sources available, skipping UI trigger")
+            return
+        }
+        
         sources.forEach { source ->
             println("DEBUG [MovieDetailsViewModel]: Advanced Source: ${source.provider.displayName} - ${source.quality.resolution.shortName}")
         }
@@ -689,7 +698,7 @@ class MovieDetailsViewModel @Inject constructor(
         )
         
         _showSourceSelection.value = true
-        println("DEBUG [MovieDetailsViewModel]: Advanced source selection UI triggered")
+        println("DEBUG [MovieDetailsViewModel]: Advanced source selection UI triggered with ${sources.size} sources")
     }
     
     /**

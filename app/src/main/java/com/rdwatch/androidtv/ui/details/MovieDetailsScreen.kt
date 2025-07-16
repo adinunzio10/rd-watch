@@ -82,17 +82,6 @@ fun MovieDetailsScreen(
         viewModel.loadMovieDetails(movieId)
     }
     
-    // Auto-trigger advanced source selection when sources are loaded
-    LaunchedEffect(sourcesState) {
-        if (sourcesState is UiState.Success) {
-            val sources = (sourcesState as UiState.Success).data
-            println("DEBUG [MovieDetailsScreen]: Auto-trigger LaunchedEffect - received ${sources.size} sources")
-            if (sources.isNotEmpty()) {
-                println("DEBUG [MovieDetailsScreen]: Triggering advanced source selection UI")
-                viewModel.selectAdvancedSources()
-            }
-        }
-    }
     
     // Get the movie from the ViewModel state
     val movie = uiState.movie
