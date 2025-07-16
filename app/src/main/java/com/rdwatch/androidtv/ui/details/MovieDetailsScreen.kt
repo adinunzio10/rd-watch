@@ -323,42 +323,11 @@ fun MovieDetailsScreen(
                                         )
                                     }
                                     
-                                    // Show basic sources for fallback
-                                    LazyRow(
-                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
-                                    ) {
-                                        items(sources.take(4)) { source -> // Show max 4 sources as preview
-                                            Surface(
-                                                modifier = Modifier
-                                                    .width(120.dp)
-                                                    .height(60.dp),
-                                                shape = RoundedCornerShape(6.dp),
-                                                color = MaterialTheme.colorScheme.surface,
-                                                tonalElevation = 2.dp
-                                            ) {
-                                                Column(
-                                                    modifier = Modifier
-                                                        .fillMaxSize()
-                                                        .padding(8.dp),
-                                                    verticalArrangement = Arrangement.Center,
-                                                    horizontalAlignment = Alignment.CenterHorizontally
-                                                ) {
-                                                    Text(
-                                                        text = source.provider.displayName,
-                                                        style = MaterialTheme.typography.bodySmall,
-                                                        color = MaterialTheme.colorScheme.onSurface,
-                                                        fontWeight = FontWeight.Medium,
-                                                        maxLines = 1,
-                                                        overflow = TextOverflow.Ellipsis
-                                                    )
-                                                    Text(
-                                                        text = source.quality.displayName,
-                                                        style = MaterialTheme.typography.labelSmall,
-                                                        color = MaterialTheme.colorScheme.primary
-                                                    )
-                                                }
-                                            }
+                                    // Auto-trigger advanced source selection when sources are loaded
+                                    LaunchedEffect(sources) {
+                                        if (sources.isNotEmpty()) {
+                                            // Trigger advanced source selection UI
+                                            viewModel.selectAdvancedSources()
                                         }
                                     }
                                 } else {
