@@ -113,7 +113,9 @@ fun EpisodeGrid(
                     onLoadMore = onLoadMore,
                     focusedEpisodeId = focusedEpisodeId,
                     onFocusedEpisodeChanged = onFocusedEpisodeChanged,
-                    requestInitialFocus = requestInitialFocus
+                    requestInitialFocus = requestInitialFocus,
+                    episodeSourcesMap = episodeSourcesMap,
+                    onEpisodeSourceSelection = onEpisodeSourceSelection
                 )
             }
         }
@@ -147,7 +149,9 @@ private fun EpisodeGridLayout(
     onLoadMore: (() -> Unit)?,
     focusedEpisodeId: String?,
     onFocusedEpisodeChanged: ((String?) -> Unit)?,
-    requestInitialFocus: Boolean
+    requestInitialFocus: Boolean,
+    episodeSourcesMap: Map<String, List<SourceMetadata>> = emptyMap(),
+    onEpisodeSourceSelection: ((TVEpisode) -> Unit)? = null
 ) {
     val gridState = rememberLazyGridState()
     val focusRequester = rememberTVFocusRequester()

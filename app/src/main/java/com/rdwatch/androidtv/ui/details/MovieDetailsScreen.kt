@@ -321,6 +321,7 @@ fun MovieDetailsScreen(
                                             selectedSourceId = selectedSourceId,
                                             title = "Select Movie Source"
                                         )
+                                    }
                                     
                                     // Show basic sources for fallback
                                     LazyRow(

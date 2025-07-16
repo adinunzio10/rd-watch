@@ -14,6 +14,7 @@ import com.rdwatch.androidtv.ui.details.models.ExtendedContentMetadata
 import com.rdwatch.androidtv.ui.details.models.CastMember
 import com.rdwatch.androidtv.ui.details.models.CrewMember
 import com.rdwatch.androidtv.ui.details.models.StreamingSource
+import com.rdwatch.androidtv.ui.details.models.SourceType
 import com.rdwatch.androidtv.ui.details.models.advanced.*
 import com.rdwatch.androidtv.ui.details.managers.ScraperSourceManager
 import com.rdwatch.androidtv.ui.details.viewmodels.SourceListViewModel
@@ -41,7 +42,7 @@ class MovieDetailsViewModel @Inject constructor(
     
     // Advanced source management
     private val advancedSourceManager = AdvancedSourceManager(context)
-    private val sourceListViewModel = SourceListViewModel(advancedSourceManager)
+    private val sourceListViewModel = SourceListViewModel()
     
     private val _movieState = MutableStateFlow<UiState<Movie>>(UiState.Loading)
     val movieState: StateFlow<UiState<Movie>> = _movieState.asStateFlow()
@@ -715,65 +716,67 @@ class MovieDetailsViewModel @Inject constructor(
         return SourceMetadata(
             id = streamingSource.id,
             provider = SourceProviderInfo(
+                id = streamingSource.provider.name.lowercase().replace(" ", "-"),
                 name = streamingSource.provider.name,
-                type = if (streamingSource.isPeerToPeer) ProviderType.P2P else ProviderType.DIRECT,
-                baseUrl = "", // Not available in StreamingSource
-                priority = 1,
-                reliability = 0.8f
+                displayName = streamingSource.provider.displayName,
+                logoUrl = null,
+                type = if (streamingSource.features.supportsP2P || streamingSource.sourceType.type == SourceType.ScraperSourceType.TORRENT) SourceProviderInfo.ProviderType.TORRENT else SourceProviderInfo.ProviderType.DIRECT_STREAM,
+                reliability = SourceProviderInfo.ProviderReliability.GOOD
             ),
             quality = QualityInfo(
                 resolution = mapStreamingQualityToVideoResolution(streamingSource.quality),
                 bitrate = null,
-                codecProfile = null,
-                hdr10 = streamingSource.features.contains("HDR"),
-                dolbyVision = streamingSource.features.contains("Dolby Vision"),
-                hdr10Plus = streamingSource.features.contains("HDR10+")
+                hdr10 = false, // Not available in StreamingSource features
+                dolbyVision = streamingSource.features.supportsDolbyVision,
+                hdr10Plus = false // Not available in StreamingSource features
             ),
             codec = CodecInfo(
-                type = CodecType.H264, // Default, would need better detection
+                type = VideoCodec.H264, // Default, would need better detection
                 profile = null,
                 level = null
             ),
             audio = AudioInfo(
-                format = AudioCodec.AAC, // Default, would need better detection
+                format = AudioFormat.AAC, // Default, would need better detection
                 channels = null,
                 bitrate = null,
                 language = null,
-                dolbyAtmos = streamingSource.features.contains("Atmos"),
-                dtsX = streamingSource.features.contains("DTS:X")
+                dolbyAtmos = streamingSource.features.supportsDolbyAtmos,
+                dtsX = false // Not available in StreamingSource features
             ),
             release = ReleaseInfo(
                 type = ReleaseType.WEB_DL, // Default, would need better detection
                 group = null,
-                year = null,
-                source = null
+                edition = null,
+                year = null
             ),
             file = FileInfo(
-                size = null,
-                format = "mkv", // Default
-                checksum = null
+                name = null,
+                sizeInBytes = null,
+                extension = "mkv", // Default
+                hash = null
             ),
             health = HealthInfo(
-                seeders = streamingSource.seeders,
-                leechers = streamingSource.leechers,
-                downloadCount = null,
-                lastSeen = Date(),
-                verifiedUploader = false
-            ),
-            features = FeatureInfo(
-                hasSubtitles = streamingSource.features.contains("Subtitles"),
-                hasMultipleAudio = false,
-                hasDvdExtras = false,
-                isRepack = false,
-                isProper = false,
-                isRemastered = false
-            ),
-            availability = AvailabilityInfo(
-                isCached = streamingSource.isCached,
-                cacheExpiry = null,
+                seeders = streamingSource.features.seeders,
+                leechers = streamingSource.features.leechers,
                 downloadSpeed = null,
                 uploadSpeed = null,
-                region = null
+                availability = null,
+                lastChecked = null
+            ),
+            features = FeatureInfo(
+                subtitles = emptyList(),
+                has3D = false,
+                hasChapters = false,
+                hasMultipleAudioTracks = false,
+                isDirectPlay = false,
+                requiresTranscoding = false
+            ),
+            availability = AvailabilityInfo(
+                isAvailable = true,
+                region = null,
+                expiryDate = null,
+                debridService = null,
+                cached = false // Not available in StreamingSource
             ),
             metadata = mapOf(
                 "movieId" to movieId,
@@ -787,11 +790,17 @@ class MovieDetailsViewModel @Inject constructor(
      */
     private fun mapStreamingQualityToVideoResolution(quality: com.rdwatch.androidtv.ui.details.models.SourceQuality): VideoResolution {
         return when (quality) {
-            com.rdwatch.androidtv.ui.details.models.SourceQuality.UHD_4K -> VideoResolution.RESOLUTION_4K
-            com.rdwatch.androidtv.ui.details.models.SourceQuality.FHD_1080P -> VideoResolution.RESOLUTION_1080P
-            com.rdwatch.androidtv.ui.details.models.SourceQuality.HD_720P -> VideoResolution.RESOLUTION_720P
-            com.rdwatch.androidtv.ui.details.models.SourceQuality.SD_480P -> VideoResolution.RESOLUTION_480P
-            else -> VideoResolution.RESOLUTION_UNKNOWN
+            com.rdwatch.androidtv.ui.details.models.SourceQuality.QUALITY_8K -> VideoResolution.RESOLUTION_8K
+            com.rdwatch.androidtv.ui.details.models.SourceQuality.QUALITY_4K, 
+            com.rdwatch.androidtv.ui.details.models.SourceQuality.QUALITY_4K_HDR -> VideoResolution.RESOLUTION_4K
+            com.rdwatch.androidtv.ui.details.models.SourceQuality.QUALITY_1080P,
+            com.rdwatch.androidtv.ui.details.models.SourceQuality.QUALITY_1080P_HDR -> VideoResolution.RESOLUTION_1080P
+            com.rdwatch.androidtv.ui.details.models.SourceQuality.QUALITY_720P,
+            com.rdwatch.androidtv.ui.details.models.SourceQuality.QUALITY_720P_HDR -> VideoResolution.RESOLUTION_720P
+            com.rdwatch.androidtv.ui.details.models.SourceQuality.QUALITY_480P -> VideoResolution.RESOLUTION_480P
+            com.rdwatch.androidtv.ui.details.models.SourceQuality.QUALITY_360P -> VideoResolution.RESOLUTION_360P
+            com.rdwatch.androidtv.ui.details.models.SourceQuality.QUALITY_240P -> VideoResolution.RESOLUTION_240P
+            else -> VideoResolution.UNKNOWN
         }
     }
 }
