@@ -64,17 +64,32 @@ class TMDbTVRepositoryImpl @Inject constructor(
         forceRefresh: Boolean,
         language: String
     ): Flow<Result<ContentDetail>> = 
-        getTVDetails(tvId, forceRefresh, language).map { result ->
+        getTVDetails(tvId, forceRefresh, language).map { result: Result<TMDbTVResponse> ->
             when (result) {
                 is Result.Success -> {
-                    // Use the ContentDetailMapper to create the proper ContentDetail with imdbId support
                     val contentDetail = result.data?.let { tvResponse ->
-                        contentDetailMapper.mapTVToContentDetail(tvResponse)
+                        try {
+                            // Fetch external IDs concurrently
+                            val externalIdsFlow = getTVExternalIds(tvId, forceRefresh)
+                            var externalIds: com.rdwatch.androidtv.network.models.tmdb.TMDbExternalIdsResponse? = null
+                            runBlocking {
+                                externalIdsFlow.collect { externalIdsResult ->
+                                    when (externalIdsResult) {
+                                        is Result.Success -> externalIds = externalIdsResult.data
+                                        else -> { /* Continue without external IDs */ }
+                                    }
+                                }
+                            }
+                            contentDetailMapper.mapTVToContentDetail(tvResponse, externalIds)
+                        } catch (e: Exception) {
+                            // Fallback to mapping without external IDs
+                            contentDetailMapper.mapTVToContentDetail(tvResponse)
+                        }
                     }
-                    Result.Success(contentDetail ?: contentDetailMapper.mapTVToContentDetail(result.data!!))
+                    Result.Success(contentDetail) as Result<ContentDetail>
                 }
-                is Result.Error -> Result.Error(result.exception)
-                is Result.Loading -> Result.Loading
+                is Result.Error -> Result.Error(result.exception) as Result<ContentDetail>
+                is Result.Loading -> Result.Loading as Result<ContentDetail>
             }
         }
 

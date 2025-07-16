@@ -64,38 +64,8 @@ class TMDbToContentDetailMapper @Inject constructor() {
         externalIds: com.rdwatch.androidtv.network.models.tmdb.TMDbExternalIdsResponse? = null
     ): ContentDetail {
         return TMDbTVContentDetail(
-            id = "tmdb_tv_${tvResponse.id}",
-            tmdbId = tvResponse.id,
-            title = tvResponse.name,
-            originalTitle = tvResponse.originalName,
-            description = tvResponse.overview,
-            backgroundImageUrl = tvResponse.backdropPath?.let { 
-                "${TMDbMovieService.IMAGE_BASE_URL}${TMDbMovieService.BACKDROP_SIZE}$it" 
-            },
-            cardImageUrl = tvResponse.posterPath?.let { 
-                "${TMDbMovieService.IMAGE_BASE_URL}${TMDbMovieService.POSTER_SIZE}$it" 
-            },
-            videoUrl = null, // TMDb doesn't provide direct video URLs
-            firstAirDate = tvResponse.firstAirDate,
-            lastAirDate = tvResponse.lastAirDate,
-            voteAverage = tvResponse.voteAverage.toFloat(),
-            voteCount = tvResponse.voteCount,
-            popularity = tvResponse.popularity.toFloat(),
-            adult = tvResponse.adult,
-            originalLanguage = tvResponse.originalLanguage,
-            genres = tvResponse.genres.map { it.name },
-            numberOfEpisodes = tvResponse.numberOfEpisodes,
-            numberOfSeasons = tvResponse.numberOfSeasons,
-            status = tvResponse.status,
-            type = tvResponse.type,
-            homepage = tvResponse.homepage,
-            inProduction = tvResponse.inProduction,
-            imdbId = externalIds?.imdbId, // Now fetched from external IDs endpoint!
-            networks = tvResponse.networks.map { it.name },
-            originCountry = tvResponse.originCountry,
-            productionCompanies = tvResponse.productionCompanies.map { it.name },
-            productionCountries = tvResponse.productionCountries.map { it.name },
-            spokenLanguages = tvResponse.spokenLanguages.map { it.name }
+            tmdbTV = tvResponse,
+            imdbId = externalIds?.imdbId
         )
     }
     

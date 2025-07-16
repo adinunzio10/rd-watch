@@ -22,7 +22,8 @@ data class TMDbTVContentDetail(
     private val isInWatchlist: Boolean = false,
     private val isLiked: Boolean = false,
     private val isDownloaded: Boolean = false,
-    private val isDownloading: Boolean = false
+    private val isDownloading: Boolean = false,
+    private val imdbId: String? = null
 ) : ContentDetail {
     
     override val id: String = tmdbTV.id.toString()
@@ -46,6 +47,7 @@ data class TMDbTVContentDetail(
         crew = extractFullCrew(credits, tmdbTV),
         customMetadata = mapOf(
             "tmdb_id" to tmdbTV.id.toString(),
+            "imdb_id" to (imdbId ?: ""),
             "vote_count" to tmdbTV.voteCount.toString(),
             "popularity" to tmdbTV.popularity.toString(),
             "status" to tmdbTV.status,
@@ -100,6 +102,11 @@ data class TMDbTVContentDetail(
      * Get TMDb TV show ID
      */
     fun getTMDbId(): Int = tmdbTV.id
+    
+    /**
+     * Get IMDb ID if available
+     */
+    fun getImdbId(): String? = extendedMetadata.customMetadata["imdb_id"]?.takeIf { it.isNotEmpty() }
     
     /**
      * Get original name
@@ -242,6 +249,13 @@ data class TMDbTVContentDetail(
      */
     fun withProgress(newProgress: ContentProgress): TMDbTVContentDetail {
         return copy(progress = newProgress)
+    }
+    
+    /**
+     * Create a copy with updated IMDB ID
+     */
+    fun withImdbId(newImdbId: String?): TMDbTVContentDetail {
+        return copy(imdbId = newImdbId)
     }
     
     /**
