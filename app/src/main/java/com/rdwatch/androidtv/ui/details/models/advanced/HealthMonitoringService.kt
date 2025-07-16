@@ -415,7 +415,7 @@ class PerformanceMetrics {
         synchronized(this) {
             healthCheckDurations.add(durationMs)
             if (healthCheckDurations.size > 1000) {
-                healthCheckDurations.removeFirst()
+                healthCheckDurations.removeAt(0)
             }
             successfulChecks++
         }
@@ -425,7 +425,7 @@ class PerformanceMetrics {
         synchronized(this) {
             healthCheckDurations.add(durationMs)
             if (healthCheckDurations.size > 1000) {
-                healthCheckDurations.removeFirst()
+                healthCheckDurations.removeAt(0)
             }
             failedChecks++
         }
@@ -435,7 +435,7 @@ class PerformanceMetrics {
         synchronized(this) {
             batchCheckMetrics.add(BatchCheckMetric(sourceCount, totalDurationMs, Date()))
             if (batchCheckMetrics.size > 100) {
-                batchCheckMetrics.removeFirst()
+                batchCheckMetrics.removeAt(0)
             }
         }
     }
@@ -444,7 +444,7 @@ class PerformanceMetrics {
         synchronized(this) {
             optimizationEvents.add("Removed $removedSources inactive sources at ${Date()}")
             if (optimizationEvents.size > 50) {
-                optimizationEvents.removeFirst()
+                optimizationEvents.removeAt(0)
             }
         }
     }
@@ -453,7 +453,7 @@ class PerformanceMetrics {
         synchronized(this) {
             optimizationEvents.add("$event at ${Date()}")
             if (optimizationEvents.size > 50) {
-                optimizationEvents.removeFirst()
+                optimizationEvents.removeAt(0)
             }
         }
     }

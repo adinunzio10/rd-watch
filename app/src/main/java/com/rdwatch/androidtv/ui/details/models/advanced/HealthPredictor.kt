@@ -165,7 +165,7 @@ class HealthPredictor {
         
         // Keep only recent records (last 1000)
         if (historyData.downloads.size > 1000) {
-            historyData.downloads.removeFirst()
+            historyData.downloads.removeAt(0)
         }
         
         // Update global statistics

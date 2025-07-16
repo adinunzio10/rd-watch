@@ -7,7 +7,7 @@ This file provides essential guidance to Claude Code when working with this Andr
 **RD Watch** is an Android TV application built with Jetpack Compose and Android Leanback library, designed for Android TV devices with remote control navigation and 10-foot UI experience.
 
 - **Package**: `com.rdwatch.androidtv`
-- **Min SDK**: 21 (Android 5.0) | **Target SDK**: 35 (Android 15)
+- **Min SDK**: 23 (Android 6.0) | **Target SDK**: 35 (Android 15)
 - **Build Tool**: Gradle with Kotlin DSL
 
 ## Essential Commands
