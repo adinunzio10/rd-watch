@@ -16,6 +16,7 @@ import com.rdwatch.androidtv.ui.details.models.ContentDetail
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.first
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -73,7 +74,7 @@ class TMDbTVRepositoryImpl @Inject constructor(
                             val externalIds = runBlocking {
                                 val externalIdsResult = getTVExternalIds(tvId, forceRefresh).first()
                                 when (externalIdsResult) {
-                                    is Result.Success -> {
+                                    is Result.Success<TMDbExternalIdsResponse> -> {
                                         android.util.Log.d("TMDbTVRepository", "External IDs fetched successfully: ${externalIdsResult.data?.imdbId}")
                                         externalIdsResult.data
                                     }
