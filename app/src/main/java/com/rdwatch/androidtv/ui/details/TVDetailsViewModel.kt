@@ -223,7 +223,8 @@ class TVDetailsViewModel @Inject constructor(
                             _tvShowState.value = tvShowDetail
                             
                             // Fetch external IDs to get IMDb ID for source scraping
-                            fetchAndUpdateIMDbId(tvShowId.toInt(), tvShowDetail)
+                            android.util.Log.d("TVDetailsViewModel", "Fetching external IDs for TMDb ID: $tmdbId")
+                            fetchAndUpdateIMDbId(tmdbId, tvShowDetail)
                             
                             // Select first season by default
                             val firstSeason = tvShowDetail.getSeasons().firstOrNull()
@@ -1741,10 +1742,13 @@ class TVDetailsViewModel @Inject constructor(
      * Fetch external IDs from TMDb to get IMDb ID and update TV show detail
      */
     private fun fetchAndUpdateIMDbId(tmdbId: Int, currentTvShow: TVShowContentDetail) {
+        android.util.Log.d("TVDetailsViewModel", "fetchAndUpdateIMDbId called for TMDb ID: $tmdbId")
         viewModelScope.launch {
+            android.util.Log.d("TVDetailsViewModel", "Calling tmdbTVRepository.getTVExternalIds($tmdbId)")
             tmdbTVRepository.getTVExternalIds(tmdbId).collect { result ->
                 when (result) {
                     is Result.Success -> {
+                        android.util.Log.d("TVDetailsViewModel", "External IDs API response received: ${result.data}")
                         result.data?.imdbId?.let { imdbId ->
                             // Update the TV show with the fetched IMDb ID
                             val updatedTvShowDetail = currentTvShow.getTVShowDetail().copy(imdbId = imdbId)
@@ -1754,6 +1758,8 @@ class TVDetailsViewModel @Inject constructor(
                             updateState { copy(tvShow = updatedTvShow) }
                             
                             android.util.Log.d("TVDetailsViewModel", "Updated TV show ${currentTvShow.getDisplayTitle()} with IMDb ID: $imdbId")
+                        } ?: run {
+                            android.util.Log.w("TVDetailsViewModel", "External IDs response received but no IMDb ID found")
                         }
                     }
                     is Result.Error -> {
@@ -1761,7 +1767,7 @@ class TVDetailsViewModel @Inject constructor(
                         // Continue without IMDb ID - sources may still work with TMDb ID for some providers
                     }
                     is Result.Loading -> {
-                        // Continue loading
+                        android.util.Log.d("TVDetailsViewModel", "External IDs API call in progress...")
                     }
                 }
             }
