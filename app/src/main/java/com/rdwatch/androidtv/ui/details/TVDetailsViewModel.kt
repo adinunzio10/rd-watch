@@ -1739,6 +1739,29 @@ class TVDetailsViewModel @Inject constructor(
     }
     
     /**
+     * Public method to fetch IMDb ID if missing - called from UI when needed
+     */
+    fun ensureIMDbIdIsLoaded() {
+        val currentTvShow = _tvShowState.value
+        if (currentTvShow != null) {
+            val tvShowDetail = currentTvShow.getTVShowDetail()
+            if (tvShowDetail.imdbId.isNullOrBlank()) {
+                val tmdbId = currentTvShow.id.toIntOrNull()
+                if (tmdbId != null) {
+                    android.util.Log.d("TVDetailsViewModel", "IMDb ID missing for TV show ${currentTvShow.getDisplayTitle()}, fetching...")
+                    fetchAndUpdateIMDbId(tmdbId, currentTvShow)
+                } else {
+                    android.util.Log.w("TVDetailsViewModel", "Cannot fetch IMDb ID: invalid TMDb ID '${currentTvShow.id}'")
+                }
+            } else {
+                android.util.Log.d("TVDetailsViewModel", "IMDb ID already available for TV show ${currentTvShow.getDisplayTitle()}: ${tvShowDetail.imdbId}")
+            }
+        } else {
+            android.util.Log.w("TVDetailsViewModel", "Cannot fetch IMDb ID: no TV show loaded")
+        }
+    }
+    
+    /**
      * Fetch external IDs from TMDb to get IMDb ID and update TV show detail
      */
     private fun fetchAndUpdateIMDbId(tmdbId: Int, currentTvShow: TVShowContentDetail) {

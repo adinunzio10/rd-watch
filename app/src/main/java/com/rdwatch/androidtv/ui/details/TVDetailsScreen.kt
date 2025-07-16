@@ -56,6 +56,13 @@ fun TVDetailsScreen(
 
     // Initialize with TV show ID
     LaunchedEffect(tvShowId) { viewModel.loadTVShow(tvShowId) }
+    
+    // Ensure IMDb ID is loaded for source scraping (even from cached data)
+    LaunchedEffect(tvShowState) {
+        if (tvShowState != null) {
+            viewModel.ensureIMDbIdIsLoaded()
+        }
+    }
 
     when {
         uiState.isLoading -> {
