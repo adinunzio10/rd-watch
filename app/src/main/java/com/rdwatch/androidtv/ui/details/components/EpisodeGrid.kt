@@ -27,6 +27,7 @@ import com.rdwatch.androidtv.presentation.components.tvFocusRequester
 import com.rdwatch.androidtv.ui.details.models.TVEpisode
 import com.rdwatch.androidtv.ui.details.models.EpisodePaginationState
 import com.rdwatch.androidtv.ui.details.models.EpisodeGridUiState
+import com.rdwatch.androidtv.ui.details.models.advanced.SourceMetadata
 import com.rdwatch.androidtv.ui.theme.RdwatchTheme
 
 /**
@@ -41,6 +42,7 @@ enum class EpisodeGridLayout {
 /**
  * Episode grid component with configurable layout and pagination
  * Optimized for Android TV D-pad navigation
+ * Now includes source availability indicators
  */
 @Composable
 fun EpisodeGrid(
@@ -55,7 +57,10 @@ fun EpisodeGrid(
     onLoadMore: (() -> Unit)? = null,
     focusedEpisodeId: String? = null,
     onFocusedEpisodeChanged: ((String?) -> Unit)? = null,
-    requestInitialFocus: Boolean = false
+    requestInitialFocus: Boolean = false,
+    // Source integration
+    episodeSourcesMap: Map<String, List<SourceMetadata>> = emptyMap(),
+    onEpisodeSourceSelection: ((TVEpisode) -> Unit)? = null
 ) {
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp
@@ -90,7 +95,9 @@ fun EpisodeGrid(
                     onLoadMore = onLoadMore,
                     focusedEpisodeId = focusedEpisodeId,
                     onFocusedEpisodeChanged = onFocusedEpisodeChanged,
-                    requestInitialFocus = requestInitialFocus
+                    requestInitialFocus = requestInitialFocus,
+                    episodeSourcesMap = episodeSourcesMap,
+                    onEpisodeSourceSelection = onEpisodeSourceSelection
                 )
             }
             else -> {
@@ -174,33 +181,48 @@ private fun EpisodeGridLayout(
             
             when (layout) {
                 EpisodeGridLayout.GRID -> {
+                    val episodeKey = "${episode.seasonNumber}-${episode.episodeNumber}"
+                    val availableSources = episodeSourcesMap[episodeKey] ?: emptyList()
+                    
                     EpisodeCard(
                         episode = episode,
                         onClick = { onEpisodeClick(episode) },
                         isFocused = isFocused,
                         showProgress = showProgress,
+                        availableSources = availableSources,
+                        onSourceSelectionClick = { onEpisodeSourceSelection?.invoke(episode) },
                         modifier = Modifier.focusRequester(
                             if (index == 0 && requestInitialFocus) focusRequester else FocusRequester.Default
                         )
                     )
                 }
                 EpisodeGridLayout.COMPACT -> {
+                    val episodeKey = "${episode.seasonNumber}-${episode.episodeNumber}"
+                    val availableSources = episodeSourcesMap[episodeKey] ?: emptyList()
+                    
                     CompactEpisodeCard(
                         episode = episode,
                         onClick = { onEpisodeClick(episode) },
                         isFocused = isFocused,
                         showProgress = showProgress,
+                        availableSources = availableSources,
+                        onSourceSelectionClick = { onEpisodeSourceSelection?.invoke(episode) },
                         modifier = Modifier.focusRequester(
                             if (index == 0 && requestInitialFocus) focusRequester else FocusRequester.Default
                         )
                     )
                 }
                 else -> {
+                    val episodeKey = "${episode.seasonNumber}-${episode.episodeNumber}"
+                    val availableSources = episodeSourcesMap[episodeKey] ?: emptyList()
+                    
                     EpisodeCard(
                         episode = episode,
                         onClick = { onEpisodeClick(episode) },
                         isFocused = isFocused,
                         showProgress = showProgress,
+                        availableSources = availableSources,
+                        onSourceSelectionClick = { onEpisodeSourceSelection?.invoke(episode) },
                         modifier = Modifier.focusRequester(
                             if (index == 0 && requestInitialFocus) focusRequester else FocusRequester.Default
                         )
@@ -253,7 +275,9 @@ private fun EpisodeListLayout(
     onLoadMore: (() -> Unit)?,
     focusedEpisodeId: String?,
     onFocusedEpisodeChanged: ((String?) -> Unit)?,
-    requestInitialFocus: Boolean
+    requestInitialFocus: Boolean,
+    episodeSourcesMap: Map<String, List<SourceMetadata>>,
+    onEpisodeSourceSelection: ((TVEpisode) -> Unit)?
 ) {
     val scrollState = rememberScrollState()
     val focusRequester = rememberTVFocusRequester()
@@ -270,11 +294,16 @@ private fun EpisodeListLayout(
         episodes.forEachIndexed { index, episode ->
             val isFocused = episode.id == focusedEpisodeId
             
+            val episodeKey = "${episode.seasonNumber}-${episode.episodeNumber}"
+            val availableSources = episodeSourcesMap[episodeKey] ?: emptyList()
+            
             ListEpisodeCard(
                 episode = episode,
                 onClick = { onEpisodeClick(episode) },
                 isFocused = isFocused,
                 showProgress = showProgress,
+                availableSources = availableSources,
+                onSourceSelectionClick = { onEpisodeSourceSelection?.invoke(episode) },
                 modifier = Modifier.focusRequester(
                     if (index == 0 && requestInitialFocus) focusRequester else FocusRequester.Default
                 )

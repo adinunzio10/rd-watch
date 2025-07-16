@@ -6,7 +6,11 @@ import com.rdwatch.androidtv.repository.RealDebridContentRepository
 import com.rdwatch.androidtv.repository.base.Result
 import com.rdwatch.androidtv.ui.common.UiState
 import com.rdwatch.androidtv.ui.details.models.*
+import com.rdwatch.androidtv.ui.details.models.advanced.*
 import com.rdwatch.androidtv.ui.details.managers.ScraperSourceManager
+import com.rdwatch.androidtv.ui.details.viewmodels.SourceListViewModel
+import android.content.Context
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -22,8 +26,13 @@ import javax.inject.Inject
 class TVDetailsViewModel @Inject constructor(
     private val realDebridContentRepository: RealDebridContentRepository,
     private val tmdbTVRepository: com.rdwatch.androidtv.data.repository.TMDbTVRepository,
-    private val scraperSourceManager: ScraperSourceManager
+    private val scraperSourceManager: ScraperSourceManager,
+    @ApplicationContext private val context: Context
 ) : BaseViewModel<TVDetailsUiState>() {
+    
+    // Advanced source management
+    private val advancedSourceManager = AdvancedSourceManager(context)
+    private val sourceListViewModel = SourceListViewModel(advancedSourceManager)
     
     // Job management for canceling concurrent API requests
     private var seasonLoadingJob: Job? = null
@@ -50,6 +59,16 @@ class TVDetailsViewModel @Inject constructor(
     
     private val _sourcesState = MutableStateFlow<UiState<List<StreamingSource>>>(UiState.Idle)
     val sourcesState: StateFlow<UiState<List<StreamingSource>>> = _sourcesState.asStateFlow()
+    
+    // Advanced source management state
+    private val _episodeSourcesMap = MutableStateFlow<Map<String, List<SourceMetadata>>>(emptyMap())
+    val episodeSourcesMap: StateFlow<Map<String, List<SourceMetadata>>> = _episodeSourcesMap.asStateFlow()
+    
+    private val _sourceSelectionState = MutableStateFlow(SourceSelectionState())
+    val sourceSelectionState: StateFlow<SourceSelectionState> = _sourceSelectionState.asStateFlow()
+    
+    private val _showSourceSelection = MutableStateFlow(false)
+    val showSourceSelection: StateFlow<Boolean> = _showSourceSelection.asStateFlow()
     
     override fun createInitialState(): TVDetailsUiState {
         return TVDetailsUiState()
@@ -296,6 +315,9 @@ class TVDetailsViewModel @Inject constructor(
             selectEpisodeInternal(selectedEpisode)
             
             android.util.Log.d("TVDetailsViewModel", "Selected episode: ${selectedEpisode?.title ?: "None"} (S${authoritativeSeason.seasonNumber}E${selectedEpisode?.episodeNumber ?: 0})")
+            
+            // Preload sources for this season's episodes
+            preloadSourcesForCurrentSeason()
         }
         
         // Update UI state with authoritative season
@@ -362,6 +384,9 @@ class TVDetailsViewModel @Inject constructor(
         _tvShowState.value?.let { tvShow ->
             android.util.Log.d("TVDetailsViewModel", "Loading sources for user-selected episode")
             loadSourcesForEpisode(tvShow, episode)
+            
+            // Also load advanced sources
+            loadAdvancedSourcesForEpisode(tvShow, episode)
         }
     }
     
@@ -922,6 +947,10 @@ class TVDetailsViewModel @Inject constructor(
                 if (currentSelectedSeason?.seasonNumber == seasonNumber) {
                     android.util.Log.d("TVDetailsViewModel", "Updating selected season state with loaded data")
                     _selectedSeason.value = tvSeason
+                    
+                    // Preload sources for the newly loaded season episodes
+                    android.util.Log.d("TVDetailsViewModel", "Preloading sources for newly loaded season $seasonNumber")
+                    preloadSourcesForCurrentSeason()
                 }
                 
                 android.util.Log.d("TVDetailsViewModel", "Season $seasonNumber loaded on demand with ${tvSeason.episodes.size} episodes")
@@ -1344,6 +1373,247 @@ class TVDetailsViewModel @Inject constructor(
         }
     }
     
+    // ===== ADVANCED SOURCE MANAGEMENT METHODS =====
+    
+    /**
+     * Load advanced sources for an episode with enhanced processing
+     */
+    fun loadAdvancedSourcesForEpisode(tvShow: TVShowContentDetail, episode: TVEpisode) {
+        viewModelScope.launch {
+            try {
+                android.util.Log.d("TVDetailsViewModel", "Loading advanced sources for episode: S${episode.seasonNumber}E${episode.episodeNumber}")
+                
+                // Get basic streaming sources first
+                val streamingSources = scraperSourceManager.getSourcesForTVEpisode(
+                    tvShowId = tvShow.id,
+                    seasonNumber = episode.seasonNumber,
+                    episodeNumber = episode.episodeNumber,
+                    imdbId = null,
+                    tmdbId = tvShow.id
+                )
+                
+                // Convert to SourceMetadata for advanced processing
+                val sourceMetadata = streamingSources.map { streamingSource ->
+                    convertStreamingSourceToMetadata(streamingSource, tvShow, episode)
+                }
+                
+                // Process sources with advanced manager
+                val processedSources = sourceMetadata.map { source ->
+                    advancedSourceManager.processSource(source)
+                }
+                
+                // Update episode sources map
+                val episodeKey = "${episode.seasonNumber}-${episode.episodeNumber}"
+                val currentMap = _episodeSourcesMap.value.toMutableMap()
+                currentMap[episodeKey] = processedSources.map { it.sourceMetadata }
+                _episodeSourcesMap.value = currentMap
+                
+                android.util.Log.d("TVDetailsViewModel", "Loaded ${processedSources.size} advanced sources for episode")
+                
+            } catch (e: Exception) {
+                android.util.Log.e("TVDetailsViewModel", "Failed to load advanced sources: ${e.message}")
+            }
+        }
+    }
+    
+    /**
+     * Get available sources for a specific episode
+     */
+    fun getSourcesForEpisode(episode: TVEpisode): List<SourceMetadata> {
+        val episodeKey = "${episode.seasonNumber}-${episode.episodeNumber}"
+        return _episodeSourcesMap.value[episodeKey] ?: emptyList()
+    }
+    
+    /**
+     * Trigger source selection UI for an episode
+     */
+    fun selectSourcesForEpisode(episode: TVEpisode) {
+        val sources = getSourcesForEpisode(episode)
+        if (sources.isEmpty()) {
+            // Load sources first if not available
+            _tvShowState.value?.let { tvShow ->
+                loadAdvancedSourcesForEpisode(tvShow, episode)
+            }
+        }
+        
+        // Update source selection state
+        _sourceSelectionState.value = SourceSelectionState(
+            sources = sources,
+            filteredSources = sources,
+            selectedEpisode = episode
+        )
+        
+        _showSourceSelection.value = true
+    }
+    
+    /**
+     * Hide source selection UI
+     */
+    fun hideSourceSelection() {
+        _showSourceSelection.value = false
+    }
+    
+    /**
+     * Handle source selection from UI
+     */
+    fun onSourceSelected(source: SourceMetadata) {
+        _selectedEpisode.value?.let { episode ->
+            android.util.Log.d("TVDetailsViewModel", "Source selected for episode S${episode.seasonNumber}E${episode.episodeNumber}: ${source.provider.name}")
+            
+            // Hide source selection
+            hideSourceSelection()
+            
+            // TODO: Trigger playback with selected source
+            // This will be handled by the PlaybackViewModel or similar component
+        }
+    }
+    
+    /**
+     * Convert StreamingSource to SourceMetadata for advanced processing
+     */
+    private fun convertStreamingSourceToMetadata(
+        streamingSource: StreamingSource,
+        tvShow: TVShowContentDetail,
+        episode: TVEpisode
+    ): SourceMetadata {
+        return SourceMetadata(
+            id = streamingSource.id,
+            provider = SourceProviderInfo(
+                name = streamingSource.provider.name,
+                type = if (streamingSource.isPeerToPeer) ProviderType.P2P else ProviderType.DIRECT,
+                baseUrl = "", // Not available in StreamingSource
+                priority = 1,
+                reliability = 0.8f
+            ),
+            quality = QualityInfo(
+                resolution = mapStreamingQualityToVideoResolution(streamingSource.quality),
+                bitrate = null,
+                codecProfile = null,
+                hdr10 = streamingSource.features.contains("HDR"),
+                dolbyVision = streamingSource.features.contains("Dolby Vision"),
+                hdr10Plus = streamingSource.features.contains("HDR10+")
+            ),
+            codec = CodecInfo(
+                type = CodecType.H264, // Default, would need better detection
+                profile = null,
+                level = null
+            ),
+            audio = AudioInfo(
+                format = AudioCodec.AAC, // Default, would need better detection
+                channels = null,
+                bitrate = null,
+                language = null,
+                dolbyAtmos = streamingSource.features.contains("Atmos"),
+                dtsX = streamingSource.features.contains("DTS:X")
+            ),
+            release = ReleaseInfo(
+                type = ReleaseType.WEB_DL, // Default, would need better detection
+                group = null,
+                year = null,
+                source = null
+            ),
+            file = FileInfo(
+                size = null,
+                format = "mkv", // Default
+                checksum = null
+            ),
+            health = HealthInfo(
+                seeders = streamingSource.seeders,
+                leechers = streamingSource.leechers,
+                downloadCount = null,
+                lastSeen = Date(),
+                verifiedUploader = false
+            ),
+            features = FeatureInfo(
+                hasSubtitles = streamingSource.features.contains("Subtitles"),
+                hasMultipleAudio = false,
+                hasDvdExtras = false,
+                isRepack = false,
+                isProper = false,
+                isRemastered = false
+            ),
+            availability = AvailabilityInfo(
+                isCached = streamingSource.isCached,
+                cacheExpiry = null,
+                downloadSpeed = null,
+                uploadSpeed = null,
+                region = null
+            ),
+            metadata = mapOf(
+                "tvShowId" to tvShow.id,
+                "seasonNumber" to episode.seasonNumber.toString(),
+                "episodeNumber" to episode.episodeNumber.toString(),
+                "episodeTitle" to episode.title,
+                "originalUrl" to (streamingSource.url ?: "")
+            )
+        )
+    }
+    
+    /**
+     * Preload sources for visible episodes in current season
+     */
+    fun preloadSourcesForCurrentSeason() {
+        viewModelScope.launch {
+            val currentTvShow = _tvShowState.value
+            val currentSeason = _selectedSeason.value
+            
+            if (currentTvShow != null && currentSeason != null) {
+                android.util.Log.d("TVDetailsViewModel", "Preloading sources for season ${currentSeason.seasonNumber} episodes")
+                
+                // Preload sources for the first few episodes (visible ones)
+                val episodesToPreload = currentSeason.episodes.take(6) // Load first 6 episodes
+                
+                episodesToPreload.forEach { episode ->
+                    val episodeKey = "${episode.seasonNumber}-${episode.episodeNumber}"
+                    
+                    // Only load if not already loaded
+                    if (!_episodeSourcesMap.value.containsKey(episodeKey)) {
+                        launch {
+                            try {
+                                loadAdvancedSourcesForEpisode(currentTvShow, episode)
+                            } catch (e: Exception) {
+                                android.util.Log.e("TVDetailsViewModel", "Failed to preload sources for episode ${episode.title}: ${e.message}")
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    /**
+     * Preload sources for a specific episode if not already loaded
+     */
+    fun preloadSourcesForEpisode(episode: TVEpisode) {
+        val episodeKey = "${episode.seasonNumber}-${episode.episodeNumber}"
+        
+        // Only load if not already loaded or loading
+        if (!_episodeSourcesMap.value.containsKey(episodeKey)) {
+            _tvShowState.value?.let { tvShow ->
+                viewModelScope.launch {
+                    try {
+                        loadAdvancedSourcesForEpisode(tvShow, episode)
+                    } catch (e: Exception) {
+                        android.util.Log.e("TVDetailsViewModel", "Failed to preload sources for episode ${episode.title}: ${e.message}")
+                    }
+                }
+            }
+        }
+    }
+    
+    /**
+     * Map StreamingSource quality to VideoResolution
+     */
+    private fun mapStreamingQualityToVideoResolution(quality: SourceQuality): VideoResolution {
+        return when (quality) {
+            SourceQuality.UHD_4K -> VideoResolution.RESOLUTION_4K
+            SourceQuality.FHD_1080P -> VideoResolution.RESOLUTION_1080P
+            SourceQuality.HD_720P -> VideoResolution.RESOLUTION_720P
+            SourceQuality.SD_480P -> VideoResolution.RESOLUTION_480P
+            else -> VideoResolution.RESOLUTION_UNKNOWN
+        }
+    }
+    
     /**
      * Clear all data
      */
@@ -1361,6 +1631,11 @@ class TVDetailsViewModel @Inject constructor(
         _creditsState.value = UiState.Loading
         _sourcesState.value = UiState.Idle
         _selectedTabIndex.value = 0
+        
+        // Clear advanced source data
+        _episodeSourcesMap.value = emptyMap()
+        _sourceSelectionState.value = SourceSelectionState()
+        _showSourceSelection.value = false
         
         updateState { createInitialState() }
     }

@@ -18,11 +18,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rdwatch.androidtv.R
 import com.rdwatch.androidtv.ui.details.models.*
+import com.rdwatch.androidtv.ui.details.models.advanced.SourceMetadata
 import com.rdwatch.androidtv.ui.theme.RdwatchTheme
 
 /**
  * Main episode grid section component that combines season selector and episode grid
  * Provides complete TV show episode browsing experience with season navigation
+ * Now includes source availability indicators
  */
 @Composable
 fun EpisodeGridSection(
@@ -37,7 +39,10 @@ fun EpisodeGridSection(
     paginationState: EpisodePaginationState? = null,
     onLoadMore: (() -> Unit)? = null,
     onRetry: (() -> Unit)? = null,
-    sectionTitle: String = "Episodes"
+    sectionTitle: String = "Episodes",
+    // Source integration
+    episodeSourcesMap: Map<String, List<SourceMetadata>> = emptyMap(),
+    onEpisodeSourceSelection: ((TVEpisode) -> Unit)? = null
 ) {
     val configuration = LocalConfiguration.current
     val isCompactMode = configuration.screenWidthDp < 1280
@@ -88,7 +93,9 @@ fun EpisodeGridSection(
             gridLayout = gridLayout,
             paginationState = paginationState,
             onLoadMore = onLoadMore,
-            onRetry = onRetry
+            onRetry = onRetry,
+            episodeSourcesMap = episodeSourcesMap,
+            onEpisodeSourceSelection = onEpisodeSourceSelection
         )
     }
 }
@@ -105,7 +112,9 @@ private fun EpisodeGridContent(
     gridLayout: EpisodeGridLayout,
     paginationState: EpisodePaginationState?,
     onLoadMore: (() -> Unit)?,
-    onRetry: (() -> Unit)?
+    onRetry: (() -> Unit)?,
+    episodeSourcesMap: Map<String, List<SourceMetadata>>,
+    onEpisodeSourceSelection: ((TVEpisode) -> Unit)?
 ) {
     when {
         // Error state
@@ -174,7 +183,9 @@ private fun EpisodeGridContent(
                     onLoadMore = onLoadMore,
                     focusedEpisodeId = uiState.focusedEpisodeId,
                     onFocusedEpisodeChanged = { /* Handle focus change if needed */ },
-                    requestInitialFocus = false
+                    requestInitialFocus = false,
+                    episodeSourcesMap = episodeSourcesMap,
+                    onEpisodeSourceSelection = onEpisodeSourceSelection
                 )
             }
         }
@@ -222,7 +233,9 @@ fun CompactEpisodeGridSection(
     modifier: Modifier = Modifier,
     uiState: EpisodeGridUiState = EpisodeGridUiState(),
     showProgress: Boolean = true,
-    onRetry: (() -> Unit)? = null
+    onRetry: (() -> Unit)? = null,
+    episodeSourcesMap: Map<String, List<SourceMetadata>> = emptyMap(),
+    onEpisodeSourceSelection: ((TVEpisode) -> Unit)? = null
 ) {
     Column(
         modifier = modifier
@@ -263,7 +276,9 @@ fun CompactEpisodeGridSection(
             gridLayout = EpisodeGridLayout.COMPACT,
             paginationState = null,
             onLoadMore = null,
-            onRetry = onRetry
+            onRetry = onRetry,
+            episodeSourcesMap = episodeSourcesMap,
+            onEpisodeSourceSelection = onEpisodeSourceSelection
         )
     }
 }
@@ -281,7 +296,9 @@ fun EpisodeGridSectionWithStats(
     uiState: EpisodeGridUiState = EpisodeGridUiState(),
     showProgress: Boolean = true,
     gridLayout: EpisodeGridLayout = EpisodeGridLayout.GRID,
-    onRetry: (() -> Unit)? = null
+    onRetry: (() -> Unit)? = null,
+    episodeSourcesMap: Map<String, List<SourceMetadata>> = emptyMap(),
+    onEpisodeSourceSelection: ((TVEpisode) -> Unit)? = null
 ) {
     val selectedSeason = tvShowDetail.seasons.find { it.seasonNumber == selectedSeasonNumber }
     
@@ -365,7 +382,9 @@ fun EpisodeGridSectionWithStats(
             gridLayout = gridLayout,
             paginationState = null,
             onLoadMore = null,
-            onRetry = onRetry
+            onRetry = onRetry,
+            episodeSourcesMap = episodeSourcesMap,
+            onEpisodeSourceSelection = onEpisodeSourceSelection
         )
     }
 }

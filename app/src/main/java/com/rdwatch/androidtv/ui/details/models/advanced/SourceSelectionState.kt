@@ -4,6 +4,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import com.rdwatch.androidtv.ui.details.models.SourceSortOption
+import com.rdwatch.androidtv.ui.details.models.TVEpisode
 
 /**
  * UI state for advanced source selection
@@ -12,6 +13,7 @@ data class SourceSelectionState(
     val sources: List<SourceMetadata> = emptyList(),
     val filteredSources: List<SourceMetadata> = emptyList(),
     val selectedSource: SourceMetadata? = null,
+    val selectedEpisode: TVEpisode? = null,
     val filter: SourceFilter = SourceFilter(),
     val sortOption: SourceSortOption = SourceSortOption.QUALITY_SCORE,
     val isLoading: Boolean = false,

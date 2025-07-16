@@ -40,6 +40,8 @@ import com.rdwatch.androidtv.ui.details.models.*
 import com.rdwatch.androidtv.ui.details.MovieDetailsUiState
 import com.rdwatch.androidtv.ui.details.components.SourceSelectionSection
 import com.rdwatch.androidtv.ui.details.components.SourceSelectionDialog
+import com.rdwatch.androidtv.ui.details.components.SourceListBottomSheet
+import com.rdwatch.androidtv.ui.details.models.advanced.*
 import androidx.media3.common.util.UnstableApi
 
 /**
@@ -67,6 +69,11 @@ fun MovieDetailsScreen(
     val creditsState by viewModel.creditsState.collectAsState()
     val selectedTabIndex by viewModel.selectedTabIndex.collectAsState()
     val sourcesState by viewModel.sourcesState.collectAsState()
+    
+    // Advanced source selection state
+    val advancedSources by viewModel.advancedSources.collectAsState()
+    val showSourceSelection by viewModel.showSourceSelection.collectAsState()
+    val sourceSelectionState by viewModel.sourceSelectionState.collectAsState()
     
     // Debug logging for UI state
     println("DEBUG [MovieDetailsScreen]: UI state availableSources count: ${uiState.availableSources.size}")
@@ -314,6 +321,44 @@ fun MovieDetailsScreen(
                                             selectedSourceId = selectedSourceId,
                                             title = "Select Movie Source"
                                         )
+                                    
+                                    // Show basic sources for fallback
+                                    LazyRow(
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+                                    ) {
+                                        items(sources.take(4)) { source -> // Show max 4 sources as preview
+                                            Surface(
+                                                modifier = Modifier
+                                                    .width(120.dp)
+                                                    .height(60.dp),
+                                                shape = RoundedCornerShape(6.dp),
+                                                color = MaterialTheme.colorScheme.surface,
+                                                tonalElevation = 2.dp
+                                            ) {
+                                                Column(
+                                                    modifier = Modifier
+                                                        .fillMaxSize()
+                                                        .padding(8.dp),
+                                                    verticalArrangement = Arrangement.Center,
+                                                    horizontalAlignment = Alignment.CenterHorizontally
+                                                ) {
+                                                    Text(
+                                                        text = source.provider.displayName,
+                                                        style = MaterialTheme.typography.bodySmall,
+                                                        color = MaterialTheme.colorScheme.onSurface,
+                                                        fontWeight = FontWeight.Medium,
+                                                        maxLines = 1,
+                                                        overflow = TextOverflow.Ellipsis
+                                                    )
+                                                    Text(
+                                                        text = source.quality.displayName,
+                                                        style = MaterialTheme.typography.labelSmall,
+                                                        color = MaterialTheme.colorScheme.primary
+                                                    )
+                                                }
+                                            }
+                                        }
                                     }
                                 } else {
                                     // No sources available
@@ -509,6 +554,41 @@ fun MovieDetailsScreen(
             }
         }
     }
+    
+    // Advanced Source Selection Bottom Sheet
+    SourceListBottomSheet(
+        isVisible = showSourceSelection,
+        sources = sourceSelectionState.filteredSources,
+        selectedSource = sourceSelectionState.selectedSource,
+        state = sourceSelectionState,
+        onDismiss = { viewModel.hideSourceSelection() },
+        onSourceSelected = { source ->
+            viewModel.onSourceSelected(source)
+            
+            // Trigger movie playback with selected source
+            movie?.let { currentMovie ->
+                playbackViewModel.startMoviePlaybackWithSource(
+                    movie = currentMovie,
+                    source = source
+                )
+            }
+        },
+        onRefresh = {
+            movie?.let { currentMovie ->
+                val tmdbId = currentMovie.id.toString()
+                val imdbId = uiState.tmdbResponse?.imdbId
+                viewModel.loadSourcesForMovie(tmdbId, imdbId)
+            }
+        },
+        onPlaySource = { source ->
+            movie?.let { currentMovie ->
+                playbackViewModel.startMoviePlaybackWithSource(
+                    movie = currentMovie,
+                    source = source
+                )
+            }
+        }
+    )
 }
 
 @Composable

@@ -121,6 +121,94 @@ class PlaybackViewModel @Inject constructor(
         }
     }
     
+    /**
+     * Start episode playback with advanced source metadata
+     */
+    fun startEpisodePlaybackWithSource(
+        tvShow: com.rdwatch.androidtv.ui.details.models.TVShowContentDetail,
+        episode: com.rdwatch.androidtv.ui.details.models.TVEpisode,
+        source: com.rdwatch.androidtv.ui.details.models.advanced.SourceMetadata
+    ) {
+        viewModelScope.launch {
+            try {
+                // Create a unique content ID for the episode
+                val episodeContentId = "${tvShow.id}:${episode.seasonNumber}:${episode.episodeNumber}"
+                
+                // Extract URL from metadata (stored in metadata map)
+                val sourceUrl = source.metadata["originalUrl"] ?: ""
+                
+                // Log the playback attempt with enhanced source info
+                android.util.Log.d("PlaybackViewModel", "Starting episode playback with advanced source:")
+                android.util.Log.d("PlaybackViewModel", "  Episode: ${episode.title}")
+                android.util.Log.d("PlaybackViewModel", "  Provider: ${source.provider.name}")
+                android.util.Log.d("PlaybackViewModel", "  Quality: ${source.quality.resolution}")
+                android.util.Log.d("PlaybackViewModel", "  Health Score: ${source.health.seeders}/${source.health.leechers}")
+                
+                if (sourceUrl.isBlank()) {
+                    throw IllegalArgumentException("Source URL is missing or empty")
+                }
+                
+                // Start playback with the source URL
+                exoPlayerManager.startPlaybackSession(
+                    mediaUrl = sourceUrl,
+                    title = "${tvShow.title} - S${episode.seasonNumber}E${episode.episodeNumber}: ${episode.title} [${source.quality.resolution}]"
+                )
+                
+                android.util.Log.d("PlaybackViewModel", "Advanced episode playback started successfully")
+                
+            } catch (e: Exception) {
+                android.util.Log.e("PlaybackViewModel", "Failed to start advanced episode playback: ${e.message}")
+                // Update UI state to show error
+                _uiState.value = _uiState.value.copy(
+                    hasError = true,
+                    errorMessage = "Failed to start playback: ${e.message}"
+                )
+            }
+        }
+    }
+    
+    /**
+     * Start movie playback with advanced source metadata
+     */
+    fun startMoviePlaybackWithSource(
+        movie: com.rdwatch.androidtv.Movie,
+        source: com.rdwatch.androidtv.ui.details.models.advanced.SourceMetadata
+    ) {
+        viewModelScope.launch {
+            try {
+                // Extract URL from metadata (stored in metadata map)
+                val sourceUrl = source.metadata["originalUrl"] ?: ""
+                
+                // Log the playback attempt with enhanced source info
+                android.util.Log.d("PlaybackViewModel", "Starting movie playback with advanced source:")
+                android.util.Log.d("PlaybackViewModel", "  Movie: ${movie.title}")
+                android.util.Log.d("PlaybackViewModel", "  Provider: ${source.provider.name}")
+                android.util.Log.d("PlaybackViewModel", "  Quality: ${source.quality.resolution}")
+                android.util.Log.d("PlaybackViewModel", "  Health Score: ${source.health.seeders}/${source.health.leechers}")
+                
+                if (sourceUrl.isBlank()) {
+                    throw IllegalArgumentException("Source URL is missing or empty")
+                }
+                
+                // Start playback with the source URL
+                exoPlayerManager.startPlaybackSession(
+                    mediaUrl = sourceUrl,
+                    title = "${movie.title} [${source.quality.resolution}]"
+                )
+                
+                android.util.Log.d("PlaybackViewModel", "Advanced movie playback started successfully")
+                
+            } catch (e: Exception) {
+                android.util.Log.e("PlaybackViewModel", "Failed to start advanced movie playback: ${e.message}")
+                // Update UI state to show error
+                _uiState.value = _uiState.value.copy(
+                    hasError = true,
+                    errorMessage = "Failed to start playback: ${e.message}"
+                )
+            }
+        }
+    }
+    
     // Content Management Methods
     fun markAsWatched(contentId: String? = null) {
         exoPlayerManager.markAsWatched(contentId)

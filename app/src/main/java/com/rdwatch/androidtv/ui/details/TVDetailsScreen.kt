@@ -84,6 +84,19 @@ fun TVDetailsScreen(
                         onEpisodeClick(episode)
                     },
                     onBackToDetails = { viewModel.selectTab(0) }, // Return to Overview tab
+                    viewModel = viewModel, // Pass ViewModel for advanced source management
+                    onSourceSelected = { source ->
+                        // Handle source selection for episode playback
+                        // This could trigger playback with the selected source
+                    },
+                    onPlayWithSource = { episode, source ->
+                        // Handle playing episode with specific source
+                        playbackViewModel.startEpisodePlaybackWithSource(
+                            tvShow = tvShow,
+                            episode = episode,
+                            source = source
+                        )
+                    },
                     modifier = modifier
                 )
             } else {

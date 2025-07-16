@@ -14,7 +14,12 @@ import com.rdwatch.androidtv.ui.details.models.ExtendedContentMetadata
 import com.rdwatch.androidtv.ui.details.models.CastMember
 import com.rdwatch.androidtv.ui.details.models.CrewMember
 import com.rdwatch.androidtv.ui.details.models.StreamingSource
+import com.rdwatch.androidtv.ui.details.models.advanced.*
 import com.rdwatch.androidtv.ui.details.managers.ScraperSourceManager
+import com.rdwatch.androidtv.ui.details.viewmodels.SourceListViewModel
+import android.content.Context
+import dagger.hilt.android.qualifiers.ApplicationContext
+import java.util.Date
 import kotlinx.coroutines.withContext
 import com.rdwatch.androidtv.ui.common.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -30,8 +35,13 @@ import javax.inject.Inject
 class MovieDetailsViewModel @Inject constructor(
     private val tmdbMovieRepository: TMDbMovieRepository,
     private val tmdbMovieService: com.rdwatch.androidtv.network.api.TMDbMovieService,
-    private val scraperSourceManager: ScraperSourceManager
+    private val scraperSourceManager: ScraperSourceManager,
+    @ApplicationContext private val context: Context
 ) : BaseViewModel<MovieDetailsUiState>() {
+    
+    // Advanced source management
+    private val advancedSourceManager = AdvancedSourceManager(context)
+    private val sourceListViewModel = SourceListViewModel(advancedSourceManager)
     
     private val _movieState = MutableStateFlow<UiState<Movie>>(UiState.Loading)
     val movieState: StateFlow<UiState<Movie>> = _movieState.asStateFlow()
@@ -47,6 +57,16 @@ class MovieDetailsViewModel @Inject constructor(
     
     private val _sourcesState = MutableStateFlow<UiState<List<StreamingSource>>>(UiState.Loading)
     val sourcesState: StateFlow<UiState<List<StreamingSource>>> = _sourcesState.asStateFlow()
+    
+    // Advanced source management state
+    private val _advancedSources = MutableStateFlow<List<SourceMetadata>>(emptyList())
+    val advancedSources: StateFlow<List<SourceMetadata>> = _advancedSources.asStateFlow()
+    
+    private val _sourceSelectionState = MutableStateFlow(SourceSelectionState())
+    val sourceSelectionState: StateFlow<SourceSelectionState> = _sourceSelectionState.asStateFlow()
+    
+    private val _showSourceSelection = MutableStateFlow(false)
+    val showSourceSelection: StateFlow<Boolean> = _showSourceSelection.asStateFlow()
     
     override fun createInitialState(): MovieDetailsUiState {
         return MovieDetailsUiState()
@@ -533,6 +553,9 @@ class MovieDetailsViewModel @Inject constructor(
                 _sourcesState.value = UiState.Success(sources)
                 updateState { copy(availableSources = sources, sourcesLoading = false) }
                 
+                // Process sources with advanced manager
+                loadAdvancedSourcesForMovie(sources, tmdbId)
+                
                 println("DEBUG [MovieDetailsViewModel]: Updated sourcesState with ${sources.size} sources")
                 println("DEBUG [MovieDetailsViewModel]: Updated uiState.availableSources with ${sources.size} sources")
             } catch (e: Exception) {
@@ -613,6 +636,162 @@ class MovieDetailsViewModel @Inject constructor(
                 isDeleting = false,
                 error = "An error occurred: ${exception.message}"
             )
+        }
+    }
+    
+    // ===== ADVANCED SOURCE MANAGEMENT METHODS =====
+    
+    /**
+     * Load advanced sources for a movie with enhanced processing
+     */
+    private fun loadAdvancedSourcesForMovie(streamingSources: List<StreamingSource>, movieId: String) {
+        viewModelScope.launch {
+            try {
+                android.util.Log.d("MovieDetailsViewModel", "Loading advanced sources for movie: $movieId")
+                
+                // Convert to SourceMetadata for advanced processing
+                val sourceMetadata = streamingSources.map { streamingSource ->
+                    convertStreamingSourceToMetadata(streamingSource, movieId)
+                }
+                
+                // Process sources with advanced manager
+                val processedSources = sourceMetadata.map { source ->
+                    advancedSourceManager.processSource(source)
+                }
+                
+                // Update advanced sources
+                _advancedSources.value = processedSources.map { it.sourceMetadata }
+                
+                android.util.Log.d("MovieDetailsViewModel", "Loaded ${processedSources.size} advanced sources for movie")
+                
+            } catch (e: Exception) {
+                android.util.Log.e("MovieDetailsViewModel", "Failed to load advanced sources: ${e.message}")
+            }
+        }
+    }
+    
+    /**
+     * Trigger advanced source selection UI for movie
+     */
+    fun selectAdvancedSources() {
+        val sources = _advancedSources.value
+        
+        // Update source selection state
+        _sourceSelectionState.value = SourceSelectionState(
+            sources = sources,
+            filteredSources = sources
+        )
+        
+        _showSourceSelection.value = true
+    }
+    
+    /**
+     * Hide source selection UI
+     */
+    fun hideSourceSelection() {
+        _showSourceSelection.value = false
+    }
+    
+    /**
+     * Handle source selection from UI
+     */
+    fun onSourceSelected(source: SourceMetadata) {
+        android.util.Log.d("MovieDetailsViewModel", "Source selected for movie: ${source.provider.name}")
+        
+        // Hide source selection
+        hideSourceSelection()
+        
+        // TODO: Trigger playback with selected source
+        // This will be handled by the PlaybackViewModel or similar component
+    }
+    
+    /**
+     * Convert StreamingSource to SourceMetadata for advanced processing
+     */
+    private fun convertStreamingSourceToMetadata(
+        streamingSource: StreamingSource,
+        movieId: String
+    ): SourceMetadata {
+        return SourceMetadata(
+            id = streamingSource.id,
+            provider = SourceProviderInfo(
+                name = streamingSource.provider.name,
+                type = if (streamingSource.isPeerToPeer) ProviderType.P2P else ProviderType.DIRECT,
+                baseUrl = "", // Not available in StreamingSource
+                priority = 1,
+                reliability = 0.8f
+            ),
+            quality = QualityInfo(
+                resolution = mapStreamingQualityToVideoResolution(streamingSource.quality),
+                bitrate = null,
+                codecProfile = null,
+                hdr10 = streamingSource.features.contains("HDR"),
+                dolbyVision = streamingSource.features.contains("Dolby Vision"),
+                hdr10Plus = streamingSource.features.contains("HDR10+")
+            ),
+            codec = CodecInfo(
+                type = CodecType.H264, // Default, would need better detection
+                profile = null,
+                level = null
+            ),
+            audio = AudioInfo(
+                format = AudioCodec.AAC, // Default, would need better detection
+                channels = null,
+                bitrate = null,
+                language = null,
+                dolbyAtmos = streamingSource.features.contains("Atmos"),
+                dtsX = streamingSource.features.contains("DTS:X")
+            ),
+            release = ReleaseInfo(
+                type = ReleaseType.WEB_DL, // Default, would need better detection
+                group = null,
+                year = null,
+                source = null
+            ),
+            file = FileInfo(
+                size = null,
+                format = "mkv", // Default
+                checksum = null
+            ),
+            health = HealthInfo(
+                seeders = streamingSource.seeders,
+                leechers = streamingSource.leechers,
+                downloadCount = null,
+                lastSeen = Date(),
+                verifiedUploader = false
+            ),
+            features = FeatureInfo(
+                hasSubtitles = streamingSource.features.contains("Subtitles"),
+                hasMultipleAudio = false,
+                hasDvdExtras = false,
+                isRepack = false,
+                isProper = false,
+                isRemastered = false
+            ),
+            availability = AvailabilityInfo(
+                isCached = streamingSource.isCached,
+                cacheExpiry = null,
+                downloadSpeed = null,
+                uploadSpeed = null,
+                region = null
+            ),
+            metadata = mapOf(
+                "movieId" to movieId,
+                "originalUrl" to (streamingSource.url ?: "")
+            )
+        )
+    }
+    
+    /**
+     * Map StreamingSource quality to VideoResolution
+     */
+    private fun mapStreamingQualityToVideoResolution(quality: com.rdwatch.androidtv.ui.details.models.SourceQuality): VideoResolution {
+        return when (quality) {
+            com.rdwatch.androidtv.ui.details.models.SourceQuality.UHD_4K -> VideoResolution.RESOLUTION_4K
+            com.rdwatch.androidtv.ui.details.models.SourceQuality.FHD_1080P -> VideoResolution.RESOLUTION_1080P
+            com.rdwatch.androidtv.ui.details.models.SourceQuality.HD_720P -> VideoResolution.RESOLUTION_720P
+            com.rdwatch.androidtv.ui.details.models.SourceQuality.SD_480P -> VideoResolution.RESOLUTION_480P
+            else -> VideoResolution.RESOLUTION_UNKNOWN
         }
     }
 }

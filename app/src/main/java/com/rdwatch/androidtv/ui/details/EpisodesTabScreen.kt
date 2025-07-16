@@ -9,10 +9,14 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.unit.dp
 import com.rdwatch.androidtv.ui.details.components.*
 import com.rdwatch.androidtv.ui.details.models.*
+import com.rdwatch.androidtv.ui.details.models.advanced.*
+import androidx.compose.runtime.collectAsState
+import androidx.hilt.navigation.compose.hiltViewModel
 
 /**
  * Dedicated Episodes tab screen that replaces nested scrolling with single container
  * Eliminates the LazyColumn/LazyVerticalGrid conflict in TVDetailsScreen
+ * Now includes advanced source selection integration
  */
 @Composable
 fun EpisodesTabScreen(
@@ -23,8 +27,16 @@ fun EpisodesTabScreen(
     onEpisodeSelected: (TVEpisode) -> Unit,
     onBackToDetails: () -> Unit,
     modifier: Modifier = Modifier,
-    firstFocusRequester: FocusRequester? = null
+    firstFocusRequester: FocusRequester? = null,
+    // Advanced source selection parameters
+    viewModel: TVDetailsViewModel = hiltViewModel(),
+    onSourceSelected: ((SourceMetadata) -> Unit)? = null,
+    onPlayWithSource: ((TVEpisode, SourceMetadata) -> Unit)? = null
 ) {
+    // Advanced source selection state
+    val episodeSourcesMap by viewModel.episodeSourcesMap.collectAsState()
+    val showSourceSelection by viewModel.showSourceSelection.collectAsState()
+    val sourceSelectionState by viewModel.sourceSelectionState.collectAsState()
     // Get authoritative season data to ensure consistency
     val authoritativeSeasons = remember(tvShow.id) { tvShow.getSeasons() }
     val authoritativeSelectedSeason = remember(selectedSeason, authoritativeSeasons) {
@@ -63,11 +75,52 @@ fun EpisodesTabScreen(
                         onSeasonSelected(foundSeason)
                     }
                 },
-                onEpisodeClick = onEpisodeSelected,
+                onEpisodeClick = { episode ->
+                    // Enhanced episode click handler with source selection
+                    val episodeKey = "${episode.seasonNumber}-${episode.episodeNumber}"
+                    val availableSources = episodeSourcesMap[episodeKey] ?: emptyList()
+                    
+                    if (availableSources.isNotEmpty()) {
+                        // If sources available, show source selection
+                        viewModel.selectSourcesForEpisode(episode)
+                    } else {
+                        // Otherwise, select episode normally and load sources
+                        onEpisodeSelected(episode)
+                    }
+                },
                 uiState = episodeGridUiState,
+                episodeSourcesMap = episodeSourcesMap, // Pass source data to grid
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(horizontal = 24.dp, vertical = 12.dp)
+            )
+            
+            // Advanced Source Selection Bottom Sheet
+            SourceListBottomSheet(
+                isVisible = showSourceSelection,
+                sources = sourceSelectionState.filteredSources,
+                selectedSource = sourceSelectionState.selectedSource,
+                state = sourceSelectionState,
+                onDismiss = { viewModel.hideSourceSelection() },
+                onSourceSelected = { source ->
+                    viewModel.onSourceSelected(source)
+                    onSourceSelected?.invoke(source)
+                    
+                    // Trigger playback if callback provided
+                    sourceSelectionState.selectedEpisode?.let { episode ->
+                        onPlayWithSource?.invoke(episode, source)
+                    }
+                },
+                onRefresh = {
+                    sourceSelectionState.selectedEpisode?.let { episode ->
+                        viewModel.loadAdvancedSourcesForEpisode(tvShow, episode)
+                    }
+                },
+                onPlaySource = { source ->
+                    sourceSelectionState.selectedEpisode?.let { episode ->
+                        onPlayWithSource?.invoke(episode, source)
+                    }
+                }
             )
         } ?: run {
             // No seasons available - show empty state

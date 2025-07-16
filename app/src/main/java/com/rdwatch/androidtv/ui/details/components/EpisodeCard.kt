@@ -27,11 +27,13 @@ import com.rdwatch.androidtv.R
 import com.rdwatch.androidtv.presentation.components.tvCardFocus
 import com.rdwatch.androidtv.ui.focus.tvFocusable
 import com.rdwatch.androidtv.ui.details.models.TVEpisode
+import com.rdwatch.androidtv.ui.details.models.advanced.SourceMetadata
+import com.rdwatch.androidtv.ui.details.models.advanced.VideoResolution
 import com.rdwatch.androidtv.ui.theme.RdwatchTheme
 
 /**
  * Episode card component for displaying individual TV show episodes
- * Optimized for Android TV with focus handling and progress indicators
+ * Optimized for Android TV with focus handling, progress indicators, and source availability
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -41,7 +43,12 @@ fun EpisodeCard(
     modifier: Modifier = Modifier,
     isFocused: Boolean = false,
     showProgress: Boolean = true,
-    aspectRatio: Float = 16f / 9f
+    aspectRatio: Float = 16f / 9f,
+    // Source-related parameters
+    availableSources: List<SourceMetadata> = emptyList(),
+    isLoadingSources: Boolean = false,
+    onSourceSelectionClick: (() -> Unit)? = null,
+    showSourceIndicators: Boolean = true
 ) {
     var focused by remember(episode.id) { mutableStateOf(isFocused) }
     
@@ -149,6 +156,17 @@ fun EpisodeCard(
                             }
                         }
                         
+                        // Source availability indicators
+                        if (showSourceIndicators) {
+                            SourceAvailabilityIndicators(
+                                sources = availableSources,
+                                isLoading = isLoadingSources,
+                                modifier = Modifier
+                                    .align(Alignment.TopStart)
+                                    .padding(6.dp)
+                            )
+                        }
+                        
                         // Episode runtime
                         episode.getFormattedRuntime()?.let { runtime ->
                             Box(
@@ -221,27 +239,154 @@ fun EpisodeCard(
                         )
                     }
                     
-                    // Rating
-                    if (episode.voteAverage > 0) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Star,
-                                contentDescription = "Rating",
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(12.dp)
+                    // Rating and source info
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        // Source count indicator
+                        if (showSourceIndicators && availableSources.isNotEmpty()) {
+                            SourceCountBadge(
+                                count = availableSources.size,
+                                maxQuality = availableSources.maxByOrNull { it.quality.resolution.baseScore }?.quality?.resolution,
+                                onClick = onSourceSelectionClick
                             )
-                            Text(
-                                text = String.format("%.1f", episode.voteAverage),
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                                fontSize = 10.sp,
-                                modifier = Modifier.padding(start = 2.dp)
-                            )
+                        }
+                        
+                        // Rating
+                        if (episode.voteAverage > 0) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Star,
+                                    contentDescription = "Rating",
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(12.dp)
+                                )
+                                Text(
+                                    text = String.format("%.1f", episode.voteAverage),
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                                    fontSize = 10.sp,
+                                    modifier = Modifier.padding(start = 2.dp)
+                                )
+                            }
                         }
                     }
                 }
             }
+        }
+    }
+}
+
+/**
+ * Source availability indicators overlay
+ */
+@Composable
+private fun SourceAvailabilityIndicators(
+    sources: List<SourceMetadata>,
+    isLoading: Boolean,
+    modifier: Modifier = Modifier
+) {
+    if (isLoading) {
+        Box(
+            modifier = modifier
+                .size(16.dp)
+                .background(
+                    MaterialTheme.colorScheme.primary.copy(alpha = 0.8f),
+                    shape = RoundedCornerShape(8.dp)
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator(
+                modifier = Modifier.size(12.dp),
+                strokeWidth = 1.5.dp,
+                color = MaterialTheme.colorScheme.onPrimary
+            )
+        }
+    } else if (sources.isNotEmpty()) {
+        // Show highest quality badge
+        sources.maxByOrNull { it.quality.resolution.baseScore }?.let { bestSource ->
+            QualityBadge(
+                quality = bestSource.quality.resolution,
+                modifier = modifier
+            )
+        }
+    }
+}
+
+/**
+ * Quality badge for showing highest available resolution
+ */
+@Composable
+private fun QualityBadge(
+    quality: VideoResolution,
+    modifier: Modifier = Modifier
+) {
+    val (text, color) = when (quality) {
+        VideoResolution.RESOLUTION_4K -> "4K" to MaterialTheme.colorScheme.primary
+        VideoResolution.RESOLUTION_1080P -> "HD" to MaterialTheme.colorScheme.secondary
+        VideoResolution.RESOLUTION_720P -> "720" to MaterialTheme.colorScheme.tertiary
+        else -> "SD" to MaterialTheme.colorScheme.outline
+    }
+    
+    Box(
+        modifier = modifier
+            .background(
+                color.copy(alpha = 0.9f),
+                shape = RoundedCornerShape(4.dp)
+            )
+            .padding(horizontal = 4.dp, vertical = 2.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = text,
+            color = MaterialTheme.colorScheme.onPrimary,
+            fontSize = 8.sp,
+            fontWeight = FontWeight.Bold
+        )
+    }
+}
+
+/**
+ * Source count badge that can be clicked for source selection
+ */
+@Composable
+private fun SourceCountBadge(
+    count: Int,
+    maxQuality: VideoResolution?,
+    onClick: (() -> Unit)?,
+    modifier: Modifier = Modifier
+) {
+    val clickableModifier = if (onClick != null) {
+        modifier.clickable(onClick = onClick)
+    } else modifier
+    
+    Box(
+        modifier = clickableModifier
+            .background(
+                MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.8f),
+                shape = RoundedCornerShape(8.dp)
+            )
+            .padding(horizontal = 4.dp, vertical = 2.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(2.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.VideoLibrary,
+                contentDescription = "Sources available",
+                modifier = Modifier.size(8.dp),
+                tint = MaterialTheme.colorScheme.onSecondaryContainer
+            )
+            Text(
+                text = count.toString(),
+                fontSize = 8.sp,
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onSecondaryContainer
+            )
         }
     }
 }
@@ -256,7 +401,12 @@ fun CompactEpisodeCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     isFocused: Boolean = false,
-    showProgress: Boolean = true
+    showProgress: Boolean = true,
+    // Source-related parameters
+    availableSources: List<SourceMetadata> = emptyList(),
+    isLoadingSources: Boolean = false,
+    onSourceSelectionClick: (() -> Unit)? = null,
+    showSourceIndicators: Boolean = true
 ) {
     var focused by remember { mutableStateOf(isFocused) }
     
@@ -296,6 +446,17 @@ fun CompactEpisodeCard(
                     placeholder = null,
                     error = null
                 )
+                
+                // Source availability indicators
+                if (showSourceIndicators) {
+                    SourceAvailabilityIndicators(
+                        sources = availableSources,
+                        isLoading = isLoadingSources,
+                        modifier = Modifier
+                            .align(Alignment.TopStart)
+                            .padding(4.dp)
+                    )
+                }
                 
                 // Progress indicator
                 if (showProgress && episode.hasProgress()) {
@@ -360,6 +521,16 @@ fun CompactEpisodeCard(
                         modifier = Modifier.padding(top = 2.dp)
                     )
                 }
+                
+                // Source indicator for compact view
+                if (showSourceIndicators && availableSources.isNotEmpty()) {
+                    SourceCountBadge(
+                        count = availableSources.size,
+                        maxQuality = availableSources.maxByOrNull { it.quality.resolution.baseScore }?.quality?.resolution,
+                        onClick = onSourceSelectionClick,
+                        modifier = Modifier.padding(top = 2.dp)
+                    )
+                }
             }
         }
     }
@@ -375,7 +546,12 @@ fun ListEpisodeCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     isFocused: Boolean = false,
-    showProgress: Boolean = true
+    showProgress: Boolean = true,
+    // Source-related parameters
+    availableSources: List<SourceMetadata> = emptyList(),
+    isLoadingSources: Boolean = false,
+    onSourceSelectionClick: (() -> Unit)? = null,
+    showSourceIndicators: Boolean = true
 ) {
     var focused by remember { mutableStateOf(isFocused) }
     
@@ -486,12 +662,22 @@ fun ListEpisodeCard(
             Column(
                 horizontalAlignment = Alignment.End
             ) {
+                // Source indicator for list view
+                if (showSourceIndicators && availableSources.isNotEmpty()) {
+                    SourceCountBadge(
+                        count = availableSources.size,
+                        maxQuality = availableSources.maxByOrNull { it.quality.resolution.baseScore }?.quality?.resolution,
+                        onClick = onSourceSelectionClick
+                    )
+                }
+                
                 // Episode runtime
                 episode.getFormattedRuntime()?.let { runtime ->
                     Text(
                         text = runtime,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                        fontSize = 10.sp
+                        fontSize = 10.sp,
+                        modifier = Modifier.padding(top = if (showSourceIndicators && availableSources.isNotEmpty()) 2.dp else 0.dp)
                     )
                 }
                 
