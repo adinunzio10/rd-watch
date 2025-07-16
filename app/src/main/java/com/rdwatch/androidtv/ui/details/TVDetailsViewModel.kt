@@ -1316,11 +1316,20 @@ class TVDetailsViewModel @Inject constructor(
             try {
                 android.util.Log.d("TVDetailsViewModel", "Loading sources for episode: S${episode.seasonNumber}E${episode.episodeNumber} - ${episode.title}")
                 
+                val imdbId = tvShow.getTVShowDetail().imdbId
+                android.util.Log.d("TVDetailsViewModel", "=== IMDB ID DEBUG ===")
+                android.util.Log.d("TVDetailsViewModel", "TV Show ID: ${tvShow.id}")
+                android.util.Log.d("TVDetailsViewModel", "TV Show Title: ${tvShow.getDisplayTitle()}")
+                android.util.Log.d("TVDetailsViewModel", "IMDB ID from TV Show: $imdbId")
+                android.util.Log.d("TVDetailsViewModel", "IMDB ID is null: ${imdbId == null}")
+                android.util.Log.d("TVDetailsViewModel", "IMDB ID is blank: ${imdbId.isNullOrBlank()}")
+                android.util.Log.d("TVDetailsViewModel", "=====================")
+                
                 val sources = scraperSourceManager.getSourcesForTVEpisode(
                     tvShowId = tvShow.id,
                     seasonNumber = episode.seasonNumber,
                     episodeNumber = episode.episodeNumber,
-                    imdbId = tvShow.getTVShowDetail().imdbId,
+                    imdbId = imdbId,
                     tmdbId = tvShow.id
                 )
                 
