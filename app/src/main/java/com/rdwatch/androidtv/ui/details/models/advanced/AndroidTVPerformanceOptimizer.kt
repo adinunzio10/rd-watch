@@ -533,21 +533,21 @@ private class PerformanceTracker {
     fun recordProcessingTime(timeMs: Long) {
         synchronized(this) {
             processingTimes.add(timeMs)
-            if (processingTimes.size > 100) processingTimes.removeFirst()
+            if (processingTimes.size > 100) processingTimes.removeAt(0)
         }
     }
     
     fun recordUIResponseTime(timeMs: Long) {
         synchronized(this) {
             uiResponseTimes.add(timeMs)
-            if (uiResponseTimes.size > 100) uiResponseTimes.removeFirst()
+            if (uiResponseTimes.size > 100) uiResponseTimes.removeAt(0)
         }
     }
     
     fun recordProcessingLoad(load: ProcessingLoad) {
         synchronized(this) {
             processingLoads.add(load)
-            if (processingLoads.size > 50) processingLoads.removeFirst()
+            if (processingLoads.size > 50) processingLoads.removeAt(0)
         }
     }
     
@@ -574,7 +574,7 @@ private class MemoryUsageTracker {
                 availableMemoryMB = availableMemoryMB,
                 usedMemoryMB = totalMemoryMB - availableMemoryMB
             ))
-            if (memoryReadings.size > 100) memoryReadings.removeFirst()
+            if (memoryReadings.size > 100) memoryReadings.removeAt(0)
         }
     }
     

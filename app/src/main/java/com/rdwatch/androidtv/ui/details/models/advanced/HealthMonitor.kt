@@ -499,7 +499,7 @@ class HealthMonitor {
         
         // Keep only recent history (last 50 entries)
         if (history.size > 50) {
-            history.removeFirst()
+            history.removeAt(0)
         }
         
         // Update state flow
