@@ -201,7 +201,8 @@ fun MovieDetailsScreen(
                             onPlayClick = onPlayClick,
                             onBackPressed = onBackPressed,
                             firstFocusRequester = firstFocusRequester,
-                            overscanMargin = overscanMargin
+                            overscanMargin = overscanMargin,
+                            viewModel = viewModel
                         )
                     }
                     
@@ -224,9 +225,6 @@ fun MovieDetailsScreen(
                             content = movieContentDetail,
                             onActionClick = { action ->
                                 when (action) {
-                                    is ContentAction.Play -> {
-                                        onPlayClick(movie)
-                                    }
                                     is ContentAction.AddToWatchlist -> {
                                         if (action.isInWatchlist) {
                                             viewModel.removeFromWatchlist()
@@ -455,7 +453,8 @@ private fun MovieHeroSection(
     onPlayClick: (Movie) -> Unit,
     onBackPressed: () -> Unit,
     firstFocusRequester: FocusRequester,
-    overscanMargin: androidx.compose.ui.unit.Dp
+    overscanMargin: androidx.compose.ui.unit.Dp,
+    viewModel: MovieDetailsViewModel
 ) {
     Box(
         modifier = Modifier
@@ -570,7 +569,24 @@ private fun MovieHeroSection(
             
             // Play button
             PlayButton(
-                onClick = { onPlayClick(movie) },
+                onClick = {
+                    val sources = viewModel.advancedSources.value
+                    val isLoading = viewModel.uiState.value.isSourcesLoading
+                    
+                    if (isLoading) {
+                        // Sources are still loading, do nothing
+                        return@PlayButton
+                    }
+                    
+                    if (sources.isEmpty()) {
+                        // No sources available, show warning (defensive coding)
+                        println("WARNING: No sources available for playback")
+                        return@PlayButton
+                    }
+                    
+                    // Open advanced source selection
+                    viewModel.selectAdvancedSources()
+                },
                 isResume = watchProgress > 0f && !isCompleted
             )
         }
