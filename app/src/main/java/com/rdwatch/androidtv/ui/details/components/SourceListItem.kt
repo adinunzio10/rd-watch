@@ -21,7 +21,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.rdwatch.androidtv.ui.details.models.advanced.SourceMetadata
+import com.rdwatch.androidtv.ui.details.models.advanced.*
+import com.rdwatch.androidtv.ui.details.components.QualityBadgeSize
 import com.rdwatch.androidtv.ui.focus.tvFocusable
 import java.util.Date
 

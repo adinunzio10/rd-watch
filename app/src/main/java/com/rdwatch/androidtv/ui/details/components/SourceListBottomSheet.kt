@@ -33,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.rdwatch.androidtv.ui.details.models.advanced.*
+import com.rdwatch.androidtv.ui.details.models.SourceSortOption
 import com.rdwatch.androidtv.ui.focus.tvFocusable
 import com.rdwatch.androidtv.ui.focus.rememberTVFocusGroup
 import com.rdwatch.androidtv.ui.focus.AutoTVFocus
@@ -243,6 +244,7 @@ private fun SourceListHeader(
     onSortChanged: (SourceSortOption) -> Unit,
     focusGroup: com.rdwatch.androidtv.ui.focus.TVFocusGroup
 ) {
+    val refreshFocusRequester = remember { FocusRequester() }
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -272,7 +274,6 @@ private fun SourceListHeader(
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Refresh button
-            val refreshFocusRequester = remember { FocusRequester() }
             var refreshFocused by remember { mutableStateOf(false) }
             
             IconButton(

@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import com.rdwatch.androidtv.ui.components.SmartTVImageLoader
 import com.rdwatch.androidtv.ui.components.ImagePriority
 import com.rdwatch.androidtv.ui.details.models.*
+import com.rdwatch.androidtv.ui.details.models.MetadataChip
 import com.rdwatch.androidtv.ui.focus.TVFocusIndicator
 import com.rdwatch.androidtv.ui.focus.tvFocusable
 
@@ -229,10 +230,7 @@ private fun HeroMetadataRow(
         // Show completion status if watched
         if (progress.isCompleted) {
             HeroMetadataChip(
-                chip = MetadataChip.Custom(
-                    text = "Watched",
-                    icon = "check_circle"
-                )
+                chip = MetadataChip.Custom("Watched")
             )
         }
     }
@@ -242,66 +240,7 @@ private fun HeroMetadataRow(
  * Get content-type specific metadata chips
  */
 private fun getContentTypeSpecificChips(content: ContentDetail): List<MetadataChip> {
-    val chips = mutableListOf<MetadataChip>()
-    
-    when (content.contentType) {
-        ContentType.MOVIE -> {
-            // Movie-specific metadata: Quality, Rating, Year, Duration, Studio
-            content.metadata.quality?.let { chips.add(MetadataChip.Quality(it)) }
-            if (content.metadata.is4K) chips.add(MetadataChip.Quality("4K"))
-            if (content.metadata.isHDR) chips.add(MetadataChip.Quality("HDR"))
-            content.metadata.rating?.let { chips.add(MetadataChip.Rating(it)) }
-            content.metadata.year?.let { chips.add(MetadataChip.Year(it)) }
-            content.metadata.duration?.let { chips.add(MetadataChip.Duration(it)) }
-            content.metadata.studio?.let { chips.add(MetadataChip.Studio(it)) }
-        }
-        ContentType.TV_SHOW -> {
-            // TV Show-specific metadata: Quality, Rating, Year, Seasons, Network
-            content.metadata.quality?.let { chips.add(MetadataChip.Quality(it)) }
-            if (content.metadata.is4K) chips.add(MetadataChip.Quality("4K"))
-            if (content.metadata.isHDR) chips.add(MetadataChip.Quality("HDR"))
-            content.metadata.rating?.let { chips.add(MetadataChip.Rating(it)) }
-            content.metadata.year?.let { chips.add(MetadataChip.Year(it)) }
-            
-            // Add seasons info from custom metadata
-            content.metadata.customMetadata["seasons"]?.let { seasons ->
-                chips.add(MetadataChip.Custom("$seasons Seasons"))
-            }
-            content.metadata.customMetadata["episodes"]?.let { episodes ->
-                chips.add(MetadataChip.Custom("$episodes Episodes"))
-            }
-            
-            content.metadata.studio?.let { chips.add(MetadataChip.Studio(it)) }
-        }
-        ContentType.TV_EPISODE -> {
-            // Episode-specific metadata: Quality, Rating, Season/Episode, Duration
-            content.metadata.quality?.let { chips.add(MetadataChip.Quality(it)) }
-            if (content.metadata.is4K) chips.add(MetadataChip.Quality("4K"))
-            if (content.metadata.isHDR) chips.add(MetadataChip.Quality("HDR"))
-            content.metadata.rating?.let { chips.add(MetadataChip.Rating(it)) }
-            
-            // Show season and episode info
-            val season = content.metadata.season
-            val episode = content.metadata.episode
-            if (season != null && episode != null) {
-                chips.add(MetadataChip.Custom("S${season}E${episode}"))
-            }
-            
-            content.metadata.duration?.let { chips.add(MetadataChip.Duration(it)) }
-            content.metadata.year?.let { chips.add(MetadataChip.Year(it)) }
-        }
-        else -> {
-            // Default metadata for other content types
-            content.metadata.quality?.let { chips.add(MetadataChip.Quality(it)) }
-            if (content.metadata.is4K) chips.add(MetadataChip.Quality("4K"))
-            if (content.metadata.isHDR) chips.add(MetadataChip.Quality("HDR"))
-            content.metadata.rating?.let { chips.add(MetadataChip.Rating(it)) }
-            content.metadata.year?.let { chips.add(MetadataChip.Year(it)) }
-            content.metadata.duration?.let { chips.add(MetadataChip.Duration(it)) }
-        }
-    }
-    
-    return chips
+    return content.getMetadataChips()
 }
 
 @Composable
@@ -407,8 +346,8 @@ private fun DefaultMetadataChip(
         ) {
             // Icon support would need to be implemented based on chip.icon
             chip.icon?.let { iconName ->
-                val icon = getIconForName(iconName)
-                icon?.let {
+                val iconVector = getIconForName(iconName)
+                iconVector?.let {
                     Icon(
                         imageVector = it,
                         contentDescription = null,

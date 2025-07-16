@@ -665,11 +665,4 @@ data class SourceFilter(
 /**
  * Sorting options for sources
  */
-enum class SourceSortOption {
-    QUALITY_SCORE,
-    FILE_SIZE,
-    SEEDERS,
-    ADDED_DATE,
-    PROVIDER,
-    RELEASE_TYPE
-}
+// SourceSortOption moved to com.rdwatch.androidtv.ui.details.models.SourceSortOption

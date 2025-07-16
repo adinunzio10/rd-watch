@@ -121,7 +121,7 @@ class AndroidTVPerformanceOptimizer(private val context: Context) {
         // Memory recommendations
         if (currentMemoryUsage > 0.8f) {
             recommendations.add(PerformanceRecommendation(
-                type = RecommendationType.MEMORY_OPTIMIZATION,
+                type = PerformanceOptimizationType.MEMORY_OPTIMIZATION,
                 priority = RecommendationPriority.HIGH,
                 description = "High memory usage detected. Consider reducing concurrent processing.",
                 action = "Reduce batch size from $currentBatchSize to ${currentBatchSize / 2}"
@@ -131,7 +131,7 @@ class AndroidTVPerformanceOptimizer(private val context: Context) {
         // Processing recommendations
         if (sourceCount > performanceConfig.largeDatasetThreshold) {
             recommendations.add(PerformanceRecommendation(
-                type = RecommendationType.PROCESSING_OPTIMIZATION,
+                type = PerformanceOptimizationType.PROCESSING_OPTIMIZATION,
                 priority = RecommendationPriority.MEDIUM,
                 description = "Large dataset detected. Consider progressive loading.",
                 action = "Process sources in chunks of ${performanceConfig.optimalBatchSize}"
@@ -141,7 +141,7 @@ class AndroidTVPerformanceOptimizer(private val context: Context) {
         // Device-specific recommendations
         if (deviceCapabilities.isLowEndDevice) {
             recommendations.add(PerformanceRecommendation(
-                type = RecommendationType.DEVICE_OPTIMIZATION,
+                type = PerformanceOptimizationType.DEVICE_OPTIMIZATION,
                 priority = RecommendationPriority.HIGH,
                 description = "Low-end device detected. Use conservative settings.",
                 action = "Enable low-performance mode with reduced features"
@@ -169,7 +169,7 @@ class AndroidTVPerformanceOptimizer(private val context: Context) {
         return AndroidTVPerformanceStats(
             deviceCapabilities = deviceCapabilities,
             currentMemoryUsageMB = (deviceCapabilities.totalMemoryMB - memoryInfo.availMem / (1024 * 1024)).toFloat(),
-            memoryPressure = calculateMemoryPressure(memoryInfo.availMem / (1024 * 1024)),
+            memoryPressure = calculateMemoryPressure((memoryInfo.availMem / (1024 * 1024)).toFloat()),
             currentConcurrencyLimit = currentConcurrencyLimit,
             currentBatchSize = currentBatchSize,
             averageProcessingTimeMs = performanceMetrics.getAverageProcessingTime(),
@@ -217,9 +217,9 @@ class AndroidTVPerformanceOptimizer(private val context: Context) {
         )
     }
     
-    private fun createPerformanceConfig(capabilities: DeviceCapabilities): PerformanceConfiguration {
+    private fun createPerformanceConfig(capabilities: DeviceCapabilities): AndroidTVPerformanceConfiguration {
         return when (capabilities.performanceTier) {
-            PerformanceTier.HIGH_END -> PerformanceConfiguration(
+            PerformanceTier.HIGH_END -> AndroidTVPerformanceConfiguration(
                 defaultConcurrency = 8,
                 maxThreads = 12,
                 defaultBatchSize = 50,
@@ -229,7 +229,7 @@ class AndroidTVPerformanceOptimizer(private val context: Context) {
                 largeDatasetThreshold = 1000,
                 optimalBatchSize = 50
             )
-            PerformanceTier.MID_RANGE -> PerformanceConfiguration(
+            PerformanceTier.MID_RANGE -> AndroidTVPerformanceConfiguration(
                 defaultConcurrency = 6,
                 maxThreads = 8,
                 defaultBatchSize = 30,
@@ -239,7 +239,7 @@ class AndroidTVPerformanceOptimizer(private val context: Context) {
                 largeDatasetThreshold = 500,
                 optimalBatchSize = 30
             )
-            PerformanceTier.STANDARD -> PerformanceConfiguration(
+            PerformanceTier.STANDARD -> AndroidTVPerformanceConfiguration(
                 defaultConcurrency = 4,
                 maxThreads = 6,
                 defaultBatchSize = 20,
@@ -249,7 +249,7 @@ class AndroidTVPerformanceOptimizer(private val context: Context) {
                 largeDatasetThreshold = 300,
                 optimalBatchSize = 20
             )
-            PerformanceTier.LOW_END -> PerformanceConfiguration(
+            PerformanceTier.LOW_END -> AndroidTVPerformanceConfiguration(
                 defaultConcurrency = 2,
                 maxThreads = 4,
                 defaultBatchSize = 10,
@@ -462,10 +462,9 @@ enum class MemoryPressure { NONE, LOW, MEDIUM, HIGH }
 enum class ProcessingPriority { LOW, NORMAL, HIGH, URGENT }
 enum class ProcessingStrategy { MINIMAL, CONSERVATIVE, OPTIMIZED, PROGRESSIVE }
 enum class CacheEvictionStrategy { LAZY_LRU, STANDARD_LRU, AGGRESSIVE_LRU }
-enum class RecommendationType { MEMORY_OPTIMIZATION, PROCESSING_OPTIMIZATION, DEVICE_OPTIMIZATION }
-enum class RecommendationPriority { LOW, MEDIUM, HIGH, CRITICAL }
+enum class PerformanceOptimizationType { MEMORY_OPTIMIZATION, PROCESSING_OPTIMIZATION, DEVICE_OPTIMIZATION }
 
-data class PerformanceConfiguration(
+data class AndroidTVPerformanceConfiguration(
     val defaultConcurrency: Int,
     val maxThreads: Int,
     val defaultBatchSize: Int,
@@ -507,7 +506,7 @@ data class ProcessingLoad(
 )
 
 data class PerformanceRecommendation(
-    val type: RecommendationType,
+    val type: PerformanceOptimizationType,
     val priority: RecommendationPriority,
     val description: String,
     val action: String

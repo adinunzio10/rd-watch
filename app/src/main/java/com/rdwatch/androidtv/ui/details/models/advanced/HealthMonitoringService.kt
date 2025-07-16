@@ -162,17 +162,20 @@ class HealthMonitoringService : Service() {
      */
     private suspend fun performScheduledHealthChecks() {
         val startTime = System.currentTimeMillis()
-        val checkTasks = mutableListOf<Deferred<Unit>>()
         
-        for (sourceId in monitoredSources.keys) {
-            val task = async {
-                performHealthCheck(sourceId)
+        coroutineScope {
+            val checkTasks = mutableListOf<Deferred<Unit>>()
+            
+            for (sourceId in monitoredSources.keys) {
+                val task = async {
+                    performHealthCheck(sourceId)
+                }
+                checkTasks.add(task)
             }
-            checkTasks.add(task)
+            
+            // Wait for all checks to complete
+            checkTasks.awaitAll()
         }
-        
-        // Wait for all checks to complete
-        checkTasks.awaitAll()
         
         val duration = System.currentTimeMillis() - startTime
         performanceMetrics.recordHealthCheckBatch(monitoredSources.size, duration)

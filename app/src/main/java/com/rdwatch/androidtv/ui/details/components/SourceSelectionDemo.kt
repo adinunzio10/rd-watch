@@ -13,7 +13,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.rdwatch.androidtv.ui.details.models.advanced.*
+import com.rdwatch.androidtv.ui.details.models.SourceSortOption
 import com.rdwatch.androidtv.ui.details.viewmodels.SourceListViewModel
+import com.rdwatch.androidtv.ui.details.viewmodels.SourceUsageStatistics
 import com.rdwatch.androidtv.ui.theme.RdwatchTheme
 
 /**
@@ -268,7 +270,7 @@ private fun AnalyticsCard(
                 fontWeight = FontWeight.Medium
             )
             
-            analytics.qualityDistribution.forEach { (quality, count) ->
+            analytics.qualityDistribution.resolutionCounts.forEach { (quality: VideoResolution, count: Int) ->
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
