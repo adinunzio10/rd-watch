@@ -38,8 +38,6 @@ import com.rdwatch.androidtv.ui.details.components.ContentDetailTabs
 import com.rdwatch.androidtv.ui.components.CastCrewSection
 import com.rdwatch.androidtv.ui.details.models.*
 import com.rdwatch.androidtv.ui.details.MovieDetailsUiState
-import com.rdwatch.androidtv.ui.details.components.SourceSelectionSection
-import com.rdwatch.androidtv.ui.details.components.SourceSelectionDialog
 import com.rdwatch.androidtv.ui.details.components.SourceListBottomSheet
 import com.rdwatch.androidtv.ui.details.models.advanced.*
 import androidx.media3.common.util.UnstableApi
@@ -82,6 +80,18 @@ fun MovieDetailsScreen(
     // Load movie details when screen is first displayed
     LaunchedEffect(movieId) {
         viewModel.loadMovieDetails(movieId)
+    }
+    
+    // Auto-trigger advanced source selection when sources are loaded
+    LaunchedEffect(sourcesState) {
+        if (sourcesState is UiState.Success) {
+            val sources = (sourcesState as UiState.Success).data
+            println("DEBUG [MovieDetailsScreen]: Auto-trigger LaunchedEffect - received ${sources.size} sources")
+            if (sources.isNotEmpty()) {
+                println("DEBUG [MovieDetailsScreen]: Triggering advanced source selection UI")
+                viewModel.selectAdvancedSources()
+            }
+        }
     }
     
     // Get the movie from the ViewModel state
@@ -258,140 +268,6 @@ fun MovieDetailsScreen(
                         )
                     }
                     
-                    // Source Selection Section
-                    item {
-                        var selectedSourceId by remember { mutableStateOf<String?>(null) }
-                        var showSourceDialog by remember { mutableStateOf(false) }
-                        
-                        when (sourcesState) {
-                            is UiState.Loading -> {
-                                // Show loading state for sources
-                                Surface(
-                                    modifier = Modifier.padding(horizontal = overscanMargin, vertical = 8.dp),
-                                    shape = RoundedCornerShape(8.dp),
-                                    color = MaterialTheme.colorScheme.surfaceVariant
-                                ) {
-                                    Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(16.dp),
-                                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        CircularProgressIndicator(
-                                            modifier = Modifier.size(24.dp),
-                                            color = MaterialTheme.colorScheme.primary
-                                        )
-                                        Text(
-                                            text = "Loading streaming sources...",
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
-                                    }
-                                }
-                            }
-                            is UiState.Success -> {
-                                val sources = (sourcesState as UiState.Success).data
-                                println("DEBUG [MovieDetailsScreen]: UiState.Success received with ${sources.size} sources")
-                                sources.forEach { source ->
-                                    println("DEBUG [MovieDetailsScreen]: UI Source: ${source.provider.displayName} - ${source.quality.displayName} - ${source.id}")
-                                }
-                                if (sources.isNotEmpty()) {
-                                    SourceSelectionSection(
-                                        sources = sources,
-                                        onSourceSelected = { source ->
-                                            selectedSourceId = source.id
-                                            // TODO: Handle source selection for movie playback
-                                        },
-                                        selectedSourceId = selectedSourceId,
-                                        onViewAllClick = { showSourceDialog = true },
-                                        modifier = Modifier.padding(horizontal = overscanMargin, vertical = 8.dp),
-                                        showAllSources = true // DEBUG: Temporarily show all sources to test
-                                    )
-                                    
-                                    if (showSourceDialog) {
-                                        SourceSelectionDialog(
-                                            sources = sources,
-                                            onSourceSelected = { source ->
-                                                selectedSourceId = source.id
-                                                showSourceDialog = false
-                                                // TODO: Handle source selection for movie playback
-                                            },
-                                            onDismiss = { showSourceDialog = false },
-                                            selectedSourceId = selectedSourceId,
-                                            title = "Select Movie Source"
-                                        )
-                                    }
-                                    
-                                    // Auto-trigger advanced source selection when sources are loaded
-                                    LaunchedEffect(sources) {
-                                        if (sources.isNotEmpty()) {
-                                            // Trigger advanced source selection UI
-                                            viewModel.selectAdvancedSources()
-                                        }
-                                    }
-                                } else {
-                                    // No sources available
-                                    Surface(
-                                        modifier = Modifier.padding(horizontal = overscanMargin, vertical = 8.dp),
-                                        shape = RoundedCornerShape(8.dp),
-                                        color = MaterialTheme.colorScheme.surfaceVariant
-                                    ) {
-                                        Column(
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .padding(16.dp),
-                                            horizontalAlignment = Alignment.CenterHorizontally
-                                        ) {
-                                            Text(
-                                                text = "No streaming sources available",
-                                                style = MaterialTheme.typography.bodyLarge,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                                            )
-                                            Text(
-                                                text = "Check back later or try refreshing",
-                                                style = MaterialTheme.typography.bodyMedium,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-                            is UiState.Error -> {
-                                // Show error state for sources
-                                Surface(
-                                    modifier = Modifier.padding(horizontal = overscanMargin, vertical = 8.dp),
-                                    shape = RoundedCornerShape(8.dp),
-                                    color = MaterialTheme.colorScheme.errorContainer
-                                ) {
-                                    Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(16.dp),
-                                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.Error,
-                                            contentDescription = null,
-                                            modifier = Modifier.size(24.dp),
-                                            tint = MaterialTheme.colorScheme.error
-                                        )
-                                        Text(
-                                            text = "Failed to load streaming sources",
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            color = MaterialTheme.colorScheme.onErrorContainer
-                                        )
-                                    }
-                                }
-                            }
-                            else -> {
-                                // Idle state or any other state
-                                // No UI to show
-                            }
-                        }
-                    }
-                    
                     // Tab navigation
                     item {
                         ContentDetailTabs(
@@ -550,6 +426,18 @@ fun MovieDetailsScreen(
                 viewModel.loadSourcesForMovie(tmdbId, imdbId)
             }
         },
+        onFilterChanged = { filter ->
+            viewModel.updateSourceFilter(filter)
+        },
+        onSortChanged = { sortOption ->
+            viewModel.updateSortOption(sortOption)
+        },
+        onGroupToggle = { groupId ->
+            viewModel.toggleGroup(groupId)
+        },
+        onViewModeChanged = { viewMode ->
+            viewModel.updateViewMode(viewMode)
+        },
         onPlaySource = { source ->
             movie?.let { currentMovie ->
                 playbackViewModel.startMoviePlaybackWithSource(
@@ -557,6 +445,14 @@ fun MovieDetailsScreen(
                     source = source
                 )
             }
+        },
+        onDownloadSource = { source ->
+            // TODO: Implement download functionality
+            println("DEBUG: Download source requested for ${source.provider.displayName}")
+        },
+        onAddToPlaylist = { source ->
+            // TODO: Implement playlist functionality
+            println("DEBUG: Add to playlist requested for ${source.provider.displayName}")
         }
     )
 }

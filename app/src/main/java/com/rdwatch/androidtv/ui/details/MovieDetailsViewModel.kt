@@ -16,6 +16,7 @@ import com.rdwatch.androidtv.ui.details.models.CrewMember
 import com.rdwatch.androidtv.ui.details.models.StreamingSource
 import com.rdwatch.androidtv.ui.details.models.SourceType
 import com.rdwatch.androidtv.ui.details.models.advanced.*
+import com.rdwatch.androidtv.ui.details.models.SourceSortOption
 import com.rdwatch.androidtv.ui.details.managers.ScraperSourceManager
 import com.rdwatch.androidtv.ui.details.viewmodels.SourceListViewModel
 import android.content.Context
@@ -676,6 +677,10 @@ class MovieDetailsViewModel @Inject constructor(
      */
     fun selectAdvancedSources() {
         val sources = _advancedSources.value
+        println("DEBUG [MovieDetailsViewModel]: selectAdvancedSources() called with ${sources.size} sources")
+        sources.forEach { source ->
+            println("DEBUG [MovieDetailsViewModel]: Advanced Source: ${source.provider.displayName} - ${source.quality.resolution.shortName}")
+        }
         
         // Update source selection state
         _sourceSelectionState.value = SourceSelectionState(
@@ -684,6 +689,7 @@ class MovieDetailsViewModel @Inject constructor(
         )
         
         _showSourceSelection.value = true
+        println("DEBUG [MovieDetailsViewModel]: Advanced source selection UI triggered")
     }
     
     /**
@@ -699,11 +705,129 @@ class MovieDetailsViewModel @Inject constructor(
     fun onSourceSelected(source: SourceMetadata) {
         android.util.Log.d("MovieDetailsViewModel", "Source selected for movie: ${source.provider.name}")
         
+        // Update selected source in state
+        _sourceSelectionState.value = _sourceSelectionState.value.copy(
+            selectedSource = source
+        )
+        
         // Hide source selection
         hideSourceSelection()
         
         // TODO: Trigger playback with selected source
         // This will be handled by the PlaybackViewModel or similar component
+    }
+    
+    /**
+     * Update source filter
+     */
+    fun updateSourceFilter(filter: SourceFilter) {
+        println("DEBUG [MovieDetailsViewModel]: Updating source filter: $filter")
+        val currentState = _sourceSelectionState.value
+        val filteredSources = currentState.sources.filter { source ->
+            // Apply the filter logic
+            var matches = true
+            
+            // Quality filter
+            filter.minQuality?.let { minQuality ->
+                matches = matches && source.quality.resolution.baseScore >= minQuality.baseScore
+            }
+            
+            // HDR filter
+            if (filter.requireHDR) {
+                matches = matches && source.quality.hasHDR()
+            }
+            
+            // Cached filter
+            if (filter.requireCached) {
+                matches = matches && source.availability.cached
+            }
+            
+            // Seeders filter
+            filter.minSeeders?.let { minSeeders ->
+                matches = matches && (source.health.seeders ?: 0) >= minSeeders
+            }
+            
+            matches
+        }
+        
+        println("DEBUG [MovieDetailsViewModel]: Filter applied: ${currentState.sources.size} → ${filteredSources.size} sources")
+        
+        _sourceSelectionState.value = currentState.copy(
+            filter = filter,
+            filteredSources = filteredSources
+        )
+    }
+    
+    /**
+     * Update sort option
+     */
+    fun updateSortOption(sortOption: SourceSortOption) {
+        val currentState = _sourceSelectionState.value
+        
+        // Apply sorting to filtered sources
+        val sortedSources = when (sortOption) {
+            SourceSortOption.QUALITY_SCORE, SourceSortOption.QUALITY -> currentState.filteredSources.sortedByDescending { 
+                it.quality.resolution.baseScore 
+            }
+            SourceSortOption.FILE_SIZE -> currentState.filteredSources.sortedByDescending { 
+                it.file.sizeInBytes ?: 0 
+            }
+            SourceSortOption.SEEDERS -> currentState.filteredSources.sortedByDescending { 
+                it.health.seeders ?: 0 
+            }
+            SourceSortOption.RELIABILITY -> currentState.filteredSources.sortedByDescending { 
+                it.provider.reliability.ordinal 
+            }
+            SourceSortOption.PROVIDER -> currentState.filteredSources.sortedBy { 
+                it.provider.displayName 
+            }
+            SourceSortOption.PRIORITY -> currentState.filteredSources.sortedByDescending { source ->
+                // Priority combines quality and reliability
+                val qualityScore = source.quality.resolution.baseScore
+                val reliabilityScore = source.provider.reliability.ordinal * 1000
+                qualityScore + reliabilityScore
+            }
+            SourceSortOption.AVAILABILITY -> currentState.filteredSources.sortedByDescending { source ->
+                if (source.availability.isAvailable) 1 else 0 
+            }
+            SourceSortOption.RELEASE_TYPE -> currentState.filteredSources.sortedBy { source ->
+                source.release.type.ordinal 
+            }
+            else -> currentState.filteredSources
+        }
+        
+        _sourceSelectionState.value = currentState.copy(
+            sortOption = sortOption,
+            filteredSources = sortedSources
+        )
+    }
+    
+    /**
+     * Update view mode
+     */
+    fun updateViewMode(viewMode: SourceSelectionState.ViewMode) {
+        println("DEBUG [MovieDetailsViewModel]: Updating view mode to: $viewMode")
+        _sourceSelectionState.value = _sourceSelectionState.value.copy(
+            viewMode = viewMode
+        )
+    }
+    
+    /**
+     * Toggle group expansion
+     */
+    fun toggleGroup(groupId: String) {
+        val currentState = _sourceSelectionState.value
+        val expandedGroups = currentState.expandedGroups.toMutableSet()
+        
+        if (expandedGroups.contains(groupId)) {
+            expandedGroups.remove(groupId)
+        } else {
+            expandedGroups.add(groupId)
+        }
+        
+        _sourceSelectionState.value = currentState.copy(
+            expandedGroups = expandedGroups
+        )
     }
     
     /**
