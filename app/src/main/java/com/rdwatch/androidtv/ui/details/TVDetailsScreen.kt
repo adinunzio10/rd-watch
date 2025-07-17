@@ -294,40 +294,6 @@ private fun TVDetailsContent(
                     }
                 }
             }
-        } else if (selectedEpisode != null) {
-            // Show loading state when episode is selected but no sources available yet
-            item {
-                Surface(
-                    modifier = Modifier.padding(horizontal = 32.dp, vertical = 8.dp),
-                    shape = RoundedCornerShape(8.dp),
-                    color = MaterialTheme.colorScheme.surfaceVariant,
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(16.dp),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(24.dp),
-                            color = MaterialTheme.colorScheme.primary,
-                        )
-                        Column {
-                            Text(
-                                text = "Loading sources for episode...",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                            selectedEpisode?.let { episode ->
-                                Text(
-                                    text = "S${episode.seasonNumber}E${episode.episodeNumber} - ${episode.title}",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                                )
-                            }
-                        }
-                    }
-                }
-            }
         }
 
         // Tab navigation
