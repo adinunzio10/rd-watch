@@ -419,10 +419,8 @@ class TVDetailsViewModel
 
             // Load sources for the selected episode (only on explicit user selection)
             _tvShowState.value?.let { tvShow ->
-                android.util.Log.d("TVDetailsViewModel", "Loading sources for user-selected episode")
-                loadSourcesForEpisode(tvShow, episode)
-
-                // Also load advanced sources
+                android.util.Log.d("TVDetailsViewModel", "Loading advanced sources for user-selected episode")
+                // Use only advanced sources system - legacy loadSourcesForEpisode() removed
                 loadAdvancedSourcesForEpisode(tvShow, episode)
             }
         }
