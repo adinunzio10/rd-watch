@@ -44,6 +44,13 @@ class TVDetailsViewModel
         private var externalIdLoadingJob: Job? = null
         private val activeExternalIdRequests = mutableSetOf<Int>()
 
+        // Source loading job management
+        private val activeSourceLoadingJobs = mutableMapOf<String, Job>()
+        private val activeSourceRequests = mutableSetOf<String>()
+        private var preloadingJob: Job? = null
+        private var lastPreloadTime = 0L
+        private val PRELOAD_THROTTLE_MS = 5000L // 5 seconds throttle between preloads
+
         private val _tvShowState = MutableStateFlow<TVShowContentDetail?>(null)
         val tvShowState: StateFlow<TVShowContentDetail?> = _tvShowState.asStateFlow()
 
@@ -344,8 +351,8 @@ class TVDetailsViewModel
                     "Selected episode: ${selectedEpisode?.title ?: "None"} (S${authoritativeSeason.seasonNumber}E${selectedEpisode?.episodeNumber ?: 0})",
                 )
 
-                // Preload sources for this season's episodes
-                preloadSourcesForCurrentSeason()
+                // Note: Removed automatic preloading to prevent rapid API calls
+                // Sources will be loaded when user explicitly selects episodes
             }
 
             // Update UI state with authoritative season
@@ -1025,9 +1032,9 @@ class TVDetailsViewModel
                         android.util.Log.d("TVDetailsViewModel", "Updating selected season state with loaded data")
                         _selectedSeason.value = tvSeason
 
-                        // Preload sources for the newly loaded season episodes
-                        android.util.Log.d("TVDetailsViewModel", "Preloading sources for newly loaded season $seasonNumber")
-                        preloadSourcesForCurrentSeason()
+                        // Note: Removed automatic preloading to prevent rapid API calls
+                        // Sources will be loaded when user explicitly selects episodes
+                        android.util.Log.d("TVDetailsViewModel", "Season $seasonNumber loaded - sources will be loaded on demand")
                     }
 
                     android.util.Log.d(
@@ -1532,46 +1539,62 @@ class TVDetailsViewModel
             tvShow: TVShowContentDetail,
             episode: TVEpisode,
         ) {
-            viewModelScope.launch {
-                try {
-                    android.util.Log.d(
-                        "TVDetailsViewModel",
-                        "Loading advanced sources for episode: S${episode.seasonNumber}E${episode.episodeNumber}",
-                    )
+            val episodeKey = "${episode.seasonNumber}-${episode.episodeNumber}"
 
-                    // Get basic streaming sources first
-                    val streamingSources =
-                        scraperSourceManager.getSourcesForTVEpisode(
-                            tvShowId = tvShow.id,
-                            seasonNumber = episode.seasonNumber,
-                            episodeNumber = episode.episodeNumber,
-                            imdbId = tvShow.getTVShowDetail().imdbId,
-                            tmdbId = tvShow.id,
+            // Check if request is already in progress
+            if (activeSourceRequests.contains(episodeKey)) {
+                android.util.Log.d("TVDetailsViewModel", "Source loading already in progress for episode $episodeKey")
+                return
+            }
+
+            // Cancel any existing job for this episode
+            activeSourceLoadingJobs[episodeKey]?.cancel()
+
+            activeSourceLoadingJobs[episodeKey] =
+                viewModelScope.launch {
+                    activeSourceRequests.add(episodeKey)
+
+                    try {
+                        android.util.Log.d(
+                            "TVDetailsViewModel",
+                            "Loading advanced sources for episode: S${episode.seasonNumber}E${episode.episodeNumber}",
                         )
 
-                    // Convert to SourceMetadata for advanced processing
-                    val sourceMetadata =
-                        streamingSources.map { streamingSource ->
-                            convertStreamingSourceToMetadata(streamingSource, tvShow, episode)
-                        }
+                        // Get basic streaming sources first
+                        val streamingSources =
+                            scraperSourceManager.getSourcesForTVEpisode(
+                                tvShowId = tvShow.id,
+                                seasonNumber = episode.seasonNumber,
+                                episodeNumber = episode.episodeNumber,
+                                imdbId = tvShow.getTVShowDetail().imdbId,
+                                tmdbId = tvShow.id,
+                            )
 
-                    // Process sources with advanced manager
-                    val processedSources =
-                        sourceMetadata.map { source ->
-                            advancedSourceManager.processSource(source)
-                        }
+                        // Convert to SourceMetadata for advanced processing
+                        val sourceMetadata =
+                            streamingSources.map { streamingSource ->
+                                convertStreamingSourceToMetadata(streamingSource, tvShow, episode)
+                            }
 
-                    // Update episode sources map
-                    val episodeKey = "${episode.seasonNumber}-${episode.episodeNumber}"
-                    val currentMap = _episodeSourcesMap.value.toMutableMap()
-                    currentMap[episodeKey] = processedSources.map { it.sourceMetadata }
-                    _episodeSourcesMap.value = currentMap
+                        // Process sources with advanced manager
+                        val processedSources =
+                            sourceMetadata.map { source ->
+                                advancedSourceManager.processSource(source)
+                            }
 
-                    android.util.Log.d("TVDetailsViewModel", "Loaded ${processedSources.size} advanced sources for episode")
-                } catch (e: Exception) {
-                    android.util.Log.e("TVDetailsViewModel", "Failed to load advanced sources: ${e.message}")
+                        // Update episode sources map
+                        val currentMap = _episodeSourcesMap.value.toMutableMap()
+                        currentMap[episodeKey] = processedSources.map { it.sourceMetadata }
+                        _episodeSourcesMap.value = currentMap
+
+                        android.util.Log.d("TVDetailsViewModel", "Loaded ${processedSources.size} advanced sources for episode")
+                    } catch (e: Exception) {
+                        android.util.Log.e("TVDetailsViewModel", "Failed to load advanced sources: ${e.message}")
+                    } finally {
+                        activeSourceRequests.remove(episodeKey)
+                        activeSourceLoadingJobs.remove(episodeKey)
+                    }
                 }
-            }
         }
 
         /**
@@ -1756,26 +1779,40 @@ class TVDetailsViewModel
 
         /**
          * Preload sources for visible episodes in current season
+         * Now includes throttling and explicit control to prevent rapid API calls
          */
         fun preloadSourcesForCurrentSeason() {
-            viewModelScope.launch {
-                val currentTvShow = _tvShowState.value
-                val currentSeason = _selectedSeason.value
+            val currentTime = System.currentTimeMillis()
 
-                if (currentTvShow != null && currentSeason != null) {
-                    android.util.Log.d("TVDetailsViewModel", "Preloading sources for season ${currentSeason.seasonNumber} episodes")
+            // Throttle preloading to prevent rapid API calls
+            if (currentTime - lastPreloadTime < PRELOAD_THROTTLE_MS) {
+                android.util.Log.d("TVDetailsViewModel", "Preloading throttled, skipping request")
+                return
+            }
 
-                    // Preload sources for the first few episodes (visible ones)
-                    val episodesToPreload = currentSeason.episodes.take(6) // Load first 6 episodes
+            // Cancel any existing preloading job
+            preloadingJob?.cancel()
 
-                    episodesToPreload.forEach { episode ->
-                        val episodeKey = "${episode.seasonNumber}-${episode.episodeNumber}"
+            preloadingJob =
+                viewModelScope.launch {
+                    val currentTvShow = _tvShowState.value
+                    val currentSeason = _selectedSeason.value
 
-                        // Only load if not already loaded
-                        if (!_episodeSourcesMap.value.containsKey(episodeKey)) {
-                            launch {
+                    if (currentTvShow != null && currentSeason != null) {
+                        android.util.Log.d("TVDetailsViewModel", "Preloading sources for season ${currentSeason.seasonNumber} episodes")
+
+                        // Preload sources for the first few episodes (visible ones)
+                        val episodesToPreload = currentSeason.episodes.take(3) // Reduced to 3 episodes to be less aggressive
+
+                        episodesToPreload.forEach { episode ->
+                            val episodeKey = "${episode.seasonNumber}-${episode.episodeNumber}"
+
+                            // Only load if not already loaded or loading
+                            if (!_episodeSourcesMap.value.containsKey(episodeKey) && !activeSourceRequests.contains(episodeKey)) {
                                 try {
                                     loadAdvancedSourcesForEpisode(currentTvShow, episode)
+                                    // Add small delay between requests to prevent overload
+                                    kotlinx.coroutines.delay(1000)
                                 } catch (e: Exception) {
                                     android.util.Log.e(
                                         "TVDetailsViewModel",
@@ -1784,9 +1821,10 @@ class TVDetailsViewModel
                                 }
                             }
                         }
+
+                        lastPreloadTime = currentTime
                     }
                 }
-            }
         }
 
         /**
@@ -1796,16 +1834,13 @@ class TVDetailsViewModel
             val episodeKey = "${episode.seasonNumber}-${episode.episodeNumber}"
 
             // Only load if not already loaded or loading
-            if (!_episodeSourcesMap.value.containsKey(episodeKey)) {
+            if (!_episodeSourcesMap.value.containsKey(episodeKey) && !activeSourceRequests.contains(episodeKey)) {
                 _tvShowState.value?.let { tvShow ->
-                    viewModelScope.launch {
-                        try {
-                            loadAdvancedSourcesForEpisode(tvShow, episode)
-                        } catch (e: Exception) {
-                            android.util.Log.e("TVDetailsViewModel", "Failed to preload sources for episode ${episode.title}: ${e.message}")
-                        }
-                    }
+                    android.util.Log.d("TVDetailsViewModel", "Preloading sources for episode $episodeKey")
+                    loadAdvancedSourcesForEpisode(tvShow, episode)
                 }
+            } else {
+                android.util.Log.d("TVDetailsViewModel", "Episode $episodeKey already loaded or loading, skipping preload")
             }
         }
 
@@ -1841,6 +1876,14 @@ class TVDetailsViewModel
             onDemandSeasonJobs.clear()
             activeSeasonRequests.clear()
 
+            // Cancel all source loading jobs
+            activeSourceLoadingJobs.values.forEach { it.cancel() }
+            activeSourceLoadingJobs.clear()
+            activeSourceRequests.clear()
+            preloadingJob?.cancel()
+            externalIdLoadingJob?.cancel()
+            activeExternalIdRequests.clear()
+
             _tvShowState.value = null
             _selectedSeason.value = null
             selectEpisodeInternal(null)
@@ -1864,6 +1907,14 @@ class TVDetailsViewModel
             onDemandSeasonJobs.values.forEach { it.cancel() }
             onDemandSeasonJobs.clear()
             activeSeasonRequests.clear()
+
+            // Clean up source loading jobs
+            activeSourceLoadingJobs.values.forEach { it.cancel() }
+            activeSourceLoadingJobs.clear()
+            activeSourceRequests.clear()
+            preloadingJob?.cancel()
+            externalIdLoadingJob?.cancel()
+            activeExternalIdRequests.clear()
         }
 
         /**
