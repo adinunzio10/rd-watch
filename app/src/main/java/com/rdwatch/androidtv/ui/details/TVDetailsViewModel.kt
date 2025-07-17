@@ -245,9 +245,8 @@ class TVDetailsViewModel
 
                                 _tvShowState.value = tvShowDetail
 
-                                // Fetch external IDs to get IMDb ID for source scraping
-                                android.util.Log.d("TVDetailsViewModel", "Fetching external IDs for TMDb ID: $tmdbId")
-                                fetchAndUpdateIMDbId(tmdbId, tvShowDetail)
+                                // External IDs will be fetched on-demand at episode level when needed for source scraping
+                                android.util.Log.d("TVDetailsViewModel", "TV show loaded without external IDs for faster loading")
 
                                 // Select first season by default
                                 val firstSeason = tvShowDetail.getSeasons().firstOrNull()
@@ -1439,6 +1438,7 @@ class TVDetailsViewModel
 
         /**
          * Load streaming sources for a TV show episode from scrapers
+         * Fetches external IDs on-demand when needed for source scraping
          */
         fun loadSourcesForEpisode(
             tvShow: TVShowContentDetail,
@@ -1454,21 +1454,29 @@ class TVDetailsViewModel
                         "Loading sources for episode: S${episode.seasonNumber}E${episode.episodeNumber} - ${episode.title}",
                     )
 
-                    val imdbId = tvShow.getTVShowDetail().imdbId
-                    android.util.Log.d("TVDetailsViewModel", "=== IMDB ID DEBUG ===")
+                    // Check if TV show has external IDs, if not fetch them on-demand
+                    val currentImdbId = tvShow.getTVShowDetail().imdbId
+                    val finalImdbId =
+                        if (currentImdbId.isNullOrBlank()) {
+                            android.util.Log.d("TVDetailsViewModel", "No IMDb ID available, fetching on-demand for episode sources")
+                            fetchExternalIdsForEpisodeSources(tvShow.id)
+                        } else {
+                            android.util.Log.d("TVDetailsViewModel", "Using existing IMDb ID: $currentImdbId")
+                            currentImdbId
+                        }
+
+                    android.util.Log.d("TVDetailsViewModel", "=== EPISODE SOURCES DEBUG ===")
                     android.util.Log.d("TVDetailsViewModel", "TV Show ID: ${tvShow.id}")
-                    android.util.Log.d("TVDetailsViewModel", "TV Show Title: ${tvShow.getDisplayTitle()}")
-                    android.util.Log.d("TVDetailsViewModel", "IMDB ID from TV Show: $imdbId")
-                    android.util.Log.d("TVDetailsViewModel", "IMDB ID is null: ${imdbId == null}")
-                    android.util.Log.d("TVDetailsViewModel", "IMDB ID is blank: ${imdbId.isNullOrBlank()}")
-                    android.util.Log.d("TVDetailsViewModel", "=====================")
+                    android.util.Log.d("TVDetailsViewModel", "Episode: S${episode.seasonNumber}E${episode.episodeNumber}")
+                    android.util.Log.d("TVDetailsViewModel", "Final IMDb ID: $finalImdbId")
+                    android.util.Log.d("TVDetailsViewModel", "============================")
 
                     val sources =
                         scraperSourceManager.getSourcesForTVEpisode(
                             tvShowId = tvShow.id,
                             seasonNumber = episode.seasonNumber,
                             episodeNumber = episode.episodeNumber,
-                            imdbId = imdbId,
+                            imdbId = finalImdbId,
                             tmdbId = tvShow.id,
                         )
 
@@ -1560,13 +1568,24 @@ class TVDetailsViewModel
                             "Loading advanced sources for episode: S${episode.seasonNumber}E${episode.episodeNumber}",
                         )
 
+                        // Check if TV show has external IDs, if not fetch them on-demand
+                        val currentImdbId = tvShow.getTVShowDetail().imdbId
+                        val finalImdbId =
+                            if (currentImdbId.isNullOrBlank()) {
+                                android.util.Log.d("TVDetailsViewModel", "No IMDb ID available for advanced sources, fetching on-demand")
+                                fetchExternalIdsForEpisodeSources(tvShow.id)
+                            } else {
+                                android.util.Log.d("TVDetailsViewModel", "Using existing IMDb ID for advanced sources: $currentImdbId")
+                                currentImdbId
+                            }
+
                         // Get basic streaming sources first
                         val streamingSources =
                             scraperSourceManager.getSourcesForTVEpisode(
                                 tvShowId = tvShow.id,
                                 seasonNumber = episode.seasonNumber,
                                 episodeNumber = episode.episodeNumber,
-                                imdbId = tvShow.getTVShowDetail().imdbId,
+                                imdbId = finalImdbId,
                                 tmdbId = tvShow.id,
                             )
 
@@ -2005,6 +2024,71 @@ class TVDetailsViewModel
                 }
             } else {
                 android.util.Log.w("TVDetailsViewModel", "Cannot fetch IMDb ID: no TV show loaded")
+            }
+        }
+
+        /**
+         * Fetch external IDs on-demand for episode source scraping
+         * Returns IMDb ID if available, null otherwise
+         */
+        private suspend fun fetchExternalIdsForEpisodeSources(tvShowId: String): String? {
+            val tmdbId = tvShowId.toIntOrNull()
+            if (tmdbId == null) {
+                android.util.Log.w("TVDetailsViewModel", "Cannot fetch external IDs: invalid TMDb ID '$tvShowId'")
+                return null
+            }
+
+            // Check if request is already in progress
+            if (activeExternalIdRequests.contains(tmdbId)) {
+                android.util.Log.d("TVDetailsViewModel", "External ID request already in progress for TMDb ID: $tmdbId")
+                return null
+            }
+
+            activeExternalIdRequests.add(tmdbId)
+
+            return try {
+                android.util.Log.d("TVDetailsViewModel", "Fetching external IDs on-demand for episode sources (TMDb ID: $tmdbId)")
+
+                val result =
+                    tmdbTVRepository.getTVExternalIds(tmdbId).first { result ->
+                        // Wait for Success or Error, skip Loading states
+                        result !is Result.Loading
+                    }
+
+                when (result) {
+                    is Result.Success -> {
+                        val imdbId = result.data?.imdbId
+                        if (!imdbId.isNullOrBlank()) {
+                            android.util.Log.d("TVDetailsViewModel", "Successfully fetched IMDb ID on-demand: $imdbId")
+
+                            // Update the TV show state with the fetched IMDb ID
+                            _tvShowState.value?.let { currentTvShow ->
+                                val updatedTvShowDetail = currentTvShow.getTVShowDetail().copy(imdbId = imdbId)
+                                val updatedTvShow = currentTvShow.withTVShowDetail(updatedTvShowDetail)
+                                _tvShowState.value = updatedTvShow
+                                updateState { copy(tvShow = updatedTvShow) }
+                            }
+
+                            imdbId
+                        } else {
+                            android.util.Log.w("TVDetailsViewModel", "External IDs response received but no IMDb ID found")
+                            null
+                        }
+                    }
+                    is Result.Error -> {
+                        android.util.Log.w("TVDetailsViewModel", "Failed to fetch external IDs on-demand: ${result.exception?.message}")
+                        null
+                    }
+                    is Result.Loading -> {
+                        android.util.Log.w("TVDetailsViewModel", "Unexpected loading state in external IDs fetch")
+                        null
+                    }
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("TVDetailsViewModel", "Exception while fetching external IDs on-demand: ${e.message}")
+                null
+            } finally {
+                activeExternalIdRequests.remove(tmdbId)
             }
         }
 

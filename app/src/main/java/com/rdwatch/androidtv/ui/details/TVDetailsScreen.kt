@@ -57,18 +57,7 @@ fun TVDetailsScreen(
     // Initialize with TV show ID
     LaunchedEffect(tvShowId) { viewModel.loadTVShow(tvShowId) }
 
-    // Ensure IMDb ID is loaded for source scraping (only when TV show ID changes)
-    LaunchedEffect(tvShowState?.id) {
-        val currentTvShow = tvShowState
-        if (currentTvShow != null) {
-            android.util.Log.d("TVDetailsScreen", "=== ENSURE IMDB ID LOADED ===")
-            android.util.Log.d("TVDetailsScreen", "TV Show loaded: ${currentTvShow.getDisplayTitle()}")
-            android.util.Log.d("TVDetailsScreen", "Current IMDB ID: ${currentTvShow.getTVShowDetail().imdbId}")
-            android.util.Log.d("TVDetailsScreen", "Calling ensureIMDbIdIsLoaded()")
-            viewModel.ensureIMDbIdIsLoaded()
-            android.util.Log.d("TVDetailsScreen", "============================")
-        }
-    }
+    // External IDs will be fetched on-demand at episode level when needed for source scraping
 
     when {
         uiState.isLoading -> {
