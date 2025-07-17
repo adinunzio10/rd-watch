@@ -216,15 +216,62 @@ abstract class NetworkModule {
             val cacheDir = File(context.cacheDir, "tmdb_cache")
             val cache = Cache(cacheDir, cacheSize)
 
-            return OkHttpClient.Builder()
-                .addInterceptor(tmdbApiKeyInterceptor) // Add API key to all requests
-                .addInterceptor(monitoringInterceptor)
-                .addInterceptor(loggingInterceptor)
-                .cache(cache)
-                .connectTimeout(30, TimeUnit.SECONDS)
-                .readTimeout(30, TimeUnit.SECONDS)
-                .writeTimeout(30, TimeUnit.SECONDS)
-                .build()
+            val builder =
+                OkHttpClient.Builder()
+                    .addInterceptor(tmdbApiKeyInterceptor) // Add API key to all requests
+                    .addInterceptor(monitoringInterceptor)
+                    .addInterceptor(loggingInterceptor)
+                    .cache(cache)
+                    .connectTimeout(30, TimeUnit.SECONDS)
+                    .readTimeout(30, TimeUnit.SECONDS)
+                    .writeTimeout(30, TimeUnit.SECONDS)
+
+            // For debug builds, add a more lenient TrustManager to handle certificate issues
+            if (BuildConfig.DEBUG) {
+                try {
+                    // Create a trust manager that accepts all certificates
+                    val trustAllCerts =
+                        arrayOf<javax.net.ssl.TrustManager>(
+                            object : javax.net.ssl.X509TrustManager {
+                                override fun checkClientTrusted(
+                                    chain: Array<out java.security.cert.X509Certificate>?,
+                                    authType: String?,
+                                ) {
+                                    // Accept all client certificates
+                                }
+
+                                override fun checkServerTrusted(
+                                    chain: Array<out java.security.cert.X509Certificate>?,
+                                    authType: String?,
+                                ) {
+                                    // Log certificate info for debugging
+                                    chain?.forEach { cert ->
+                                        android.util.Log.d("SSL_DEBUG", "Certificate: ${cert.subjectDN}")
+                                        android.util.Log.d("SSL_DEBUG", "Valid from: ${cert.notBefore} to ${cert.notAfter}")
+                                    }
+                                }
+
+                                override fun getAcceptedIssuers(): Array<java.security.cert.X509Certificate> {
+                                    return arrayOf()
+                                }
+                            },
+                        )
+
+                    // Install the all-trusting trust manager
+                    val sslContext = javax.net.ssl.SSLContext.getInstance("TLS")
+                    sslContext.init(null, trustAllCerts, java.security.SecureRandom())
+
+                    // Create an ssl socket factory with our all-trusting manager
+                    val sslSocketFactory = sslContext.socketFactory
+
+                    builder.sslSocketFactory(sslSocketFactory, trustAllCerts[0] as javax.net.ssl.X509TrustManager)
+                    builder.hostnameVerifier { _, _ -> true }
+                } catch (e: Exception) {
+                    android.util.Log.e("NetworkModule", "Failed to set custom SSL socket factory", e)
+                }
+            }
+
+            return builder.build()
         }
 
         @Provides

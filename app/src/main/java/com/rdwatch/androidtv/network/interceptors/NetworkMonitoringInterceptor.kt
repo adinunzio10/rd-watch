@@ -96,6 +96,25 @@ class NetworkMonitoringInterceptor
             // TODO: Implement error tracking
             // This could send errors to Crashlytics or custom error tracking service
 
-            Log.e(TAG, "Network failure for $url after ${durationMs}ms: ${error.message}")
+            // Special handling for SSL errors
+            when {
+                error is javax.net.ssl.SSLHandshakeException -> {
+                    Log.e(TAG, "SSL handshake failure for $url after ${durationMs}ms: ${error.message}")
+                    val cause = error.cause
+                    if (cause is java.security.cert.CertPathValidatorException) {
+                        Log.e(TAG, "Certificate validation error: ${cause.message}")
+                        Log.e(TAG, "This may be due to:")
+                        Log.e(TAG, "1. Device date/time being incorrect")
+                        Log.e(TAG, "2. Expired SSL certificate")
+                        Log.e(TAG, "3. Missing intermediate certificates")
+                    }
+                }
+                error is javax.net.ssl.SSLException -> {
+                    Log.e(TAG, "SSL error for $url after ${durationMs}ms: ${error.message}")
+                }
+                else -> {
+                    Log.e(TAG, "Network failure for $url after ${durationMs}ms: ${error.message}")
+                }
+            }
         }
     }
