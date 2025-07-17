@@ -11,7 +11,7 @@ data class TMDbSearchResponse(
     @Json(name = "page") val page: Int = 1,
     @Json(name = "results") val results: List<TMDbSearchResultResponse> = emptyList(),
     @Json(name = "total_pages") val totalPages: Int = 0,
-    @Json(name = "total_results") val totalResults: Int = 0
+    @Json(name = "total_results") val totalResults: Int = 0,
 )
 
 /**
@@ -22,7 +22,7 @@ data class TMDbMultiSearchResponse(
     @Json(name = "page") val page: Int = 1,
     @Json(name = "results") val results: List<TMDbMultiSearchResultResponse> = emptyList(),
     @Json(name = "total_pages") val totalPages: Int = 0,
-    @Json(name = "total_results") val totalResults: Int = 0
+    @Json(name = "total_results") val totalResults: Int = 0,
 )
 
 /**
@@ -40,18 +40,16 @@ data class TMDbSearchResultResponse(
     @Json(name = "poster_path") val posterPath: String? = null,
     @Json(name = "vote_average") val voteAverage: Double = 0.0,
     @Json(name = "vote_count") val voteCount: Int = 0,
-    
     // Movie specific fields
     @Json(name = "original_title") val originalTitle: String? = null,
     @Json(name = "release_date") val releaseDate: String? = null,
     @Json(name = "title") val title: String? = null,
     @Json(name = "video") val video: Boolean = false,
-    
     // TV Show specific fields
     @Json(name = "first_air_date") val firstAirDate: String? = null,
     @Json(name = "name") val name: String? = null,
     @Json(name = "origin_country") val originCountry: List<String> = emptyList(),
-    @Json(name = "original_name") val originalName: String? = null
+    @Json(name = "original_name") val originalName: String? = null,
 )
 
 /**
@@ -70,24 +68,21 @@ data class TMDbMultiSearchResultResponse(
     @Json(name = "poster_path") val posterPath: String? = null,
     @Json(name = "vote_average") val voteAverage: Double = 0.0,
     @Json(name = "vote_count") val voteCount: Int = 0,
-    
     // Movie specific fields
     @Json(name = "original_title") val originalTitle: String? = null,
     @Json(name = "release_date") val releaseDate: String? = null,
     @Json(name = "title") val title: String? = null,
     @Json(name = "video") val video: Boolean = false,
-    
     // TV Show specific fields
     @Json(name = "first_air_date") val firstAirDate: String? = null,
     @Json(name = "name") val name: String? = null,
     @Json(name = "origin_country") val originCountry: List<String> = emptyList(),
     @Json(name = "original_name") val originalName: String? = null,
-    
     // Person specific fields
     @Json(name = "gender") val gender: Int = 0,
     @Json(name = "known_for") val knownFor: List<TMDbKnownForResponse> = emptyList(),
     @Json(name = "known_for_department") val knownForDepartment: String = "",
-    @Json(name = "profile_path") val profilePath: String? = null
+    @Json(name = "profile_path") val profilePath: String? = null,
 )
 
 /**
@@ -98,7 +93,7 @@ data class TMDbRecommendationsResponse(
     @Json(name = "page") val page: Int = 1,
     @Json(name = "results") val results: List<TMDbRecommendationItemResponse> = emptyList(),
     @Json(name = "total_pages") val totalPages: Int = 0,
-    @Json(name = "total_results") val totalResults: Int = 0
+    @Json(name = "total_results") val totalResults: Int = 0,
 )
 
 /**
@@ -122,7 +117,7 @@ data class TMDbImageResponse(
     @Json(name = "file_path") val filePath: String = "",
     @Json(name = "vote_average") val voteAverage: Double = 0.0,
     @Json(name = "vote_count") val voteCount: Int = 0,
-    @Json(name = "width") val width: Int = 0
+    @Json(name = "width") val width: Int = 0,
 )
 
 /**
@@ -133,7 +128,7 @@ data class TMDbMovieImagesResponse(
     @Json(name = "id") val id: Int = 0,
     @Json(name = "backdrops") val backdrops: List<TMDbImageResponse> = emptyList(),
     @Json(name = "logos") val logos: List<TMDbImageResponse> = emptyList(),
-    @Json(name = "posters") val posters: List<TMDbImageResponse> = emptyList()
+    @Json(name = "posters") val posters: List<TMDbImageResponse> = emptyList(),
 )
 
 /**
@@ -150,7 +145,7 @@ data class TMDbVideoResponse(
     @Json(name = "type") val type: String = "",
     @Json(name = "official") val official: Boolean = false,
     @Json(name = "published_at") val publishedAt: String = "",
-    @Json(name = "id") val id: String = ""
+    @Json(name = "id") val id: String = "",
 )
 
 /**
@@ -159,5 +154,5 @@ data class TMDbVideoResponse(
 @JsonClass(generateAdapter = true)
 data class TMDbMovieVideosResponse(
     @Json(name = "id") val id: Int = 0,
-    @Json(name = "results") val results: List<TMDbVideoResponse> = emptyList()
+    @Json(name = "results") val results: List<TMDbVideoResponse> = emptyList(),
 )

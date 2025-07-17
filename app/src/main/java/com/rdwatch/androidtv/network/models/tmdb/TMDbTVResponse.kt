@@ -40,7 +40,6 @@ data class TMDbTVResponse(
     @Json(name = "type") val type: String = "",
     @Json(name = "vote_average") val voteAverage: Double = 0.0,
     @Json(name = "vote_count") val voteCount: Int = 0,
-    
     // Additional fields for append_to_response
     @Json(name = "credits") val credits: TMDbCreditsResponse? = null,
     @Json(name = "images") val images: TMDbTVImagesResponse? = null,
@@ -50,7 +49,7 @@ data class TMDbTVResponse(
     @Json(name = "keywords") val keywords: TMDbKeywordsResponse? = null,
     @Json(name = "reviews") val reviews: TMDbReviewsResponse? = null,
     @Json(name = "watch/providers") val watchProviders: TMDbWatchProvidersResponse? = null,
-    @Json(name = "content_ratings") val contentRatings: TMDbContentRatingsResponse? = null
+    @Json(name = "content_ratings") val contentRatings: TMDbContentRatingsResponse? = null,
 )
 
 /**
@@ -62,7 +61,7 @@ data class TMDbCreatedByResponse(
     @Json(name = "credit_id") val creditId: String = "",
     @Json(name = "name") val name: String = "",
     @Json(name = "gender") val gender: Int = 0,
-    @Json(name = "profile_path") val profilePath: String? = null
+    @Json(name = "profile_path") val profilePath: String? = null,
 )
 
 /**
@@ -73,7 +72,7 @@ data class TMDbNetworkResponse(
     @Json(name = "id") val id: Int = 0,
     @Json(name = "logo_path") val logoPath: String? = null,
     @Json(name = "name") val name: String = "",
-    @Json(name = "origin_country") val originCountry: String = ""
+    @Json(name = "origin_country") val originCountry: String = "",
 )
 
 /**
@@ -89,7 +88,7 @@ data class TMDbSeasonResponse(
     @Json(name = "poster_path") val posterPath: String? = null,
     @Json(name = "season_number") val seasonNumber: Int = 0,
     @Json(name = "vote_average") val voteAverage: Double = 0.0,
-    @Json(name = "episodes") val episodes: List<TMDbEpisodeResponse> = emptyList()
+    @Json(name = "episodes") val episodes: List<TMDbEpisodeResponse> = emptyList(),
 )
 
 /**
@@ -109,7 +108,7 @@ data class TMDbEpisodeResponse(
     @Json(name = "vote_average") val voteAverage: Double = 0.0,
     @Json(name = "vote_count") val voteCount: Int = 0,
     @Json(name = "crew") val crew: List<TMDbCrewResponse> = emptyList(),
-    @Json(name = "guest_stars") val guestStars: List<TMDbCastResponse> = emptyList()
+    @Json(name = "guest_stars") val guestStars: List<TMDbCastResponse> = emptyList(),
 )
 
 /**
@@ -117,7 +116,7 @@ data class TMDbEpisodeResponse(
  */
 @JsonClass(generateAdapter = true)
 data class TMDbContentRatingsResponse(
-    @Json(name = "results") val results: List<TMDbContentRatingResponse> = emptyList()
+    @Json(name = "results") val results: List<TMDbContentRatingResponse> = emptyList(),
 )
 
 /**
@@ -127,7 +126,7 @@ data class TMDbContentRatingsResponse(
 data class TMDbContentRatingResponse(
     @Json(name = "descriptors") val descriptors: List<String> = emptyList(),
     @Json(name = "iso_3166_1") val iso31661: String = "",
-    @Json(name = "rating") val rating: String = ""
+    @Json(name = "rating") val rating: String = "",
 )
 
 /**
@@ -138,7 +137,7 @@ data class TMDbTVImagesResponse(
     @Json(name = "id") val id: Int = 0,
     @Json(name = "backdrops") val backdrops: List<TMDbImageResponse> = emptyList(),
     @Json(name = "logos") val logos: List<TMDbImageResponse> = emptyList(),
-    @Json(name = "posters") val posters: List<TMDbImageResponse> = emptyList()
+    @Json(name = "posters") val posters: List<TMDbImageResponse> = emptyList(),
 )
 
 /**
@@ -147,5 +146,5 @@ data class TMDbTVImagesResponse(
 @JsonClass(generateAdapter = true)
 data class TMDbTVVideosResponse(
     @Json(name = "id") val id: Int = 0,
-    @Json(name = "results") val results: List<TMDbVideoResponse> = emptyList()
+    @Json(name = "results") val results: List<TMDbVideoResponse> = emptyList(),
 )

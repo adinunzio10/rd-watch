@@ -1,6 +1,5 @@
 package com.rdwatch.androidtv.ui.filebrowser.models
 
-import com.rdwatch.androidtv.network.models.TorrentInfo
 import com.rdwatch.androidtv.ui.common.UiState
 
 /**
@@ -19,7 +18,7 @@ data class FileBrowserState(
     val viewMode: ViewMode = ViewMode.LIST,
     val bulkOperationState: BulkOperationState? = null,
     val refreshState: RefreshState? = null,
-    val errorRecoveryState: RecoveryState? = null
+    val errorRecoveryState: RecoveryState? = null,
 )
 
 /**
@@ -28,8 +27,9 @@ data class FileBrowserState(
 enum class AccountType(val displayName: String) {
     REAL_DEBRID("Real-Debrid"),
     PREMIUMIZE("Premiumize"),
-    ALL_DEBRID("AllDebrid");
-    
+    ALL_DEBRID("AllDebrid"),
+    ;
+
     companion object {
         fun fromString(type: String): AccountType {
             return values().find { it.name.equals(type, ignoreCase = true) } ?: REAL_DEBRID
@@ -45,7 +45,7 @@ sealed class FileItem {
     abstract val name: String
     abstract val size: Long
     abstract val modifiedDate: Long
-    
+
     data class File(
         override val id: String,
         override val name: String,
@@ -56,18 +56,18 @@ sealed class FileItem {
         val streamUrl: String?,
         val isPlayable: Boolean = false,
         val progress: Float? = null,
-        val status: FileStatus = FileStatus.READY
+        val status: FileStatus = FileStatus.READY,
     ) : FileItem()
-    
+
     data class Folder(
         override val id: String,
         override val name: String,
         override val size: Long = 0L,
         override val modifiedDate: Long,
         val itemCount: Int = 0,
-        val path: String
+        val path: String,
     ) : FileItem()
-    
+
     data class Torrent(
         override val id: String,
         override val name: String,
@@ -78,7 +78,7 @@ sealed class FileItem {
         val status: TorrentStatus,
         val seeders: Int?,
         val speed: Long?,
-        val files: List<File> = emptyList()
+        val files: List<File> = emptyList(),
     ) : FileItem()
 }
 
@@ -89,7 +89,7 @@ enum class FileStatus {
     READY,
     DOWNLOADING,
     ERROR,
-    UNAVAILABLE
+    UNAVAILABLE,
 }
 
 /**
@@ -106,8 +106,9 @@ enum class TorrentStatus(val displayName: String) {
     VIRUS("Virus Detected"),
     COMPRESSING("Compressing"),
     UPLOADING("Uploading"),
-    DEAD("Dead");
-    
+    DEAD("Dead"),
+    ;
+
     companion object {
         fun fromString(status: String): TorrentStatus {
             return values().find { it.name.equals(status, ignoreCase = true) } ?: ERROR
@@ -120,7 +121,7 @@ enum class TorrentStatus(val displayName: String) {
  */
 data class SortingOptions(
     val sortBy: SortBy = SortBy.NAME,
-    val sortOrder: SortOrder = SortOrder.ASCENDING
+    val sortOrder: SortOrder = SortOrder.ASCENDING,
 )
 
 /**
@@ -131,7 +132,7 @@ enum class SortBy(val displayName: String) {
     SIZE("Size"),
     DATE("Date Modified"),
     TYPE("Type"),
-    STATUS("Status")
+    STATUS("Status"),
 }
 
 /**
@@ -139,7 +140,7 @@ enum class SortBy(val displayName: String) {
  */
 enum class SortOrder {
     ASCENDING,
-    DESCENDING
+    DESCENDING,
 }
 
 /**
@@ -150,7 +151,7 @@ data class FilterOptions(
     val showOnlyDownloaded: Boolean = false,
     val fileTypeFilter: Set<FileType> = emptySet(),
     val statusFilter: Set<FileStatus> = emptySet(),
-    val searchQuery: String = ""
+    val searchQuery: String = "",
 )
 
 /**
@@ -163,8 +164,9 @@ enum class FileType(val displayName: String, val extensions: Set<String>) {
     IMAGE("Image", setOf("jpg", "jpeg", "png", "gif", "bmp", "svg", "webp")),
     ARCHIVE("Archive", setOf("zip", "rar", "7z", "tar", "gz", "bz2")),
     SUBTITLE("Subtitle", setOf("srt", "ass", "vtt", "sub", "ssa")),
-    OTHER("Other", emptySet());
-    
+    OTHER("Other", emptySet()),
+    ;
+
     companion object {
         fun fromExtension(extension: String): FileType {
             val ext = extension.lowercase()
@@ -181,7 +183,7 @@ enum class FileType(val displayName: String, val extensions: Set<String>) {
 enum class ViewMode(val displayName: String) {
     LIST("List View"),
     TILES("Tiles View"),
-    GRID("Grid View")
+    GRID("Grid View"),
 }
 
 /**
@@ -189,25 +191,45 @@ enum class ViewMode(val displayName: String) {
  */
 sealed class FileBrowserAction {
     data class Navigate(val path: String) : FileBrowserAction()
+
     data class SelectItem(val itemId: String) : FileBrowserAction()
+
     data class DeselectItem(val itemId: String) : FileBrowserAction()
+
     object ToggleMultiSelect : FileBrowserAction()
+
     object ClearSelection : FileBrowserAction()
+
     data class SortBy(val sortBy: com.rdwatch.androidtv.ui.filebrowser.models.SortBy) : FileBrowserAction()
+
     object ToggleSortOrder : FileBrowserAction()
+
     data class UpdateFilter(val filterOptions: FilterOptions) : FileBrowserAction()
+
     data class Search(val query: String) : FileBrowserAction()
+
     data class PlayFile(val file: FileItem.File) : FileBrowserAction()
+
     data class DownloadFiles(val itemIds: Set<String>) : FileBrowserAction()
+
     data class DeleteFiles(val itemIds: Set<String>) : FileBrowserAction()
+
     data class BulkDownloadFiles(val itemIds: Set<String>) : FileBrowserAction()
+
     data class BulkDeleteFiles(val itemIds: Set<String>) : FileBrowserAction()
+
     object CancelBulkOperation : FileBrowserAction()
+
     object RetryFailedItems : FileBrowserAction()
+
     object NavigateBack : FileBrowserAction()
+
     object Refresh : FileBrowserAction()
+
     object PullToRefresh : FileBrowserAction()
+
     object ClearCache : FileBrowserAction()
+
     data class ChangeViewMode(val viewMode: ViewMode) : FileBrowserAction()
 }
 
@@ -218,7 +240,7 @@ data class SelectionState(
     val selectedCount: Int = 0,
     val canDownload: Boolean = false,
     val canDelete: Boolean = false,
-    val canPlay: Boolean = false
+    val canPlay: Boolean = false,
 )
 
 /**
@@ -230,7 +252,7 @@ data class PaginationState(
     val totalItems: Int = 0,
     val isLoadingMore: Boolean = false,
     val hasNextPage: Boolean = false,
-    val offset: Int = 0
+    val offset: Int = 0,
 ) {
     val hasMore: Boolean
         get() = hasNextPage && !isLoadingMore

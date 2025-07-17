@@ -1,7 +1,7 @@
 package com.rdwatch.androidtv.ui.filebrowser.mappers
 
-import com.rdwatch.androidtv.network.models.TorrentInfo
 import com.rdwatch.androidtv.network.models.TorrentFile
+import com.rdwatch.androidtv.network.models.TorrentInfo
 import com.rdwatch.androidtv.ui.filebrowser.models.*
 import java.text.SimpleDateFormat
 import java.util.*
@@ -11,12 +11,13 @@ import java.util.*
  */
 fun TorrentInfo.toFileItem(): FileItem.Torrent {
     val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
-    val timestamp = try {
-        dateFormat.parse(added)?.time ?: System.currentTimeMillis()
-    } catch (e: Exception) {
-        System.currentTimeMillis()
-    }
-    
+    val timestamp =
+        try {
+            dateFormat.parse(added)?.time ?: System.currentTimeMillis()
+        } catch (e: Exception) {
+            System.currentTimeMillis()
+        }
+
     return FileItem.Torrent(
         id = id,
         name = filename,
@@ -27,18 +28,21 @@ fun TorrentInfo.toFileItem(): FileItem.Torrent {
         status = TorrentStatus.fromString(status),
         seeders = seeders,
         speed = speed,
-        files = emptyList() // Files will be populated separately when torrent is expanded
+        files = emptyList(), // Files will be populated separately when torrent is expanded
     )
 }
 
 /**
  * Maps TorrentFile to FileItem.File
  */
-fun TorrentFile.toFileItem(torrentId: String, baseUrl: String? = null): FileItem.File {
+fun TorrentFile.toFileItem(
+    torrentId: String,
+    baseUrl: String? = null,
+): FileItem.File {
     val extension = path.substringAfterLast('.', "").lowercase()
     val fileType = FileType.fromExtension(extension)
     val isPlayable = fileType == FileType.VIDEO || fileType == FileType.AUDIO
-    
+
     return FileItem.File(
         id = "$torrentId-$id",
         name = path.substringAfterLast('/'),
@@ -49,7 +53,7 @@ fun TorrentFile.toFileItem(torrentId: String, baseUrl: String? = null): FileItem
         streamUrl = if (isPlayable) baseUrl?.let { "$it/$id" } else null,
         isPlayable = isPlayable,
         progress = if (selected == 1) 100f else null,
-        status = if (selected == 1) FileStatus.READY else FileStatus.UNAVAILABLE
+        status = if (selected == 1) FileStatus.READY else FileStatus.UNAVAILABLE,
     )
 }
 
@@ -68,7 +72,7 @@ private fun getMimeTypeFromExtension(extension: String): String? {
         "webm" -> "video/webm"
         "m4v" -> "video/x-m4v"
         "mpg", "mpeg" -> "video/mpeg"
-        
+
         // Audio
         "mp3" -> "audio/mpeg"
         "wav" -> "audio/wav"
@@ -78,7 +82,7 @@ private fun getMimeTypeFromExtension(extension: String): String? {
         "wma" -> "audio/x-ms-wma"
         "m4a" -> "audio/mp4"
         "opus" -> "audio/opus"
-        
+
         // Document
         "pdf" -> "application/pdf"
         "doc" -> "application/msword"
@@ -86,7 +90,7 @@ private fun getMimeTypeFromExtension(extension: String): String? {
         "txt" -> "text/plain"
         "odt" -> "application/vnd.oasis.opendocument.text"
         "rtf" -> "application/rtf"
-        
+
         // Image
         "jpg", "jpeg" -> "image/jpeg"
         "png" -> "image/png"
@@ -94,7 +98,7 @@ private fun getMimeTypeFromExtension(extension: String): String? {
         "bmp" -> "image/bmp"
         "svg" -> "image/svg+xml"
         "webp" -> "image/webp"
-        
+
         // Archive
         "zip" -> "application/zip"
         "rar" -> "application/x-rar-compressed"
@@ -102,13 +106,13 @@ private fun getMimeTypeFromExtension(extension: String): String? {
         "tar" -> "application/x-tar"
         "gz" -> "application/gzip"
         "bz2" -> "application/x-bzip2"
-        
+
         // Subtitle
         "srt" -> "application/x-subrip"
         "ass", "ssa" -> "text/x-ssa"
         "vtt" -> "text/vtt"
         "sub" -> "text/x-microdvd"
-        
+
         else -> null
     }
 }
@@ -117,26 +121,29 @@ private fun getMimeTypeFromExtension(extension: String): String? {
  * Extension function to apply sorting to a list of FileItems
  */
 fun List<FileItem>.sortedByOptions(options: SortingOptions): List<FileItem> {
-    val comparator = when (options.sortBy) {
-        SortBy.NAME -> compareBy<FileItem> { it.name.lowercase() }
-        SortBy.SIZE -> compareBy { it.size }
-        SortBy.DATE -> compareBy { it.modifiedDate }
-        SortBy.TYPE -> compareBy { 
-            when (it) {
-                is FileItem.Folder -> 0
-                is FileItem.Torrent -> 1
-                is FileItem.File -> 2
-            }
+    val comparator =
+        when (options.sortBy) {
+            SortBy.NAME -> compareBy<FileItem> { it.name.lowercase() }
+            SortBy.SIZE -> compareBy { it.size }
+            SortBy.DATE -> compareBy { it.modifiedDate }
+            SortBy.TYPE ->
+                compareBy {
+                    when (it) {
+                        is FileItem.Folder -> 0
+                        is FileItem.Torrent -> 1
+                        is FileItem.File -> 2
+                    }
+                }
+            SortBy.STATUS ->
+                compareBy {
+                    when (it) {
+                        is FileItem.File -> it.status.ordinal
+                        is FileItem.Torrent -> it.status.ordinal
+                        is FileItem.Folder -> 0
+                    }
+                }
         }
-        SortBy.STATUS -> compareBy {
-            when (it) {
-                is FileItem.File -> it.status.ordinal
-                is FileItem.Torrent -> it.status.ordinal
-                is FileItem.Folder -> 0
-            }
-        }
-    }
-    
+
     return if (options.sortOrder == SortOrder.DESCENDING) {
         sortedWith(comparator.reversed())
     } else {
@@ -150,33 +157,38 @@ fun List<FileItem>.sortedByOptions(options: SortingOptions): List<FileItem> {
 fun List<FileItem>.filteredByOptions(options: FilterOptions): List<FileItem> {
     return filter { item ->
         // Search query filter
-        val matchesSearch = options.searchQuery.isBlank() || 
-            item.name.contains(options.searchQuery, ignoreCase = true)
-        
+        val matchesSearch =
+            options.searchQuery.isBlank() ||
+                item.name.contains(options.searchQuery, ignoreCase = true)
+
         // Type-specific filters
-        val matchesTypeFilter = when (item) {
-            is FileItem.File -> {
-                val passesPlayableFilter = !options.showOnlyPlayable || item.isPlayable
-                val passesStatusFilter = options.statusFilter.isEmpty() || 
-                    options.statusFilter.contains(item.status)
-                val passesFileTypeFilter = if (options.fileTypeFilter.isNotEmpty()) {
-                    val extension = item.name.substringAfterLast('.', "").lowercase()
-                    val fileType = FileType.fromExtension(extension)
-                    options.fileTypeFilter.contains(fileType)
-                } else {
-                    true
+        val matchesTypeFilter =
+            when (item) {
+                is FileItem.File -> {
+                    val passesPlayableFilter = !options.showOnlyPlayable || item.isPlayable
+                    val passesStatusFilter =
+                        options.statusFilter.isEmpty() ||
+                            options.statusFilter.contains(item.status)
+                    val passesFileTypeFilter =
+                        if (options.fileTypeFilter.isNotEmpty()) {
+                            val extension = item.name.substringAfterLast('.', "").lowercase()
+                            val fileType = FileType.fromExtension(extension)
+                            options.fileTypeFilter.contains(fileType)
+                        } else {
+                            true
+                        }
+
+                    passesPlayableFilter && passesStatusFilter && passesFileTypeFilter
                 }
-                
-                passesPlayableFilter && passesStatusFilter && passesFileTypeFilter
+                is FileItem.Torrent -> {
+                    val passesDownloadedFilter =
+                        !options.showOnlyDownloaded ||
+                            item.status == TorrentStatus.DOWNLOADED
+                    passesDownloadedFilter
+                }
+                is FileItem.Folder -> true // Folders pass all filters
             }
-            is FileItem.Torrent -> {
-                val passesDownloadedFilter = !options.showOnlyDownloaded || 
-                    item.status == TorrentStatus.DOWNLOADED
-                passesDownloadedFilter
-            }
-            is FileItem.Folder -> true // Folders pass all filters
-        }
-        
+
         matchesSearch && matchesTypeFilter
     }
 }
@@ -184,7 +196,10 @@ fun List<FileItem>.filteredByOptions(options: FilterOptions): List<FileItem> {
 /**
  * Extension function to filter by date range
  */
-fun List<FileItem>.filteredByDateRange(startDate: Long, endDate: Long): List<FileItem> {
+fun List<FileItem>.filteredByDateRange(
+    startDate: Long,
+    endDate: Long,
+): List<FileItem> {
     return filter { item ->
         item.modifiedDate in startDate..endDate
     }
@@ -193,7 +208,10 @@ fun List<FileItem>.filteredByDateRange(startDate: Long, endDate: Long): List<Fil
 /**
  * Extension function to filter by size range
  */
-fun List<FileItem>.filteredBySizeRange(minSize: Long, maxSize: Long): List<FileItem> {
+fun List<FileItem>.filteredBySizeRange(
+    minSize: Long,
+    maxSize: Long,
+): List<FileItem> {
     return filter { item ->
         item.size in minSize..maxSize
     }
@@ -245,7 +263,7 @@ fun List<FileItem>.getContentStats(): ContentStats {
     var folderCount = 0
     var torrentCount = 0
     var playableCount = 0
-    
+
     forEach { item ->
         totalSize += item.size
         when (item) {
@@ -260,13 +278,13 @@ fun List<FileItem>.getContentStats(): ContentStats {
             }
         }
     }
-    
+
     return ContentStats(
         totalSize = totalSize,
         fileCount = fileCount,
         folderCount = folderCount,
         torrentCount = torrentCount,
-        playableCount = playableCount
+        playableCount = playableCount,
     )
 }
 
@@ -278,7 +296,7 @@ data class ContentStats(
     val fileCount: Int,
     val folderCount: Int,
     val torrentCount: Int,
-    val playableCount: Int
+    val playableCount: Int,
 )
 
 /**
@@ -286,7 +304,7 @@ data class ContentStats(
  */
 fun List<FileItem>.getFileTypeDistribution(): Map<FileType, Int> {
     val distribution = mutableMapOf<FileType, Int>()
-    
+
     forEach { item ->
         when (item) {
             is FileItem.File -> {
@@ -306,6 +324,6 @@ fun List<FileItem>.getFileTypeDistribution(): Map<FileType, Int> {
             }
         }
     }
-    
+
     return distribution
 }

@@ -19,28 +19,25 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.media3.common.util.UnstableApi
 import com.rdwatch.androidtv.Movie
 import com.rdwatch.androidtv.ui.common.UiState
-import com.rdwatch.androidtv.ui.components.SmartTVImageLoader
+import com.rdwatch.androidtv.ui.components.CastCrewSection
 import com.rdwatch.androidtv.ui.components.ImagePriority
-import com.rdwatch.androidtv.ui.focus.tvFocusable
-import com.rdwatch.androidtv.ui.focus.TVFocusIndicator
-import com.rdwatch.androidtv.ui.viewmodel.PlaybackViewModel
+import com.rdwatch.androidtv.ui.components.SmartTVImageLoader
 import com.rdwatch.androidtv.ui.details.components.ActionSection
 import com.rdwatch.androidtv.ui.details.components.ContentDetailTabs
-import com.rdwatch.androidtv.ui.components.CastCrewSection
-import com.rdwatch.androidtv.ui.details.models.*
-import com.rdwatch.androidtv.ui.details.MovieDetailsUiState
 import com.rdwatch.androidtv.ui.details.components.SourceListBottomSheet
+import com.rdwatch.androidtv.ui.details.models.*
 import com.rdwatch.androidtv.ui.details.models.advanced.*
-import androidx.media3.common.util.UnstableApi
+import com.rdwatch.androidtv.ui.focus.TVFocusIndicator
+import com.rdwatch.androidtv.ui.focus.tvFocusable
+import com.rdwatch.androidtv.ui.viewmodel.PlaybackViewModel
 
 /**
  * Movie Details Screen with hero layout and metadata
@@ -55,11 +52,11 @@ fun MovieDetailsScreen(
     onMovieClick: (Movie) -> Unit = {},
     onBackPressed: () -> Unit = {},
     playbackViewModel: PlaybackViewModel = hiltViewModel(),
-    viewModel: MovieDetailsViewModel = hiltViewModel()
+    viewModel: MovieDetailsViewModel = hiltViewModel(),
 ) {
     val overscanMargin = 32.dp
     val firstFocusRequester = remember { FocusRequester() }
-    
+
     // Observe ViewModel state
     val uiState by viewModel.uiState.collectAsState()
     val movieState by viewModel.movieState.collectAsState()
@@ -67,52 +64,50 @@ fun MovieDetailsScreen(
     val creditsState by viewModel.creditsState.collectAsState()
     val selectedTabIndex by viewModel.selectedTabIndex.collectAsState()
     val sourcesState by viewModel.sourcesState.collectAsState()
-    
+
     // Advanced source selection state
     val advancedSources by viewModel.advancedSources.collectAsState()
     val showSourceSelection by viewModel.showSourceSelection.collectAsState()
     val sourceSelectionState by viewModel.sourceSelectionState.collectAsState()
-    
+
     // Debug logging for UI state
     println("DEBUG [MovieDetailsScreen]: UI state availableSources count: ${uiState.availableSources.size}")
     println("DEBUG [MovieDetailsScreen]: Sources state: ${sourcesState.javaClass.simpleName}")
-    
+
     // Load movie details when screen is first displayed
     LaunchedEffect(movieId) {
         viewModel.loadMovieDetails(movieId)
     }
-    
-    
+
     // Get the movie from the ViewModel state
     val movie = uiState.movie
-    
-    
+
     // Get playback progress
     val contentProgress by playbackViewModel.inProgressContent.collectAsState()
     val currentMovieProgress = movie?.let { contentProgress.find { it.contentId == movie.videoUrl } }
     val watchProgress = currentMovieProgress?.watchPercentage ?: 0f
     val isCompleted = movie?.let { playbackViewModel.isContentCompleted(it.videoUrl ?: "") } ?: false
-    
-    
+
     when (movieState) {
         is UiState.Loading -> {
             Box(
-                modifier = modifier
-                    .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.background),
-                contentAlignment = Alignment.Center
+                modifier =
+                    modifier
+                        .fillMaxSize()
+                        .background(MaterialTheme.colorScheme.background),
+                contentAlignment = Alignment.Center,
             ) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
                 ) {
                     CircularProgressIndicator(
-                        color = MaterialTheme.colorScheme.primary
+                        color = MaterialTheme.colorScheme.primary,
                     )
                     Text(
                         text = "Loading movie details...",
                         style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onBackground
+                        color = MaterialTheme.colorScheme.onBackground,
                     )
                 }
             }
@@ -121,31 +116,32 @@ fun MovieDetailsScreen(
             LaunchedEffect(Unit) {
                 firstFocusRequester.requestFocus()
             }
-            
+
             Box(
-                modifier = modifier
-                    .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.background),
-                contentAlignment = Alignment.Center
+                modifier =
+                    modifier
+                        .fillMaxSize()
+                        .background(MaterialTheme.colorScheme.background),
+                contentAlignment = Alignment.Center,
             ) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
                 ) {
                     Text(
                         text = "Failed to load movie",
                         style = MaterialTheme.typography.headlineSmall,
-                        color = MaterialTheme.colorScheme.error
+                        color = MaterialTheme.colorScheme.error,
                     )
                     val currentMovieState = movieState
                     Text(
                         text = if (currentMovieState is UiState.Error) currentMovieState.message ?: "Unknown error" else "Unknown error",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onBackground
+                        color = MaterialTheme.colorScheme.onBackground,
                     )
                     Button(
                         onClick = onBackPressed,
-                        modifier = Modifier.focusRequester(firstFocusRequester)
+                        modifier = Modifier.focusRequester(firstFocusRequester),
                     ) {
                         Text("Go Back")
                     }
@@ -157,25 +153,26 @@ fun MovieDetailsScreen(
                 LaunchedEffect(Unit) {
                     firstFocusRequester.requestFocus()
                 }
-                
+
                 Box(
-                    modifier = modifier
-                        .fillMaxSize()
-                        .background(MaterialTheme.colorScheme.background),
-                    contentAlignment = Alignment.Center
+                    modifier =
+                        modifier
+                            .fillMaxSize()
+                            .background(MaterialTheme.colorScheme.background),
+                    contentAlignment = Alignment.Center,
                 ) {
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                        verticalArrangement = Arrangement.spacedBy(16.dp),
                     ) {
                         Text(
                             text = "Movie not found",
                             style = MaterialTheme.typography.headlineSmall,
-                            color = MaterialTheme.colorScheme.error
+                            color = MaterialTheme.colorScheme.error,
                         )
                         Button(
                             onClick = onBackPressed,
-                            modifier = Modifier.focusRequester(firstFocusRequester)
+                            modifier = Modifier.focusRequester(firstFocusRequester),
                         ) {
                             Text("Go Back")
                         }
@@ -185,11 +182,12 @@ fun MovieDetailsScreen(
                 LaunchedEffect(Unit) {
                     firstFocusRequester.requestFocus()
                 }
-                
+
                 LazyColumn(
-                    modifier = modifier
-                        .fillMaxSize()
-                        .background(MaterialTheme.colorScheme.background)
+                    modifier =
+                        modifier
+                            .fillMaxSize()
+                            .background(MaterialTheme.colorScheme.background),
                 ) {
                     // Hero Section
                     item {
@@ -202,25 +200,27 @@ fun MovieDetailsScreen(
                             onBackPressed = onBackPressed,
                             firstFocusRequester = firstFocusRequester,
                             overscanMargin = overscanMargin,
-                            viewModel = viewModel
+                            viewModel = viewModel,
                         )
                     }
-                    
+
                     // Action Buttons Section
                     item {
-                        val movieContentDetail = MovieContentDetail(
-                            movie = movie,
-                            progress = ContentProgress(
-                                watchPercentage = watchProgress,
-                                isCompleted = isCompleted
-                            ),
-                            isInWatchlist = uiState.isInWatchlist,
-                            isLiked = uiState.isLiked,
-                            isDownloaded = uiState.isDownloaded,
-                            isDownloading = uiState.isDownloading,
-                            isFromRealDebrid = uiState.isFromRealDebrid
-                        )
-                        
+                        val movieContentDetail =
+                            MovieContentDetail(
+                                movie = movie,
+                                progress =
+                                    ContentProgress(
+                                        watchPercentage = watchProgress,
+                                        isCompleted = isCompleted,
+                                    ),
+                                isInWatchlist = uiState.isInWatchlist,
+                                isLiked = uiState.isLiked,
+                                isDownloaded = uiState.isDownloaded,
+                                isDownloading = uiState.isDownloading,
+                                isFromRealDebrid = uiState.isFromRealDebrid,
+                            )
+
                         ActionSection(
                             content = movieContentDetail,
                             onActionClick = { action ->
@@ -251,20 +251,20 @@ fun MovieDetailsScreen(
                                     }
                                 }
                             },
-                            modifier = Modifier.padding(horizontal = overscanMargin, vertical = 8.dp)
+                            modifier = Modifier.padding(horizontal = overscanMargin, vertical = 8.dp),
                         )
                     }
-                    
+
                     // Tab navigation
                     item {
                         ContentDetailTabs(
                             selectedTabIndex = selectedTabIndex,
                             contentType = ContentType.MOVIE,
                             onTabSelected = { tabIndex -> viewModel.selectTab(tabIndex) },
-                            modifier = Modifier.padding(horizontal = overscanMargin)
+                            modifier = Modifier.padding(horizontal = overscanMargin),
                         )
                     }
-                    
+
                     // Tab content based on selected tab
                     when (selectedTabIndex) {
                         0 -> {
@@ -274,11 +274,11 @@ fun MovieDetailsScreen(
                                     movie = movie,
                                     uiState = uiState,
                                     isOverview = true,
-                                    modifier = Modifier.padding(horizontal = overscanMargin)
+                                    modifier = Modifier.padding(horizontal = overscanMargin),
                                 )
                             }
                         }
-                        
+
                         1 -> {
                             // Details Tab
                             item {
@@ -286,10 +286,10 @@ fun MovieDetailsScreen(
                                     movie = movie,
                                     uiState = uiState,
                                     isOverview = false,
-                                    modifier = Modifier.padding(horizontal = overscanMargin)
+                                    modifier = Modifier.padding(horizontal = overscanMargin),
                                 )
                             }
-                            
+
                             // Related Movies Section
                             when (val currentRelatedMoviesState = relatedMoviesState) {
                                 is com.rdwatch.androidtv.ui.common.UiState.Success -> {
@@ -298,7 +298,7 @@ fun MovieDetailsScreen(
                                             RelatedMoviesSection(
                                                 movies = currentRelatedMoviesState.data,
                                                 onMovieClick = onMovieClick,
-                                                modifier = Modifier.padding(horizontal = overscanMargin)
+                                                modifier = Modifier.padding(horizontal = overscanMargin),
                                             )
                                         }
                                     }
@@ -306,10 +306,11 @@ fun MovieDetailsScreen(
                                 is com.rdwatch.androidtv.ui.common.UiState.Loading -> {
                                     item {
                                         Box(
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .padding(horizontal = overscanMargin),
-                                            contentAlignment = Alignment.Center
+                                            modifier =
+                                                Modifier
+                                                    .fillMaxWidth()
+                                                    .padding(horizontal = overscanMargin),
+                                            contentAlignment = Alignment.Center,
                                         ) {
                                             CircularProgressIndicator()
                                         }
@@ -323,7 +324,7 @@ fun MovieDetailsScreen(
                                 }
                             }
                         }
-                        
+
                         2 -> {
                             // Cast & Crew Tab
                             when (val currentCreditsState = creditsState) {
@@ -331,17 +332,18 @@ fun MovieDetailsScreen(
                                     item {
                                         CastCrewSection(
                                             metadata = currentCreditsState.data,
-                                            modifier = Modifier.padding(horizontal = overscanMargin)
+                                            modifier = Modifier.padding(horizontal = overscanMargin),
                                         )
                                     }
                                 }
                                 is UiState.Loading -> {
                                     item {
                                         Box(
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .padding(horizontal = overscanMargin),
-                                            contentAlignment = Alignment.Center
+                                            modifier =
+                                                Modifier
+                                                    .fillMaxWidth()
+                                                    .padding(horizontal = overscanMargin),
+                                            contentAlignment = Alignment.Center,
                                         ) {
                                             CircularProgressIndicator()
                                         }
@@ -350,15 +352,16 @@ fun MovieDetailsScreen(
                                 is UiState.Error -> {
                                     item {
                                         Box(
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .padding(horizontal = overscanMargin),
-                                            contentAlignment = Alignment.Center
+                                            modifier =
+                                                Modifier
+                                                    .fillMaxWidth()
+                                                    .padding(horizontal = overscanMargin),
+                                            contentAlignment = Alignment.Center,
                                         ) {
                                             Text(
                                                 text = "Failed to load cast & crew",
                                                 style = MaterialTheme.typography.bodyMedium,
-                                                color = MaterialTheme.colorScheme.error
+                                                color = MaterialTheme.colorScheme.error,
                                             )
                                         }
                                     }
@@ -369,7 +372,7 @@ fun MovieDetailsScreen(
                             }
                         }
                     }
-                    
+
                     // Bottom spacing for TV overscan
                     item {
                         Spacer(modifier = Modifier.height(overscanMargin))
@@ -381,13 +384,13 @@ fun MovieDetailsScreen(
             // Handle UiState.Idle or any other state
             Box(
                 modifier = modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
+                contentAlignment = Alignment.Center,
             ) {
                 CircularProgressIndicator()
             }
         }
     }
-    
+
     // Advanced Source Selection Bottom Sheet
     SourceListBottomSheet(
         isVisible = showSourceSelection,
@@ -397,12 +400,12 @@ fun MovieDetailsScreen(
         onDismiss = { viewModel.hideSourceSelection() },
         onSourceSelected = { source ->
             viewModel.onSourceSelected(source)
-            
+
             // Trigger movie playback with selected source
             movie?.let { currentMovie ->
                 playbackViewModel.startMoviePlaybackWithSource(
                     movie = currentMovie,
-                    source = source
+                    source = source,
                 )
             }
         },
@@ -429,7 +432,7 @@ fun MovieDetailsScreen(
             movie?.let { currentMovie ->
                 playbackViewModel.startMoviePlaybackWithSource(
                     movie = currentMovie,
-                    source = source
+                    source = source,
                 )
             }
         },
@@ -440,7 +443,7 @@ fun MovieDetailsScreen(
         onAddToPlaylist = { source ->
             // TODO: Implement playlist functionality
             println("DEBUG: Add to playlist requested for ${source.provider.displayName}")
-        }
+        },
     )
 }
 
@@ -454,12 +457,13 @@ private fun MovieHeroSection(
     onBackPressed: () -> Unit,
     firstFocusRequester: FocusRequester,
     overscanMargin: androidx.compose.ui.unit.Dp,
-    viewModel: MovieDetailsViewModel
+    viewModel: MovieDetailsViewModel,
 ) {
     Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(400.dp)
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .height(400.dp),
     ) {
         // Background image
         SmartTVImageLoader(
@@ -467,58 +471,64 @@ private fun MovieHeroSection(
             contentDescription = movie.title,
             contentScale = ContentScale.Crop,
             priority = ImagePriority.HIGH,
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier.fillMaxSize(),
         )
-        
+
         // Gradient overlay for text readability
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(
-                            Color.Transparent,
-                            Color.Black.copy(alpha = 0.3f),
-                            Color.Black.copy(alpha = 0.8f)
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.verticalGradient(
+                            colors =
+                                listOf(
+                                    Color.Transparent,
+                                    Color.Black.copy(alpha = 0.3f),
+                                    Color.Black.copy(alpha = 0.8f),
+                                ),
+                            startY = 0f,
+                            endY = Float.POSITIVE_INFINITY,
                         ),
-                        startY = 0f,
-                        endY = Float.POSITIVE_INFINITY
-                    )
-                )
+                    ),
         )
-        
+
         // Back button
         var backButtonFocused by remember { mutableStateOf(false) }
         TVFocusIndicator(isFocused = backButtonFocused) {
             IconButton(
                 onClick = onBackPressed,
-                modifier = Modifier
-                    .align(Alignment.TopStart)
-                    .padding(overscanMargin)
-                    .focusRequester(firstFocusRequester)
-                    .tvFocusable(
-                        onFocusChanged = { backButtonFocused = it.isFocused }
-                    )
+                modifier =
+                    Modifier
+                        .align(Alignment.TopStart)
+                        .padding(overscanMargin)
+                        .focusRequester(firstFocusRequester)
+                        .tvFocusable(
+                            onFocusChanged = { backButtonFocused = it.isFocused },
+                        ),
             ) {
                 Icon(
                     imageVector = Icons.Default.ArrowBack,
                     contentDescription = "Back",
-                    tint = if (backButtonFocused) {
-                        MaterialTheme.colorScheme.primary
-                    } else {
-                        Color.White
-                    }
+                    tint =
+                        if (backButtonFocused) {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            Color.White
+                        },
                 )
             }
         }
-        
+
         // Movie info overlay
         Column(
-            modifier = Modifier
-                .align(Alignment.BottomStart)
-                .padding(overscanMargin)
-                .fillMaxWidth(0.6f), // Use only part of width for better readability
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            modifier =
+                Modifier
+                    .align(Alignment.BottomStart)
+                    .padding(overscanMargin)
+                    .fillMaxWidth(0.6f),
+            // Use only part of width for better readability
+            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             // Movie title
             Text(
@@ -527,13 +537,13 @@ private fun MovieHeroSection(
                 color = Color.White,
                 fontWeight = FontWeight.Bold,
                 maxLines = 2,
-                overflow = TextOverflow.Ellipsis
+                overflow = TextOverflow.Ellipsis,
             )
-            
+
             // Movie metadata
             Row(
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 if (movie.studio != null) {
                     MetadataChip(text = movie.studio!!)
@@ -543,51 +553,52 @@ private fun MovieHeroSection(
                 if (isCompleted) {
                     MetadataChip(
                         text = "Watched",
-                        icon = Icons.Default.CheckCircle
+                        icon = Icons.Default.CheckCircle,
                     )
                 }
             }
-            
+
             // Progress indicator
             if (watchProgress > 0f && !isCompleted) {
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(
                         text = "${(watchProgress * 100).toInt()}% watched",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = Color.White.copy(alpha = 0.9f)
+                        color = Color.White.copy(alpha = 0.9f),
                     )
                     LinearProgressIndicator(
                         progress = { watchProgress },
-                        modifier = Modifier
-                            .width(200.dp)
-                            .height(4.dp),
+                        modifier =
+                            Modifier
+                                .width(200.dp)
+                                .height(4.dp),
                         color = MaterialTheme.colorScheme.primary,
-                        trackColor = Color.White.copy(alpha = 0.3f)
+                        trackColor = Color.White.copy(alpha = 0.3f),
                     )
                 }
             }
-            
+
             // Play button
             PlayButton(
                 onClick = {
                     val sources = viewModel.advancedSources.value
                     val isLoading = viewModel.uiState.value.isSourcesLoading
-                    
+
                     if (isLoading) {
                         // Sources are still loading, do nothing
                         return@PlayButton
                     }
-                    
+
                     if (sources.isEmpty()) {
                         // No sources available, show warning (defensive coding)
                         println("WARNING: No sources available for playback")
                         return@PlayButton
                     }
-                    
+
                     // Open advanced source selection
                     viewModel.selectAdvancedSources()
                 },
-                isResume = watchProgress > 0f && !isCompleted
+                isResume = watchProgress > 0f && !isCompleted,
             )
         }
     }
@@ -596,29 +607,29 @@ private fun MovieHeroSection(
 @Composable
 private fun MetadataChip(
     text: String,
-    icon: ImageVector? = null
+    icon: ImageVector? = null,
 ) {
     Surface(
         color = Color.Black.copy(alpha = 0.6f),
-        shape = RoundedCornerShape(16.dp)
+        shape = RoundedCornerShape(16.dp),
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
             horizontalArrangement = Arrangement.spacedBy(4.dp),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             icon?.let {
                 Icon(
                     imageVector = it,
                     contentDescription = null,
                     tint = Color.White,
-                    modifier = Modifier.size(16.dp)
+                    modifier = Modifier.size(16.dp),
                 )
             }
             Text(
                 text = text,
                 style = MaterialTheme.typography.labelMedium,
-                color = Color.White
+                color = Color.White,
             )
         }
     }
@@ -628,39 +639,42 @@ private fun MetadataChip(
 @Composable
 private fun PlayButton(
     onClick: () -> Unit,
-    isResume: Boolean = false
+    isResume: Boolean = false,
 ) {
     var isFocused by remember { mutableStateOf(false) }
-    
+
     TVFocusIndicator(isFocused = isFocused) {
         Button(
             onClick = onClick,
-            modifier = Modifier
-                .tvFocusable(
-                    onFocusChanged = { isFocused = it.isFocused }
+            modifier =
+                Modifier
+                    .tvFocusable(
+                        onFocusChanged = { isFocused = it.isFocused },
+                    ),
+            colors =
+                ButtonDefaults.buttonColors(
+                    containerColor =
+                        if (isFocused) {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.9f)
+                        },
                 ),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = if (isFocused) {
-                    MaterialTheme.colorScheme.primary
-                } else {
-                    MaterialTheme.colorScheme.primary.copy(alpha = 0.9f)
-                }
-            ),
-            contentPadding = PaddingValues(horizontal = 24.dp, vertical = 12.dp)
+            contentPadding = PaddingValues(horizontal = 24.dp, vertical = 12.dp),
         ) {
             Row(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 Icon(
                     imageVector = Icons.Default.PlayArrow,
                     contentDescription = null,
-                    modifier = Modifier.size(24.dp)
+                    modifier = Modifier.size(24.dp),
                 )
                 Text(
                     text = if (isResume) "Resume" else "Play",
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold
+                    fontWeight = FontWeight.SemiBold,
                 )
             }
         }
@@ -672,11 +686,11 @@ private fun MovieInfoSection(
     movie: Movie,
     uiState: MovieDetailsUiState,
     isOverview: Boolean = false,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Column(
         modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         // Description
         if (movie.description != null) {
@@ -685,23 +699,23 @@ private fun MovieInfoSection(
                     text = "Description",
                     style = MaterialTheme.typography.headlineSmall,
                     color = MaterialTheme.colorScheme.onBackground,
-                    fontWeight = FontWeight.SemiBold
+                    fontWeight = FontWeight.SemiBold,
                 )
                 Text(
                     text = movie.description!!,
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.8f),
                     lineHeight = MaterialTheme.typography.bodyLarge.lineHeight * 1.2,
-                    maxLines = if (isOverview) 3 else Int.MAX_VALUE
+                    maxLines = if (isOverview) 3 else Int.MAX_VALUE,
                 )
             }
         }
-        
+
         // Additional info (placeholder)
         if (isOverview) {
             // Overview: Show key metadata only
             Row(
-                horizontalArrangement = Arrangement.spacedBy(32.dp)
+                horizontalArrangement = Arrangement.spacedBy(32.dp),
             ) {
                 InfoItem(label = "Duration", value = uiState.getMovieRuntime())
                 InfoItem(label = "Rating", value = uiState.getMovieRating())
@@ -710,7 +724,7 @@ private fun MovieInfoSection(
             // Details: Show all metadata
             LazyRow(
                 horizontalArrangement = Arrangement.spacedBy(24.dp),
-                contentPadding = PaddingValues(horizontal = 4.dp)
+                contentPadding = PaddingValues(horizontal = 4.dp),
             ) {
                 item { InfoItem(label = "Duration", value = uiState.getMovieRuntime()) }
                 item { InfoItem(label = "Language", value = "English") }
@@ -726,49 +740,48 @@ private fun MovieInfoSection(
 @Composable
 private fun InfoItem(
     label: String,
-    value: String
+    value: String,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Text(
             text = label,
             style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
+            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
         )
         Text(
             text = value,
             style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.onBackground,
-            fontWeight = FontWeight.Medium
+            fontWeight = FontWeight.Medium,
         )
     }
 }
-
 
 @Composable
 private fun RelatedMoviesSection(
     movies: List<Movie>,
     onMovieClick: (Movie) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Column(
         modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         Text(
             text = "More Like This",
             style = MaterialTheme.typography.headlineSmall,
             color = MaterialTheme.colorScheme.onBackground,
-            fontWeight = FontWeight.SemiBold
+            fontWeight = FontWeight.SemiBold,
         )
-        
+
         LazyRow(
             horizontalArrangement = Arrangement.spacedBy(16.dp),
-            contentPadding = PaddingValues(horizontal = 4.dp)
+            contentPadding = PaddingValues(horizontal = 4.dp),
         ) {
             items(movies) { movie ->
                 RelatedMovieCard(
                     movie = movie,
-                    onClick = { onMovieClick(movie) }
+                    onClick = { onMovieClick(movie) },
                 )
             }
         }
@@ -779,45 +792,49 @@ private fun RelatedMoviesSection(
 @Composable
 private fun RelatedMovieCard(
     movie: Movie,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     var isFocused by remember { mutableStateOf(false) }
-    
+
     TVFocusIndicator(isFocused = isFocused) {
         Card(
             onClick = onClick,
-            modifier = Modifier
-                .size(
-                    width = if (isFocused) 180.dp else 160.dp,
-                    height = if (isFocused) 240.dp else 220.dp
-                )
-                .tvFocusable(
-                    onFocusChanged = { isFocused = it.isFocused }
+            modifier =
+                Modifier
+                    .size(
+                        width = if (isFocused) 180.dp else 160.dp,
+                        height = if (isFocused) 240.dp else 220.dp,
+                    )
+                    .tvFocusable(
+                        onFocusChanged = { isFocused = it.isFocused },
+                    ),
+            colors =
+                CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surface,
                 ),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surface
-            ),
-            elevation = CardDefaults.cardElevation(
-                defaultElevation = if (isFocused) 8.dp else 2.dp
-            ),
-            shape = RoundedCornerShape(8.dp)
+            elevation =
+                CardDefaults.cardElevation(
+                    defaultElevation = if (isFocused) 8.dp else 2.dp,
+                ),
+            shape = RoundedCornerShape(8.dp),
         ) {
             Column {
                 // Movie poster
                 Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f)
-                        .clip(RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp))
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .weight(1f)
+                            .clip(RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp)),
                 ) {
                     SmartTVImageLoader(
                         imageUrl = movie.cardImageUrl,
                         contentDescription = movie.title,
                         priority = ImagePriority.LOW,
-                        modifier = Modifier.fillMaxSize()
+                        modifier = Modifier.fillMaxSize(),
                     )
                 }
-                
+
                 // Movie title
                 Text(
                     text = movie.title ?: "Unknown Title",
@@ -826,10 +843,9 @@ private fun RelatedMovieCard(
                     fontWeight = FontWeight.Medium,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.padding(12.dp)
+                    modifier = Modifier.padding(12.dp),
                 )
             }
         }
     }
 }
-

@@ -14,7 +14,7 @@ data class ContentListState(
     val isLoading: Boolean = false,
     val isRefreshing: Boolean = false,
     val hasMore: Boolean = false,
-    val error: String? = null
+    val error: String? = null,
 ) {
     val isEmpty: Boolean get() = items.isEmpty() && !isLoading
 }
@@ -27,7 +27,7 @@ data class SearchState(
     val results: List<Movie> = emptyList(),
     val isSearching: Boolean = false,
     val recentSearches: List<String> = emptyList(),
-    val suggestions: List<String> = emptyList()
+    val suggestions: List<String> = emptyList(),
 ) {
     val hasQuery: Boolean get() = query.isNotBlank()
     val hasResults: Boolean get() = results.isNotEmpty()
@@ -44,7 +44,7 @@ data class PlaybackState(
     val duration: Long = 0,
     val bufferedPosition: Long = 0,
     val playbackSpeed: Float = 1.0f,
-    val error: String? = null
+    val error: String? = null,
 ) {
     val progress: Float get() = if (duration > 0) currentPosition.toFloat() / duration else 0f
     val bufferedProgress: Float get() = if (duration > 0) bufferedPosition.toFloat() / duration else 0f
@@ -60,7 +60,7 @@ data class DownloadState(
     val totalBytes: Long = 0,
     val isPaused: Boolean = false,
     val isCompleted: Boolean = false,
-    val error: String? = null
+    val error: String? = null,
 ) {
     val isDownloading: Boolean get() = downloadId != null && !isCompleted && !isPaused
     val canResume: Boolean get() = isPaused && downloadId != null
@@ -74,7 +74,7 @@ data class RealDebridState(
     val torrents: List<RealDebridTorrent> = emptyList(),
     val downloads: List<RealDebridDownload> = emptyList(),
     val isLoading: Boolean = false,
-    val error: String? = null
+    val error: String? = null,
 )
 
 /**
@@ -84,7 +84,7 @@ data class RealDebridTorrent(
     val id: String,
     val filename: String,
     val status: String,
-    val progress: Float
+    val progress: Float,
 )
 
 /**
@@ -94,5 +94,5 @@ data class RealDebridDownload(
     val id: String,
     val filename: String,
     val link: String,
-    val size: Long
+    val size: Long,
 )

@@ -10,10 +10,12 @@ annotation class NullToEmptyString
 
 class NullToEmptyStringAdapter {
     @ToJson
-    fun toJson(@NullToEmptyString value: String?): String? {
+    fun toJson(
+        @NullToEmptyString value: String?,
+    ): String? {
         return value
     }
-    
+
     @FromJson
     @NullToEmptyString
     fun fromJson(value: String?): String {

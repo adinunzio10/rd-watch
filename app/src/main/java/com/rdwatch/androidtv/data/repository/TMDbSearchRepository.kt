@@ -1,9 +1,7 @@
 package com.rdwatch.androidtv.data.repository
 
-import com.rdwatch.androidtv.network.models.tmdb.TMDbSearchResponse
 import com.rdwatch.androidtv.network.models.tmdb.TMDbMultiSearchResponse
-import com.rdwatch.androidtv.network.models.tmdb.TMDbPersonResponse
-import com.rdwatch.androidtv.network.models.tmdb.TMDbCollectionResponse
+import com.rdwatch.androidtv.network.models.tmdb.TMDbSearchResponse
 import com.rdwatch.androidtv.repository.base.Result
 import com.rdwatch.androidtv.ui.details.models.ContentDetail
 import kotlinx.coroutines.flow.Flow
@@ -13,7 +11,6 @@ import kotlinx.coroutines.flow.Flow
  * Provides caching and offline-first access to search data
  */
 interface TMDbSearchRepository {
-    
     /**
      * Search movies
      * @param query Search query
@@ -32,9 +29,9 @@ interface TMDbSearchRepository {
         includeAdult: Boolean = false,
         region: String? = null,
         year: Int? = null,
-        primaryReleaseYear: Int? = null
+        primaryReleaseYear: Int? = null,
     ): Flow<Result<TMDbSearchResponse>>
-    
+
     /**
      * Search TV shows
      * @param query Search query
@@ -49,9 +46,9 @@ interface TMDbSearchRepository {
         page: Int = 1,
         language: String = "en-US",
         includeAdult: Boolean = false,
-        firstAirDateYear: Int? = null
+        firstAirDateYear: Int? = null,
     ): Flow<Result<TMDbSearchResponse>>
-    
+
     /**
      * Search people
      * @param query Search query
@@ -66,9 +63,9 @@ interface TMDbSearchRepository {
         page: Int = 1,
         language: String = "en-US",
         includeAdult: Boolean = false,
-        region: String? = null
+        region: String? = null,
     ): Flow<Result<TMDbSearchResponse>>
-    
+
     /**
      * Multi-search across movies, TV shows, and people
      * @param query Search query
@@ -83,9 +80,9 @@ interface TMDbSearchRepository {
         page: Int = 1,
         language: String = "en-US",
         includeAdult: Boolean = false,
-        region: String? = null
+        region: String? = null,
     ): Flow<Result<TMDbMultiSearchResponse>>
-    
+
     /**
      * Multi-search and convert to ContentDetail list
      * @param query Search query
@@ -100,9 +97,9 @@ interface TMDbSearchRepository {
         page: Int = 1,
         language: String = "en-US",
         includeAdult: Boolean = false,
-        region: String? = null
+        region: String? = null,
     ): Flow<Result<List<ContentDetail>>>
-    
+
     /**
      * Search collections
      * @param query Search query
@@ -113,9 +110,9 @@ interface TMDbSearchRepository {
     fun searchCollections(
         query: String,
         page: Int = 1,
-        language: String = "en-US"
+        language: String = "en-US",
     ): Flow<Result<TMDbSearchResponse>>
-    
+
     /**
      * Search companies
      * @param query Search query
@@ -124,9 +121,9 @@ interface TMDbSearchRepository {
      */
     fun searchCompanies(
         query: String,
-        page: Int = 1
+        page: Int = 1,
     ): Flow<Result<TMDbSearchResponse>>
-    
+
     /**
      * Search keywords
      * @param query Search query
@@ -135,9 +132,9 @@ interface TMDbSearchRepository {
      */
     fun searchKeywords(
         query: String,
-        page: Int = 1
+        page: Int = 1,
     ): Flow<Result<TMDbSearchResponse>>
-    
+
     /**
      * Get trending content
      * @param mediaType Media type (all, movie, tv, person)
@@ -150,9 +147,9 @@ interface TMDbSearchRepository {
         mediaType: String = "all",
         timeWindow: String = "day",
         language: String = "en-US",
-        page: Int = 1
+        page: Int = 1,
     ): Flow<Result<TMDbSearchResponse>>
-    
+
     /**
      * Get trending content as ContentDetail list
      * @param mediaType Media type (all, movie, tv, person)
@@ -165,9 +162,9 @@ interface TMDbSearchRepository {
         mediaType: String = "all",
         timeWindow: String = "day",
         language: String = "en-US",
-        page: Int = 1
+        page: Int = 1,
     ): Flow<Result<List<ContentDetail>>>
-    
+
     /**
      * Discover movies with filtering
      * @param page Page number for pagination
@@ -206,9 +203,9 @@ interface TMDbSearchRepository {
         voteCountGte: Int? = null,
         withOriginalLanguage: String? = null,
         withWatchProviders: String? = null,
-        watchRegion: String? = null
+        watchRegion: String? = null,
     ): Flow<Result<TMDbSearchResponse>>
-    
+
     /**
      * Discover TV shows with filtering
      * @param page Page number for pagination
@@ -261,9 +258,9 @@ interface TMDbSearchRepository {
         watchRegion: String? = null,
         withStatus: String? = null,
         withType: String? = null,
-        withKeywords: String? = null
+        withKeywords: String? = null,
     ): Flow<Result<TMDbSearchResponse>>
-    
+
     /**
      * Get search suggestions for a query
      * @param query Search query
@@ -274,9 +271,9 @@ interface TMDbSearchRepository {
     fun getSearchSuggestions(
         query: String,
         limit: Int = 5,
-        language: String = "en-US"
+        language: String = "en-US",
     ): Flow<Result<List<String>>>
-    
+
     /**
      * Get cached search results
      * @param query Search query
@@ -285,9 +282,9 @@ interface TMDbSearchRepository {
      */
     fun getCachedSearchResults(
         query: String,
-        mediaType: String? = null
+        mediaType: String? = null,
     ): Flow<Result<List<ContentDetail>>>
-    
+
     /**
      * Save search query to history
      * @param query Search query
@@ -297,28 +294,26 @@ interface TMDbSearchRepository {
     suspend fun saveSearchHistory(
         query: String,
         mediaType: String? = null,
-        resultCount: Int = 0
+        resultCount: Int = 0,
     )
-    
+
     /**
      * Get search history
      * @param limit Maximum number of history items
      * @return Flow of Result containing search history
      */
-    fun getSearchHistory(
-        limit: Int = 10
-    ): Flow<Result<List<String>>>
-    
+    fun getSearchHistory(limit: Int = 10): Flow<Result<List<String>>>
+
     /**
      * Clear search history
      */
     suspend fun clearSearchHistory()
-    
+
     /**
      * Clear search cache
      */
     suspend fun clearSearchCache()
-    
+
     /**
      * Clear specific search cache
      * @param query Search query

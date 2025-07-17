@@ -1,20 +1,8 @@
 package com.rdwatch.androidtv.ui.details.components
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -22,23 +10,16 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.rdwatch.androidtv.ui.details.models.advanced.*
 import com.rdwatch.androidtv.ui.details.models.SourceSortOption
-import com.rdwatch.androidtv.ui.focus.tvFocusable
-import com.rdwatch.androidtv.ui.focus.rememberTVFocusGroup
-import com.rdwatch.androidtv.ui.focus.AutoTVFocus
+import com.rdwatch.androidtv.ui.details.models.advanced.*
 import com.rdwatch.androidtv.ui.focus.TVFocusItem
-import kotlinx.coroutines.delay
+import com.rdwatch.androidtv.ui.focus.rememberTVFocusGroup
+import com.rdwatch.androidtv.ui.focus.tvFocusable
 
 /**
  * Comprehensive source selection bottom sheet for advanced source selection
@@ -61,21 +42,22 @@ fun SourceListBottomSheet(
     onViewModeChanged: (SourceSelectionState.ViewMode) -> Unit = {},
     onPlaySource: (SourceMetadata) -> Unit = {},
     onDownloadSource: (SourceMetadata) -> Unit = {},
-    onAddToPlaylist: (SourceMetadata) -> Unit = {}
+    onAddToPlaylist: (SourceMetadata) -> Unit = {},
 ) {
-    val bottomSheetState = rememberModalBottomSheetState(
-        skipPartiallyExpanded = true
-    )
-    
+    val bottomSheetState =
+        rememberModalBottomSheetState(
+            skipPartiallyExpanded = true,
+        )
+
     val mainFocusGroup = rememberTVFocusGroup("source_sheet_main")
-    
+
     // Auto-dismiss when not visible
     LaunchedEffect(isVisible) {
         if (!isVisible) {
             bottomSheetState.hide()
         }
     }
-    
+
     if (isVisible) {
         ModalBottomSheet(
             onDismissRequest = onDismiss,
@@ -85,14 +67,15 @@ fun SourceListBottomSheet(
             contentColor = MaterialTheme.colorScheme.onSurface,
             dragHandle = {
                 Surface(
-                    modifier = Modifier
-                        .padding(vertical = 8.dp)
-                        .width(40.dp)
-                        .height(4.dp),
+                    modifier =
+                        Modifier
+                            .padding(vertical = 8.dp)
+                            .width(40.dp)
+                            .height(4.dp),
                     shape = RoundedCornerShape(2.dp),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
                 ) {}
-            }
+            },
         ) {
             SourceListContent(
                 sources = sources,
@@ -107,7 +90,7 @@ fun SourceListBottomSheet(
                 onViewModeChanged = onViewModeChanged,
                 onPlaySource = onPlaySource,
                 onDownloadSource = onDownloadSource,
-                onAddToPlaylist = onAddToPlaylist
+                onAddToPlaylist = onAddToPlaylist,
             )
         }
     }
@@ -130,13 +113,14 @@ private fun SourceListContent(
     onViewModeChanged: (SourceSelectionState.ViewMode) -> Unit,
     onPlaySource: (SourceMetadata) -> Unit,
     onDownloadSource: (SourceMetadata) -> Unit,
-    onAddToPlaylist: (SourceMetadata) -> Unit
+    onAddToPlaylist: (SourceMetadata) -> Unit,
 ) {
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .heightIn(max = 600.dp)
-            .padding(16.dp)
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .heightIn(max = 600.dp)
+                .padding(16.dp),
     ) {
         // Header with title and controls
         SourceListHeader(
@@ -148,29 +132,29 @@ private fun SourceListContent(
             onRefresh = onRefresh,
             onViewModeChanged = onViewModeChanged,
             onSortChanged = onSortChanged,
-            focusGroup = focusGroup
+            focusGroup = focusGroup,
         )
-        
+
         Spacer(modifier = Modifier.height(16.dp))
-        
+
         // Quick filters
         QuickFiltersRow(
             quickFilters = state.getQuickFilters(),
             currentFilter = state.filter,
             onFilterChanged = onFilterChanged,
-            focusGroup = focusGroup
+            focusGroup = focusGroup,
         )
-        
+
         Spacer(modifier = Modifier.height(16.dp))
-        
+
         // Statistics summary
         SourceStatisticsSummary(
             statistics = state.getStatistics(),
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
         )
-        
+
         Spacer(modifier = Modifier.height(16.dp))
-        
+
         // Source list based on view mode
         when (state.viewMode) {
             SourceSelectionState.ViewMode.GRID -> {
@@ -183,7 +167,7 @@ private fun SourceListContent(
                     onPlaySource = onPlaySource,
                     onDownloadSource = onDownloadSource,
                     onAddToPlaylist = onAddToPlaylist,
-                    focusGroup = focusGroup
+                    focusGroup = focusGroup,
                 )
             }
             SourceSelectionState.ViewMode.LIST -> {
@@ -196,7 +180,7 @@ private fun SourceListContent(
                     onPlaySource = onPlaySource,
                     onDownloadSource = onDownloadSource,
                     onAddToPlaylist = onAddToPlaylist,
-                    focusGroup = focusGroup
+                    focusGroup = focusGroup,
                 )
             }
             SourceSelectionState.ViewMode.COMPACT -> {
@@ -205,24 +189,24 @@ private fun SourceListContent(
                     selectedSource = selectedSource,
                     onSourceSelected = onSourceSelected,
                     onPlaySource = onPlaySource,
-                    focusGroup = focusGroup
+                    focusGroup = focusGroup,
                 )
             }
         }
-        
+
         // Loading and error states
         if (state.isLoading) {
             LoadingState(modifier = Modifier.fillMaxWidth())
         }
-        
+
         state.error?.let { error ->
             ErrorState(
                 error = error,
                 onRetry = onRefresh,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
             )
         }
-        
+
         if (state.filteredSources.isEmpty() && !state.isLoading && state.error == null) {
             EmptyState(modifier = Modifier.fillMaxWidth())
         }
@@ -242,95 +226,99 @@ private fun SourceListHeader(
     onRefresh: () -> Unit,
     onViewModeChanged: (SourceSelectionState.ViewMode) -> Unit,
     onSortChanged: (SourceSortOption) -> Unit,
-    focusGroup: com.rdwatch.androidtv.ui.focus.TVFocusGroup
+    focusGroup: com.rdwatch.androidtv.ui.focus.TVFocusGroup,
 ) {
     val refreshFocusRequester = remember { FocusRequester() }
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         // Title and count
         Column {
             Text(
                 text = "Select Source",
                 style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
             )
             Text(
-                text = if (sourcesCount == totalSources) {
-                    "$sourcesCount sources available"
-                } else {
-                    "$sourcesCount of $totalSources sources"
-                },
+                text =
+                    if (sourcesCount == totalSources) {
+                        "$sourcesCount sources available"
+                    } else {
+                        "$sourcesCount of $totalSources sources"
+                    },
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
-        
+
         // Control buttons
         Row(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             // Refresh button
             var refreshFocused by remember { mutableStateOf(false) }
-            
+
             IconButton(
                 onClick = onRefresh,
-                modifier = Modifier
-                    .tvFocusable(
-                        enabled = true,
-                        focusRequester = refreshFocusRequester,
-                        onFocusChanged = { refreshFocused = it.isFocused }
-                    )
-                    .then(
-                        if (refreshFocused) {
-                            Modifier.border(
-                                2.dp,
-                                MaterialTheme.colorScheme.primary,
-                                RoundedCornerShape(8.dp)
-                            )
-                        } else Modifier
-                    ),
-                enabled = !isLoading
+                modifier =
+                    Modifier
+                        .tvFocusable(
+                            enabled = true,
+                            focusRequester = refreshFocusRequester,
+                            onFocusChanged = { refreshFocused = it.isFocused },
+                        )
+                        .then(
+                            if (refreshFocused) {
+                                Modifier.border(
+                                    2.dp,
+                                    MaterialTheme.colorScheme.primary,
+                                    RoundedCornerShape(8.dp),
+                                )
+                            } else {
+                                Modifier
+                            },
+                        ),
+                enabled = !isLoading,
             ) {
                 if (isLoading) {
                     CircularProgressIndicator(
                         modifier = Modifier.size(20.dp),
-                        strokeWidth = 2.dp
+                        strokeWidth = 2.dp,
                     )
                 } else {
                     Icon(
                         Icons.Default.Refresh,
-                        contentDescription = "Refresh sources"
+                        contentDescription = "Refresh sources",
                     )
                 }
             }
-            
+
             // View mode selector
             ViewModeSelector(
                 currentMode = viewMode,
                 onModeChanged = onViewModeChanged,
-                focusGroup = focusGroup
+                focusGroup = focusGroup,
             )
-            
+
             // Sort selector
             SortSelector(
                 currentSort = sortOption,
                 onSortChanged = onSortChanged,
-                focusGroup = focusGroup
+                focusGroup = focusGroup,
             )
         }
     }
-    
+
     // Register focus items
     LaunchedEffect(Unit) {
         focusGroup.addItem(
             TVFocusItem(
                 id = "refresh_button",
-                focusRequester = refreshFocusRequester
-            )
+                focusRequester = refreshFocusRequester,
+            ),
         )
     }
 }
@@ -343,12 +331,12 @@ private fun QuickFiltersRow(
     quickFilters: QuickFilters,
     currentFilter: SourceFilter,
     onFilterChanged: (SourceFilter) -> Unit,
-    focusGroup: com.rdwatch.androidtv.ui.focus.TVFocusGroup
+    focusGroup: com.rdwatch.androidtv.ui.focus.TVFocusGroup,
 ) {
     if (quickFilters.has4K || quickFilters.hasHDR || quickFilters.hasCached || quickFilters.hasP2P) {
         LazyRow(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
-            contentPadding = PaddingValues(horizontal = 4.dp)
+            contentPadding = PaddingValues(horizontal = 4.dp),
         ) {
             if (quickFilters.has4K) {
                 item {
@@ -361,14 +349,14 @@ private fun QuickFiltersRow(
                                     currentFilter.copy(minQuality = null)
                                 } else {
                                     currentFilter.copy(minQuality = VideoResolution.RESOLUTION_4K)
-                                }
+                                },
                             )
                         },
-                        focusGroup = focusGroup
+                        focusGroup = focusGroup,
                     )
                 }
             }
-            
+
             if (quickFilters.hasHDR) {
                 item {
                     QuickFilterChip(
@@ -377,11 +365,11 @@ private fun QuickFiltersRow(
                         onClick = {
                             onFilterChanged(currentFilter.copy(requireHDR = !currentFilter.requireHDR))
                         },
-                        focusGroup = focusGroup
+                        focusGroup = focusGroup,
                     )
                 }
             }
-            
+
             if (quickFilters.hasCached) {
                 item {
                     QuickFilterChip(
@@ -390,11 +378,11 @@ private fun QuickFiltersRow(
                         onClick = {
                             onFilterChanged(currentFilter.copy(requireCached = !currentFilter.requireCached))
                         },
-                        focusGroup = focusGroup
+                        focusGroup = focusGroup,
                     )
                 }
             }
-            
+
             if (quickFilters.hasP2P) {
                 item {
                     QuickFilterChip(
@@ -406,20 +394,20 @@ private fun QuickFiltersRow(
                                     currentFilter.copy(minSeeders = null)
                                 } else {
                                     currentFilter.copy(minSeeders = 1)
-                                }
+                                },
                             )
                         },
-                        focusGroup = focusGroup
+                        focusGroup = focusGroup,
                     )
                 }
             }
-            
+
             item {
                 QuickFilterChip(
                     label = "Clear",
                     isSelected = false,
                     onClick = { onFilterChanged(SourceFilter()) },
-                    focusGroup = focusGroup
+                    focusGroup = focusGroup,
                 )
             }
         }
@@ -434,43 +422,46 @@ private fun QuickFilterChip(
     label: String,
     isSelected: Boolean,
     onClick: () -> Unit,
-    focusGroup: com.rdwatch.androidtv.ui.focus.TVFocusGroup
+    focusGroup: com.rdwatch.androidtv.ui.focus.TVFocusGroup,
 ) {
     val focusRequester = remember { FocusRequester() }
     var isFocused by remember { mutableStateOf(false) }
-    
+
     FilterChip(
         selected = isSelected,
         onClick = onClick,
         label = {
             Text(
                 text = label,
-                style = MaterialTheme.typography.labelMedium
+                style = MaterialTheme.typography.labelMedium,
             )
         },
-        modifier = Modifier
-            .tvFocusable(
-                enabled = true,
-                focusRequester = focusRequester,
-                onFocusChanged = { isFocused = it.isFocused }
-            )
-            .then(
-                if (isFocused) {
-                    Modifier.border(
-                        2.dp,
-                        MaterialTheme.colorScheme.primary,
-                        RoundedCornerShape(16.dp)
-                    )
-                } else Modifier
-            )
+        modifier =
+            Modifier
+                .tvFocusable(
+                    enabled = true,
+                    focusRequester = focusRequester,
+                    onFocusChanged = { isFocused = it.isFocused },
+                )
+                .then(
+                    if (isFocused) {
+                        Modifier.border(
+                            2.dp,
+                            MaterialTheme.colorScheme.primary,
+                            RoundedCornerShape(16.dp),
+                        )
+                    } else {
+                        Modifier
+                    },
+                ),
     )
-    
+
     LaunchedEffect(Unit) {
         focusGroup.addItem(
             TVFocusItem(
                 id = "filter_$label",
-                focusRequester = focusRequester
-            )
+                focusRequester = focusRequester,
+            ),
         )
     }
 }
@@ -481,40 +472,42 @@ private fun QuickFilterChip(
 @Composable
 private fun SourceStatisticsSummary(
     statistics: SourceStatistics,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Card(
         modifier = modifier,
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-        )
+        colors =
+            CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+            ),
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(12.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly,
         ) {
             StatisticItem(
                 label = "Total",
-                value = statistics.totalSources.toString()
+                value = statistics.totalSources.toString(),
             )
             StatisticItem(
                 label = "Cached",
-                value = statistics.cachedSources.toString()
+                value = statistics.cachedSources.toString(),
             )
             StatisticItem(
                 label = "HDR",
-                value = statistics.hdrSources.toString()
+                value = statistics.hdrSources.toString(),
             )
             StatisticItem(
                 label = "Providers",
-                value = statistics.providerCount.toString()
+                value = statistics.providerCount.toString(),
             )
             statistics.averageFileSize?.let { avgSize ->
                 StatisticItem(
                     label = "Avg Size",
-                    value = String.format("%.1f GB", avgSize / (1024.0 * 1024.0 * 1024.0))
+                    value = String.format("%.1f GB", avgSize / (1024.0 * 1024.0 * 1024.0)),
                 )
             }
         }
@@ -527,20 +520,20 @@ private fun SourceStatisticsSummary(
 @Composable
 private fun StatisticItem(
     label: String,
-    value: String
+    value: String,
 ) {
     Column(
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
             text = value,
             style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.Bold,
         )
         Text(
             text = label,
             style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
 }
@@ -552,30 +545,33 @@ private fun StatisticItem(
 private fun ViewModeSelector(
     currentMode: SourceSelectionState.ViewMode,
     onModeChanged: (SourceSelectionState.ViewMode) -> Unit,
-    focusGroup: com.rdwatch.androidtv.ui.focus.TVFocusGroup
+    focusGroup: com.rdwatch.androidtv.ui.focus.TVFocusGroup,
 ) {
     val focusRequester = remember { FocusRequester() }
     var isFocused by remember { mutableStateOf(false) }
     var expanded by remember { mutableStateOf(false) }
-    
+
     Box {
         IconButton(
             onClick = { expanded = true },
-            modifier = Modifier
-                .tvFocusable(
-                    enabled = true,
-                    focusRequester = focusRequester,
-                    onFocusChanged = { isFocused = it.isFocused }
-                )
-                .then(
-                    if (isFocused) {
-                        Modifier.border(
-                            2.dp,
-                            MaterialTheme.colorScheme.primary,
-                            RoundedCornerShape(8.dp)
-                        )
-                    } else Modifier
-                )
+            modifier =
+                Modifier
+                    .tvFocusable(
+                        enabled = true,
+                        focusRequester = focusRequester,
+                        onFocusChanged = { isFocused = it.isFocused },
+                    )
+                    .then(
+                        if (isFocused) {
+                            Modifier.border(
+                                2.dp,
+                                MaterialTheme.colorScheme.primary,
+                                RoundedCornerShape(8.dp),
+                            )
+                        } else {
+                            Modifier
+                        },
+                    ),
         ) {
             Icon(
                 when (currentMode) {
@@ -583,13 +579,13 @@ private fun ViewModeSelector(
                     SourceSelectionState.ViewMode.LIST -> Icons.Default.List
                     SourceSelectionState.ViewMode.COMPACT -> Icons.Default.ViewAgenda
                 },
-                contentDescription = "Change view mode"
+                contentDescription = "Change view mode",
             )
         }
-        
+
         DropdownMenu(
             expanded = expanded,
-            onDismissRequest = { expanded = false }
+            onDismissRequest = { expanded = false },
         ) {
             SourceSelectionState.ViewMode.entries.forEach { mode ->
                 DropdownMenuItem(
@@ -605,20 +601,20 @@ private fun ViewModeSelector(
                                 SourceSelectionState.ViewMode.LIST -> Icons.Default.List
                                 SourceSelectionState.ViewMode.COMPACT -> Icons.Default.ViewAgenda
                             },
-                            contentDescription = null
+                            contentDescription = null,
                         )
-                    }
+                    },
                 )
             }
         }
     }
-    
+
     LaunchedEffect(Unit) {
         focusGroup.addItem(
             TVFocusItem(
                 id = "view_mode_selector",
-                focusRequester = focusRequester
-            )
+                focusRequester = focusRequester,
+            ),
         )
     }
 }
@@ -630,65 +626,68 @@ private fun ViewModeSelector(
 private fun SortSelector(
     currentSort: SourceSortOption,
     onSortChanged: (SourceSortOption) -> Unit,
-    focusGroup: com.rdwatch.androidtv.ui.focus.TVFocusGroup
+    focusGroup: com.rdwatch.androidtv.ui.focus.TVFocusGroup,
 ) {
     val focusRequester = remember { FocusRequester() }
     var isFocused by remember { mutableStateOf(false) }
     var expanded by remember { mutableStateOf(false) }
-    
+
     Box {
         IconButton(
             onClick = { expanded = true },
-            modifier = Modifier
-                .tvFocusable(
-                    enabled = true,
-                    focusRequester = focusRequester,
-                    onFocusChanged = { isFocused = it.isFocused }
-                )
-                .then(
-                    if (isFocused) {
-                        Modifier.border(
-                            2.dp,
-                            MaterialTheme.colorScheme.primary,
-                            RoundedCornerShape(8.dp)
-                        )
-                    } else Modifier
-                )
+            modifier =
+                Modifier
+                    .tvFocusable(
+                        enabled = true,
+                        focusRequester = focusRequester,
+                        onFocusChanged = { isFocused = it.isFocused },
+                    )
+                    .then(
+                        if (isFocused) {
+                            Modifier.border(
+                                2.dp,
+                                MaterialTheme.colorScheme.primary,
+                                RoundedCornerShape(8.dp),
+                            )
+                        } else {
+                            Modifier
+                        },
+                    ),
         ) {
             Icon(
                 Icons.Default.Sort,
-                contentDescription = "Sort sources"
+                contentDescription = "Sort sources",
             )
         }
-        
+
         DropdownMenu(
             expanded = expanded,
-            onDismissRequest = { expanded = false }
+            onDismissRequest = { expanded = false },
         ) {
             SourceSortOption.entries.forEach { option ->
                 DropdownMenuItem(
-                    text = { 
+                    text = {
                         Text(
                             option.name.lowercase()
                                 .split('_')
-                                .joinToString(" ") { it.replaceFirstChar { char -> char.uppercase() } }
+                                .joinToString(" ") { it.replaceFirstChar { char -> char.uppercase() } },
                         )
                     },
                     onClick = {
                         onSortChanged(option)
                         expanded = false
-                    }
+                    },
                 )
             }
         }
     }
-    
+
     LaunchedEffect(Unit) {
         focusGroup.addItem(
             TVFocusItem(
                 id = "sort_selector",
-                focusRequester = focusRequester
-            )
+                focusRequester = focusRequester,
+            ),
         )
     }
 }
@@ -697,22 +696,20 @@ private fun SortSelector(
  * Loading state component
  */
 @Composable
-private fun LoadingState(
-    modifier: Modifier = Modifier
-) {
+private fun LoadingState(modifier: Modifier = Modifier) {
     Box(
         modifier = modifier.height(100.dp),
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Center,
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             CircularProgressIndicator()
             Text(
                 text = "Loading sources...",
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
     }
@@ -725,40 +722,42 @@ private fun LoadingState(
 private fun ErrorState(
     error: String,
     onRetry: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Card(
         modifier = modifier,
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.errorContainer
-        )
+        colors =
+            CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.errorContainer,
+            ),
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             Icon(
                 Icons.Default.Error,
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.error
+                tint = MaterialTheme.colorScheme.error,
             )
             Text(
                 text = "Error loading sources",
                 style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onErrorContainer
+                color = MaterialTheme.colorScheme.onErrorContainer,
             )
             Text(
                 text = error,
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onErrorContainer,
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
             )
             Button(
                 onClick = onRetry,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.error
-                )
+                colors =
+                    ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error,
+                    ),
             ) {
                 Text("Retry")
             }
@@ -770,32 +769,30 @@ private fun ErrorState(
  * Empty state component
  */
 @Composable
-private fun EmptyState(
-    modifier: Modifier = Modifier
-) {
+private fun EmptyState(modifier: Modifier = Modifier) {
     Box(
         modifier = modifier.height(100.dp),
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Center,
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             Icon(
                 Icons.Default.SearchOff,
                 contentDescription = null,
                 modifier = Modifier.size(48.dp),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Text(
                 text = "No sources found",
-                style = MaterialTheme.typography.titleMedium
+                style = MaterialTheme.typography.titleMedium,
             )
             Text(
                 text = "Try adjusting your filters or refreshing",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
             )
         }
     }

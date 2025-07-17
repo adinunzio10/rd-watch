@@ -17,26 +17,23 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class ScraperModule {
+    @Binds
+    @Singleton
+    abstract fun bindManifestRepository(manifestRepositoryImpl: ManifestRepositoryImpl): ManifestRepository
 
     @Binds
     @Singleton
-    abstract fun bindManifestRepository(
-        manifestRepositoryImpl: ManifestRepositoryImpl
-    ): ManifestRepository
-
-    @Binds
-    @Singleton
-    abstract fun bindManifestCache(
-        inMemoryManifestCache: InMemoryManifestCache
-    ): ManifestCache
+    abstract fun bindManifestCache(inMemoryManifestCache: InMemoryManifestCache): ManifestCache
 
     companion object {
         @Provides
         @Singleton
         fun provideCacheConfig(): CacheConfig = CacheConfig()
-        
+
         @Provides
         @Singleton
-        fun provideOkHttpClient(@PublicClient publicClient: OkHttpClient): OkHttpClient = publicClient
+        fun provideOkHttpClient(
+            @PublicClient publicClient: OkHttpClient,
+        ): OkHttpClient = publicClient
     }
 }

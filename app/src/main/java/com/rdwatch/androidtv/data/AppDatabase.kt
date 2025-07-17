@@ -33,30 +33,43 @@ import com.rdwatch.androidtv.data.entities.*
         TMDbImagesEntity::class,
         TMDbVideosEntity::class,
         TMDbGenreEntity::class,
-        TMDbConfigEntity::class
+        TMDbConfigEntity::class,
+        TMDbEpisodeExternalIdsEntity::class,
     ],
-    version = 7,
-    exportSchema = false
+    version = 8,
+    exportSchema = false,
 )
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
-
     abstract fun movieDao(): MovieDao
+
     abstract fun userDao(): UserDao
+
     abstract fun watchProgressDao(): WatchProgressDao
+
     abstract fun libraryDao(): LibraryDao
+
     abstract fun scraperManifestDao(): ScraperManifestDao
+
     abstract fun searchHistoryDao(): SearchHistoryDao
+
     abstract fun relationshipDao(): RelationshipDao
+
     abstract fun contentDao(): ContentDao
+
     abstract fun torrentDao(): TorrentDao
+
     abstract fun downloadDao(): DownloadDao
+
     abstract fun fileHashDao(): FileHashDao
+
     abstract fun subtitleDao(): SubtitleDao
-    
+
     // TMDb DAOs
     abstract fun tmdbMovieDao(): TMDbMovieDao
+
     abstract fun tmdbTVDao(): TMDbTVDao
+
     abstract fun tmdbSearchDao(): TMDbSearchDao
 
     companion object {

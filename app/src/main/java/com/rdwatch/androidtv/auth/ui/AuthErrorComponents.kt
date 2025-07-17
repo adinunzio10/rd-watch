@@ -2,11 +2,9 @@ package com.rdwatch.androidtv.auth.ui
 
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -40,7 +38,6 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.key.Key
-import androidx.compose.ui.input.key.KeyEvent
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onKeyEvent
@@ -57,126 +54,133 @@ fun AuthErrorCard(
     errorType: AuthErrorType,
     onRetry: () -> Unit,
     onCancel: (() -> Unit)? = null,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val retryFocusRequester = remember { FocusRequester() }
     val cancelFocusRequester = remember { FocusRequester() }
     var retryHasFocus by remember { mutableStateOf(false) }
     var cancelHasFocus by remember { mutableStateOf(false) }
-    
+
     LaunchedEffect(Unit) {
         retryFocusRequester.requestFocus()
     }
-    
+
     Card(
         modifier = modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.errorContainer
-        )
+        colors =
+            CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.errorContainer,
+            ),
     ) {
         Column(
             modifier = Modifier.padding(32.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Icon(
                 imageVector = errorType.icon,
                 contentDescription = null,
                 modifier = Modifier.size(64.dp),
-                tint = MaterialTheme.colorScheme.error
+                tint = MaterialTheme.colorScheme.error,
             )
-            
+
             Spacer(modifier = Modifier.height(16.dp))
-            
+
             Text(
                 text = title,
-                style = MaterialTheme.typography.headlineLarge.copy(
-                    fontSize = 28.sp,
-                    fontWeight = FontWeight.Bold
-                ),
+                style =
+                    MaterialTheme.typography.headlineLarge.copy(
+                        fontSize = 28.sp,
+                        fontWeight = FontWeight.Bold,
+                    ),
                 color = MaterialTheme.colorScheme.error,
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
             )
-            
+
             Spacer(modifier = Modifier.height(12.dp))
-            
+
             Text(
                 text = message,
                 style = MaterialTheme.typography.bodyLarge.copy(fontSize = 16.sp),
                 textAlign = TextAlign.Center,
                 color = MaterialTheme.colorScheme.onErrorContainer,
-                modifier = Modifier.padding(horizontal = 16.dp)
+                modifier = Modifier.padding(horizontal = 16.dp),
             )
-            
+
             Spacer(modifier = Modifier.height(24.dp))
-            
+
             Row(
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 Button(
                     onClick = onRetry,
-                    modifier = Modifier
-                        .focusRequester(retryFocusRequester)
-                        .onFocusChanged { retryHasFocus = it.hasFocus }
-                        .onKeyEvent { keyEvent ->
-                            if (keyEvent.type == KeyEventType.KeyUp && 
-                                (keyEvent.key == Key.DirectionCenter || keyEvent.key == Key.Enter)
-                            ) {
-                                onRetry()
-                                true
-                            } else {
-                                false
-                            }
-                        }
-                        .border(
-                            width = if (retryHasFocus) 3.dp else 0.dp,
-                            color = if (retryHasFocus) MaterialTheme.colorScheme.primary else Color.Transparent,
-                            shape = RoundedCornerShape(8.dp)
-                        ),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        contentColor = MaterialTheme.colorScheme.onPrimary
-                    )
-                ) {
-                    Text(
-                        text = "Try Again",
-                        style = MaterialTheme.typography.bodyLarge.copy(
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Medium
-                        ),
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
-                    )
-                }
-                
-                if (onCancel != null) {
-                    OutlinedButton(
-                        onClick = onCancel,
-                        modifier = Modifier
-                            .focusRequester(cancelFocusRequester)
-                            .onFocusChanged { cancelHasFocus = it.hasFocus }
+                    modifier =
+                        Modifier
+                            .focusRequester(retryFocusRequester)
+                            .onFocusChanged { retryHasFocus = it.hasFocus }
                             .onKeyEvent { keyEvent ->
-                                if (keyEvent.type == KeyEventType.KeyUp && 
+                                if (keyEvent.type == KeyEventType.KeyUp &&
                                     (keyEvent.key == Key.DirectionCenter || keyEvent.key == Key.Enter)
                                 ) {
-                                    onCancel()
+                                    onRetry()
                                     true
                                 } else {
                                     false
                                 }
                             }
                             .border(
-                                width = if (cancelHasFocus) 3.dp else 0.dp,
-                                color = if (cancelHasFocus) MaterialTheme.colorScheme.primary else Color.Transparent,
-                                shape = RoundedCornerShape(8.dp)
-                            )
+                                width = if (retryHasFocus) 3.dp else 0.dp,
+                                color = if (retryHasFocus) MaterialTheme.colorScheme.primary else Color.Transparent,
+                                shape = RoundedCornerShape(8.dp),
+                            ),
+                    colors =
+                        ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = MaterialTheme.colorScheme.onPrimary,
+                        ),
+                ) {
+                    Text(
+                        text = "Try Again",
+                        style =
+                            MaterialTheme.typography.bodyLarge.copy(
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Medium,
+                            ),
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+                    )
+                }
+
+                if (onCancel != null) {
+                    OutlinedButton(
+                        onClick = onCancel,
+                        modifier =
+                            Modifier
+                                .focusRequester(cancelFocusRequester)
+                                .onFocusChanged { cancelHasFocus = it.hasFocus }
+                                .onKeyEvent { keyEvent ->
+                                    if (keyEvent.type == KeyEventType.KeyUp &&
+                                        (keyEvent.key == Key.DirectionCenter || keyEvent.key == Key.Enter)
+                                    ) {
+                                        onCancel()
+                                        true
+                                    } else {
+                                        false
+                                    }
+                                }
+                                .border(
+                                    width = if (cancelHasFocus) 3.dp else 0.dp,
+                                    color = if (cancelHasFocus) MaterialTheme.colorScheme.primary else Color.Transparent,
+                                    shape = RoundedCornerShape(8.dp),
+                                ),
                     ) {
                         Text(
                             text = "Cancel",
-                            style = MaterialTheme.typography.bodyLarge.copy(
-                                fontSize = 18.sp,
-                                fontWeight = FontWeight.Medium
-                            ),
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
+                            style =
+                                MaterialTheme.typography.bodyLarge.copy(
+                                    fontSize = 18.sp,
+                                    fontWeight = FontWeight.Medium,
+                                ),
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
                         )
                     }
                 }
@@ -189,7 +193,7 @@ fun AuthErrorCard(
 fun AuthNetworkErrorDisplay(
     onRetry: () -> Unit,
     onCancel: (() -> Unit)? = null,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     AuthErrorCard(
         title = "Network Connection Error",
@@ -197,7 +201,7 @@ fun AuthNetworkErrorDisplay(
         errorType = AuthErrorType.NETWORK,
         onRetry = onRetry,
         onCancel = onCancel,
-        modifier = modifier
+        modifier = modifier,
     )
 }
 
@@ -205,7 +209,7 @@ fun AuthNetworkErrorDisplay(
 fun AuthTimeoutErrorDisplay(
     onRetry: () -> Unit,
     onCancel: (() -> Unit)? = null,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     AuthErrorCard(
         title = "Authentication Timeout",
@@ -213,7 +217,7 @@ fun AuthTimeoutErrorDisplay(
         errorType = AuthErrorType.TIMEOUT,
         onRetry = onRetry,
         onCancel = onCancel,
-        modifier = modifier
+        modifier = modifier,
     )
 }
 
@@ -221,7 +225,7 @@ fun AuthTimeoutErrorDisplay(
 fun AuthExpiredErrorDisplay(
     onRetry: () -> Unit,
     onCancel: (() -> Unit)? = null,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     AuthErrorCard(
         title = "Authentication Code Expired",
@@ -229,7 +233,7 @@ fun AuthExpiredErrorDisplay(
         errorType = AuthErrorType.EXPIRED,
         onRetry = onRetry,
         onCancel = onCancel,
-        modifier = modifier
+        modifier = modifier,
     )
 }
 
@@ -238,7 +242,7 @@ fun AuthGenericErrorDisplay(
     message: String,
     onRetry: () -> Unit,
     onCancel: (() -> Unit)? = null,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     AuthErrorCard(
         title = "Authentication Error",
@@ -246,7 +250,7 @@ fun AuthGenericErrorDisplay(
         errorType = AuthErrorType.GENERIC,
         onRetry = onRetry,
         onCancel = onCancel,
-        modifier = modifier
+        modifier = modifier,
     )
 }
 
@@ -254,5 +258,5 @@ enum class AuthErrorType(val icon: ImageVector) {
     NETWORK(Icons.Default.NetworkCheck),
     TIMEOUT(Icons.Default.Timer),
     EXPIRED(Icons.Default.Warning),
-    GENERIC(Icons.Default.Error)
+    GENERIC(Icons.Default.Error),
 }

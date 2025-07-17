@@ -11,11 +11,11 @@ package com.rdwatch.androidtv.data.preferences.models
 enum class ThemeMode(val value: String) {
     LIGHT("light"),
     DARK("dark"),
-    SYSTEM("system");
-    
+    SYSTEM("system"),
+    ;
+
     companion object {
-        fun fromValue(value: String): ThemeMode = 
-            values().find { it.value == value } ?: SYSTEM
+        fun fromValue(value: String): ThemeMode = values().find { it.value == value } ?: SYSTEM
     }
 }
 
@@ -25,11 +25,11 @@ enum class ThemeMode(val value: String) {
 enum class ContentLayout(val value: String) {
     GRID("grid"),
     LIST("list"),
-    COMPACT_GRID("compact_grid");
-    
+    COMPACT_GRID("compact_grid"),
+    ;
+
     companion object {
-        fun fromValue(value: String): ContentLayout = 
-            values().find { it.value == value } ?: GRID
+        fun fromValue(value: String): ContentLayout = values().find { it.value == value } ?: GRID
     }
 }
 
@@ -40,18 +40,18 @@ enum class VideoQualityPreference(
     val value: String,
     val displayName: String,
     val maxResolution: String,
-    val bitrateHint: Int? = null
+    val bitrateHint: Int? = null,
 ) {
     AUTO("auto", "Auto", "Best Available"),
     UHD_4K("4k", "4K UHD", "2160p", 25000),
     FHD_1080P("1080p", "1080p HD", "1080p", 8000),
     HD_720P("720p", "720p HD", "720p", 4000),
     SD_480P("480p", "480p SD", "480p", 2000),
-    DATA_SAVER("data_saver", "Data Saver", "360p", 1000);
-    
+    DATA_SAVER("data_saver", "Data Saver", "360p", 1000),
+    ;
+
     companion object {
-        fun fromValue(value: String): VideoQualityPreference = 
-            values().find { it.value == value } ?: AUTO
+        fun fromValue(value: String): VideoQualityPreference = values().find { it.value == value } ?: AUTO
     }
 }
 
@@ -65,11 +65,11 @@ enum class PlaybackSpeedPreference(val value: Float, val displayName: String) {
     SPEED_1_25X(1.25f, "1.25x"),
     SPEED_1_5X(1.5f, "1.5x"),
     SPEED_1_75X(1.75f, "1.75x"),
-    SPEED_2X(2.0f, "2x");
-    
+    SPEED_2X(2.0f, "2x"),
+    ;
+
     companion object {
-        fun fromValue(value: Float): PlaybackSpeedPreference = 
-            values().find { it.value == value } ?: SPEED_1X
+        fun fromValue(value: Float): PlaybackSpeedPreference = values().find { it.value == value } ?: SPEED_1X
     }
 }
 
@@ -82,11 +82,11 @@ enum class BandwidthLimit(val mbps: Int, val displayName: String) {
     LIMIT_50(50, "50 Mbps"),
     LIMIT_25(25, "25 Mbps"),
     LIMIT_10(10, "10 Mbps"),
-    LIMIT_5(5, "5 Mbps");
-    
+    LIMIT_5(5, "5 Mbps"),
+    ;
+
     companion object {
-        fun fromMbps(mbps: Int): BandwidthLimit = 
-            values().find { it.mbps == mbps } ?: UNLIMITED
+        fun fromMbps(mbps: Int): BandwidthLimit = values().find { it.mbps == mbps } ?: UNLIMITED
     }
 }
 
@@ -99,11 +99,11 @@ enum class ParentalRating(val value: String, val displayName: String, val minAge
     PG13("PG-13", "PG-13 - Parents Strongly Cautioned", 13),
     R("R", "R - Restricted", 17),
     NC17("NC-17", "NC-17 - Adults Only", 18),
-    UNRATED("UNRATED", "Unrated Content", 18);
-    
+    UNRATED("UNRATED", "Unrated Content", 18),
+    ;
+
     companion object {
-        fun fromValue(value: String): ParentalRating = 
-            values().find { it.value == value } ?: UNRATED
+        fun fromValue(value: String): ParentalRating = values().find { it.value == value } ?: UNRATED
     }
 }
 
@@ -114,7 +114,7 @@ data class SettingsBackup(
     val version: Int,
     val timestamp: Long,
     val deviceName: String?,
-    val preferences: Map<String, Any>
+    val preferences: Map<String, Any>,
 )
 
 /**
@@ -129,7 +129,7 @@ enum class SettingsCategory(val displayName: String, val icon: String) {
     ACCOUNT("Account", "account_circle"),
     PARENTAL("Parental Controls", "child_care"),
     NOTIFICATIONS("Notifications", "notifications"),
-    ABOUT("About", "info");
+    ABOUT("About", "info"),
 }
 
 /**
@@ -139,17 +139,18 @@ data class ExternalPlayer(
     val packageName: String,
     val displayName: String,
     val supportsStreaming: Boolean = true,
-    val supportsLocalFiles: Boolean = true
+    val supportsLocalFiles: Boolean = true,
 )
 
 /**
  * Common external players for Android TV
  */
-val EXTERNAL_PLAYERS = listOf(
-    ExternalPlayer("com.mxtech.videoplayer.ad", "MX Player", true, true),
-    ExternalPlayer("com.mxtech.videoplayer.pro", "MX Player Pro", true, true),
-    ExternalPlayer("org.videolan.vlc", "VLC", true, true),
-    ExternalPlayer("com.kodi.android", "Kodi", true, true),
-    ExternalPlayer("com.semperpax.spmc", "SPMC", true, true),
-    ExternalPlayer("", "Built-in Player", true, true)
-)
+val EXTERNAL_PLAYERS =
+    listOf(
+        ExternalPlayer("com.mxtech.videoplayer.ad", "MX Player", true, true),
+        ExternalPlayer("com.mxtech.videoplayer.pro", "MX Player Pro", true, true),
+        ExternalPlayer("org.videolan.vlc", "VLC", true, true),
+        ExternalPlayer("com.kodi.android", "Kodi", true, true),
+        ExternalPlayer("com.semperpax.spmc", "SPMC", true, true),
+        ExternalPlayer("", "Built-in Player", true, true),
+    )

@@ -17,25 +17,24 @@ data class AdvancedSourceFilter(
     val ageFilters: AgeFilters = AgeFilters(),
     val customFilters: List<CustomFilter> = emptyList(),
     val filterCombination: FilterCombination = FilterCombination.AND,
-    val conflictResolution: ConflictResolution = ConflictResolution()
+    val conflictResolution: ConflictResolution = ConflictResolution(),
 ) {
-    
     /**
      * Check if filter is empty (no criteria set)
      */
     fun isEmpty(): Boolean {
         return qualityFilters.isEmpty() &&
-                sourceTypeFilters.isEmpty() &&
-                healthFilters.isEmpty() &&
-                fileSizeFilters.isEmpty() &&
-                codecFilters.isEmpty() &&
-                audioFilters.isEmpty() &&
-                releaseTypeFilters.isEmpty() &&
-                providerFilters.isEmpty() &&
-                ageFilters.isEmpty() &&
-                customFilters.isEmpty()
+            sourceTypeFilters.isEmpty() &&
+            healthFilters.isEmpty() &&
+            fileSizeFilters.isEmpty() &&
+            codecFilters.isEmpty() &&
+            audioFilters.isEmpty() &&
+            releaseTypeFilters.isEmpty() &&
+            providerFilters.isEmpty() &&
+            ageFilters.isEmpty() &&
+            customFilters.isEmpty()
     }
-    
+
     /**
      * Get count of active filters
      */
@@ -53,31 +52,31 @@ data class AdvancedSourceFilter(
         count += customFilters.size
         return count
     }
-    
+
     /**
      * Create a summary of active filters
      */
     fun getSummary(): String {
         val parts = mutableListOf<String>()
-        
+
         if (!qualityFilters.isEmpty()) {
             qualityFilters.minResolution?.let { parts.add("Min: ${it.displayName}") }
             if (qualityFilters.requireHDR) parts.add("HDR")
         }
-        
+
         if (!sourceTypeFilters.isEmpty()) {
             if (sourceTypeFilters.cachedOnly) parts.add("Cached")
             if (sourceTypeFilters.p2pOnly) parts.add("P2P")
         }
-        
+
         if (!healthFilters.isEmpty()) {
             healthFilters.minSeeders?.let { parts.add("≥${it}S") }
         }
-        
+
         if (!fileSizeFilters.isEmpty()) {
             fileSizeFilters.maxSizeGB?.let { parts.add("≤${it}GB") }
         }
-        
+
         return if (parts.isEmpty()) "No filters" else parts.joinToString(", ")
     }
 }
@@ -99,13 +98,14 @@ data class QualityFilters(
     val requireBitrateInfo: Boolean = false,
     val minFrameRate: Int? = null,
     val maxFrameRate: Int? = null,
-    val requireFrameRateInfo: Boolean = false
+    val requireFrameRateInfo: Boolean = false,
 ) {
-    fun isEmpty(): Boolean = minResolution == null && maxResolution == null && 
-                            allowedResolutions.isEmpty() && !requireHDR && !require4KOnly &&
-                            !requireDolbyVision && !requireHDR10Plus && !requireHDR10 &&
-                            minBitrate == null && maxBitrate == null && 
-                            minFrameRate == null && maxFrameRate == null
+    fun isEmpty(): Boolean =
+        minResolution == null && maxResolution == null &&
+            allowedResolutions.isEmpty() && !requireHDR && !require4KOnly &&
+            !requireDolbyVision && !requireHDR10Plus && !requireHDR10 &&
+            minBitrate == null && maxBitrate == null &&
+            minFrameRate == null && maxFrameRate == null
 }
 
 /**
@@ -119,11 +119,12 @@ data class SourceTypeFilters(
     val allowedDebridServices: Set<String> = emptySet(),
     val requireDebridService: Boolean = false,
     val allowedRegions: Set<String> = emptySet(),
-    val requireRegionInfo: Boolean = false
+    val requireRegionInfo: Boolean = false,
 ) {
-    fun isEmpty(): Boolean = allowedProviderTypes.isEmpty() && !cachedOnly && !p2pOnly && 
-                            !directLinksOnly && allowedDebridServices.isEmpty() && 
-                            allowedRegions.isEmpty()
+    fun isEmpty(): Boolean =
+        allowedProviderTypes.isEmpty() && !cachedOnly && !p2pOnly &&
+            !directLinksOnly && allowedDebridServices.isEmpty() &&
+            allowedRegions.isEmpty()
 }
 
 /**
@@ -136,11 +137,12 @@ data class HealthFilters(
     val minAvailability: Float? = null, // 0.0 to 1.0
     val allowedHealthStatuses: Set<HealthInfo.HealthStatus> = emptySet(),
     val requireSeederInfo: Boolean = false,
-    val requireAvailabilityInfo: Boolean = false
+    val requireAvailabilityInfo: Boolean = false,
 ) {
-    fun isEmpty(): Boolean = minSeeders == null && maxLeechers == null && 
-                            minSeederRatio == null && minAvailability == null && 
-                            allowedHealthStatuses.isEmpty()
+    fun isEmpty(): Boolean =
+        minSeeders == null && maxLeechers == null &&
+            minSeederRatio == null && minAvailability == null &&
+            allowedHealthStatuses.isEmpty()
 }
 
 /**
@@ -150,7 +152,7 @@ data class FileSizeFilters(
     val minSizeGB: Double? = null,
     val maxSizeGB: Double? = null,
     val optimalSizeRange: Pair<Double, Double>? = null, // (min, max) for quality-to-size ratio
-    val requireSizeInfo: Boolean = false
+    val requireSizeInfo: Boolean = false,
 ) {
     fun isEmpty(): Boolean = minSizeGB == null && maxSizeGB == null && optimalSizeRange == null
 }
@@ -163,10 +165,11 @@ data class CodecFilters(
     val preferredCodecs: Set<VideoCodec> = emptySet(), // For scoring boost, not filtering
     val excludedCodecs: Set<VideoCodec> = emptySet(),
     val preferHEVC: Boolean = false,
-    val preferAV1: Boolean = false
+    val preferAV1: Boolean = false,
 ) {
-    fun isEmpty(): Boolean = allowedCodecs.isEmpty() && preferredCodecs.isEmpty() && 
-                            excludedCodecs.isEmpty() && !preferHEVC && !preferAV1
+    fun isEmpty(): Boolean =
+        allowedCodecs.isEmpty() && preferredCodecs.isEmpty() &&
+            excludedCodecs.isEmpty() && !preferHEVC && !preferAV1
 }
 
 /**
@@ -181,11 +184,12 @@ data class AudioFilters(
     val allowedLanguages: Set<String> = emptySet(),
     val requireChannelInfo: Boolean = false,
     val requireBitrateInfo: Boolean = false,
-    val requireLanguageInfo: Boolean = false
+    val requireLanguageInfo: Boolean = false,
 ) {
-    fun isEmpty(): Boolean = allowedFormats.isEmpty() && !requireDolbyAtmos && !requireDTSX &&
-                            minChannels == null && minAudioBitrate == null && 
-                            allowedLanguages.isEmpty()
+    fun isEmpty(): Boolean =
+        allowedFormats.isEmpty() && !requireDolbyAtmos && !requireDTSX &&
+            minChannels == null && minAudioBitrate == null &&
+            allowedLanguages.isEmpty()
 }
 
 /**
@@ -199,11 +203,12 @@ data class ReleaseTypeFilters(
     val excludeCAM: Boolean = false,
     val allowedGroups: Set<String> = emptySet(),
     val excludedGroups: Set<String> = emptySet(),
-    val requireGroupInfo: Boolean = false
+    val requireGroupInfo: Boolean = false,
 ) {
-    fun isEmpty(): Boolean = allowedTypes.isEmpty() && excludedTypes.isEmpty() && 
-                            !remuxOnly && !webDLOnly && !excludeCAM &&
-                            allowedGroups.isEmpty() && excludedGroups.isEmpty()
+    fun isEmpty(): Boolean =
+        allowedTypes.isEmpty() && excludedTypes.isEmpty() &&
+            !remuxOnly && !webDLOnly && !excludeCAM &&
+            allowedGroups.isEmpty() && excludedGroups.isEmpty()
 }
 
 /**
@@ -213,10 +218,11 @@ data class ProviderFilters(
     val allowedProviders: Set<String> = emptySet(),
     val excludedProviders: Set<String> = emptySet(),
     val allowedReliabilityTiers: Set<SourceProviderInfo.ProviderReliability> = emptySet(),
-    val minReliability: SourceProviderInfo.ProviderReliability? = null
+    val minReliability: SourceProviderInfo.ProviderReliability? = null,
 ) {
-    fun isEmpty(): Boolean = allowedProviders.isEmpty() && excludedProviders.isEmpty() && 
-                            allowedReliabilityTiers.isEmpty() && minReliability == null
+    fun isEmpty(): Boolean =
+        allowedProviders.isEmpty() && excludedProviders.isEmpty() &&
+            allowedReliabilityTiers.isEmpty() && minReliability == null
 }
 
 /**
@@ -226,7 +232,7 @@ data class AgeFilters(
     val maxAgeDays: Long? = null,
     val dateRange: Pair<Date, Date>? = null, // (start, end)
     val recentOnly: Boolean = false, // Last 3 days
-    val requireDateInfo: Boolean = false
+    val requireDateInfo: Boolean = false,
 ) {
     fun isEmpty(): Boolean = maxAgeDays == null && dateRange == null && !recentOnly
 }
@@ -235,8 +241,8 @@ data class AgeFilters(
  * Filter combination logic
  */
 enum class FilterCombination {
-    AND,    // All filters must pass (default)
-    OR      // Any filter can pass
+    AND, // All filters must pass (default)
+    OR, // Any filter can pass
 }
 
 /**
@@ -244,22 +250,23 @@ enum class FilterCombination {
  */
 data class ConflictResolution(
     val enabled: Boolean = true,
-    val strategies: List<ConflictResolutionStrategy> = listOf(
-        ConflictResolutionStrategy.RELAX_QUALITY,
-        ConflictResolutionStrategy.RELAX_HEALTH,
-        ConflictResolutionStrategy.RELAX_SIZE,
-        ConflictResolutionStrategy.DISABLE_STRICT
-    )
+    val strategies: List<ConflictResolutionStrategy> =
+        listOf(
+            ConflictResolutionStrategy.RELAX_QUALITY,
+            ConflictResolutionStrategy.RELAX_HEALTH,
+            ConflictResolutionStrategy.RELAX_SIZE,
+            ConflictResolutionStrategy.DISABLE_STRICT,
+        ),
 )
 
 /**
  * Strategies for resolving filter conflicts
  */
 enum class ConflictResolutionStrategy {
-    RELAX_QUALITY,      // Lower quality requirements
-    RELAX_HEALTH,       // Lower health requirements  
-    RELAX_SIZE,         // Increase size tolerance
-    DISABLE_STRICT,     // Disable strict requirements
-    EXPAND_PROVIDERS,   // Include more providers
-    IGNORE_MISSING_INFO // Don't require metadata fields
+    RELAX_QUALITY, // Lower quality requirements
+    RELAX_HEALTH, // Lower health requirements
+    RELAX_SIZE, // Increase size tolerance
+    DISABLE_STRICT, // Disable strict requirements
+    EXPAND_PROVIDERS, // Include more providers
+    IGNORE_MISSING_INFO, // Don't require metadata fields
 }

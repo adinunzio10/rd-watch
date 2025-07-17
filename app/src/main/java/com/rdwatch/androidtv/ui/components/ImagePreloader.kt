@@ -8,7 +8,9 @@ import coil.request.ImageRequest
 import kotlinx.coroutines.launch
 
 enum class ImagePriority {
-    HIGH, NORMAL, LOW
+    HIGH,
+    NORMAL,
+    LOW,
 }
 
 /**
@@ -16,21 +18,21 @@ enum class ImagePriority {
  */
 class TVImagePreloader(
     private val imageLoader: ImageLoader,
-    private val context: Context
+    private val context: Context,
 ) {
-    
     suspend fun preloadImages(
         imageUrls: List<String>,
-        priority: ImagePriority = ImagePriority.LOW
+        priority: ImagePriority = ImagePriority.LOW,
     ) {
         imageUrls.forEach { url ->
             try {
-                val request = ImageRequest.Builder(context)
-                    .data(url)
-                    .memoryCachePolicy(coil.request.CachePolicy.ENABLED)
-                    .diskCachePolicy(coil.request.CachePolicy.ENABLED)
-                    .build()
-                
+                val request =
+                    ImageRequest.Builder(context)
+                        .data(url)
+                        .memoryCachePolicy(coil.request.CachePolicy.ENABLED)
+                        .diskCachePolicy(coil.request.CachePolicy.ENABLED)
+                        .build()
+
                 imageLoader.execute(request)
             } catch (e: Exception) {
                 // Silently ignore preload failures
@@ -42,7 +44,7 @@ class TVImagePreloader(
 @Composable
 fun rememberTVImagePreloader(): TVImagePreloader {
     val context = LocalContext.current
-    
+
     return remember {
         TVImagePreloader(ImageLoader(context), context)
     }
@@ -55,11 +57,11 @@ fun rememberTVImagePreloader(): TVImagePreloader {
 fun PreloadImagesEffect(
     imageUrls: List<String>,
     shouldPreload: Boolean = true,
-    priority: ImagePriority = ImagePriority.LOW
+    priority: ImagePriority = ImagePriority.LOW,
 ) {
     val preloader = rememberTVImagePreloader()
     val scope = rememberCoroutineScope()
-    
+
     LaunchedEffect(imageUrls, shouldPreload) {
         if (shouldPreload && imageUrls.isNotEmpty()) {
             scope.launch {

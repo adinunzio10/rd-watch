@@ -3,7 +3,6 @@ package com.rdwatch.androidtv.data.dao
 import androidx.room.*
 import com.rdwatch.androidtv.data.entities.*
 import com.rdwatch.androidtv.player.subtitle.api.SubtitleApiProvider
-import com.rdwatch.androidtv.player.subtitle.models.SubtitleFormat
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -12,171 +11,199 @@ import kotlinx.coroutines.flow.Flow
  */
 @Dao
 interface SubtitleDao {
-    
     // ============ Cache Operations ============
-    
+
     /**
      * Get cached search results for a specific search key.
      */
     @Transaction
-    @Query("""
+    @Query(
+        """
         SELECT * FROM subtitle_cache 
         WHERE searchKey = :searchKey 
         AND expiresAt > :currentTime
         LIMIT 1
-    """)
-    suspend fun getCachedSearch(searchKey: String, currentTime: Long = System.currentTimeMillis()): SubtitleCacheWithResults?
-    
+    """,
+    )
+    suspend fun getCachedSearch(
+        searchKey: String,
+        currentTime: Long = System.currentTimeMillis(),
+    ): SubtitleCacheWithResults?
+
     /**
      * Insert a new cache entry.
      */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertCacheEntry(cache: SubtitleCacheEntity): Long
-    
+
     /**
      * Insert multiple subtitle results for a cache entry.
      */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertResults(results: List<SubtitleResultEntity>)
-    
+
     /**
      * Clean up expired cache entries and their associated data.
      */
     @Query("DELETE FROM subtitle_cache WHERE expiresAt <= :currentTime")
     suspend fun cleanupExpiredCache(currentTime: Long = System.currentTimeMillis())
-    
+
     /**
      * Get cache statistics for monitoring.
      */
-    @Query("""
+    @Query(
+        """
         SELECT 
             COUNT(*) as totalEntries,
             COUNT(CASE WHEN expiresAt > :currentTime THEN 1 END) as validEntries,
             COUNT(CASE WHEN expiresAt <= :currentTime THEN 1 END) as expiredEntries,
             AVG(resultCount) as avgResultsPerSearch
         FROM subtitle_cache
-    """)
+    """,
+    )
     suspend fun getCacheStatistics(currentTime: Long = System.currentTimeMillis()): CacheStatistics
-    
+
     // ============ File Operations ============
-    
+
     /**
      * Get cached file for a specific content and language.
      */
-    @Query("""
+    @Query(
+        """
         SELECT * FROM subtitle_files 
         WHERE contentId = :contentId 
         AND language = :language 
         AND isActive = 1
         ORDER BY downloadTimestamp DESC
         LIMIT 1
-    """)
-    suspend fun getCachedFile(contentId: String, language: String): SubtitleFileEntity?
-    
+    """,
+    )
+    suspend fun getCachedFile(
+        contentId: String,
+        language: String,
+    ): SubtitleFileEntity?
+
     /**
      * Get all cached files for specific content.
      */
-    @Query("""
+    @Query(
+        """
         SELECT * FROM subtitle_files 
         WHERE contentId = :contentId 
         AND isActive = 1
         ORDER BY language, downloadTimestamp DESC
-    """)
+    """,
+    )
     suspend fun getAllCachedFiles(contentId: String): List<SubtitleFileEntity>
-    
+
     /**
      * Insert a new subtitle file entry.
      */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertSubtitleFile(file: SubtitleFileEntity): Long
-    
+
     /**
      * Update file access information.
      */
     @Update
     suspend fun updateFileAccess(file: SubtitleFileEntity)
-    
+
     /**
      * Mark a file as inactive instead of deleting.
      */
     @Query("UPDATE subtitle_files SET isActive = 0 WHERE id = :fileId")
     suspend fun deactivateFile(fileId: Long)
-    
+
     /**
      * Clean up old subtitle files based on age and usage.
      */
-    @Query("""
+    @Query(
+        """
         DELETE FROM subtitle_files 
         WHERE downloadTimestamp < :cutoffTime 
         AND accessCount < :minAccessCount
-    """)
-    suspend fun cleanupOldFiles(cutoffTime: Long, minAccessCount: Int = 1)
-    
+    """,
+    )
+    suspend fun cleanupOldFiles(
+        cutoffTime: Long,
+        minAccessCount: Int = 1,
+    )
+
     /**
      * Get files that need cleanup (old, unused).
      */
-    @Query("""
+    @Query(
+        """
         SELECT * FROM subtitle_files 
         WHERE downloadTimestamp < :cutoffTime 
         AND lastAccessTime < :lastAccessCutoff
         ORDER BY lastAccessTime ASC
-    """)
-    suspend fun getFilesForCleanup(cutoffTime: Long, lastAccessCutoff: Long): List<SubtitleFileEntity>
-    
+    """,
+    )
+    suspend fun getFilesForCleanup(
+        cutoffTime: Long,
+        lastAccessCutoff: Long,
+    ): List<SubtitleFileEntity>
+
     // ============ Provider Statistics ============
-    
+
     /**
      * Get provider statistics.
      */
     @Query("SELECT * FROM subtitle_provider_stats WHERE provider = :provider")
     suspend fun getProviderStats(provider: SubtitleApiProvider): SubtitleProviderStatsEntity?
-    
+
     /**
      * Update provider statistics.
      */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun updateProviderStats(stats: SubtitleProviderStatsEntity)
-    
+
     /**
      * Get all provider statistics.
      */
     @Query("SELECT * FROM subtitle_provider_stats ORDER BY totalRequests DESC")
     suspend fun getAllProviderStats(): List<SubtitleProviderStatsEntity>
-    
+
     /**
      * Get health status of all providers.
      */
-    @Query("""
+    @Query(
+        """
         SELECT provider, isEnabled, consecutiveFailures, lastSuccessTime, lastFailureTime
         FROM subtitle_provider_stats
         ORDER BY provider
-    """)
+    """,
+    )
     fun getAllProviderHealth(): Flow<List<ProviderHealthStatus>>
-    
+
     // ============ Search and Analysis ============
-    
+
     /**
      * Search cached results by content metadata.
      */
     @Transaction
-    @Query("""
+    @Query(
+        """
         SELECT sc.* FROM subtitle_cache sc
         WHERE (sc.contentTitle LIKE '%' || :query || '%' 
             OR sc.contentId LIKE '%' || :query || '%')
         AND sc.expiresAt > :currentTime
         ORDER BY sc.timestamp DESC
         LIMIT :limit
-    """)
+    """,
+    )
     suspend fun searchCachedContent(
-        query: String, 
+        query: String,
         currentTime: Long = System.currentTimeMillis(),
-        limit: Int = 50
+        limit: Int = 50,
     ): List<SubtitleCacheWithResults>
-    
+
     /**
      * Get popular languages from cached results.
      */
-    @Query("""
+    @Query(
+        """
         SELECT sr.language, sr.languageName, COUNT(*) as count
         FROM subtitle_results sr
         INNER JOIN subtitle_cache sc ON sr.cacheId = sc.id
@@ -184,16 +211,18 @@ interface SubtitleDao {
         GROUP BY sr.language, sr.languageName
         ORDER BY count DESC
         LIMIT :limit
-    """)
+    """,
+    )
     suspend fun getPopularLanguages(
         currentTime: Long = System.currentTimeMillis(),
-        limit: Int = 10
+        limit: Int = 10,
     ): List<LanguagePopularity>
-    
+
     /**
      * Get provider performance metrics.
      */
-    @Query("""
+    @Query(
+        """
         SELECT 
             sr.provider,
             COUNT(*) as totalResults,
@@ -205,25 +234,26 @@ interface SubtitleDao {
         WHERE sc.expiresAt > :currentTime
         GROUP BY sr.provider
         ORDER BY avgMatchScore DESC, totalResults DESC
-    """)
-    suspend fun getProviderPerformanceMetrics(
-        currentTime: Long = System.currentTimeMillis()
-    ): List<ProviderPerformanceMetrics>
-    
+    """,
+    )
+    suspend fun getProviderPerformanceMetrics(currentTime: Long = System.currentTimeMillis()): List<ProviderPerformanceMetrics>
+
     // ============ Maintenance Operations ============
-    
+
     /**
      * Get database size information for cache management.
      */
-    @Query("""
+    @Query(
+        """
         SELECT 
             (SELECT COUNT(*) FROM subtitle_cache) as cacheEntries,
             (SELECT COUNT(*) FROM subtitle_results) as resultEntries,
             (SELECT COUNT(*) FROM subtitle_files) as fileEntries,
             (SELECT COUNT(*) FROM subtitle_provider_stats) as providerEntries
-    """)
+    """,
+    )
     suspend fun getDatabaseSize(): DatabaseSizeInfo
-    
+
     /**
      * Clear all subtitle cache data (nuclear option).
      */
@@ -234,16 +264,16 @@ interface SubtitleDao {
         clearAllResults()
         clearAllCacheEntries()
     }
-    
+
     @Query("DELETE FROM subtitle_provider_stats")
     suspend fun clearProviderStats()
-    
+
     @Query("DELETE FROM subtitle_files")
     suspend fun clearAllFiles()
-    
+
     @Query("DELETE FROM subtitle_results")
     suspend fun clearAllResults()
-    
+
     @Query("DELETE FROM subtitle_cache")
     suspend fun clearAllCacheEntries()
 }
@@ -257,9 +287,9 @@ data class SubtitleCacheWithResults(
     @Embedded val cache: SubtitleCacheEntity,
     @Relation(
         parentColumn = "id",
-        entityColumn = "cacheId"
+        entityColumn = "cacheId",
     )
-    val results: List<SubtitleResultEntity>
+    val results: List<SubtitleResultEntity>,
 )
 
 /**
@@ -269,7 +299,7 @@ data class CacheStatistics(
     val totalEntries: Int,
     val validEntries: Int,
     val expiredEntries: Int,
-    val avgResultsPerSearch: Double
+    val avgResultsPerSearch: Double,
 )
 
 /**
@@ -280,7 +310,7 @@ data class ProviderHealthStatus(
     val isEnabled: Boolean,
     val consecutiveFailures: Int,
     val lastSuccessTime: Long?,
-    val lastFailureTime: Long?
+    val lastFailureTime: Long?,
 )
 
 /**
@@ -289,7 +319,7 @@ data class ProviderHealthStatus(
 data class LanguagePopularity(
     val language: String,
     val languageName: String,
-    val count: Int
+    val count: Int,
 )
 
 /**
@@ -300,7 +330,7 @@ data class ProviderPerformanceMetrics(
     val totalResults: Int,
     val avgMatchScore: Double,
     val avgDownloadCount: Double?,
-    val verifiedCount: Int
+    val verifiedCount: Int,
 )
 
 /**
@@ -310,7 +340,7 @@ data class DatabaseSizeInfo(
     val cacheEntries: Int,
     val resultEntries: Int,
     val fileEntries: Int,
-    val providerEntries: Int
+    val providerEntries: Int,
 ) {
     val totalEntries: Int get() = cacheEntries + resultEntries + fileEntries + providerEntries
 }

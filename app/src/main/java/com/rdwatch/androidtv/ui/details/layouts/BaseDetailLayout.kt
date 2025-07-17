@@ -12,12 +12,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.unit.dp
-import com.rdwatch.androidtv.ui.common.UiState
-import com.rdwatch.androidtv.ui.details.models.*
-import com.rdwatch.androidtv.ui.details.components.HeroSection
-import com.rdwatch.androidtv.ui.components.CastCrewSection
 import com.rdwatch.androidtv.data.mappers.TMDbMovieContentDetail
 import com.rdwatch.androidtv.data.mappers.TMDbTVContentDetail
+import com.rdwatch.androidtv.ui.components.CastCrewSection
+import com.rdwatch.androidtv.ui.details.components.HeroSection
+import com.rdwatch.androidtv.ui.details.models.*
 
 /**
  * Base layout for content detail screens
@@ -32,15 +31,15 @@ fun BaseDetailLayout(
     modifier: Modifier = Modifier,
     firstFocusRequester: FocusRequester = remember { FocusRequester() },
     customSections: @Composable (DetailSection) -> Unit = {},
-    listState: LazyListState = rememberLazyListState()
+    listState: LazyListState = rememberLazyListState(),
 ) {
     val overscanMargin = uiState.getLayoutConfig().overscanMargin.dp
-    
+
     when {
         uiState.isLoading && !uiState.hasContent -> {
             LoadingState(
                 modifier = modifier,
-                firstFocusRequester = firstFocusRequester
+                firstFocusRequester = firstFocusRequester,
             )
         }
         uiState.hasError && !uiState.hasContent -> {
@@ -48,7 +47,7 @@ fun BaseDetailLayout(
                 error = uiState.error ?: "Unknown error",
                 onBackPressed = onBackPressed,
                 modifier = modifier,
-                firstFocusRequester = firstFocusRequester
+                firstFocusRequester = firstFocusRequester,
             )
         }
         uiState.hasContent -> {
@@ -62,14 +61,14 @@ fun BaseDetailLayout(
                 firstFocusRequester = firstFocusRequester,
                 customSections = customSections,
                 listState = listState,
-                overscanMargin = overscanMargin
+                overscanMargin = overscanMargin,
             )
         }
         else -> {
             ContentNotFoundState(
                 onBackPressed = onBackPressed,
                 modifier = modifier,
-                firstFocusRequester = firstFocusRequester
+                firstFocusRequester = firstFocusRequester,
             )
         }
     }
@@ -86,20 +85,21 @@ private fun ContentDetailLayout(
     firstFocusRequester: FocusRequester,
     customSections: @Composable (DetailSection) -> Unit,
     listState: LazyListState,
-    overscanMargin: androidx.compose.ui.unit.Dp
+    overscanMargin: androidx.compose.ui.unit.Dp,
 ) {
     val sections = uiState.getVisibleSections()
-    
+
     LaunchedEffect(Unit) {
         firstFocusRequester.requestFocus()
     }
-    
+
     LazyColumn(
-        modifier = modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background),
+        modifier =
+            modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background),
         state = listState,
-        verticalArrangement = Arrangement.spacedBy(24.dp)
+        verticalArrangement = Arrangement.spacedBy(24.dp),
     ) {
         sections.forEach { section ->
             when (section) {
@@ -112,7 +112,7 @@ private fun ContentDetailLayout(
                                 onActionClick = onActionClick,
                                 onBackPressed = onBackPressed,
                                 firstFocusRequester = firstFocusRequester,
-                                overscanMargin = overscanMargin
+                                overscanMargin = overscanMargin,
                             )
                         }
                     }
@@ -122,7 +122,7 @@ private fun ContentDetailLayout(
                         item(key = "info_${content.id}") {
                             InfoSectionPlaceholder(
                                 content = content,
-                                modifier = Modifier.padding(horizontal = overscanMargin)
+                                modifier = Modifier.padding(horizontal = overscanMargin),
                             )
                         }
                     }
@@ -133,7 +133,7 @@ private fun ContentDetailLayout(
                             ActionsSectionPlaceholder(
                                 content = content,
                                 onActionClick = onActionClick,
-                                modifier = Modifier.padding(horizontal = overscanMargin)
+                                modifier = Modifier.padding(horizontal = overscanMargin),
                             )
                         }
                     }
@@ -144,7 +144,7 @@ private fun ContentDetailLayout(
                             RelatedContentSectionPlaceholder(
                                 relatedContent = uiState.relatedContent,
                                 onContentClick = onRelatedContentClick,
-                                modifier = Modifier.padding(horizontal = overscanMargin)
+                                modifier = Modifier.padding(horizontal = overscanMargin),
                             )
                         }
                     }
@@ -154,7 +154,7 @@ private fun ContentDetailLayout(
                         item(key = "episodes_${content.id}") {
                             SeasonEpisodeGridPlaceholder(
                                 content = content,
-                                modifier = Modifier.padding(horizontal = overscanMargin)
+                                modifier = Modifier.padding(horizontal = overscanMargin),
                             )
                         }
                     }
@@ -164,7 +164,7 @@ private fun ContentDetailLayout(
                         item(key = "cast_${content.id}") {
                             CastCrewSectionPlaceholder(
                                 content = content,
-                                modifier = Modifier.padding(horizontal = overscanMargin)
+                                modifier = Modifier.padding(horizontal = overscanMargin),
                             )
                         }
                     }
@@ -178,7 +178,7 @@ private fun ContentDetailLayout(
                 }
             }
         }
-        
+
         // Bottom spacing for TV overscan
         item(key = "bottom_spacer") {
             Spacer(modifier = Modifier.height(overscanMargin))
@@ -189,25 +189,26 @@ private fun ContentDetailLayout(
 @Composable
 private fun LoadingState(
     modifier: Modifier,
-    firstFocusRequester: FocusRequester
+    firstFocusRequester: FocusRequester,
 ) {
     Box(
-        modifier = modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background),
-        contentAlignment = Alignment.Center
+        modifier =
+            modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background),
+        contentAlignment = Alignment.Center,
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             CircularProgressIndicator(
-                color = MaterialTheme.colorScheme.primary
+                color = MaterialTheme.colorScheme.primary,
             )
             Text(
                 text = "Loading content details...",
                 style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onBackground
+                color = MaterialTheme.colorScheme.onBackground,
             )
         }
     }
@@ -218,35 +219,36 @@ private fun ErrorState(
     error: String,
     onBackPressed: () -> Unit,
     modifier: Modifier,
-    firstFocusRequester: FocusRequester
+    firstFocusRequester: FocusRequester,
 ) {
     LaunchedEffect(Unit) {
         firstFocusRequester.requestFocus()
     }
-    
+
     Box(
-        modifier = modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background),
-        contentAlignment = Alignment.Center
+        modifier =
+            modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background),
+        contentAlignment = Alignment.Center,
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             Text(
                 text = "Failed to load content",
                 style = MaterialTheme.typography.headlineSmall,
-                color = MaterialTheme.colorScheme.error
+                color = MaterialTheme.colorScheme.error,
             )
             Text(
                 text = error,
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onBackground
+                color = MaterialTheme.colorScheme.onBackground,
             )
             Button(
                 onClick = onBackPressed,
-                modifier = Modifier.focusRequester(firstFocusRequester)
+                modifier = Modifier.focusRequester(firstFocusRequester),
             ) {
                 Text("Go Back")
             }
@@ -258,30 +260,31 @@ private fun ErrorState(
 private fun ContentNotFoundState(
     onBackPressed: () -> Unit,
     modifier: Modifier,
-    firstFocusRequester: FocusRequester
+    firstFocusRequester: FocusRequester,
 ) {
     LaunchedEffect(Unit) {
         firstFocusRequester.requestFocus()
     }
-    
+
     Box(
-        modifier = modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background),
-        contentAlignment = Alignment.Center
+        modifier =
+            modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background),
+        contentAlignment = Alignment.Center,
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             Text(
                 text = "Content not found",
                 style = MaterialTheme.typography.headlineSmall,
-                color = MaterialTheme.colorScheme.error
+                color = MaterialTheme.colorScheme.error,
             )
             Button(
                 onClick = onBackPressed,
-                modifier = Modifier.focusRequester(firstFocusRequester)
+                modifier = Modifier.focusRequester(firstFocusRequester),
             ) {
                 Text("Go Back")
             }
@@ -294,21 +297,21 @@ private fun ContentNotFoundState(
 @Composable
 private fun InfoSectionPlaceholder(
     content: ContentDetail,
-    modifier: Modifier
+    modifier: Modifier,
 ) {
     Column(
         modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Text(
             text = "Info Section",
             style = MaterialTheme.typography.headlineSmall,
-            color = MaterialTheme.colorScheme.onBackground
+            color = MaterialTheme.colorScheme.onBackground,
         )
         Text(
             text = content.getDisplayDescription(),
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onBackground
+            color = MaterialTheme.colorScheme.onBackground,
         )
     }
 }
@@ -317,16 +320,16 @@ private fun InfoSectionPlaceholder(
 private fun ActionsSectionPlaceholder(
     content: ContentDetail,
     onActionClick: (ContentAction) -> Unit,
-    modifier: Modifier
+    modifier: Modifier,
 ) {
     Column(
         modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Text(
             text = "Actions: ${content.actions.size} available",
             style = MaterialTheme.typography.headlineSmall,
-            color = MaterialTheme.colorScheme.onBackground
+            color = MaterialTheme.colorScheme.onBackground,
         )
     }
 }
@@ -335,16 +338,16 @@ private fun ActionsSectionPlaceholder(
 private fun RelatedContentSectionPlaceholder(
     relatedContent: List<ContentDetail>,
     onContentClick: (ContentDetail) -> Unit,
-    modifier: Modifier
+    modifier: Modifier,
 ) {
     Column(
         modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Text(
             text = "Related Content: ${relatedContent.size} items",
             style = MaterialTheme.typography.headlineSmall,
-            color = MaterialTheme.colorScheme.onBackground
+            color = MaterialTheme.colorScheme.onBackground,
         )
     }
 }
@@ -352,16 +355,16 @@ private fun RelatedContentSectionPlaceholder(
 @Composable
 private fun SeasonEpisodeGridPlaceholder(
     content: ContentDetail,
-    modifier: Modifier
+    modifier: Modifier,
 ) {
     Column(
         modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Text(
             text = "Season/Episode Grid",
             style = MaterialTheme.typography.headlineSmall,
-            color = MaterialTheme.colorScheme.onBackground
+            color = MaterialTheme.colorScheme.onBackground,
         )
     }
 }
@@ -369,15 +372,16 @@ private fun SeasonEpisodeGridPlaceholder(
 @Composable
 private fun CastCrewSectionPlaceholder(
     content: ContentDetail,
-    modifier: Modifier
+    modifier: Modifier,
 ) {
     // Check if content has extended metadata with cast/crew info
-    val extendedMetadata = when (content) {
-        is TMDbMovieContentDetail -> content.extendedMetadata
-        is TMDbTVContentDetail -> content.extendedMetadata
-        else -> null
-    }
-    
+    val extendedMetadata =
+        when (content) {
+            is TMDbMovieContentDetail -> content.extendedMetadata
+            is TMDbTVContentDetail -> content.extendedMetadata
+            else -> null
+        }
+
     if (extendedMetadata != null && (extendedMetadata.fullCast.isNotEmpty() || extendedMetadata.crew.isNotEmpty())) {
         CastCrewSection(
             metadata = extendedMetadata,
@@ -387,23 +391,23 @@ private fun CastCrewSectionPlaceholder(
             },
             onCrewMemberClick = { crewMember ->
                 // TODO: Handle crew member click (e.g., navigate to person details)
-            }
+            },
         )
     } else {
         // Fallback if no cast/crew data available
         Column(
             modifier = modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             Text(
                 text = "Cast & Crew",
                 style = MaterialTheme.typography.headlineSmall,
-                color = MaterialTheme.colorScheme.onBackground
+                color = MaterialTheme.colorScheme.onBackground,
             )
             Text(
                 text = "No cast or crew information available",
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
             )
         }
     }

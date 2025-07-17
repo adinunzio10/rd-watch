@@ -10,7 +10,6 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object NavigationModule {
-
     @Provides
     @Singleton
     fun provideDeepLinkHandler(): DeepLinkHandler = DeepLinkHandler()

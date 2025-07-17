@@ -17,7 +17,9 @@ val navigationEvents = navigationEventChannel.receiveAsFlow()
 
 sealed class NavigationEvent {
     data class NavigatedTo(val screen: Screen) : NavigationEvent()
+
     data class NavigatedBack(val fromScreen: Screen?) : NavigationEvent()
+
     data class NavigationError(val error: String) : NavigationEvent()
 }
 
@@ -26,14 +28,14 @@ sealed class NavigationEvent {
  */
 fun NavController.navigateToScreen(
     screen: Screen,
-    navOptions: NavOptions? = null
+    navOptions: NavOptions? = null,
 ) {
     try {
         navigate(screen, navOptions)
         navigationEventChannel.trySend(NavigationEvent.NavigatedTo(screen))
     } catch (e: Exception) {
         navigationEventChannel.trySend(
-            NavigationEvent.NavigationError("Failed to navigate to $screen: ${e.message}")
+            NavigationEvent.NavigationError("Failed to navigate to $screen: ${e.message}"),
         )
     }
 }
@@ -45,16 +47,17 @@ fun NavController.navigateToScreenWithPopUp(
     screen: Screen,
     popUpToRoute: String? = null,
     inclusive: Boolean = false,
-    saveState: Boolean = true
+    saveState: Boolean = true,
 ) {
-    val navOptions = NavOptions.Builder().apply {
-        if (popUpToRoute != null) {
-            setPopUpTo(popUpToRoute, inclusive, saveState)
-        }
-        setLaunchSingleTop(true)
-        setRestoreState(saveState)
-    }.build()
-    
+    val navOptions =
+        NavOptions.Builder().apply {
+            if (popUpToRoute != null) {
+                setPopUpTo(popUpToRoute, inclusive, saveState)
+            }
+            setLaunchSingleTop(true)
+            setRestoreState(saveState)
+        }.build()
+
     navigateToScreen(screen, navOptions)
 }
 
@@ -62,14 +65,15 @@ fun NavController.navigateToScreenWithPopUp(
  * Navigate to home with option to clear entire back stack
  */
 fun NavController.navigateToHome(clearBackStack: Boolean = false) {
-    val navOptions = if (clearBackStack) {
-        NavOptions.Builder()
-            .setPopUpTo(graph.findStartDestination().id, true)
-            .setLaunchSingleTop(true)
-            .build()
-    } else {
-        null
-    }
+    val navOptions =
+        if (clearBackStack) {
+            NavOptions.Builder()
+                .setPopUpTo(graph.findStartDestination().id, true)
+                .setLaunchSingleTop(true)
+                .build()
+        } else {
+            null
+        }
     navigateToScreen(Screen.Home, navOptions)
 }
 
@@ -79,7 +83,7 @@ fun NavController.navigateToHome(clearBackStack: Boolean = false) {
 fun NavController.navigateToMovieDetails(movieId: String) {
     if (movieId.isBlank()) {
         navigationEventChannel.trySend(
-            NavigationEvent.NavigationError("Invalid movie ID provided")
+            NavigationEvent.NavigationError("Invalid movie ID provided"),
         )
         return
     }
@@ -92,7 +96,7 @@ fun NavController.navigateToMovieDetails(movieId: String) {
 fun NavController.navigateToTVDetails(tvShowId: String) {
     if (tvShowId.isBlank()) {
         navigationEventChannel.trySend(
-            NavigationEvent.NavigationError("Invalid TV show ID provided")
+            NavigationEvent.NavigationError("Invalid TV show ID provided"),
         )
         return
     }
@@ -102,10 +106,13 @@ fun NavController.navigateToTVDetails(tvShowId: String) {
 /**
  * Navigate to video player with validation
  */
-fun NavController.navigateToVideoPlayer(videoUrl: String, title: String = "") {
+fun NavController.navigateToVideoPlayer(
+    videoUrl: String,
+    title: String = "",
+) {
     if (videoUrl.isBlank()) {
         navigationEventChannel.trySend(
-            NavigationEvent.NavigationError("Invalid video URL provided")
+            NavigationEvent.NavigationError("Invalid video URL provided"),
         )
         return
     }
@@ -151,14 +158,15 @@ fun NavController.navigateToProfile() {
  * Navigate to authentication screen with back stack clearing
  */
 fun NavController.navigateToAuthentication(clearBackStack: Boolean = true) {
-    val navOptions = if (clearBackStack) {
-        NavOptions.Builder()
-            .setPopUpTo(0, true)
-            .setLaunchSingleTop(true)
-            .build()
-    } else {
-        null
-    }
+    val navOptions =
+        if (clearBackStack) {
+            NavOptions.Builder()
+                .setPopUpTo(0, true)
+                .setLaunchSingleTop(true)
+                .build()
+        } else {
+            null
+        }
     navigateToScreen(Screen.Authentication, navOptions)
 }
 
@@ -172,7 +180,10 @@ fun NavController.navigateToAccountFileBrowser(accountType: String = "realdebrid
 /**
  * Navigate to error screen with message and retry capability
  */
-fun NavController.navigateToError(message: String, canRetry: Boolean = true) {
+fun NavController.navigateToError(
+    message: String,
+    canRetry: Boolean = true,
+) {
     navigateToScreen(Screen.Error(message, canRetry))
 }
 
@@ -182,25 +193,28 @@ fun NavController.navigateToError(message: String, canRetry: Boolean = true) {
 fun NavController.navigateBack(): Boolean {
     val currentDestination = currentDestination
     val result = navigateUp()
-    
+
     if (result) {
         navigationEventChannel.trySend(
-            NavigationEvent.NavigatedBack(getCurrentScreen(currentDestination))
+            NavigationEvent.NavigatedBack(getCurrentScreen(currentDestination)),
         )
     }
-    
+
     return result
 }
 
 /**
  * Pop back stack to specific route with safety checks
  */
-fun NavController.popBackStackToRoute(route: String, inclusive: Boolean = false): Boolean {
+fun NavController.popBackStackToRoute(
+    route: String,
+    inclusive: Boolean = false,
+): Boolean {
     return try {
         popBackStack(route, inclusive)
     } catch (e: Exception) {
         navigationEventChannel.trySend(
-            NavigationEvent.NavigationError("Failed to pop back stack to $route: ${e.message}")
+            NavigationEvent.NavigationError("Failed to pop back stack to $route: ${e.message}"),
         )
         false
     }

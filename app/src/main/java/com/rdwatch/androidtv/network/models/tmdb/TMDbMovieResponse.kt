@@ -33,7 +33,6 @@ data class TMDbMovieResponse(
     @Json(name = "video") val video: Boolean = false,
     @Json(name = "vote_average") val voteAverage: Double = 0.0,
     @Json(name = "vote_count") val voteCount: Int = 0,
-    
     // Additional fields for append_to_response
     @Json(name = "credits") val credits: TMDbCreditsResponse? = null,
     @Json(name = "images") val images: TMDbMovieImagesResponse? = null,
@@ -43,7 +42,7 @@ data class TMDbMovieResponse(
     @Json(name = "keywords") val keywords: TMDbKeywordsResponse? = null,
     @Json(name = "reviews") val reviews: TMDbReviewsResponse? = null,
     @Json(name = "watch/providers") val watchProviders: TMDbWatchProvidersResponse? = null,
-    @Json(name = "release_dates") val releaseDates: TMDbReleaseDatesResponse? = null
+    @Json(name = "release_dates") val releaseDates: TMDbReleaseDatesResponse? = null,
 )
 
 /**
@@ -56,7 +55,7 @@ data class TMDbCollectionResponse(
     @Json(name = "poster_path") val posterPath: String? = null,
     @Json(name = "backdrop_path") val backdropPath: String? = null,
     @Json(name = "overview") val overview: String? = null,
-    @Json(name = "parts") val parts: List<TMDbMovieResponse> = emptyList()
+    @Json(name = "parts") val parts: List<TMDbMovieResponse> = emptyList(),
 )
 
 /**
@@ -65,7 +64,7 @@ data class TMDbCollectionResponse(
 @JsonClass(generateAdapter = true)
 data class TMDbGenreResponse(
     @Json(name = "id") val id: Int = 0,
-    @Json(name = "name") val name: String = ""
+    @Json(name = "name") val name: String = "",
 )
 
 /**
@@ -76,7 +75,7 @@ data class TMDbProductionCompanyResponse(
     @Json(name = "id") val id: Int = 0,
     @Json(name = "logo_path") val logoPath: String? = null,
     @Json(name = "name") val name: String = "",
-    @Json(name = "origin_country") val originCountry: String = ""
+    @Json(name = "origin_country") val originCountry: String = "",
 )
 
 /**
@@ -85,7 +84,7 @@ data class TMDbProductionCompanyResponse(
 @JsonClass(generateAdapter = true)
 data class TMDbProductionCountryResponse(
     @Json(name = "iso_3166_1") val iso31661: String = "",
-    @Json(name = "name") val name: String = ""
+    @Json(name = "name") val name: String = "",
 )
 
 /**
@@ -95,7 +94,7 @@ data class TMDbProductionCountryResponse(
 data class TMDbSpokenLanguageResponse(
     @Json(name = "english_name") val englishName: String = "",
     @Json(name = "iso_639_1") val iso6391: String = "",
-    @Json(name = "name") val name: String = ""
+    @Json(name = "name") val name: String = "",
 )
 
 /**
@@ -103,7 +102,7 @@ data class TMDbSpokenLanguageResponse(
  */
 @JsonClass(generateAdapter = true)
 data class TMDbKeywordsResponse(
-    @Json(name = "keywords") val keywords: List<TMDbKeywordResponse> = emptyList()
+    @Json(name = "keywords") val keywords: List<TMDbKeywordResponse> = emptyList(),
 )
 
 /**
@@ -112,7 +111,7 @@ data class TMDbKeywordsResponse(
 @JsonClass(generateAdapter = true)
 data class TMDbKeywordResponse(
     @Json(name = "id") val id: Int = 0,
-    @Json(name = "name") val name: String = ""
+    @Json(name = "name") val name: String = "",
 )
 
 /**
@@ -124,7 +123,7 @@ data class TMDbReviewsResponse(
     @Json(name = "page") val page: Int = 1,
     @Json(name = "results") val results: List<TMDbReviewResponse> = emptyList(),
     @Json(name = "total_pages") val totalPages: Int = 0,
-    @Json(name = "total_results") val totalResults: Int = 0
+    @Json(name = "total_results") val totalResults: Int = 0,
 )
 
 /**
@@ -138,7 +137,7 @@ data class TMDbReviewResponse(
     @Json(name = "created_at") val createdAt: String = "",
     @Json(name = "id") val id: String = "",
     @Json(name = "updated_at") val updatedAt: String = "",
-    @Json(name = "url") val url: String = ""
+    @Json(name = "url") val url: String = "",
 )
 
 /**
@@ -149,7 +148,7 @@ data class TMDbAuthorDetailsResponse(
     @Json(name = "name") val name: String = "",
     @Json(name = "username") val username: String = "",
     @Json(name = "avatar_path") val avatarPath: String? = null,
-    @Json(name = "rating") val rating: Double? = null
+    @Json(name = "rating") val rating: Double? = null,
 )
 
 /**
@@ -157,7 +156,7 @@ data class TMDbAuthorDetailsResponse(
  */
 @JsonClass(generateAdapter = true)
 data class TMDbReleaseDatesResponse(
-    @Json(name = "results") val results: List<TMDbReleaseDateInfoResponse> = emptyList()
+    @Json(name = "results") val results: List<TMDbReleaseDateInfoResponse> = emptyList(),
 )
 
 /**
@@ -166,7 +165,7 @@ data class TMDbReleaseDatesResponse(
 @JsonClass(generateAdapter = true)
 data class TMDbReleaseDateInfoResponse(
     @Json(name = "iso_3166_1") val iso31661: String = "",
-    @Json(name = "release_dates") val releaseDates: List<TMDbReleaseDateResponse> = emptyList()
+    @Json(name = "release_dates") val releaseDates: List<TMDbReleaseDateResponse> = emptyList(),
 )
 
 /**
@@ -178,7 +177,7 @@ data class TMDbReleaseDateResponse(
     @Json(name = "iso_639_1") val iso6391: String = "",
     @Json(name = "note") val note: String = "",
     @Json(name = "release_date") val releaseDate: String = "",
-    @Json(name = "type") val type: Int = 0
+    @Json(name = "type") val type: Int = 0,
 )
 
 /**
@@ -186,7 +185,7 @@ data class TMDbReleaseDateResponse(
  */
 @JsonClass(generateAdapter = true)
 data class TMDbWatchProvidersResponse(
-    @Json(name = "results") val results: Map<String, TMDbWatchProvidersByRegionResponse> = emptyMap()
+    @Json(name = "results") val results: Map<String, TMDbWatchProvidersByRegionResponse> = emptyMap(),
 )
 
 /**
@@ -197,7 +196,7 @@ data class TMDbWatchProvidersByRegionResponse(
     @Json(name = "link") val link: String = "",
     @Json(name = "rent") val rent: List<TMDbWatchProviderResponse> = emptyList(),
     @Json(name = "buy") val buy: List<TMDbWatchProviderResponse> = emptyList(),
-    @Json(name = "flatrate") val flatrate: List<TMDbWatchProviderResponse> = emptyList()
+    @Json(name = "flatrate") val flatrate: List<TMDbWatchProviderResponse> = emptyList(),
 )
 
 /**
@@ -208,5 +207,5 @@ data class TMDbWatchProviderResponse(
     @Json(name = "display_priority") val displayPriority: Int = 0,
     @Json(name = "logo_path") val logoPath: String = "",
     @Json(name = "provider_id") val providerId: Int = 0,
-    @Json(name = "provider_name") val providerName: String = ""
+    @Json(name = "provider_name") val providerName: String = "",
 )

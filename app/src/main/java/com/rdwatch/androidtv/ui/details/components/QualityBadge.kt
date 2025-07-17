@@ -20,8 +20,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rdwatch.androidtv.ui.details.models.SourceQuality
-import com.rdwatch.androidtv.ui.details.models.advanced.QualityBadge as AdvancedQualityBadge
 import com.rdwatch.androidtv.ui.focus.tvFocusable
+import com.rdwatch.androidtv.ui.details.models.advanced.QualityBadge as AdvancedQualityBadge
 
 /**
  * Quality badge component for displaying video quality indicators
@@ -36,83 +36,95 @@ fun QualityBadge(
     size: QualityBadgeSize = QualityBadgeSize.SMALL,
     variant: QualityBadgeVariant = QualityBadgeVariant.DEFAULT,
     focusable: Boolean = false,
-    onClick: (() -> Unit)? = null
+    onClick: (() -> Unit)? = null,
 ) {
     var isFocused by remember { mutableStateOf(false) }
-    val backgroundColor = when {
-        isSelected -> MaterialTheme.colorScheme.primary
-        quality.isHighQuality -> getHighQualityColor(quality)
-        else -> getStandardQualityColor(quality)
-    }
-    
-    val textColor = when {
-        isSelected -> MaterialTheme.colorScheme.onPrimary
-        quality.isHighQuality -> Color.White
-        else -> MaterialTheme.colorScheme.onSurfaceVariant
-    }
-    
+    val backgroundColor =
+        when {
+            isSelected -> MaterialTheme.colorScheme.primary
+            quality.isHighQuality -> getHighQualityColor(quality)
+            else -> getStandardQualityColor(quality)
+        }
+
+    val textColor =
+        when {
+            isSelected -> MaterialTheme.colorScheme.onPrimary
+            quality.isHighQuality -> Color.White
+            else -> MaterialTheme.colorScheme.onSurfaceVariant
+        }
+
     // TV-optimized sizing with better visibility
-    val cornerRadius = when (size) {
-        QualityBadgeSize.SMALL -> 6.dp
-        QualityBadgeSize.MEDIUM -> 8.dp
-        QualityBadgeSize.LARGE -> 10.dp
-    }
-    
-    val padding = when (size) {
-        QualityBadgeSize.SMALL -> PaddingValues(horizontal = 8.dp, vertical = 4.dp)
-        QualityBadgeSize.MEDIUM -> PaddingValues(horizontal = 12.dp, vertical = 6.dp)
-        QualityBadgeSize.LARGE -> PaddingValues(horizontal = 16.dp, vertical = 8.dp)
-    }
-    
+    val cornerRadius =
+        when (size) {
+            QualityBadgeSize.SMALL -> 6.dp
+            QualityBadgeSize.MEDIUM -> 8.dp
+            QualityBadgeSize.LARGE -> 10.dp
+        }
+
+    val padding =
+        when (size) {
+            QualityBadgeSize.SMALL -> PaddingValues(horizontal = 8.dp, vertical = 4.dp)
+            QualityBadgeSize.MEDIUM -> PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+            QualityBadgeSize.LARGE -> PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+        }
+
     // Larger text for TV viewing distance
-    val textStyle = when (size) {
-        QualityBadgeSize.SMALL -> MaterialTheme.typography.labelSmall.copy(
-            fontSize = 12.sp,
-            fontWeight = FontWeight.Bold
-        )
-        QualityBadgeSize.MEDIUM -> MaterialTheme.typography.labelMedium.copy(
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Bold
-        )
-        QualityBadgeSize.LARGE -> MaterialTheme.typography.labelLarge.copy(
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Bold
-        )
-    }
-    
+    val textStyle =
+        when (size) {
+            QualityBadgeSize.SMALL ->
+                MaterialTheme.typography.labelSmall.copy(
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold,
+                )
+            QualityBadgeSize.MEDIUM ->
+                MaterialTheme.typography.labelMedium.copy(
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                )
+            QualityBadgeSize.LARGE ->
+                MaterialTheme.typography.labelLarge.copy(
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                )
+        }
+
     Box(
-        modifier = modifier
-            .clip(RoundedCornerShape(cornerRadius))
-            .background(backgroundColor)
-            .then(
-                if (focusable) {
-                    Modifier
-                        .tvFocusable(
-                            enabled = focusable,
-                            onFocusChanged = { isFocused = it.isFocused },
-                            onKeyEvent = null
-                        )
-                        .border(
-                            width = if (isFocused) 2.dp else 0.dp,
-                            color = if (isFocused) MaterialTheme.colorScheme.primary else Color.Transparent,
-                            shape = RoundedCornerShape(cornerRadius)
-                        )
-                        .then(if (onClick != null) Modifier.clickable { onClick() } else Modifier)
-                } else Modifier
-            )
-            .padding(padding),
-        contentAlignment = Alignment.Center
+        modifier =
+            modifier
+                .clip(RoundedCornerShape(cornerRadius))
+                .background(backgroundColor)
+                .then(
+                    if (focusable) {
+                        Modifier
+                            .tvFocusable(
+                                enabled = focusable,
+                                onFocusChanged = { isFocused = it.isFocused },
+                                onKeyEvent = null,
+                            )
+                            .border(
+                                width = if (isFocused) 2.dp else 0.dp,
+                                color = if (isFocused) MaterialTheme.colorScheme.primary else Color.Transparent,
+                                shape = RoundedCornerShape(cornerRadius),
+                            )
+                            .then(if (onClick != null) Modifier.clickable { onClick() } else Modifier)
+                    } else {
+                        Modifier
+                    },
+                )
+                .padding(padding),
+        contentAlignment = Alignment.Center,
     ) {
         Text(
-            text = when (variant) {
-                QualityBadgeVariant.DEFAULT -> quality.shortName
-                QualityBadgeVariant.FULL_NAME -> quality.displayName
-                QualityBadgeVariant.ICON_ONLY -> quality.shortName.take(2)
-            },
+            text =
+                when (variant) {
+                    QualityBadgeVariant.DEFAULT -> quality.shortName
+                    QualityBadgeVariant.FULL_NAME -> quality.displayName
+                    QualityBadgeVariant.ICON_ONLY -> quality.shortName.take(2)
+                },
             style = textStyle,
             color = textColor,
             textAlign = TextAlign.Center,
-            maxLines = 1
+            maxLines = 1,
         )
     }
 }
@@ -126,32 +138,33 @@ fun MultiQualityBadge(
     modifier: Modifier = Modifier,
     maxVisible: Int = 3,
     size: QualityBadgeSize = QualityBadgeSize.SMALL,
-    spacing: Int = 4
+    spacing: Int = 4,
 ) {
     val sortedQualities = qualities.sortedByDescending { it.priority }
     val visibleQualities = sortedQualities.take(maxVisible)
     val remainingCount = qualities.size - visibleQualities.size
-    
+
     Row(
         modifier = modifier,
         horizontalArrangement = Arrangement.spacedBy(spacing.dp),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         visibleQualities.forEach { quality ->
             QualityBadge(
                 quality = quality,
-                size = size
+                size = size,
             )
         }
-        
+
         if (remainingCount > 0) {
             QualityBadge(
                 quality = SourceQuality.QUALITY_AUTO, // Use as placeholder
                 size = size,
-                modifier = Modifier.background(
-                    MaterialTheme.colorScheme.surfaceVariant,
-                    RoundedCornerShape(4.dp)
-                )
+                modifier =
+                    Modifier.background(
+                        MaterialTheme.colorScheme.surfaceVariant,
+                        RoundedCornerShape(4.dp),
+                    ),
             )
         }
     }
@@ -165,66 +178,75 @@ fun FeatureBadge(
     feature: String,
     modifier: Modifier = Modifier,
     isHighlighted: Boolean = false,
-    size: QualityBadgeSize = QualityBadgeSize.SMALL
+    size: QualityBadgeSize = QualityBadgeSize.SMALL,
 ) {
-    val backgroundColor = when {
-        isHighlighted -> MaterialTheme.colorScheme.secondary
-        feature.contains("Dolby", ignoreCase = true) -> Color(0xFF1A1A1A)
-        feature.contains("HDR", ignoreCase = true) -> Color(0xFF4A90E2)
-        feature.contains("4K", ignoreCase = true) -> Color(0xFF8B5CF6)
-        feature.contains("8K", ignoreCase = true) -> Color(0xFFEF4444)
-        else -> MaterialTheme.colorScheme.surfaceVariant
-    }
-    
-    val textColor = when {
-        isHighlighted -> MaterialTheme.colorScheme.onSecondary
-        feature.contains("Dolby", ignoreCase = true) -> Color.White
-        feature.contains("HDR", ignoreCase = true) -> Color.White
-        feature.contains("4K", ignoreCase = true) -> Color.White
-        feature.contains("8K", ignoreCase = true) -> Color.White
-        else -> MaterialTheme.colorScheme.onSurfaceVariant
-    }
-    
-    val cornerRadius = when (size) {
-        QualityBadgeSize.SMALL -> 4.dp
-        QualityBadgeSize.MEDIUM -> 6.dp
-        QualityBadgeSize.LARGE -> 8.dp
-    }
-    
-    val padding = when (size) {
-        QualityBadgeSize.SMALL -> PaddingValues(horizontal = 6.dp, vertical = 2.dp)
-        QualityBadgeSize.MEDIUM -> PaddingValues(horizontal = 8.dp, vertical = 4.dp)
-        QualityBadgeSize.LARGE -> PaddingValues(horizontal = 12.dp, vertical = 6.dp)
-    }
-    
-    val textStyle = when (size) {
-        QualityBadgeSize.SMALL -> MaterialTheme.typography.labelSmall.copy(
-            fontSize = 10.sp,
-            fontWeight = FontWeight.Medium
-        )
-        QualityBadgeSize.MEDIUM -> MaterialTheme.typography.labelMedium.copy(
-            fontSize = 12.sp,
-            fontWeight = FontWeight.Medium
-        )
-        QualityBadgeSize.LARGE -> MaterialTheme.typography.labelLarge.copy(
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Medium
-        )
-    }
-    
+    val backgroundColor =
+        when {
+            isHighlighted -> MaterialTheme.colorScheme.secondary
+            feature.contains("Dolby", ignoreCase = true) -> Color(0xFF1A1A1A)
+            feature.contains("HDR", ignoreCase = true) -> Color(0xFF4A90E2)
+            feature.contains("4K", ignoreCase = true) -> Color(0xFF8B5CF6)
+            feature.contains("8K", ignoreCase = true) -> Color(0xFFEF4444)
+            else -> MaterialTheme.colorScheme.surfaceVariant
+        }
+
+    val textColor =
+        when {
+            isHighlighted -> MaterialTheme.colorScheme.onSecondary
+            feature.contains("Dolby", ignoreCase = true) -> Color.White
+            feature.contains("HDR", ignoreCase = true) -> Color.White
+            feature.contains("4K", ignoreCase = true) -> Color.White
+            feature.contains("8K", ignoreCase = true) -> Color.White
+            else -> MaterialTheme.colorScheme.onSurfaceVariant
+        }
+
+    val cornerRadius =
+        when (size) {
+            QualityBadgeSize.SMALL -> 4.dp
+            QualityBadgeSize.MEDIUM -> 6.dp
+            QualityBadgeSize.LARGE -> 8.dp
+        }
+
+    val padding =
+        when (size) {
+            QualityBadgeSize.SMALL -> PaddingValues(horizontal = 6.dp, vertical = 2.dp)
+            QualityBadgeSize.MEDIUM -> PaddingValues(horizontal = 8.dp, vertical = 4.dp)
+            QualityBadgeSize.LARGE -> PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+        }
+
+    val textStyle =
+        when (size) {
+            QualityBadgeSize.SMALL ->
+                MaterialTheme.typography.labelSmall.copy(
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.Medium,
+                )
+            QualityBadgeSize.MEDIUM ->
+                MaterialTheme.typography.labelMedium.copy(
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Medium,
+                )
+            QualityBadgeSize.LARGE ->
+                MaterialTheme.typography.labelLarge.copy(
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                )
+        }
+
     Box(
-        modifier = modifier
-            .clip(RoundedCornerShape(cornerRadius))
-            .background(backgroundColor)
-            .padding(padding),
-        contentAlignment = Alignment.Center
+        modifier =
+            modifier
+                .clip(RoundedCornerShape(cornerRadius))
+                .background(backgroundColor)
+                .padding(padding),
+        contentAlignment = Alignment.Center,
     ) {
         Text(
             text = feature,
             style = textStyle,
             color = textColor,
             textAlign = TextAlign.Center,
-            maxLines = 1
+            maxLines = 1,
         )
     }
 }
@@ -240,31 +262,36 @@ fun QualityBadgeRow(
     spacing: Int = 8,
     badgeSize: QualityBadgeSize = QualityBadgeSize.SMALL,
     focusable: Boolean = false,
-    onBadgeClick: ((AdvancedQualityBadge) -> Unit)? = null
+    onBadgeClick: ((AdvancedQualityBadge) -> Unit)? = null,
 ) {
     val visibleBadges = badges.sortedByDescending { it.priority }.take(maxVisible)
-    
+
     LazyRow(
         modifier = modifier,
         horizontalArrangement = Arrangement.spacedBy(spacing.dp),
         verticalAlignment = Alignment.CenterVertically,
-        contentPadding = PaddingValues(horizontal = 4.dp)
+        contentPadding = PaddingValues(horizontal = 4.dp),
     ) {
         items(visibleBadges) { badge ->
             AdvancedQualityBadgeComponent(
                 badge = badge,
                 size = badgeSize,
                 focusable = focusable,
-                onClick = if (onBadgeClick != null) { { onBadgeClick(badge) } } else null
+                onClick =
+                    if (onBadgeClick != null) {
+                        { onBadgeClick(badge) }
+                    } else {
+                        null
+                    },
             )
         }
-        
+
         // Show overflow indicator if there are more badges
         if (badges.size > maxVisible) {
             item {
                 OverflowBadge(
                     count = badges.size - maxVisible,
-                    size = badgeSize
+                    size = badgeSize,
                 )
             }
         }
@@ -281,22 +308,22 @@ fun QualityFeatureBadgeRow(
     modifier: Modifier = Modifier,
     maxFeatures: Int = 2,
     spacing: Int = 4,
-    badgeSize: QualityBadgeSize = QualityBadgeSize.SMALL
+    badgeSize: QualityBadgeSize = QualityBadgeSize.SMALL,
 ) {
     Row(
         modifier = modifier,
         horizontalArrangement = Arrangement.spacedBy(spacing.dp),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         QualityBadge(
             quality = quality,
-            size = badgeSize
+            size = badgeSize,
         )
-        
+
         features.take(maxFeatures).forEach { feature ->
             FeatureBadge(
                 feature = feature,
-                size = badgeSize
+                size = badgeSize,
             )
         }
     }
@@ -310,56 +337,63 @@ fun PricingBadge(
     priceText: String,
     modifier: Modifier = Modifier,
     isFree: Boolean = false,
-    size: QualityBadgeSize = QualityBadgeSize.SMALL
+    size: QualityBadgeSize = QualityBadgeSize.SMALL,
 ) {
-    val backgroundColor = when {
-        isFree -> Color(0xFF10B981)
-        priceText.contains("Free", ignoreCase = true) -> Color(0xFF10B981)
-        priceText.contains("Rent", ignoreCase = true) -> Color(0xFFF59E0B)
-        priceText.contains("Buy", ignoreCase = true) -> Color(0xFFEF4444)
-        else -> MaterialTheme.colorScheme.primaryContainer
-    }
-    
-    val textColor = when {
-        isFree -> Color.White
-        priceText.contains("Free", ignoreCase = true) -> Color.White
-        priceText.contains("Rent", ignoreCase = true) -> Color.White
-        priceText.contains("Buy", ignoreCase = true) -> Color.White
-        else -> MaterialTheme.colorScheme.onPrimaryContainer
-    }
-    
-    val cornerRadius = when (size) {
-        QualityBadgeSize.SMALL -> 4.dp
-        QualityBadgeSize.MEDIUM -> 6.dp
-        QualityBadgeSize.LARGE -> 8.dp
-    }
-    
-    val padding = when (size) {
-        QualityBadgeSize.SMALL -> PaddingValues(horizontal = 6.dp, vertical = 2.dp)
-        QualityBadgeSize.MEDIUM -> PaddingValues(horizontal = 8.dp, vertical = 4.dp)
-        QualityBadgeSize.LARGE -> PaddingValues(horizontal = 12.dp, vertical = 6.dp)
-    }
-    
+    val backgroundColor =
+        when {
+            isFree -> Color(0xFF10B981)
+            priceText.contains("Free", ignoreCase = true) -> Color(0xFF10B981)
+            priceText.contains("Rent", ignoreCase = true) -> Color(0xFFF59E0B)
+            priceText.contains("Buy", ignoreCase = true) -> Color(0xFFEF4444)
+            else -> MaterialTheme.colorScheme.primaryContainer
+        }
+
+    val textColor =
+        when {
+            isFree -> Color.White
+            priceText.contains("Free", ignoreCase = true) -> Color.White
+            priceText.contains("Rent", ignoreCase = true) -> Color.White
+            priceText.contains("Buy", ignoreCase = true) -> Color.White
+            else -> MaterialTheme.colorScheme.onPrimaryContainer
+        }
+
+    val cornerRadius =
+        when (size) {
+            QualityBadgeSize.SMALL -> 4.dp
+            QualityBadgeSize.MEDIUM -> 6.dp
+            QualityBadgeSize.LARGE -> 8.dp
+        }
+
+    val padding =
+        when (size) {
+            QualityBadgeSize.SMALL -> PaddingValues(horizontal = 6.dp, vertical = 2.dp)
+            QualityBadgeSize.MEDIUM -> PaddingValues(horizontal = 8.dp, vertical = 4.dp)
+            QualityBadgeSize.LARGE -> PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+        }
+
     Box(
-        modifier = modifier
-            .clip(RoundedCornerShape(cornerRadius))
-            .background(backgroundColor)
-            .padding(padding),
-        contentAlignment = Alignment.Center
+        modifier =
+            modifier
+                .clip(RoundedCornerShape(cornerRadius))
+                .background(backgroundColor)
+                .padding(padding),
+        contentAlignment = Alignment.Center,
     ) {
         Text(
             text = priceText,
-            style = MaterialTheme.typography.labelSmall.copy(
-                fontSize = when (size) {
-                    QualityBadgeSize.SMALL -> 10.sp
-                    QualityBadgeSize.MEDIUM -> 12.sp
-                    QualityBadgeSize.LARGE -> 14.sp
-                },
-                fontWeight = FontWeight.Medium
-            ),
+            style =
+                MaterialTheme.typography.labelSmall.copy(
+                    fontSize =
+                        when (size) {
+                            QualityBadgeSize.SMALL -> 10.sp
+                            QualityBadgeSize.MEDIUM -> 12.sp
+                            QualityBadgeSize.LARGE -> 14.sp
+                        },
+                    fontWeight = FontWeight.Medium,
+                ),
             color = textColor,
             textAlign = TextAlign.Center,
-            maxLines = 1
+            maxLines = 1,
         )
     }
 }
@@ -374,69 +408,78 @@ fun AdvancedQualityBadgeComponent(
     modifier: Modifier = Modifier,
     size: QualityBadgeSize = QualityBadgeSize.SMALL,
     focusable: Boolean = false,
-    onClick: (() -> Unit)? = null
+    onClick: (() -> Unit)? = null,
 ) {
     var isFocused by remember { mutableStateOf(false) }
-    
+
     val backgroundColor = getEnhancedBadgeColor(badge)
     val textColor = getEnhancedBadgeTextColor(badge)
-    
-    val cornerRadius = when (size) {
-        QualityBadgeSize.SMALL -> 6.dp
-        QualityBadgeSize.MEDIUM -> 8.dp
-        QualityBadgeSize.LARGE -> 10.dp
-    }
-    
-    val padding = when (size) {
-        QualityBadgeSize.SMALL -> PaddingValues(horizontal = 8.dp, vertical = 4.dp)
-        QualityBadgeSize.MEDIUM -> PaddingValues(horizontal = 12.dp, vertical = 6.dp)
-        QualityBadgeSize.LARGE -> PaddingValues(horizontal = 16.dp, vertical = 8.dp)
-    }
-    
-    val textStyle = when (size) {
-        QualityBadgeSize.SMALL -> MaterialTheme.typography.labelSmall.copy(
-            fontSize = 12.sp,
-            fontWeight = FontWeight.Bold
-        )
-        QualityBadgeSize.MEDIUM -> MaterialTheme.typography.labelMedium.copy(
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Bold
-        )
-        QualityBadgeSize.LARGE -> MaterialTheme.typography.labelLarge.copy(
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Bold
-        )
-    }
-    
+
+    val cornerRadius =
+        when (size) {
+            QualityBadgeSize.SMALL -> 6.dp
+            QualityBadgeSize.MEDIUM -> 8.dp
+            QualityBadgeSize.LARGE -> 10.dp
+        }
+
+    val padding =
+        when (size) {
+            QualityBadgeSize.SMALL -> PaddingValues(horizontal = 8.dp, vertical = 4.dp)
+            QualityBadgeSize.MEDIUM -> PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+            QualityBadgeSize.LARGE -> PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+        }
+
+    val textStyle =
+        when (size) {
+            QualityBadgeSize.SMALL ->
+                MaterialTheme.typography.labelSmall.copy(
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold,
+                )
+            QualityBadgeSize.MEDIUM ->
+                MaterialTheme.typography.labelMedium.copy(
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                )
+            QualityBadgeSize.LARGE ->
+                MaterialTheme.typography.labelLarge.copy(
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                )
+        }
+
     Box(
-        modifier = modifier
-            .clip(RoundedCornerShape(cornerRadius))
-            .background(backgroundColor)
-            .then(
-                if (focusable) {
-                    Modifier
-                        .tvFocusable(
-                            enabled = focusable,
-                            onFocusChanged = { isFocused = it.isFocused },
-                            onKeyEvent = null
-                        )
-                        .border(
-                            width = if (isFocused) 2.dp else 0.dp,
-                            color = if (isFocused) MaterialTheme.colorScheme.primary else Color.Transparent,
-                            shape = RoundedCornerShape(cornerRadius)
-                        )
-                        .then(if (onClick != null) Modifier.clickable { onClick() } else Modifier)
-                } else Modifier
-            )
-            .padding(padding),
-        contentAlignment = Alignment.Center
+        modifier =
+            modifier
+                .clip(RoundedCornerShape(cornerRadius))
+                .background(backgroundColor)
+                .then(
+                    if (focusable) {
+                        Modifier
+                            .tvFocusable(
+                                enabled = focusable,
+                                onFocusChanged = { isFocused = it.isFocused },
+                                onKeyEvent = null,
+                            )
+                            .border(
+                                width = if (isFocused) 2.dp else 0.dp,
+                                color = if (isFocused) MaterialTheme.colorScheme.primary else Color.Transparent,
+                                shape = RoundedCornerShape(cornerRadius),
+                            )
+                            .then(if (onClick != null) Modifier.clickable { onClick() } else Modifier)
+                    } else {
+                        Modifier
+                    },
+                )
+                .padding(padding),
+        contentAlignment = Alignment.Center,
     ) {
         Text(
             text = badge.text,
             style = textStyle,
             color = textColor,
             textAlign = TextAlign.Center,
-            maxLines = 1
+            maxLines = 1,
         )
     }
 }
@@ -448,48 +491,55 @@ fun AdvancedQualityBadgeComponent(
 fun OverflowBadge(
     count: Int,
     modifier: Modifier = Modifier,
-    size: QualityBadgeSize = QualityBadgeSize.SMALL
+    size: QualityBadgeSize = QualityBadgeSize.SMALL,
 ) {
-    val cornerRadius = when (size) {
-        QualityBadgeSize.SMALL -> 6.dp
-        QualityBadgeSize.MEDIUM -> 8.dp
-        QualityBadgeSize.LARGE -> 10.dp
-    }
-    
-    val padding = when (size) {
-        QualityBadgeSize.SMALL -> PaddingValues(horizontal = 8.dp, vertical = 4.dp)
-        QualityBadgeSize.MEDIUM -> PaddingValues(horizontal = 12.dp, vertical = 6.dp)
-        QualityBadgeSize.LARGE -> PaddingValues(horizontal = 16.dp, vertical = 8.dp)
-    }
-    
-    val textStyle = when (size) {
-        QualityBadgeSize.SMALL -> MaterialTheme.typography.labelSmall.copy(
-            fontSize = 12.sp,
-            fontWeight = FontWeight.Medium
-        )
-        QualityBadgeSize.MEDIUM -> MaterialTheme.typography.labelMedium.copy(
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Medium
-        )
-        QualityBadgeSize.LARGE -> MaterialTheme.typography.labelLarge.copy(
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Medium
-        )
-    }
-    
+    val cornerRadius =
+        when (size) {
+            QualityBadgeSize.SMALL -> 6.dp
+            QualityBadgeSize.MEDIUM -> 8.dp
+            QualityBadgeSize.LARGE -> 10.dp
+        }
+
+    val padding =
+        when (size) {
+            QualityBadgeSize.SMALL -> PaddingValues(horizontal = 8.dp, vertical = 4.dp)
+            QualityBadgeSize.MEDIUM -> PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+            QualityBadgeSize.LARGE -> PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+        }
+
+    val textStyle =
+        when (size) {
+            QualityBadgeSize.SMALL ->
+                MaterialTheme.typography.labelSmall.copy(
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Medium,
+                )
+            QualityBadgeSize.MEDIUM ->
+                MaterialTheme.typography.labelMedium.copy(
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                )
+            QualityBadgeSize.LARGE ->
+                MaterialTheme.typography.labelLarge.copy(
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Medium,
+                )
+        }
+
     Box(
-        modifier = modifier
-            .clip(RoundedCornerShape(cornerRadius))
-            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f))
-            .padding(padding),
-        contentAlignment = Alignment.Center
+        modifier =
+            modifier
+                .clip(RoundedCornerShape(cornerRadius))
+                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f))
+                .padding(padding),
+        contentAlignment = Alignment.Center,
     ) {
         Text(
             text = "+$count",
             style = textStyle,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
-            maxLines = 1
+            maxLines = 1,
         )
     }
 }
@@ -500,16 +550,16 @@ fun OverflowBadge(
 enum class QualityBadgeSize {
     SMALL,
     MEDIUM,
-    LARGE
+    LARGE,
 }
 
 /**
  * Badge variant options
  */
 enum class QualityBadgeVariant {
-    DEFAULT,      // Shows short name (e.g., "4K")
-    FULL_NAME,    // Shows full name (e.g., "4K Ultra HD")
-    ICON_ONLY     // Shows minimal text (e.g., "4K")
+    DEFAULT, // Shows short name (e.g., "4K")
+    FULL_NAME, // Shows full name (e.g., "4K Ultra HD")
+    ICON_ONLY, // Shows minimal text (e.g., "4K")
 }
 
 /**
@@ -540,11 +590,12 @@ private fun getStandardQualityColor(quality: SourceQuality): Color {
  */
 private fun getAdvancedBadgeColor(type: AdvancedQualityBadge.Type): Color {
     return when (type) {
-        AdvancedQualityBadge.Type.RESOLUTION -> when {
-            // Different colors for different resolutions for quick recognition
-            true -> Color(0xFF8B5CF6) // Purple for resolution
-            else -> Color(0xFF8B5CF6)
-        }
+        AdvancedQualityBadge.Type.RESOLUTION ->
+            when {
+                // Different colors for different resolutions for quick recognition
+                true -> Color(0xFF8B5CF6) // Purple for resolution
+                else -> Color(0xFF8B5CF6)
+            }
         AdvancedQualityBadge.Type.HDR -> Color(0xFF4A90E2) // Blue for HDR
         AdvancedQualityBadge.Type.CODEC -> Color(0xFF10B981) // Green for codec
         AdvancedQualityBadge.Type.AUDIO -> Color(0xFFF59E0B) // Orange for audio
@@ -561,51 +612,58 @@ private fun getAdvancedBadgeColor(type: AdvancedQualityBadge.Type): Color {
  */
 private fun getEnhancedBadgeColor(badge: AdvancedQualityBadge): Color {
     return when (badge.type) {
-        AdvancedQualityBadge.Type.RESOLUTION -> when (badge.text) {
-            "8K" -> Color(0xFFDC2626) // Red for 8K
-            "4K" -> Color(0xFF8B5CF6) // Purple for 4K
-            "1440p" -> Color(0xFF7C3AED) // Violet for 2K
-            "1080p" -> Color(0xFF2563EB) // Blue for 1080p
-            "720p" -> Color(0xFF059669) // Green for 720p
-            else -> Color(0xFF6B7280) // Gray for lower resolutions
-        }
-        AdvancedQualityBadge.Type.HDR -> when (badge.text) {
-            "DV" -> Color(0xFF000000) // Black for Dolby Vision with white text
-            "HDR10+" -> Color(0xFF1E40AF) // Dark blue for HDR10+
-            "HDR10" -> Color(0xFF4A90E2) // Blue for HDR10
-            else -> Color(0xFF4A90E2)
-        }
-        AdvancedQualityBadge.Type.CODEC -> when (badge.text) {
-            "AV1" -> Color(0xFF059669) // Emerald for AV1
-            "H.265", "HEVC" -> Color(0xFF10B981) // Green for HEVC
-            "H.264", "AVC" -> Color(0xFF34D399) // Light green for H.264
-            else -> Color(0xFF6EE7B7) // Pale green for others
-        }
-        AdvancedQualityBadge.Type.AUDIO -> when {
-            badge.text.contains("Atmos") -> Color(0xFF1F2937) // Near black for Atmos
-            badge.text.contains("DTS:X") -> Color(0xFF374151) // Dark gray for DTS:X
-            badge.text.contains("TrueHD") -> Color(0xFFEA580C) // Dark orange for TrueHD
-            badge.text.contains("DTS-HD") -> Color(0xFFF59E0B) // Orange for DTS-HD
-            else -> Color(0xFFFBBF24) // Yellow for standard audio
-        }
-        AdvancedQualityBadge.Type.RELEASE -> when (badge.text) {
-            "REMUX" -> Color(0xFF7C3AED) // Violet for REMUX
-            "BluRay" -> Color(0xFF2563EB) // Blue for BluRay
-            "WEB-DL" -> Color(0xFF0891B2) // Cyan for WEB-DL
-            "WebRip" -> Color(0xFF0EA5E9) // Light blue for WebRip
-            else -> Color(0xFF6B7280) // Gray for others
-        }
-        AdvancedQualityBadge.Type.HEALTH -> when {
-            badge.text.contains("1000") -> Color(0xFF059669) // Green for excellent health
-            badge.text.contains("500") -> Color(0xFF10B981) // Light green for good health
-            badge.text.contains("100") -> Color(0xFFF59E0B) // Orange for fair health
-            else -> Color(0xFFEF4444) // Red for poor health
-        }
-        AdvancedQualityBadge.Type.FEATURE -> when {
-            badge.text.contains("Cached") -> Color(0xFF059669) // Green for cached
-            badge.text.contains("Pack") -> Color(0xFF8B5CF6) // Purple for season pack
-            else -> Color(0xFF06B6D4) // Cyan for other features
-        }
+        AdvancedQualityBadge.Type.RESOLUTION ->
+            when (badge.text) {
+                "8K" -> Color(0xFFDC2626) // Red for 8K
+                "4K" -> Color(0xFF8B5CF6) // Purple for 4K
+                "1440p" -> Color(0xFF7C3AED) // Violet for 2K
+                "1080p" -> Color(0xFF2563EB) // Blue for 1080p
+                "720p" -> Color(0xFF059669) // Green for 720p
+                else -> Color(0xFF6B7280) // Gray for lower resolutions
+            }
+        AdvancedQualityBadge.Type.HDR ->
+            when (badge.text) {
+                "DV" -> Color(0xFF000000) // Black for Dolby Vision with white text
+                "HDR10+" -> Color(0xFF1E40AF) // Dark blue for HDR10+
+                "HDR10" -> Color(0xFF4A90E2) // Blue for HDR10
+                else -> Color(0xFF4A90E2)
+            }
+        AdvancedQualityBadge.Type.CODEC ->
+            when (badge.text) {
+                "AV1" -> Color(0xFF059669) // Emerald for AV1
+                "H.265", "HEVC" -> Color(0xFF10B981) // Green for HEVC
+                "H.264", "AVC" -> Color(0xFF34D399) // Light green for H.264
+                else -> Color(0xFF6EE7B7) // Pale green for others
+            }
+        AdvancedQualityBadge.Type.AUDIO ->
+            when {
+                badge.text.contains("Atmos") -> Color(0xFF1F2937) // Near black for Atmos
+                badge.text.contains("DTS:X") -> Color(0xFF374151) // Dark gray for DTS:X
+                badge.text.contains("TrueHD") -> Color(0xFFEA580C) // Dark orange for TrueHD
+                badge.text.contains("DTS-HD") -> Color(0xFFF59E0B) // Orange for DTS-HD
+                else -> Color(0xFFFBBF24) // Yellow for standard audio
+            }
+        AdvancedQualityBadge.Type.RELEASE ->
+            when (badge.text) {
+                "REMUX" -> Color(0xFF7C3AED) // Violet for REMUX
+                "BluRay" -> Color(0xFF2563EB) // Blue for BluRay
+                "WEB-DL" -> Color(0xFF0891B2) // Cyan for WEB-DL
+                "WebRip" -> Color(0xFF0EA5E9) // Light blue for WebRip
+                else -> Color(0xFF6B7280) // Gray for others
+            }
+        AdvancedQualityBadge.Type.HEALTH ->
+            when {
+                badge.text.contains("1000") -> Color(0xFF059669) // Green for excellent health
+                badge.text.contains("500") -> Color(0xFF10B981) // Light green for good health
+                badge.text.contains("100") -> Color(0xFFF59E0B) // Orange for fair health
+                else -> Color(0xFFEF4444) // Red for poor health
+            }
+        AdvancedQualityBadge.Type.FEATURE ->
+            when {
+                badge.text.contains("Cached") -> Color(0xFF059669) // Green for cached
+                badge.text.contains("Pack") -> Color(0xFF8B5CF6) // Purple for season pack
+                else -> Color(0xFF06B6D4) // Cyan for other features
+            }
         else -> getAdvancedBadgeColor(badge.type)
     }
 }
@@ -634,7 +692,7 @@ object QualityBadgePreview {
     @Composable
     fun AllQualityBadges() {
         Column(
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             Text("High Quality Badges", style = MaterialTheme.typography.headlineSmall)
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -642,14 +700,14 @@ object QualityBadgePreview {
                     QualityBadge(quality = quality)
                 }
             }
-            
+
             Text("Standard Quality Badges", style = MaterialTheme.typography.headlineSmall)
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 SourceQuality.getStandardQualityOptions().forEach { quality ->
                     QualityBadge(quality = quality)
                 }
             }
-            
+
             Text("Feature Badges", style = MaterialTheme.typography.headlineSmall)
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 FeatureBadge("Dolby Vision")
@@ -657,7 +715,7 @@ object QualityBadgePreview {
                 FeatureBadge("HDR10")
                 FeatureBadge("Download")
             }
-            
+
             Text("Pricing Badges", style = MaterialTheme.typography.headlineSmall)
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 PricingBadge("Free", isFree = true)
@@ -665,29 +723,30 @@ object QualityBadgePreview {
                 PricingBadge("Rent $4.99")
                 PricingBadge("Buy $14.99")
             }
-            
+
             Text("Advanced Quality Badges", style = MaterialTheme.typography.headlineSmall)
             QualityBadgeRow(
-                badges = listOf(
-                    AdvancedQualityBadge("4K", AdvancedQualityBadge.Type.RESOLUTION, 100),
-                    AdvancedQualityBadge("DV", AdvancedQualityBadge.Type.HDR, 95),
-                    AdvancedQualityBadge("H.265", AdvancedQualityBadge.Type.CODEC, 80),
-                    AdvancedQualityBadge("Atmos", AdvancedQualityBadge.Type.AUDIO, 70),
-                    AdvancedQualityBadge("REMUX", AdvancedQualityBadge.Type.RELEASE, 60),
-                    AdvancedQualityBadge("150S", AdvancedQualityBadge.Type.HEALTH, 50)
-                )
+                badges =
+                    listOf(
+                        AdvancedQualityBadge("4K", AdvancedQualityBadge.Type.RESOLUTION, 100),
+                        AdvancedQualityBadge("DV", AdvancedQualityBadge.Type.HDR, 95),
+                        AdvancedQualityBadge("H.265", AdvancedQualityBadge.Type.CODEC, 80),
+                        AdvancedQualityBadge("Atmos", AdvancedQualityBadge.Type.AUDIO, 70),
+                        AdvancedQualityBadge("REMUX", AdvancedQualityBadge.Type.RELEASE, 60),
+                        AdvancedQualityBadge("150S", AdvancedQualityBadge.Type.HEALTH, 50),
+                    ),
             )
-            
+
             Text("TV Focus-enabled Badges", style = MaterialTheme.typography.headlineSmall)
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 QualityBadge(
                     quality = SourceQuality.QUALITY_4K,
                     focusable = true,
-                    onClick = { /* Handle click */ }
+                    onClick = { /* Handle click */ },
                 )
                 FeatureBadge(
                     feature = "HDR10",
-                    isHighlighted = true
+                    isHighlighted = true,
                 )
             }
         }

@@ -19,7 +19,6 @@ import dagger.hilt.android.scopes.ViewModelScoped
 @Module
 @InstallIn(ViewModelComponent::class)
 object FileBrowserModule {
-    
     /**
      * Provides FileBrowserRepository
      * Currently only supports Real-Debrid, but structured for future expansion
@@ -30,7 +29,7 @@ object FileBrowserModule {
         realDebridApiService: RealDebridApiService,
         realDebridContentRepository: RealDebridContentRepository,
         dispatcherProvider: DispatcherProvider,
-        errorHandler: ErrorHandler
+        errorHandler: ErrorHandler,
     ): FileBrowserRepository {
         // Default to Real-Debrid for now
         // In the future, this could be based on user preferences or multiple implementations
@@ -38,7 +37,7 @@ object FileBrowserModule {
             apiService = realDebridApiService,
             contentRepository = realDebridContentRepository,
             dispatcherProvider = dispatcherProvider,
-            errorHandler = errorHandler
+            errorHandler = errorHandler,
         )
     }
 }

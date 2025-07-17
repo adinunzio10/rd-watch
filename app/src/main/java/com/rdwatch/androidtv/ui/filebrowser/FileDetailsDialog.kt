@@ -1,6 +1,5 @@
 package com.rdwatch.androidtv.ui.filebrowser
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -38,71 +37,75 @@ fun FileDetailsDialog(
     onDownloadFile: ((FileItem) -> Unit)? = null,
     onDeleteFile: ((FileItem) -> Unit)? = null,
     onCopyLink: ((FileItem.File) -> Unit)? = null,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val closeFocusRequester = remember { FocusRequester() }
-    
+
     LaunchedEffect(Unit) {
         closeFocusRequester.requestFocus()
     }
-    
+
     Dialog(
         onDismissRequest = onDismiss,
-        properties = DialogProperties(
-            usePlatformDefaultWidth = false,
-            dismissOnBackPress = true,
-            dismissOnClickOutside = true
-        )
+        properties =
+            DialogProperties(
+                usePlatformDefaultWidth = false,
+                dismissOnBackPress = true,
+                dismissOnClickOutside = true,
+            ),
     ) {
         Surface(
-            modifier = modifier
-                .fillMaxWidth(0.8f)
-                .fillMaxHeight(0.8f)
-                .clip(RoundedCornerShape(16.dp)),
+            modifier =
+                modifier
+                    .fillMaxWidth(0.8f)
+                    .fillMaxHeight(0.8f)
+                    .clip(RoundedCornerShape(16.dp)),
             color = MaterialTheme.colorScheme.surface,
-            tonalElevation = 8.dp
+            tonalElevation = 8.dp,
         ) {
             Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(24.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .padding(24.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 // Header with icon and title
                 FileDetailsHeader(
                     item = item,
                     onDismiss = onDismiss,
-                    closeFocusRequester = closeFocusRequester
+                    closeFocusRequester = closeFocusRequester,
                 )
-                
+
                 // Content area
                 Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        .verticalScroll(rememberScrollState()),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                    modifier =
+                        Modifier
+                            .weight(1f)
+                            .verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
                 ) {
                     // Basic information
                     FileBasicInfo(item = item)
-                    
+
                     // Type-specific information
                     when (item) {
                         is FileItem.File -> FileSpecificInfo(item)
                         is FileItem.Torrent -> TorrentSpecificInfo(item)
                         is FileItem.Folder -> FolderSpecificInfo(item)
                     }
-                    
+
                     // Status information
                     FileStatusInfo(item = item)
                 }
-                
+
                 // Action buttons
                 FileDetailsActions(
                     item = item,
                     onPlayFile = onPlayFile,
                     onDownloadFile = onDownloadFile,
                     onDeleteFile = onDeleteFile,
-                    onCopyLink = onCopyLink
+                    onCopyLink = onCopyLink,
                 )
             }
         }
@@ -113,62 +116,64 @@ fun FileDetailsDialog(
 private fun FileDetailsHeader(
     item: FileItem,
     onDismiss: () -> Unit,
-    closeFocusRequester: FocusRequester
+    closeFocusRequester: FocusRequester,
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         // Icon and title
         Row(
             horizontalArrangement = Arrangement.spacedBy(16.dp),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(
                 imageVector = getFileTypeIcon(item),
                 contentDescription = null,
                 modifier = Modifier.size(40.dp),
-                tint = getFileTypeColor(item)
+                tint = getFileTypeColor(item),
             )
-            
+
             Column {
                 Text(
                     text = item.name,
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
                     maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
+                    overflow = TextOverflow.Ellipsis,
                 )
-                
+
                 Text(
                     text = getFileTypeLabel(item),
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                 )
             }
         }
-        
+
         // Close button
         var closeFocused by remember { mutableStateOf(false) }
-        
+
         TVFocusIndicator(isFocused = closeFocused) {
             IconButton(
                 onClick = onDismiss,
-                modifier = Modifier
-                    .focusRequester(closeFocusRequester)
-                    .tvFocusable(
-                        onFocusChanged = { closeFocused = it.isFocused }
-                    )
+                modifier =
+                    Modifier
+                        .focusRequester(closeFocusRequester)
+                        .tvFocusable(
+                            onFocusChanged = { closeFocused = it.isFocused },
+                        ),
             ) {
                 Icon(
                     imageVector = Icons.Default.Close,
                     contentDescription = "Close",
-                    tint = if (closeFocused) {
-                        MaterialTheme.colorScheme.primary
-                    } else {
-                        MaterialTheme.colorScheme.onSurface
-                    }
+                    tint =
+                        if (closeFocused) {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            MaterialTheme.colorScheme.onSurface
+                        },
                 )
             }
         }
@@ -179,40 +184,42 @@ private fun FileDetailsHeader(
 private fun FileBasicInfo(item: FileItem) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
-        )
+        colors =
+            CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant,
+            ),
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             Text(
                 text = "Basic Information",
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold
+                fontWeight = FontWeight.SemiBold,
             )
-            
+
             // File size
             if (item.size > 0) {
                 DetailRow(
                     label = "Size",
-                    value = formatFileSize(item.size)
+                    value = formatFileSize(item.size),
                 )
             }
-            
+
             // Modified date
             DetailRow(
                 label = "Modified",
-                value = formatDate(item.modifiedDate)
+                value = formatDate(item.modifiedDate),
             )
-            
+
             // ID
             DetailRow(
                 label = "ID",
-                value = item.id
+                value = item.id,
             )
         }
     }
@@ -222,57 +229,59 @@ private fun FileBasicInfo(item: FileItem) {
 private fun FileSpecificInfo(file: FileItem.File) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
-        )
+        colors =
+            CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant,
+            ),
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             Text(
                 text = "File Details",
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold
+                fontWeight = FontWeight.SemiBold,
             )
-            
+
             // MIME type
             if (file.mimeType != null) {
                 DetailRow(
                     label = "Type",
-                    value = file.mimeType
+                    value = file.mimeType,
                 )
             }
-            
+
             // Extension
             val extension = file.name.substringAfterLast('.', "")
             if (extension.isNotEmpty()) {
                 DetailRow(
                     label = "Extension",
-                    value = extension.uppercase()
+                    value = extension.uppercase(),
                 )
             }
-            
+
             // File category
             val fileType = FileType.fromExtension(extension)
             DetailRow(
                 label = "Category",
-                value = fileType.displayName
+                value = fileType.displayName,
             )
-            
+
             // Playable status
             DetailRow(
                 label = "Playable",
-                value = if (file.isPlayable) "Yes" else "No"
+                value = if (file.isPlayable) "Yes" else "No",
             )
-            
+
             // Progress (if downloading)
             if (file.progress != null) {
                 DetailRow(
                     label = "Progress",
-                    value = "${(file.progress * 100).toInt()}%"
+                    value = "${(file.progress * 100).toInt()}%",
                 )
             }
         }
@@ -283,62 +292,64 @@ private fun FileSpecificInfo(file: FileItem.File) {
 private fun TorrentSpecificInfo(torrent: FileItem.Torrent) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
-        )
+        colors =
+            CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant,
+            ),
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             Text(
                 text = "Torrent Details",
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold
+                fontWeight = FontWeight.SemiBold,
             )
-            
+
             // Hash
             DetailRow(
                 label = "Hash",
-                value = torrent.hash
+                value = torrent.hash,
             )
-            
+
             // Progress
             DetailRow(
                 label = "Progress",
-                value = "${(torrent.progress * 100).toInt()}%"
+                value = "${(torrent.progress * 100).toInt()}%",
             )
-            
+
             // Seeders
             if (torrent.seeders != null) {
                 DetailRow(
                     label = "Seeders",
-                    value = torrent.seeders.toString()
+                    value = torrent.seeders.toString(),
                 )
             }
-            
+
             // Speed
             if (torrent.speed != null) {
                 DetailRow(
                     label = "Speed",
-                    value = formatSpeed(torrent.speed)
+                    value = formatSpeed(torrent.speed),
                 )
             }
-            
+
             // File count
             DetailRow(
                 label = "Files",
-                value = torrent.files.size.toString()
+                value = torrent.files.size.toString(),
             )
-            
+
             // Playable files
             val playableFiles = torrent.files.count { it.isPlayable }
             if (playableFiles > 0) {
                 DetailRow(
                     label = "Playable Files",
-                    value = playableFiles.toString()
+                    value = playableFiles.toString(),
                 )
             }
         }
@@ -349,32 +360,34 @@ private fun TorrentSpecificInfo(torrent: FileItem.Torrent) {
 private fun FolderSpecificInfo(folder: FileItem.Folder) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
-        )
+        colors =
+            CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant,
+            ),
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             Text(
                 text = "Folder Details",
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold
+                fontWeight = FontWeight.SemiBold,
             )
-            
+
             // Path
             DetailRow(
                 label = "Path",
-                value = folder.path
+                value = folder.path,
             )
-            
+
             // Item count
             DetailRow(
                 label = "Items",
-                value = folder.itemCount.toString()
+                value = folder.itemCount.toString(),
             )
         }
     }
@@ -384,59 +397,66 @@ private fun FolderSpecificInfo(folder: FileItem.Folder) {
 private fun FileStatusInfo(item: FileItem) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = when (item) {
-                is FileItem.File -> when (item.status) {
-                    FileStatus.READY -> MaterialTheme.colorScheme.primaryContainer
-                    FileStatus.DOWNLOADING -> MaterialTheme.colorScheme.tertiaryContainer
-                    FileStatus.ERROR -> MaterialTheme.colorScheme.errorContainer
-                    FileStatus.UNAVAILABLE -> MaterialTheme.colorScheme.surfaceVariant
-                }
-                is FileItem.Torrent -> when (item.status) {
-                    TorrentStatus.DOWNLOADED -> MaterialTheme.colorScheme.primaryContainer
-                    TorrentStatus.DOWNLOADING -> MaterialTheme.colorScheme.tertiaryContainer
-                    TorrentStatus.ERROR, TorrentStatus.DEAD -> MaterialTheme.colorScheme.errorContainer
-                    else -> MaterialTheme.colorScheme.surfaceVariant
-                }
-                else -> MaterialTheme.colorScheme.surfaceVariant
-            }
-        )
+        colors =
+            CardDefaults.cardColors(
+                containerColor =
+                    when (item) {
+                        is FileItem.File ->
+                            when (item.status) {
+                                FileStatus.READY -> MaterialTheme.colorScheme.primaryContainer
+                                FileStatus.DOWNLOADING -> MaterialTheme.colorScheme.tertiaryContainer
+                                FileStatus.ERROR -> MaterialTheme.colorScheme.errorContainer
+                                FileStatus.UNAVAILABLE -> MaterialTheme.colorScheme.surfaceVariant
+                            }
+                        is FileItem.Torrent ->
+                            when (item.status) {
+                                TorrentStatus.DOWNLOADED -> MaterialTheme.colorScheme.primaryContainer
+                                TorrentStatus.DOWNLOADING -> MaterialTheme.colorScheme.tertiaryContainer
+                                TorrentStatus.ERROR, TorrentStatus.DEAD -> MaterialTheme.colorScheme.errorContainer
+                                else -> MaterialTheme.colorScheme.surfaceVariant
+                            }
+                        else -> MaterialTheme.colorScheme.surfaceVariant
+                    },
+            ),
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             Row(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 Icon(
                     imageVector = getStatusIcon(item),
                     contentDescription = null,
                     modifier = Modifier.size(20.dp),
-                    tint = getStatusColor(item)
+                    tint = getStatusColor(item),
                 )
-                
+
                 Text(
                     text = "Status",
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold
+                    fontWeight = FontWeight.SemiBold,
                 )
             }
-            
-            val statusText = when (item) {
-                is FileItem.File -> item.status.name.replace("_", " ").lowercase()
-                    .replaceFirstChar { it.titlecase() }
-                is FileItem.Torrent -> item.status.displayName
-                else -> "Ready"
-            }
-            
+
+            val statusText =
+                when (item) {
+                    is FileItem.File ->
+                        item.status.name.replace("_", " ").lowercase()
+                            .replaceFirstChar { it.titlecase() }
+                    is FileItem.Torrent -> item.status.displayName
+                    else -> "Ready"
+                }
+
             Text(
                 text = statusText,
                 style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurface
+                color = MaterialTheme.colorScheme.onSurface,
             )
         }
     }
@@ -448,104 +468,109 @@ private fun FileDetailsActions(
     onPlayFile: ((FileItem.File) -> Unit)?,
     onDownloadFile: ((FileItem) -> Unit)?,
     onDeleteFile: ((FileItem) -> Unit)?,
-    onCopyLink: ((FileItem.File) -> Unit)?
+    onCopyLink: ((FileItem.File) -> Unit)?,
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         // Play button (for playable files)
         if (item is FileItem.File && item.isPlayable && onPlayFile != null) {
             var playFocused by remember { mutableStateOf(false) }
-            
+
             TVFocusIndicator(isFocused = playFocused) {
                 Button(
                     onClick = { onPlayFile(item) },
-                    modifier = Modifier
-                        .weight(1f)
-                        .tvFocusable(
-                            onFocusChanged = { playFocused = it.isFocused }
-                        )
+                    modifier =
+                        Modifier
+                            .weight(1f)
+                            .tvFocusable(
+                                onFocusChanged = { playFocused = it.isFocused },
+                            ),
                 ) {
                     Icon(
                         imageVector = Icons.Default.PlayArrow,
                         contentDescription = null,
-                        modifier = Modifier.size(18.dp)
+                        modifier = Modifier.size(18.dp),
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text("Play")
                 }
             }
         }
-        
+
         // Download button
         if (onDownloadFile != null) {
             var downloadFocused by remember { mutableStateOf(false) }
-            
+
             TVFocusIndicator(isFocused = downloadFocused) {
                 OutlinedButton(
                     onClick = { onDownloadFile(item) },
-                    modifier = Modifier
-                        .weight(1f)
-                        .tvFocusable(
-                            onFocusChanged = { downloadFocused = it.isFocused }
-                        )
+                    modifier =
+                        Modifier
+                            .weight(1f)
+                            .tvFocusable(
+                                onFocusChanged = { downloadFocused = it.isFocused },
+                            ),
                 ) {
                     Icon(
                         imageVector = Icons.Default.Download,
                         contentDescription = null,
-                        modifier = Modifier.size(18.dp)
+                        modifier = Modifier.size(18.dp),
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text("Download")
                 }
             }
         }
-        
+
         // Copy link button (for files with URLs)
         if (item is FileItem.File && item.streamUrl != null && onCopyLink != null) {
             var copyFocused by remember { mutableStateOf(false) }
-            
+
             TVFocusIndicator(isFocused = copyFocused) {
                 OutlinedButton(
                     onClick = { onCopyLink(item) },
-                    modifier = Modifier
-                        .weight(1f)
-                        .tvFocusable(
-                            onFocusChanged = { copyFocused = it.isFocused }
-                        )
+                    modifier =
+                        Modifier
+                            .weight(1f)
+                            .tvFocusable(
+                                onFocusChanged = { copyFocused = it.isFocused },
+                            ),
                 ) {
                     Icon(
                         imageVector = Icons.Default.ContentCopy,
                         contentDescription = null,
-                        modifier = Modifier.size(18.dp)
+                        modifier = Modifier.size(18.dp),
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text("Copy Link")
                 }
             }
         }
-        
+
         // Delete button
         if (onDeleteFile != null) {
             var deleteFocused by remember { mutableStateOf(false) }
-            
+
             TVFocusIndicator(isFocused = deleteFocused) {
                 OutlinedButton(
                     onClick = { onDeleteFile(item) },
-                    modifier = Modifier
-                        .weight(1f)
-                        .tvFocusable(
-                            onFocusChanged = { deleteFocused = it.isFocused }
+                    modifier =
+                        Modifier
+                            .weight(1f)
+                            .tvFocusable(
+                                onFocusChanged = { deleteFocused = it.isFocused },
+                            ),
+                    colors =
+                        ButtonDefaults.outlinedButtonColors(
+                            contentColor = MaterialTheme.colorScheme.error,
                         ),
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = MaterialTheme.colorScheme.error
-                    )
                 ) {
                     Icon(
                         imageVector = Icons.Default.Delete,
                         contentDescription = null,
-                        modifier = Modifier.size(18.dp)
+                        modifier = Modifier.size(18.dp),
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text("Delete")
@@ -559,20 +584,20 @@ private fun FileDetailsActions(
 private fun DetailRow(
     label: String,
     value: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Row(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
             text = label,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.weight(1f),
         )
-        
+
         Text(
             text = value,
             style = MaterialTheme.typography.bodyMedium,
@@ -580,7 +605,7 @@ private fun DetailRow(
             color = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.weight(2f),
             maxLines = 3,
-            overflow = TextOverflow.Ellipsis
+            overflow = TextOverflow.Ellipsis,
         )
     }
 }
@@ -634,18 +659,20 @@ private fun getFileTypeLabel(item: FileItem): String {
 
 private fun getStatusIcon(item: FileItem): ImageVector {
     return when (item) {
-        is FileItem.File -> when (item.status) {
-            FileStatus.READY -> Icons.Default.CheckCircle
-            FileStatus.DOWNLOADING -> Icons.Default.Download
-            FileStatus.ERROR -> Icons.Default.Error
-            FileStatus.UNAVAILABLE -> Icons.Default.CloudOff
-        }
-        is FileItem.Torrent -> when (item.status) {
-            TorrentStatus.DOWNLOADED -> Icons.Default.CheckCircle
-            TorrentStatus.DOWNLOADING -> Icons.Default.Download
-            TorrentStatus.ERROR, TorrentStatus.DEAD -> Icons.Default.Error
-            else -> Icons.Default.Info
-        }
+        is FileItem.File ->
+            when (item.status) {
+                FileStatus.READY -> Icons.Default.CheckCircle
+                FileStatus.DOWNLOADING -> Icons.Default.Download
+                FileStatus.ERROR -> Icons.Default.Error
+                FileStatus.UNAVAILABLE -> Icons.Default.CloudOff
+            }
+        is FileItem.Torrent ->
+            when (item.status) {
+                TorrentStatus.DOWNLOADED -> Icons.Default.CheckCircle
+                TorrentStatus.DOWNLOADING -> Icons.Default.Download
+                TorrentStatus.ERROR, TorrentStatus.DEAD -> Icons.Default.Error
+                else -> Icons.Default.Info
+            }
         else -> Icons.Default.Info
     }
 }
@@ -653,18 +680,20 @@ private fun getStatusIcon(item: FileItem): ImageVector {
 @Composable
 private fun getStatusColor(item: FileItem): androidx.compose.ui.graphics.Color {
     return when (item) {
-        is FileItem.File -> when (item.status) {
-            FileStatus.READY -> MaterialTheme.colorScheme.primary
-            FileStatus.DOWNLOADING -> MaterialTheme.colorScheme.tertiary
-            FileStatus.ERROR -> MaterialTheme.colorScheme.error
-            FileStatus.UNAVAILABLE -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
-        }
-        is FileItem.Torrent -> when (item.status) {
-            TorrentStatus.DOWNLOADED -> MaterialTheme.colorScheme.primary
-            TorrentStatus.DOWNLOADING -> MaterialTheme.colorScheme.tertiary
-            TorrentStatus.ERROR, TorrentStatus.DEAD -> MaterialTheme.colorScheme.error
-            else -> MaterialTheme.colorScheme.onSurface
-        }
+        is FileItem.File ->
+            when (item.status) {
+                FileStatus.READY -> MaterialTheme.colorScheme.primary
+                FileStatus.DOWNLOADING -> MaterialTheme.colorScheme.tertiary
+                FileStatus.ERROR -> MaterialTheme.colorScheme.error
+                FileStatus.UNAVAILABLE -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+            }
+        is FileItem.Torrent ->
+            when (item.status) {
+                TorrentStatus.DOWNLOADED -> MaterialTheme.colorScheme.primary
+                TorrentStatus.DOWNLOADING -> MaterialTheme.colorScheme.tertiary
+                TorrentStatus.ERROR, TorrentStatus.DEAD -> MaterialTheme.colorScheme.error
+                else -> MaterialTheme.colorScheme.onSurface
+            }
         else -> MaterialTheme.colorScheme.onSurface
     }
 }
@@ -673,12 +702,12 @@ private fun formatFileSize(bytes: Long): String {
     val units = arrayOf("B", "KB", "MB", "GB", "TB")
     var size = bytes.toDouble()
     var unitIndex = 0
-    
+
     while (size >= 1024 && unitIndex < units.size - 1) {
         size /= 1024
         unitIndex++
     }
-    
+
     return if (size >= 100) {
         "${size.toInt()} ${units[unitIndex]}"
     } else {
@@ -690,12 +719,12 @@ private fun formatSpeed(bytesPerSecond: Long): String {
     val units = arrayOf("B/s", "KB/s", "MB/s", "GB/s")
     var speed = bytesPerSecond.toDouble()
     var unitIndex = 0
-    
+
     while (speed >= 1024 && unitIndex < units.size - 1) {
         speed /= 1024
         unitIndex++
     }
-    
+
     return if (speed >= 100) {
         "${speed.toInt()} ${units[unitIndex]}"
     } else {

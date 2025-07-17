@@ -1,10 +1,7 @@
 package com.rdwatch.androidtv.network.api
 
-import com.rdwatch.androidtv.network.response.ApiResponse
-import com.rdwatch.androidtv.network.models.tmdb.TMDbSearchResponse
 import com.rdwatch.androidtv.network.models.tmdb.TMDbMultiSearchResponse
-import com.rdwatch.androidtv.network.models.tmdb.TMDbPersonResponse
-import com.rdwatch.androidtv.network.models.tmdb.TMDbCollectionResponse
+import com.rdwatch.androidtv.network.models.tmdb.TMDbSearchResponse
 import retrofit2.Call
 import retrofit2.http.GET
 import retrofit2.http.Path
@@ -15,7 +12,6 @@ import retrofit2.http.Query
  * Follows existing ApiService pattern with ApiResponse wrapper
  */
 interface TMDbSearchService {
-    
     /**
      * Search for movies
      * @param query Search query string
@@ -34,9 +30,9 @@ interface TMDbSearchService {
         @Query("include_adult") includeAdult: Boolean = false,
         @Query("region") region: String? = null,
         @Query("year") year: Int? = null,
-        @Query("primary_release_year") primaryReleaseYear: Int? = null
+        @Query("primary_release_year") primaryReleaseYear: Int? = null,
     ): Call<TMDbSearchResponse>
-    
+
     /**
      * Search for TV shows
      * @param query Search query string
@@ -51,9 +47,9 @@ interface TMDbSearchService {
         @Query("language") language: String = "en-US",
         @Query("page") page: Int = 1,
         @Query("include_adult") includeAdult: Boolean = false,
-        @Query("first_air_date_year") firstAirDateYear: Int? = null
+        @Query("first_air_date_year") firstAirDateYear: Int? = null,
     ): Call<TMDbSearchResponse>
-    
+
     /**
      * Search for people (actors, directors, etc.)
      * @param query Search query string
@@ -68,9 +64,9 @@ interface TMDbSearchService {
         @Query("language") language: String = "en-US",
         @Query("page") page: Int = 1,
         @Query("include_adult") includeAdult: Boolean = false,
-        @Query("region") region: String? = null
+        @Query("region") region: String? = null,
     ): Call<TMDbSearchResponse>
-    
+
     /**
      * Multi-search across movies, TV shows, and people
      * @param query Search query string
@@ -85,9 +81,9 @@ interface TMDbSearchService {
         @Query("language") language: String = "en-US",
         @Query("page") page: Int = 1,
         @Query("include_adult") includeAdult: Boolean = false,
-        @Query("region") region: String? = null
+        @Query("region") region: String? = null,
     ): Call<TMDbMultiSearchResponse>
-    
+
     /**
      * Search for collections
      * @param query Search query string
@@ -98,9 +94,9 @@ interface TMDbSearchService {
     fun searchCollections(
         @Query("query") query: String,
         @Query("language") language: String = "en-US",
-        @Query("page") page: Int = 1
+        @Query("page") page: Int = 1,
     ): Call<TMDbSearchResponse>
-    
+
     /**
      * Search for companies
      * @param query Search query string
@@ -109,9 +105,9 @@ interface TMDbSearchService {
     @GET("search/company")
     fun searchCompanies(
         @Query("query") query: String,
-        @Query("page") page: Int = 1
+        @Query("page") page: Int = 1,
     ): Call<TMDbSearchResponse>
-    
+
     /**
      * Search for keywords
      * @param query Search query string
@@ -120,9 +116,9 @@ interface TMDbSearchService {
     @GET("search/keyword")
     fun searchKeywords(
         @Query("query") query: String,
-        @Query("page") page: Int = 1
+        @Query("page") page: Int = 1,
     ): Call<TMDbSearchResponse>
-    
+
     /**
      * Get trending content
      * @param mediaType Media type (all, movie, tv, person)
@@ -135,9 +131,9 @@ interface TMDbSearchService {
         @Path("media_type") mediaType: String = "all",
         @Path("time_window") timeWindow: String = "day",
         @Query("language") language: String = "en-US",
-        @Query("page") page: Int = 1
+        @Query("page") page: Int = 1,
     ): Call<TMDbSearchResponse>
-    
+
     /**
      * Discover movies with filtering options
      * @param language Language for the response (default: en-US)
@@ -206,9 +202,9 @@ interface TMDbSearchService {
         @Query("with_watch_providers") withWatchProviders: String? = null,
         @Query("watch_region") watchRegion: String? = null,
         @Query("with_watch_monetization_types") withWatchMonetizationTypes: String? = null,
-        @Query("without_companies") withoutCompanies: String? = null
+        @Query("without_companies") withoutCompanies: String? = null,
     ): Call<TMDbSearchResponse>
-    
+
     /**
      * Discover TV shows with filtering options
      * @param language Language for the response (default: en-US)
@@ -265,6 +261,6 @@ interface TMDbSearchService {
         @Query("with_watch_monetization_types") withWatchMonetizationTypes: String? = null,
         @Query("with_status") withStatus: String? = null,
         @Query("with_type") withType: String? = null,
-        @Query("with_keywords") withKeywords: String? = null
+        @Query("with_keywords") withKeywords: String? = null,
     ): Call<TMDbSearchResponse>
 }

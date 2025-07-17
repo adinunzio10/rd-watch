@@ -1,10 +1,10 @@
 package com.rdwatch.androidtv.data.repository
 
-import com.rdwatch.androidtv.network.models.tmdb.TMDbMovieResponse
 import com.rdwatch.androidtv.network.models.tmdb.TMDbCreditsResponse
-import com.rdwatch.androidtv.network.models.tmdb.TMDbRecommendationsResponse
 import com.rdwatch.androidtv.network.models.tmdb.TMDbMovieImagesResponse
+import com.rdwatch.androidtv.network.models.tmdb.TMDbMovieResponse
 import com.rdwatch.androidtv.network.models.tmdb.TMDbMovieVideosResponse
+import com.rdwatch.androidtv.network.models.tmdb.TMDbRecommendationsResponse
 import com.rdwatch.androidtv.network.models.tmdb.TMDbSearchResponse
 import com.rdwatch.androidtv.repository.base.Result
 import com.rdwatch.androidtv.ui.details.models.ContentDetail
@@ -15,7 +15,6 @@ import kotlinx.coroutines.flow.Flow
  * Provides caching and offline-first access to movie data
  */
 interface TMDbMovieRepository {
-    
     /**
      * Get movie details by TMDb ID
      * @param movieId TMDb movie ID
@@ -26,9 +25,9 @@ interface TMDbMovieRepository {
     fun getMovieDetails(
         movieId: Int,
         forceRefresh: Boolean = false,
-        language: String = "en-US"
+        language: String = "en-US",
     ): Flow<Result<TMDbMovieResponse?>>
-    
+
     /**
      * Get movie details as ContentDetail for UI consumption
      * @param movieId TMDb movie ID
@@ -39,9 +38,9 @@ interface TMDbMovieRepository {
     fun getMovieContentDetail(
         movieId: Int,
         forceRefresh: Boolean = false,
-        language: String = "en-US"
+        language: String = "en-US",
     ): Flow<Result<ContentDetail?>>
-    
+
     /**
      * Get movie credits (cast and crew)
      * @param movieId TMDb movie ID
@@ -52,9 +51,9 @@ interface TMDbMovieRepository {
     fun getMovieCredits(
         movieId: Int,
         forceRefresh: Boolean = false,
-        language: String = "en-US"
+        language: String = "en-US",
     ): Flow<Result<TMDbCreditsResponse?>>
-    
+
     /**
      * Get movie recommendations
      * @param movieId TMDb movie ID
@@ -67,9 +66,9 @@ interface TMDbMovieRepository {
         movieId: Int,
         page: Int = 1,
         forceRefresh: Boolean = false,
-        language: String = "en-US"
+        language: String = "en-US",
     ): Flow<Result<TMDbRecommendationsResponse>>
-    
+
     /**
      * Get similar movies
      * @param movieId TMDb movie ID
@@ -82,9 +81,9 @@ interface TMDbMovieRepository {
         movieId: Int,
         page: Int = 1,
         forceRefresh: Boolean = false,
-        language: String = "en-US"
+        language: String = "en-US",
     ): Flow<Result<TMDbRecommendationsResponse>>
-    
+
     /**
      * Get movie images
      * @param movieId TMDb movie ID
@@ -95,9 +94,9 @@ interface TMDbMovieRepository {
     fun getMovieImages(
         movieId: Int,
         forceRefresh: Boolean = false,
-        includeImageLanguage: String? = null
+        includeImageLanguage: String? = null,
     ): Flow<Result<TMDbMovieImagesResponse>>
-    
+
     /**
      * Get movie videos
      * @param movieId TMDb movie ID
@@ -108,9 +107,9 @@ interface TMDbMovieRepository {
     fun getMovieVideos(
         movieId: Int,
         forceRefresh: Boolean = false,
-        language: String = "en-US"
+        language: String = "en-US",
     ): Flow<Result<TMDbMovieVideosResponse>>
-    
+
     /**
      * Get popular movies
      * @param page Page number for pagination
@@ -123,9 +122,9 @@ interface TMDbMovieRepository {
         page: Int = 1,
         forceRefresh: Boolean = false,
         language: String = "en-US",
-        region: String? = null
+        region: String? = null,
     ): Flow<Result<TMDbRecommendationsResponse>>
-    
+
     /**
      * Get top rated movies
      * @param page Page number for pagination
@@ -138,9 +137,9 @@ interface TMDbMovieRepository {
         page: Int = 1,
         forceRefresh: Boolean = false,
         language: String = "en-US",
-        region: String? = null
+        region: String? = null,
     ): Flow<Result<TMDbRecommendationsResponse>>
-    
+
     /**
      * Get now playing movies
      * @param page Page number for pagination
@@ -153,9 +152,9 @@ interface TMDbMovieRepository {
         page: Int = 1,
         forceRefresh: Boolean = false,
         language: String = "en-US",
-        region: String? = null
+        region: String? = null,
     ): Flow<Result<TMDbRecommendationsResponse>>
-    
+
     /**
      * Get upcoming movies
      * @param page Page number for pagination
@@ -168,9 +167,9 @@ interface TMDbMovieRepository {
         page: Int = 1,
         forceRefresh: Boolean = false,
         language: String = "en-US",
-        region: String? = null
+        region: String? = null,
     ): Flow<Result<TMDbRecommendationsResponse>>
-    
+
     /**
      * Search movies
      * @param query Search query
@@ -189,9 +188,9 @@ interface TMDbMovieRepository {
         includeAdult: Boolean = false,
         region: String? = null,
         year: Int? = null,
-        primaryReleaseYear: Int? = null
+        primaryReleaseYear: Int? = null,
     ): Flow<Result<TMDbSearchResponse>>
-    
+
     /**
      * Discover movies with filtering
      * @param page Page number for pagination
@@ -230,20 +229,20 @@ interface TMDbMovieRepository {
         voteCountGte: Int? = null,
         withOriginalLanguage: String? = null,
         withWatchProviders: String? = null,
-        watchRegion: String? = null
+        watchRegion: String? = null,
     ): Flow<Result<TMDbSearchResponse>>
-    
+
     /**
      * Clear all cached movie data
      */
     suspend fun clearCache()
-    
+
     /**
      * Clear specific movie cache
      * @param movieId TMDb movie ID
      */
     suspend fun clearMovieCache(movieId: Int)
-    
+
     /**
      * Get trending movies
      * @param timeWindow Time window (day, week)
@@ -254,6 +253,6 @@ interface TMDbMovieRepository {
     fun getTrendingMovies(
         timeWindow: String = "day",
         page: Int = 1,
-        language: String = "en-US"
+        language: String = "en-US",
     ): Flow<Result<TMDbSearchResponse>>
 }

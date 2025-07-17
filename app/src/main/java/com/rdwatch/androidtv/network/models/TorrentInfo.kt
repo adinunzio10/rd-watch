@@ -19,7 +19,7 @@ data class TorrentInfo(
     @Json(name = "speed") val speed: Long?,
     @Json(name = "seeders") val seeders: Int?,
     @Json(name = "links") val links: List<String>,
-    @Json(name = "files") val files: List<TorrentFile> = emptyList()
+    @Json(name = "files") val files: List<TorrentFile> = emptyList(),
 )
 
 @JsonClass(generateAdapter = true)
@@ -27,11 +27,11 @@ data class TorrentFile(
     @Json(name = "id") val id: Int,
     @Json(name = "path") val path: String,
     @Json(name = "bytes") val bytes: Long,
-    @Json(name = "selected") val selected: Int
+    @Json(name = "selected") val selected: Int,
 )
 
 @JsonClass(generateAdapter = true)
 data class AddTorrentResponse(
     @Json(name = "id") val id: String,
-    @Json(name = "uri") val uri: String
+    @Json(name = "uri") val uri: String,
 )

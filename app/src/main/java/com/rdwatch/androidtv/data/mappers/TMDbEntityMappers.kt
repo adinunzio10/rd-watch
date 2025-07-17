@@ -9,14 +9,17 @@ import com.rdwatch.androidtv.network.models.tmdb.*
  */
 
 // TMDbCreditsResponse to Entity conversion
-fun TMDbCreditsResponse.toEntity(contentId: Int, contentType: String): TMDbCreditsEntity {
+fun TMDbCreditsResponse.toEntity(
+    contentId: Int,
+    contentType: String,
+): TMDbCreditsEntity {
     return TMDbCreditsEntity(
-        id = "${contentId}_${contentType}",
+        id = "${contentId}_$contentType",
         contentId = contentId,
         contentType = contentType,
         cast = cast.map { it.toCastMemberEntity() },
         crew = crew.map { it.toCrewMemberEntity() },
-        lastUpdated = System.currentTimeMillis()
+        lastUpdated = System.currentTimeMillis(),
     )
 }
 
@@ -33,7 +36,7 @@ fun TMDbCastMemberResponse.toCastMemberEntity(): TMDbCastMemberEntity {
         gender = gender,
         knownForDepartment = knownForDepartment,
         originalName = originalName,
-        popularity = popularity.toFloat()
+        popularity = popularity.toFloat(),
     )
 }
 
@@ -49,7 +52,7 @@ fun TMDbCrewMemberResponse.toCrewMemberEntity(): TMDbCrewMemberEntity {
         gender = gender,
         knownForDepartment = knownForDepartment,
         originalName = originalName,
-        popularity = popularity.toFloat()
+        popularity = popularity.toFloat(),
     )
 }
 
@@ -58,7 +61,7 @@ fun TMDbCreditsEntity.toCreditsResponse(): TMDbCreditsResponse {
     return TMDbCreditsResponse(
         id = contentId,
         cast = cast.map { it.toCastMemberResponse() },
-        crew = crew.map { it.toCrewMemberResponse() }
+        crew = crew.map { it.toCrewMemberResponse() },
     )
 }
 
@@ -75,7 +78,7 @@ fun TMDbCastMemberEntity.toCastMemberResponse(): TMDbCastMemberResponse {
         gender = gender ?: 0,
         knownForDepartment = knownForDepartment ?: "",
         originalName = originalName,
-        popularity = popularity.toDouble()
+        popularity = popularity.toDouble(),
     )
 }
 
@@ -91,7 +94,7 @@ fun TMDbCrewMemberEntity.toCrewMemberResponse(): TMDbCrewMemberResponse {
         gender = gender ?: 0,
         knownForDepartment = knownForDepartment ?: "",
         originalName = originalName,
-        popularity = popularity.toDouble()
+        popularity = popularity.toDouble(),
     )
 }
 
@@ -100,10 +103,10 @@ fun TMDbRecommendationsResponse.toEntity(
     contentId: Int,
     contentType: String,
     recommendationType: String,
-    page: Int
+    page: Int,
 ): TMDbRecommendationEntity {
     return TMDbRecommendationEntity(
-        id = "${contentId}_${contentType}_${recommendationType}_${page}",
+        id = "${contentId}_${contentType}_${recommendationType}_$page",
         contentId = contentId,
         contentType = contentType,
         recommendationType = recommendationType,
@@ -111,11 +114,11 @@ fun TMDbRecommendationsResponse.toEntity(
         totalPages = totalPages,
         totalResults = totalResults,
         results = results.map { it.toSearchItemEntity() },
-        lastUpdated = System.currentTimeMillis()
+        lastUpdated = System.currentTimeMillis(),
     )
 }
 
-// TMDbRecommendationItemResponse is an alias for TMDbSearchResultResponse, 
+// TMDbRecommendationItemResponse is an alias for TMDbSearchResultResponse,
 // so we use the same toSearchItemEntity function
 
 // TMDbRecommendationEntity to Response conversion
@@ -124,7 +127,7 @@ fun TMDbRecommendationEntity.toRecommendationsResponse(): TMDbRecommendationsRes
         page = page,
         totalPages = totalPages,
         totalResults = totalResults,
-        results = results.map { it.toRecommendationItemResponse() }
+        results = results.map { it.toRecommendationItemResponse() },
     )
 }
 
@@ -146,20 +149,23 @@ fun TMDbSearchItemEntity.toRecommendationItemResponse(): TMDbRecommendationItemR
         adult = adult,
         video = video ?: false,
         originalLanguage = originalLanguage,
-        genreIds = genreIds
+        genreIds = genreIds,
     )
 }
 
 // TMDbMovieImagesResponse to Entity conversion
-fun TMDbMovieImagesResponse.toEntity(contentId: Int, contentType: String): TMDbImagesEntity {
+fun TMDbMovieImagesResponse.toEntity(
+    contentId: Int,
+    contentType: String,
+): TMDbImagesEntity {
     return TMDbImagesEntity(
-        id = "${contentId}_${contentType}",
+        id = "${contentId}_$contentType",
         contentId = contentId,
         contentType = contentType,
         backdrops = backdrops.map { it.toImageEntity() },
         posters = posters.map { it.toImageEntity() },
         logos = logos?.map { it.toImageEntity() },
-        lastUpdated = System.currentTimeMillis()
+        lastUpdated = System.currentTimeMillis(),
     )
 }
 
@@ -171,7 +177,7 @@ fun TMDbImageResponse.toImageEntity(): TMDbImageEntity {
         aspectRatio = aspectRatio.toFloat(),
         voteAverage = voteAverage.toFloat(),
         voteCount = voteCount,
-        iso6391 = iso6391
+        iso6391 = iso6391,
     )
 }
 
@@ -180,7 +186,7 @@ fun TMDbImagesEntity.toImagesResponse(): TMDbMovieImagesResponse {
     return TMDbMovieImagesResponse(
         backdrops = backdrops.map { it.toImageResponse() },
         posters = posters.map { it.toImageResponse() },
-        logos = logos?.map { it.toImageResponse() } ?: emptyList()
+        logos = logos?.map { it.toImageResponse() } ?: emptyList(),
     )
 }
 
@@ -192,18 +198,21 @@ fun TMDbImageEntity.toImageResponse(): TMDbImageResponse {
         aspectRatio = aspectRatio.toDouble(),
         voteAverage = voteAverage.toDouble(),
         voteCount = voteCount,
-        iso6391 = iso6391
+        iso6391 = iso6391,
     )
 }
 
 // TMDbMovieVideosResponse to Entity conversion
-fun TMDbMovieVideosResponse.toEntity(contentId: Int, contentType: String): TMDbVideosEntity {
+fun TMDbMovieVideosResponse.toEntity(
+    contentId: Int,
+    contentType: String,
+): TMDbVideosEntity {
     return TMDbVideosEntity(
-        id = "${contentId}_${contentType}",
+        id = "${contentId}_$contentType",
         contentId = contentId,
         contentType = contentType,
         results = results.map { it.toVideoEntity() },
-        lastUpdated = System.currentTimeMillis()
+        lastUpdated = System.currentTimeMillis(),
     )
 }
 
@@ -218,14 +227,14 @@ fun TMDbVideoResponse.toVideoEntity(): TMDbVideoEntity {
         official = official,
         publishedAt = publishedAt,
         iso6391 = iso6391,
-        iso31661 = iso31661
+        iso31661 = iso31661,
     )
 }
 
 // TMDbVideosEntity to Response conversion
 fun TMDbVideosEntity.toVideosResponse(): TMDbMovieVideosResponse {
     return TMDbMovieVideosResponse(
-        results = results.map { it.toVideoResponse() }
+        results = results.map { it.toVideoResponse() },
     )
 }
 
@@ -240,7 +249,7 @@ fun TMDbVideoEntity.toVideoResponse(): TMDbVideoResponse {
         official = official,
         publishedAt = publishedAt,
         iso6391 = iso6391,
-        iso31661 = iso31661
+        iso31661 = iso31661,
     )
 }
 
@@ -260,10 +269,10 @@ fun TMDbSearchResponse.toRecommendationEntity(
     contentId: Int,
     contentType: String,
     recommendationType: String,
-    page: Int
+    page: Int,
 ): TMDbRecommendationEntity {
     return TMDbRecommendationEntity(
-        id = "${contentId}_${contentType}_${recommendationType}_${page}",
+        id = "${contentId}_${contentType}_${recommendationType}_$page",
         contentId = contentId,
         contentType = contentType,
         recommendationType = recommendationType,
@@ -271,7 +280,7 @@ fun TMDbSearchResponse.toRecommendationEntity(
         totalPages = totalPages,
         totalResults = totalResults,
         results = results.map { it.toSearchItemEntity() },
-        lastUpdated = System.currentTimeMillis()
+        lastUpdated = System.currentTimeMillis(),
     )
 }
 
@@ -280,7 +289,7 @@ fun TMDbSearchResponse.toEntity(
     searchId: String,
     query: String,
     page: Int,
-    searchType: String
+    searchType: String,
 ): TMDbSearchResultEntity {
     return TMDbSearchResultEntity(
         id = searchId,
@@ -290,7 +299,7 @@ fun TMDbSearchResponse.toEntity(
         totalResults = totalResults,
         searchType = searchType,
         results = results.map { it.toSearchItemEntity() },
-        lastUpdated = System.currentTimeMillis()
+        lastUpdated = System.currentTimeMillis(),
     )
 }
 
@@ -313,7 +322,7 @@ fun TMDbSearchResultResponse.toSearchItemEntity(): TMDbSearchItemEntity {
         adult = adult,
         video = video,
         originalLanguage = originalLanguage,
-        genreIds = genreIds
+        genreIds = genreIds,
     )
 }
 
@@ -336,7 +345,7 @@ fun TMDbMultiSearchResultResponse.toSearchItemEntity(): TMDbSearchItemEntity {
         adult = adult,
         video = video,
         originalLanguage = originalLanguage,
-        genreIds = genreIds
+        genreIds = genreIds,
     )
 }
 
@@ -348,7 +357,7 @@ fun TMDbRecommendationEntity.toSearchResponse(): TMDbSearchResponse {
         page = page,
         totalPages = totalPages,
         totalResults = totalResults,
-        results = results.map { it.toSearchItemResponse() }
+        results = results.map { it.toSearchItemResponse() },
     )
 }
 
@@ -358,7 +367,7 @@ fun TMDbSearchResultEntity.toSearchResponse(): TMDbSearchResponse {
         page = page,
         totalPages = totalPages,
         totalResults = totalResults,
-        results = results.map { it.toSearchItemResponse() }
+        results = results.map { it.toSearchItemResponse() },
     )
 }
 
@@ -380,7 +389,7 @@ fun TMDbSearchItemEntity.toSearchItemResponse(): TMDbSearchItemResponse {
         adult = adult,
         video = video ?: false,
         originalLanguage = originalLanguage,
-        genreIds = genreIds
+        genreIds = genreIds,
     )
 }
 
@@ -389,7 +398,7 @@ fun TMDbMultiSearchResponse.toEntity(
     searchId: String,
     query: String,
     page: Int,
-    searchType: String
+    searchType: String,
 ): TMDbSearchResultEntity {
     return TMDbSearchResultEntity(
         id = searchId,
@@ -399,7 +408,7 @@ fun TMDbMultiSearchResponse.toEntity(
         totalResults = totalResults,
         searchType = searchType,
         results = results.map { it.toSearchItemEntity() },
-        lastUpdated = System.currentTimeMillis()
+        lastUpdated = System.currentTimeMillis(),
     )
 }
 
@@ -408,7 +417,7 @@ fun TMDbSearchResultEntity.toMultiSearchResponse(): TMDbMultiSearchResponse {
         page = page,
         totalPages = totalPages,
         totalResults = totalResults,
-        results = results.map { it.toMultiSearchItemResponse() }
+        results = results.map { it.toMultiSearchItemResponse() },
     )
 }
 
@@ -431,7 +440,7 @@ fun TMDbSearchItemEntity.toMultiSearchItemResponse(): TMDbMultiSearchResultRespo
         adult = adult,
         video = video ?: false,
         originalLanguage = originalLanguage,
-        genreIds = genreIds
+        genreIds = genreIds,
     )
 }
 
@@ -464,7 +473,7 @@ fun TMDbMovieResponse.toEntity(): TMDbMovieEntity {
         spokenLanguages = spokenLanguages.map { it.name },
         productionCompanies = productionCompanies.map { it.name },
         productionCountries = productionCountries.map { it.name },
-        genres = genres.map { it.name }
+        genres = genres.map { it.name },
     )
 }
 
@@ -494,7 +503,7 @@ fun TMDbMovieEntity.toMovieResponse(): TMDbMovieResponse {
         genres = genres?.map { TMDbGenreResponse(id = 0, name = it) } ?: emptyList(),
         spokenLanguages = spokenLanguages?.map { TMDbSpokenLanguageResponse(name = it) } ?: emptyList(),
         productionCompanies = productionCompanies?.map { TMDbProductionCompanyResponse(name = it) } ?: emptyList(),
-        productionCountries = productionCountries?.map { TMDbProductionCountryResponse(name = it) } ?: emptyList()
+        productionCountries = productionCountries?.map { TMDbProductionCountryResponse(name = it) } ?: emptyList(),
     )
 }
 
@@ -528,20 +537,27 @@ fun TMDbTVResponse.toEntity(): TMDbTVEntity {
         productionCompanies = productionCompanies.map { it.name },
         productionCountries = productionCountries.map { it.name },
         spokenLanguages = spokenLanguages.map { it.name },
-        seasons = seasons.map { season ->
-            // Serialize episodes as JSON-like string for database storage
-            val episodesData = if (season.episodes.isNotEmpty()) {
-                season.episodes.joinToString("|") { episode ->
-                    "${episode.id},${episode.episodeNumber},${episode.name.replace(",", "\\,").replace("|", "\\|")}"
-                }
-            } else {
-                ""
-            }
-            "${season.id}:${season.seasonNumber}:${season.name}:${season.episodeCount}:$episodesData"
-        },
+        seasons =
+            seasons.map { season ->
+                // Serialize episodes as JSON-like string for database storage
+                val episodesData =
+                    if (season.episodes.isNotEmpty()) {
+                        season.episodes.joinToString("|") { episode ->
+                            "${episode.id},${episode.episodeNumber},${episode.name.replace(",", "\\,").replace("|", "\\|")}"
+                        }
+                    } else {
+                        ""
+                    }
+                "${season.id}:${season.seasonNumber}:${season.name}:${season.episodeCount}:$episodesData"
+            },
         lastEpisodeToAir = lastEpisodeToAir?.name,
         nextEpisodeToAir = nextEpisodeToAir?.name,
-        lastUpdated = System.currentTimeMillis()
+        imdbId = null,
+        tvdbId = null,
+        facebookId = null,
+        instagramId = null,
+        twitterId = null,
+        lastUpdated = System.currentTimeMillis(),
     )
 }
 
@@ -574,59 +590,67 @@ fun TMDbTVEntity.toTVResponse(): TMDbTVResponse {
         productionCompanies = productionCompanies?.map { TMDbProductionCompanyResponse(name = it) } ?: emptyList(),
         productionCountries = productionCountries?.map { TMDbProductionCountryResponse(name = it) } ?: emptyList(),
         spokenLanguages = spokenLanguages?.map { TMDbSpokenLanguageResponse(name = it) } ?: emptyList(),
-        seasons = seasons?.map { seasonString ->
-            val parts = seasonString.split(":")
-            if (parts.size >= 4) {
-                // Parse episodes from part 4 if it exists and is not empty
-                val episodes = if (parts.size >= 5 && parts[4].isNotEmpty()) {
-                    parts[4].split("|").mapNotNull { episodeData ->
-                        val episodeParts = episodeData.split(",")
-                        if (episodeParts.size >= 3) {
-                            TMDbEpisodeResponse(
-                                id = episodeParts[0].toIntOrNull() ?: 0,
-                                episodeNumber = episodeParts[1].toIntOrNull() ?: 0,
-                                name = episodeParts[2].replace("\\,", ",").replace("\\|", "|"),
-                                seasonNumber = parts[1].toIntOrNull() ?: 0
-                            )
-                        } else null
-                    }
+        seasons =
+            seasons?.map { seasonString ->
+                val parts = seasonString.split(":")
+                if (parts.size >= 4) {
+                    // Parse episodes from part 4 if it exists and is not empty
+                    val episodes =
+                        if (parts.size >= 5 && parts[4].isNotEmpty()) {
+                            parts[4].split("|").mapNotNull { episodeData ->
+                                val episodeParts = episodeData.split(",")
+                                if (episodeParts.size >= 3) {
+                                    TMDbEpisodeResponse(
+                                        id = episodeParts[0].toIntOrNull() ?: 0,
+                                        episodeNumber = episodeParts[1].toIntOrNull() ?: 0,
+                                        name = episodeParts[2].replace("\\,", ",").replace("\\|", "|"),
+                                        seasonNumber = parts[1].toIntOrNull() ?: 0,
+                                    )
+                                } else {
+                                    null
+                                }
+                            }
+                        } else {
+                            emptyList()
+                        }
+
+                    val season =
+                        TMDbSeasonResponse(
+                            id = parts[0].toIntOrNull() ?: 0,
+                            seasonNumber = parts[1].toIntOrNull() ?: 0,
+                            name = parts[2],
+                            episodeCount = parts[3].toIntOrNull() ?: 0,
+                            episodes = episodes,
+                        )
+                    android.util.Log.d("TMDbEntityMappers", "Mapped season from DB: ${season.name} (S${season.seasonNumber}) - episodeCount=${season.episodeCount}, episodes=${episodes.size}")
+                    season
                 } else {
-                    emptyList()
+                    // Fallback for old format (just name)
+                    val fallbackSeason = TMDbSeasonResponse(name = seasonString)
+                    android.util.Log.w("TMDbEntityMappers", "Using fallback season mapping for: '$seasonString' - episodeCount will be 0")
+                    fallbackSeason
                 }
-                
-                val season = TMDbSeasonResponse(
-                    id = parts[0].toIntOrNull() ?: 0,
-                    seasonNumber = parts[1].toIntOrNull() ?: 0,
-                    name = parts[2],
-                    episodeCount = parts[3].toIntOrNull() ?: 0,
-                    episodes = episodes
-                )
-                android.util.Log.d("TMDbEntityMappers", "Mapped season from DB: ${season.name} (S${season.seasonNumber}) - episodeCount=${season.episodeCount}, episodes=${episodes.size}")
-                season
-            } else {
-                // Fallback for old format (just name)
-                val fallbackSeason = TMDbSeasonResponse(name = seasonString)
-                android.util.Log.w("TMDbEntityMappers", "Using fallback season mapping for: '$seasonString' - episodeCount will be 0")
-                fallbackSeason
-            }
-        } ?: emptyList(),
+            } ?: emptyList(),
         episodeRunTime = emptyList(),
         createdBy = networks?.map { TMDbCreatedByResponse(name = it) } ?: emptyList(),
         lastEpisodeToAir = null,
-        nextEpisodeToAir = null
+        nextEpisodeToAir = null,
     )
 }
 
 // TMDbTVImagesResponse to Entity conversion
-fun TMDbTVImagesResponse.toEntity(contentId: Int, contentType: String): TMDbImagesEntity {
+fun TMDbTVImagesResponse.toEntity(
+    contentId: Int,
+    contentType: String,
+): TMDbImagesEntity {
     return TMDbImagesEntity(
-        id = "${contentId}_${contentType}",
+        id = "${contentId}_$contentType",
         contentId = contentId,
         contentType = contentType,
         backdrops = backdrops.map { it.toImageEntity() },
         posters = posters.map { it.toImageEntity() },
         logos = logos?.map { it.toImageEntity() },
-        lastUpdated = System.currentTimeMillis()
+        lastUpdated = System.currentTimeMillis(),
     )
 }
 
@@ -635,25 +659,28 @@ fun TMDbImagesEntity.toTVImagesResponse(): TMDbTVImagesResponse {
     return TMDbTVImagesResponse(
         backdrops = backdrops.map { it.toImageResponse() },
         posters = posters.map { it.toImageResponse() },
-        logos = logos?.map { it.toImageResponse() } ?: emptyList()
+        logos = logos?.map { it.toImageResponse() } ?: emptyList(),
     )
 }
 
 // TMDbTVVideosResponse to Entity conversion
-fun TMDbTVVideosResponse.toEntity(contentId: Int, contentType: String): TMDbVideosEntity {
+fun TMDbTVVideosResponse.toEntity(
+    contentId: Int,
+    contentType: String,
+): TMDbVideosEntity {
     return TMDbVideosEntity(
-        id = "${contentId}_${contentType}",
+        id = "${contentId}_$contentType",
         contentId = contentId,
         contentType = contentType,
         results = results.map { it.toVideoEntity() },
-        lastUpdated = System.currentTimeMillis()
+        lastUpdated = System.currentTimeMillis(),
     )
 }
 
 // TMDbVideosEntity to TV Videos Response conversion
 fun TMDbVideosEntity.toTVVideosResponse(): TMDbTVVideosResponse {
     return TMDbTVVideosResponse(
-        results = results.map { it.toVideoResponse() }
+        results = results.map { it.toVideoResponse() },
     )
 }
 

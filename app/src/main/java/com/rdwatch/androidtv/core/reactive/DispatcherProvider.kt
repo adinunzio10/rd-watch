@@ -13,16 +13,18 @@ interface DispatcherProvider {
 }
 
 @Singleton
-class DefaultDispatcherProvider @Inject constructor() : DispatcherProvider {
-    override val main: CoroutineDispatcher = Dispatchers.Main
-    override val io: CoroutineDispatcher = Dispatchers.IO
-    override val default: CoroutineDispatcher = Dispatchers.Default
-    override val unconfined: CoroutineDispatcher = Dispatchers.Unconfined
-}
+class DefaultDispatcherProvider
+    @Inject
+    constructor() : DispatcherProvider {
+        override val main: CoroutineDispatcher = Dispatchers.Main
+        override val io: CoroutineDispatcher = Dispatchers.IO
+        override val default: CoroutineDispatcher = Dispatchers.Default
+        override val unconfined: CoroutineDispatcher = Dispatchers.Unconfined
+    }
 
 class TestDispatcherProvider(
     override val main: CoroutineDispatcher = Dispatchers.Unconfined,
     override val io: CoroutineDispatcher = Dispatchers.Unconfined,
     override val default: CoroutineDispatcher = Dispatchers.Unconfined,
-    override val unconfined: CoroutineDispatcher = Dispatchers.Unconfined
+    override val unconfined: CoroutineDispatcher = Dispatchers.Unconfined,
 ) : DispatcherProvider

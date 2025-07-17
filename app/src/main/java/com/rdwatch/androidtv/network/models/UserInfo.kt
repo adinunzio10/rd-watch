@@ -16,5 +16,5 @@ data class UserInfo(
     @Json(name = "expiration") val expiration: String?,
     @Json(name = "storage_used") val storageUsed: Long? = null,
     @Json(name = "storage_left") val storageLeft: Long? = null,
-    @Json(name = "storage_total") val storageTotal: Long? = null
+    @Json(name = "storage_total") val storageTotal: Long? = null,
 )

@@ -14,7 +14,6 @@ import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.rdwatch.androidtv.auth.models.AuthState
-import com.rdwatch.androidtv.auth.ui.AuthViewModel
 
 /**
  * AuthGuard component that ensures the user is authenticated before showing protected content.
@@ -26,11 +25,11 @@ fun AuthGuard(
     onAuthenticationRequired: () -> Unit,
     content: @Composable () -> Unit,
     authViewModel: AuthViewModel = hiltViewModel(),
-    showLoadingOnInitializing: Boolean = false
+    showLoadingOnInitializing: Boolean = false,
 ) {
     val authState by authViewModel.authState.collectAsStateWithLifecycle()
     var hasTriggeredRedirect by remember { mutableStateOf(false) }
-    
+
     LaunchedEffect(authState) {
         when (authState) {
             is AuthState.Initializing -> {
@@ -41,7 +40,8 @@ fun AuthGuard(
             is AuthState.Unauthenticated,
             is AuthState.WaitingForUser,
             is AuthState.ApiKeyEntry,
-            is AuthState.Error -> {
+            is AuthState.Error,
+            -> {
                 // Only trigger redirect once to prevent infinite loops
                 if (!hasTriggeredRedirect) {
                     hasTriggeredRedirect = true
@@ -54,7 +54,7 @@ fun AuthGuard(
             }
         }
     }
-    
+
     // Only show content if authenticated
     when (authState) {
         is AuthState.Authenticated -> {
@@ -65,7 +65,7 @@ fun AuthGuard(
                 // Optional loading indicator
                 Box(
                     modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
+                    contentAlignment = Alignment.Center,
                 ) {
                     CircularProgressIndicator()
                 }

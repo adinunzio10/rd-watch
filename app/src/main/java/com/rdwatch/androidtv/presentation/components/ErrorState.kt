@@ -21,51 +21,50 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.rdwatch.androidtv.R
 import com.rdwatch.androidtv.core.error.ErrorInfo
-import com.rdwatch.androidtv.core.error.ErrorType
 
 @Composable
 fun ErrorState(
     errorInfo: ErrorInfo,
     onRetry: (() -> Unit)? = null,
     onDismiss: (() -> Unit)? = null,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Box(
         modifier = modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Center,
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16.dp),
-            modifier = Modifier.padding(32.dp)
+            modifier = Modifier.padding(32.dp),
         ) {
             Icon(
                 imageVector = Icons.Default.Error,
                 contentDescription = null,
                 modifier = Modifier.size(64.dp),
-                tint = MaterialTheme.colorScheme.error
+                tint = MaterialTheme.colorScheme.error,
             )
-            
+
             Text(
                 text = errorInfo.message,
                 style = MaterialTheme.typography.headlineSmall,
                 color = MaterialTheme.colorScheme.onBackground,
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
             )
-            
+
             if (errorInfo.canRetry && onRetry != null) {
                 Button(
                     onClick = onRetry,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
                 ) {
                     Text(stringResource(R.string.action_retry))
                 }
             }
-            
+
             if (onDismiss != null) {
                 Button(
                     onClick = onDismiss,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
                 ) {
                     Text(stringResource(R.string.action_ok))
                 }
@@ -78,29 +77,31 @@ fun ErrorState(
 fun ErrorBanner(
     errorInfo: ErrorInfo,
     onDismiss: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     androidx.compose.material3.Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(16.dp),
-        colors = androidx.compose.material3.CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.errorContainer
-        )
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+        colors =
+            androidx.compose.material3.CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.errorContainer,
+            ),
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             Text(
                 text = errorInfo.message,
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onErrorContainer
+                color = MaterialTheme.colorScheme.onErrorContainer,
             )
-            
+
             Button(
                 onClick = onDismiss,
-                modifier = Modifier.align(Alignment.End)
+                modifier = Modifier.align(Alignment.End),
             ) {
                 Text(stringResource(R.string.dismiss_error))
             }

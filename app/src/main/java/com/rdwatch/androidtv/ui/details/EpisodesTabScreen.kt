@@ -3,15 +3,15 @@ package com.rdwatch.androidtv.ui.details
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.rdwatch.androidtv.ui.details.components.*
 import com.rdwatch.androidtv.ui.details.models.*
 import com.rdwatch.androidtv.ui.details.models.advanced.*
-import androidx.compose.runtime.collectAsState
-import androidx.hilt.navigation.compose.hiltViewModel
 
 /**
  * Dedicated Episodes tab screen that replaces nested scrolling with single container
@@ -31,7 +31,7 @@ fun EpisodesTabScreen(
     // Advanced source selection parameters
     viewModel: TVDetailsViewModel = hiltViewModel(),
     onSourceSelected: ((SourceMetadata) -> Unit)? = null,
-    onPlayWithSource: ((TVEpisode, SourceMetadata) -> Unit)? = null
+    onPlayWithSource: ((TVEpisode, SourceMetadata) -> Unit)? = null,
 ) {
     // Advanced source selection state
     val episodeSourcesMap by viewModel.episodeSourcesMap.collectAsState()
@@ -39,32 +39,34 @@ fun EpisodesTabScreen(
     val sourceSelectionState by viewModel.sourceSelectionState.collectAsState()
     // Get authoritative season data to ensure consistency
     val authoritativeSeasons = remember(tvShow.id) { tvShow.getSeasons() }
-    val authoritativeSelectedSeason = remember(selectedSeason, authoritativeSeasons) {
-        selectedSeason ?: authoritativeSeasons.firstOrNull()
-    }
-    
+    val authoritativeSelectedSeason =
+        remember(selectedSeason, authoritativeSeasons) {
+            selectedSeason ?: authoritativeSeasons.firstOrNull()
+        }
+
     // Force recomposition when season or episodes change
     LaunchedEffect(authoritativeSelectedSeason?.seasonNumber, authoritativeSelectedSeason?.episodes?.size) {
         // This ensures the UI updates when season data changes
     }
-    
+
     Box(
-        modifier = modifier.fillMaxSize()
+        modifier = modifier.fillMaxSize(),
     ) {
         authoritativeSelectedSeason?.let { season ->
             // Create proper UI state with current season episodes - use remember with keys
-            val episodeGridUiState = remember(season.seasonNumber, season.episodes.size, selectedEpisode?.id) {
-                EpisodeGridUiState(
-                    isLoading = false,
-                    selectedSeasonNumber = season.seasonNumber,
-                    availableSeasons = authoritativeSeasons,
-                    currentSeasonEpisodes = season.episodes,
-                    focusedEpisodeId = selectedEpisode?.id,
-                    error = null,
-                    isRefreshing = false
-                )
-            }
-            
+            val episodeGridUiState =
+                remember(season.seasonNumber, season.episodes.size, selectedEpisode?.id) {
+                    EpisodeGridUiState(
+                        isLoading = false,
+                        selectedSeasonNumber = season.seasonNumber,
+                        availableSeasons = authoritativeSeasons,
+                        currentSeasonEpisodes = season.episodes,
+                        focusedEpisodeId = selectedEpisode?.id,
+                        error = null,
+                        isRefreshing = false,
+                    )
+                }
+
             // Use single scrolling container - no nested LazyColumn
             EpisodeGridSection(
                 tvShowDetail = tvShow.getTVShowDetail(),
@@ -83,11 +85,12 @@ fun EpisodesTabScreen(
                 },
                 uiState = episodeGridUiState,
                 episodeSourcesMap = episodeSourcesMap, // Pass source data to grid
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 24.dp, vertical = 12.dp)
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 24.dp, vertical = 12.dp),
             )
-            
+
             // Advanced Source Selection Bottom Sheet
             SourceListBottomSheet(
                 isVisible = showSourceSelection,
@@ -98,7 +101,7 @@ fun EpisodesTabScreen(
                 onSourceSelected = { source ->
                     viewModel.onSourceSelected(source)
                     onSourceSelected?.invoke(source)
-                    
+
                     // Trigger playback if callback provided
                     sourceSelectionState.selectedEpisode?.let { episode ->
                         onPlayWithSource?.invoke(episode, source)
@@ -113,26 +116,27 @@ fun EpisodesTabScreen(
                     sourceSelectionState.selectedEpisode?.let { episode ->
                         onPlayWithSource?.invoke(episode, source)
                     }
-                }
+                },
             )
         } ?: run {
             // No seasons available - show empty state
             Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(32.dp),
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .padding(32.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
+                verticalArrangement = Arrangement.Center,
             ) {
                 Text(
                     text = "No episodes available",
                     style = MaterialTheme.typography.headlineSmall,
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = MaterialTheme.colorScheme.onSurface,
                 )
-                
+
                 Button(
                     onClick = onBackToDetails,
-                    modifier = Modifier.padding(top = 16.dp)
+                    modifier = Modifier.padding(top = 16.dp),
                 ) {
                     Text("Back to Details")
                 }

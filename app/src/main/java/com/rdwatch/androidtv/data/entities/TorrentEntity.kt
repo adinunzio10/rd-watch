@@ -13,8 +13,8 @@ import java.util.Date
     indices = [
         Index(value = ["hash"]),
         Index(value = ["status"]),
-        Index(value = ["added"])
-    ]
+        Index(value = ["added"]),
+    ],
 )
 data class TorrentEntity(
     @PrimaryKey
@@ -30,5 +30,5 @@ data class TorrentEntity(
     val speed: Long? = null,
     val seeders: Int? = null,
     val created: Date? = null,
-    val ended: Date? = null
+    val ended: Date? = null,
 )

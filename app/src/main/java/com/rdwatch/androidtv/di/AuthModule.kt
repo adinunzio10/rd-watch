@@ -13,7 +13,6 @@ import dagger.hilt.components.SingletonComponent
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class AuthModule {
-    
     /**
      * Binds the DataStore-based token storage implementation
      */

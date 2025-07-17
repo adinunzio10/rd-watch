@@ -8,12 +8,12 @@ data class DeviceCodeInfo(
     val userCode: String,
     val verificationUri: String,
     val expiresIn: Int,
-    val interval: Int
+    val interval: Int,
 ) {
     val verificationUriComplete: String
         get() {
             val uri = "$verificationUri?user_code=$userCode"
-            
+
             // Validate the URL
             try {
                 URL(uri)
@@ -21,7 +21,7 @@ data class DeviceCodeInfo(
             } catch (e: Exception) {
                 Log.e("DeviceCodeInfo", "Invalid verification URI: $uri", e)
             }
-            
+
             return uri
         }
 }

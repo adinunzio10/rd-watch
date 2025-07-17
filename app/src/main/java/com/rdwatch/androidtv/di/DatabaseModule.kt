@@ -16,15 +16,16 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object DatabaseModule {
-
     @Provides
     @Singleton
     @MainDatabase
-    fun provideAppDatabase(@ApplicationContext context: Context): AppDatabase {
+    fun provideAppDatabase(
+        @ApplicationContext context: Context,
+    ): AppDatabase {
         return Room.databaseBuilder(
             context,
             AppDatabase::class.java,
-            AppDatabase.DATABASE_NAME
+            AppDatabase.DATABASE_NAME,
         )
             .addMigrations(*com.rdwatch.androidtv.data.migrations.Migrations.ALL_MIGRATIONS)
             .fallbackToDestructiveMigration() // For development only - remove in production
@@ -33,87 +34,114 @@ object DatabaseModule {
 
     @Provides
     @Singleton
-    fun provideMovieDao(@MainDatabase database: AppDatabase): MovieDao {
+    fun provideMovieDao(
+        @MainDatabase database: AppDatabase,
+    ): MovieDao {
         return database.movieDao()
     }
 
     @Provides
     @Singleton
-    fun provideUserDao(@MainDatabase database: AppDatabase): UserDao {
+    fun provideUserDao(
+        @MainDatabase database: AppDatabase,
+    ): UserDao {
         return database.userDao()
     }
 
-
     @Provides
     @Singleton
-    fun provideWatchProgressDao(@MainDatabase database: AppDatabase): WatchProgressDao {
+    fun provideWatchProgressDao(
+        @MainDatabase database: AppDatabase,
+    ): WatchProgressDao {
         return database.watchProgressDao()
     }
 
     @Provides
     @Singleton
-    fun provideLibraryDao(@MainDatabase database: AppDatabase): LibraryDao {
+    fun provideLibraryDao(
+        @MainDatabase database: AppDatabase,
+    ): LibraryDao {
         return database.libraryDao()
     }
 
     @Provides
     @Singleton
-    fun provideScraperManifestDao(@MainDatabase database: AppDatabase): ScraperManifestDao {
+    fun provideScraperManifestDao(
+        @MainDatabase database: AppDatabase,
+    ): ScraperManifestDao {
         return database.scraperManifestDao()
     }
 
     @Provides
     @Singleton
-    fun provideSearchHistoryDao(@MainDatabase database: AppDatabase): SearchHistoryDao {
+    fun provideSearchHistoryDao(
+        @MainDatabase database: AppDatabase,
+    ): SearchHistoryDao {
         return database.searchHistoryDao()
     }
 
     @Provides
     @Singleton
-    fun provideRelationshipDao(@MainDatabase database: AppDatabase): RelationshipDao {
+    fun provideRelationshipDao(
+        @MainDatabase database: AppDatabase,
+    ): RelationshipDao {
         return database.relationshipDao()
     }
 
     @Provides
     @Singleton
-    fun provideContentDao(@MainDatabase database: AppDatabase): ContentDao {
+    fun provideContentDao(
+        @MainDatabase database: AppDatabase,
+    ): ContentDao {
         return database.contentDao()
     }
 
     @Provides
     @Singleton
-    fun provideTorrentDao(@MainDatabase database: AppDatabase): TorrentDao {
+    fun provideTorrentDao(
+        @MainDatabase database: AppDatabase,
+    ): TorrentDao {
         return database.torrentDao()
     }
 
     @Provides
     @Singleton
-    fun provideDownloadDao(@MainDatabase database: AppDatabase): DownloadDao {
+    fun provideDownloadDao(
+        @MainDatabase database: AppDatabase,
+    ): DownloadDao {
         return database.downloadDao()
     }
 
     @Provides
     @Singleton
-    fun provideFileHashDao(@MainDatabase database: AppDatabase): FileHashDao {
+    fun provideFileHashDao(
+        @MainDatabase database: AppDatabase,
+    ): FileHashDao {
         return database.fileHashDao()
     }
 
     // TMDb DAOs
     @Provides
     @Singleton
-    fun provideTMDbMovieDao(@MainDatabase database: AppDatabase): TMDbMovieDao {
+    fun provideTMDbMovieDao(
+        @MainDatabase database: AppDatabase,
+    ): TMDbMovieDao {
         return database.tmdbMovieDao()
     }
 
     @Provides
     @Singleton
-    fun provideTMDbTVDao(@MainDatabase database: AppDatabase): TMDbTVDao {
+    fun provideTMDbTVDao(
+        @MainDatabase database: AppDatabase,
+    ): TMDbTVDao {
         return database.tmdbTVDao()
     }
 
     @Provides
     @Singleton
-    fun provideTMDbSearchDao(@MainDatabase database: AppDatabase): TMDbSearchDao {
+    fun provideTMDbSearchDao(
+        @MainDatabase database: AppDatabase,
+    ): TMDbSearchDao {
         return database.tmdbSearchDao()
     }
 }

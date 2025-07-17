@@ -11,14 +11,14 @@ import javax.inject.Qualifier
 
 /**
  * Hilt module for ViewModel-scoped dependencies.
- * 
+ *
  * Note: ViewModels annotated with @HiltViewModel are automatically handled by Hilt
  * and don't need manual binding here. This module is for providing ViewModel-scoped
  * dependencies and custom bindings when needed.
- * 
+ *
  * Active ViewModels in the app (automatically handled by @HiltViewModel):
  * - AuthViewModel
- * - HomeViewModel  
+ * - HomeViewModel
  * - BrowseViewModel
  * - SearchViewModel
  * - MovieDetailsViewModel
@@ -33,7 +33,6 @@ import javax.inject.Qualifier
 @Module
 @InstallIn(ViewModelComponent::class)
 object ViewModelModule {
-    
     /**
      * Provides IO dispatcher for ViewModel operations
      */
@@ -41,15 +40,15 @@ object ViewModelModule {
     @ViewModelScoped
     @IoDispatcher
     fun provideIoDispatcher(): CoroutineDispatcher = Dispatchers.IO
-    
+
     /**
      * Provides Main dispatcher for ViewModel operations
      */
     @Provides
     @ViewModelScoped
-    @MainDispatcher  
+    @MainDispatcher
     fun provideMainDispatcher(): CoroutineDispatcher = Dispatchers.Main
-    
+
     /**
      * Provides Default dispatcher for ViewModel operations
      */

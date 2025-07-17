@@ -18,11 +18,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.key.*
 import androidx.compose.ui.text.font.FontWeight
@@ -43,31 +41,31 @@ fun TVSearchKeyboard(
     modifier: Modifier = Modifier,
     initialText: String = "",
     placeholder: String = "Search for movies, TV shows...",
-    isVoiceSearchEnabled: Boolean = true
+    isVoiceSearchEnabled: Boolean = true,
 ) {
     var currentText by remember { mutableStateOf(initialText) }
     val firstKeyFocusRequester = remember { FocusRequester() }
-    
+
     LaunchedEffect(initialText) {
         currentText = initialText
         onTextChanged(currentText)
     }
-    
+
     LaunchedEffect(Unit) {
         firstKeyFocusRequester.requestFocus()
     }
-    
+
     Column(
         modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         // Search input display
         SearchInputDisplay(
             text = currentText,
             placeholder = placeholder,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
         )
-        
+
         // Keyboard grid
         TVKeyboardGrid(
             onKeyPressed = { key ->
@@ -96,7 +94,7 @@ fun TVSearchKeyboard(
                 }
             },
             firstKeyFocusRequester = firstKeyFocusRequester,
-            isVoiceSearchEnabled = isVoiceSearchEnabled
+            isVoiceSearchEnabled = isVoiceSearchEnabled,
         )
     }
 }
@@ -105,44 +103,46 @@ fun TVSearchKeyboard(
 private fun SearchInputDisplay(
     text: String,
     placeholder: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Surface(
         modifier = modifier.height(60.dp),
         color = MaterialTheme.colorScheme.surface,
         shape = RoundedCornerShape(8.dp),
-        shadowElevation = 4.dp
+        shadowElevation = 4.dp,
     ) {
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 16.dp),
-            contentAlignment = Alignment.CenterStart
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 16.dp),
+            contentAlignment = Alignment.CenterStart,
         ) {
             if (text.isEmpty()) {
                 Text(
                     text = placeholder,
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
                 )
             } else {
                 Text(
                     text = text,
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
                 )
             }
-            
+
             // Cursor simulation
             if (text.isNotEmpty()) {
                 Box(
-                    modifier = Modifier
-                        .align(Alignment.CenterEnd)
-                        .width(2.dp)
-                        .height(20.dp)
-                        .background(MaterialTheme.colorScheme.primary)
+                    modifier =
+                        Modifier
+                            .align(Alignment.CenterEnd)
+                            .width(2.dp)
+                            .height(20.dp)
+                            .background(MaterialTheme.colorScheme.primary),
                 )
             }
         }
@@ -154,28 +154,29 @@ private fun TVKeyboardGrid(
     onKeyPressed: (KeyboardKey) -> Unit,
     firstKeyFocusRequester: FocusRequester,
     isVoiceSearchEnabled: Boolean,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val keyboardLayout = getTVKeyboardLayout(isVoiceSearchEnabled)
-    
+
     LazyVerticalGrid(
         columns = GridCells.Fixed(13), // Standard QWERTY width
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(8.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
-        contentPadding = PaddingValues(8.dp)
+        contentPadding = PaddingValues(8.dp),
     ) {
         items(keyboardLayout.flatten().size) { index ->
             val key = keyboardLayout.flatten()[index]
-            
+
             TVKeyboardKey(
                 key = key,
                 onKeyPressed = onKeyPressed,
-                modifier = if (index == 0) {
-                    Modifier.focusRequester(firstKeyFocusRequester)
-                } else {
-                    Modifier
-                }
+                modifier =
+                    if (index == 0) {
+                        Modifier.focusRequester(firstKeyFocusRequester)
+                    } else {
+                        Modifier
+                    },
             )
         }
     }
@@ -186,60 +187,68 @@ private fun TVKeyboardGrid(
 private fun TVKeyboardKey(
     key: KeyboardKey,
     onKeyPressed: (KeyboardKey) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     var isFocused by remember { mutableStateOf(false) }
-    
+
     Card(
         onClick = { onKeyPressed(key) },
-        modifier = modifier
-            .size(
-                width = if (key.type == KeyType.SPACE) 200.dp else 60.dp,
-                height = 60.dp
-            )
-            .onFocusChanged { isFocused = it.isFocused }
-            .focusable()
-            .onKeyEvent { keyEvent ->
-                if (keyEvent.type == KeyEventType.KeyDown) {
-                    when (keyEvent.key) {
-                        Key.DirectionCenter, Key.Enter -> {
-                            onKeyPressed(key)
-                            true
+        modifier =
+            modifier
+                .size(
+                    width = if (key.type == KeyType.SPACE) 200.dp else 60.dp,
+                    height = 60.dp,
+                )
+                .onFocusChanged { isFocused = it.isFocused }
+                .focusable()
+                .onKeyEvent { keyEvent ->
+                    if (keyEvent.type == KeyEventType.KeyDown) {
+                        when (keyEvent.key) {
+                            Key.DirectionCenter, Key.Enter -> {
+                                onKeyPressed(key)
+                                true
+                            }
+                            else -> false
                         }
-                        else -> false
+                    } else {
+                        false
                     }
-                } else false
-            },
-        colors = CardDefaults.cardColors(
-            containerColor = when {
-                isFocused -> MaterialTheme.colorScheme.primary
-                key.type in listOf(KeyType.BACKSPACE, KeyType.CLEAR, KeyType.SEARCH, KeyType.VOICE) -> 
-                    MaterialTheme.colorScheme.secondary
-                else -> MaterialTheme.colorScheme.surface
-            }
-        ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = if (isFocused) 8.dp else 4.dp
-        )
+                },
+        colors =
+            CardDefaults.cardColors(
+                containerColor =
+                    when {
+                        isFocused -> MaterialTheme.colorScheme.primary
+                        key.type in listOf(KeyType.BACKSPACE, KeyType.CLEAR, KeyType.SEARCH, KeyType.VOICE) ->
+                            MaterialTheme.colorScheme.secondary
+                        else -> MaterialTheme.colorScheme.surface
+                    },
+            ),
+        elevation =
+            CardDefaults.cardElevation(
+                defaultElevation = if (isFocused) 8.dp else 4.dp,
+            ),
     ) {
         Box(
             modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
+            contentAlignment = Alignment.Center,
         ) {
             when (key.type) {
                 KeyType.CHARACTER, KeyType.SPACE -> {
                     Text(
                         text = key.displayValue,
-                        style = MaterialTheme.typography.bodyLarge.copy(
-                            fontSize = 18.sp,
-                            fontWeight = if (isFocused) FontWeight.Bold else FontWeight.Normal
-                        ),
-                        color = if (isFocused) {
-                            MaterialTheme.colorScheme.onPrimary
-                        } else {
-                            MaterialTheme.colorScheme.onSurface
-                        },
-                        textAlign = TextAlign.Center
+                        style =
+                            MaterialTheme.typography.bodyLarge.copy(
+                                fontSize = 18.sp,
+                                fontWeight = if (isFocused) FontWeight.Bold else FontWeight.Normal,
+                            ),
+                        color =
+                            if (isFocused) {
+                                MaterialTheme.colorScheme.onPrimary
+                            } else {
+                                MaterialTheme.colorScheme.onSurface
+                            },
+                        textAlign = TextAlign.Center,
                     )
                 }
                 else -> {
@@ -247,12 +256,13 @@ private fun TVKeyboardKey(
                         Icon(
                             imageVector = icon,
                             contentDescription = key.displayValue,
-                            tint = if (isFocused) {
-                                MaterialTheme.colorScheme.onPrimary
-                            } else {
-                                MaterialTheme.colorScheme.onSecondary
-                            },
-                            modifier = Modifier.size(24.dp)
+                            tint =
+                                if (isFocused) {
+                                    MaterialTheme.colorScheme.onPrimary
+                                } else {
+                                    MaterialTheme.colorScheme.onSecondary
+                                },
+                            modifier = Modifier.size(24.dp),
                         )
                     }
                 }
@@ -280,9 +290,8 @@ private fun getTVKeyboardLayout(isVoiceSearchEnabled: Boolean): List<List<Keyboa
             KeyboardKey("0", "0", KeyType.CHARACTER),
             KeyboardKey("-", "-", KeyType.CHARACTER),
             KeyboardKey("=", "=", KeyType.CHARACTER),
-            KeyboardKey("⌫", "Backspace", KeyType.BACKSPACE, Icons.Default.Backspace)
+            KeyboardKey("⌫", "Backspace", KeyType.BACKSPACE, Icons.Default.Backspace),
         ),
-        
         // Row 2: QWERTY first row
         listOf(
             KeyboardKey("q", "Q", KeyType.CHARACTER),
@@ -297,9 +306,8 @@ private fun getTVKeyboardLayout(isVoiceSearchEnabled: Boolean): List<List<Keyboa
             KeyboardKey("p", "P", KeyType.CHARACTER),
             KeyboardKey("[", "[", KeyType.CHARACTER),
             KeyboardKey("]", "]", KeyType.CHARACTER),
-            KeyboardKey("\\", "\\", KeyType.CHARACTER)
+            KeyboardKey("\\", "\\", KeyType.CHARACTER),
         ),
-        
         // Row 3: ASDF row
         listOf(
             KeyboardKey("a", "A", KeyType.CHARACTER),
@@ -314,9 +322,8 @@ private fun getTVKeyboardLayout(isVoiceSearchEnabled: Boolean): List<List<Keyboa
             KeyboardKey(";", ";", KeyType.CHARACTER),
             KeyboardKey("'", "'", KeyType.CHARACTER),
             KeyboardKey("", "Clear", KeyType.CLEAR, Icons.Default.Clear),
-            KeyboardKey("", "Search", KeyType.SEARCH, Icons.Default.Search)
+            KeyboardKey("", "Search", KeyType.SEARCH, Icons.Default.Search),
         ),
-        
         // Row 4: ZXCV row
         listOf(
             KeyboardKey("z", "Z", KeyType.CHARACTER),
@@ -336,8 +343,8 @@ private fun getTVKeyboardLayout(isVoiceSearchEnabled: Boolean): List<List<Keyboa
             } else {
                 KeyboardKey("", "Done", KeyType.SEARCH, Icons.Default.Done)
             },
-            KeyboardKey("", "Done", KeyType.SEARCH, Icons.Default.Done)
-        )
+            KeyboardKey("", "Done", KeyType.SEARCH, Icons.Default.Done),
+        ),
     )
 }
 
@@ -348,7 +355,7 @@ data class KeyboardKey(
     val value: String,
     val displayValue: String,
     val type: KeyType,
-    val icon: ImageVector? = null
+    val icon: ImageVector? = null,
 )
 
 /**
@@ -360,5 +367,5 @@ enum class KeyType {
     SPACE,
     CLEAR,
     SEARCH,
-    VOICE
+    VOICE,
 }

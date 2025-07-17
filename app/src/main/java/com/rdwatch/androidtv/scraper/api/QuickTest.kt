@@ -6,7 +6,7 @@ package com.rdwatch.androidtv.scraper.api
 fun main() {
     println("🧪 Quick Scraper Test")
     println("=" * 30)
-    
+
     try {
         val results = ScraperTestRunner.runAllTests()
         println(results)
@@ -14,7 +14,7 @@ fun main() {
         println("❌ Test failed: ${e.message}")
         e.printStackTrace()
     }
-    
+
     println("\n✅ Test completed!")
 }
 

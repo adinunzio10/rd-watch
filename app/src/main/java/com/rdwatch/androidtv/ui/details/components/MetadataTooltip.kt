@@ -5,8 +5,6 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -15,7 +13,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -36,32 +33,35 @@ fun MetadataTooltip(
     isVisible: Boolean,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
-    tooltipType: TooltipType = TooltipType.COMPREHENSIVE
+    tooltipType: TooltipType = TooltipType.COMPREHENSIVE,
 ) {
     AnimatedVisibility(
         visible = isVisible,
         enter = fadeIn() + scaleIn(initialScale = 0.9f),
-        exit = fadeOut() + scaleOut(targetScale = 0.9f)
+        exit = fadeOut() + scaleOut(targetScale = 0.9f),
     ) {
         Popup(
             onDismissRequest = onDismiss,
-            properties = PopupProperties(
-                focusable = true,
-                dismissOnBackPress = true,
-                dismissOnClickOutside = true
-            )
+            properties =
+                PopupProperties(
+                    focusable = true,
+                    dismissOnBackPress = true,
+                    dismissOnClickOutside = true,
+                ),
         ) {
             Card(
-                modifier = modifier
-                    .widthIn(min = 400.dp, max = 600.dp)
-                    .heightIn(max = 500.dp)
-                    .shadow(
-                        elevation = 16.dp,
-                        shape = RoundedCornerShape(16.dp)
+                modifier =
+                    modifier
+                        .widthIn(min = 400.dp, max = 600.dp)
+                        .heightIn(max = 500.dp)
+                        .shadow(
+                            elevation = 16.dp,
+                            shape = RoundedCornerShape(16.dp),
+                        ),
+                colors =
+                    CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainer,
                     ),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceContainer
-                )
             ) {
                 when (tooltipType) {
                     TooltipType.QUICK_INFO -> QuickInfoTooltip(sourceMetadata)
@@ -80,72 +80,73 @@ fun MetadataTooltip(
 @Composable
 private fun QuickInfoTooltip(
     sourceMetadata: SourceMetadata,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Column(
         modifier = modifier.padding(20.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         // Header
         Text(
             text = "Source Information",
-            style = MaterialTheme.typography.headlineSmall.copy(
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold
-            ),
-            color = MaterialTheme.colorScheme.onSurface
+            style =
+                MaterialTheme.typography.headlineSmall.copy(
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                ),
+            color = MaterialTheme.colorScheme.onSurface,
         )
-        
+
         HorizontalDivider(
             thickness = 1.dp,
-            color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+            color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
         )
-        
+
         // Essential info
         InfoRow(
             label = "Quality",
             value = sourceMetadata.quality.getDisplayText(),
-            valueColor = MaterialTheme.colorScheme.primary
+            valueColor = MaterialTheme.colorScheme.primary,
         )
-        
+
         InfoRow(
             label = "Codec",
-            value = sourceMetadata.codec.getDisplayText()
+            value = sourceMetadata.codec.getDisplayText(),
         )
-        
+
         InfoRow(
             label = "Audio",
-            value = sourceMetadata.audio.getDisplayText()
+            value = sourceMetadata.audio.getDisplayText(),
         )
-        
+
         sourceMetadata.file.getFormattedSize()?.let { size ->
             InfoRow(
                 label = "Size",
-                value = size
+                value = size,
             )
         }
-        
+
         InfoRow(
             label = "Provider",
             value = sourceMetadata.provider.displayName,
-            valueColor = getProviderColor(sourceMetadata.provider.type)
+            valueColor = getProviderColor(sourceMetadata.provider.type),
         )
-        
+
         // Health info for P2P
         sourceMetadata.health.seeders?.let { seeders ->
             val leechers = sourceMetadata.health.leechers ?: 0
             InfoRow(
                 label = "Health",
                 value = "${seeders}S / ${leechers}L",
-                valueColor = getHealthColor(seeders)
+                valueColor = getHealthColor(seeders),
             )
         }
-        
+
         // Quality score
         InfoRow(
             label = "Score",
             value = "${sourceMetadata.getQualityScore()}",
-            valueColor = getScoreColor(sourceMetadata.getQualityScore())
+            valueColor = getScoreColor(sourceMetadata.getQualityScore()),
         )
     }
 }
@@ -156,91 +157,96 @@ private fun QuickInfoTooltip(
 @Composable
 private fun TechnicalSpecsTooltip(
     sourceMetadata: SourceMetadata,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     LazyColumn(
         modifier = modifier.padding(20.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         item {
             Text(
                 text = "Technical Specifications",
-                style = MaterialTheme.typography.headlineSmall.copy(
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold
-                ),
-                color = MaterialTheme.colorScheme.onSurface
+                style =
+                    MaterialTheme.typography.headlineSmall.copy(
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                    ),
+                color = MaterialTheme.colorScheme.onSurface,
             )
-            
+
             HorizontalDivider(
                 modifier = Modifier.padding(vertical = 8.dp),
                 thickness = 1.dp,
-                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
             )
         }
-        
+
         // Video specifications
         item {
             SpecificationSection(
                 title = "Video",
-                items = buildList {
-                    add("Resolution" to sourceMetadata.quality.resolution.displayName)
-                    sourceMetadata.quality.frameRate?.let { fps ->
-                        add("Frame Rate" to "${fps} fps")
-                    }
-                    sourceMetadata.quality.bitrate?.let { bitrate ->
-                        add("Bitrate" to "${bitrate / 1_000_000} Mbps")
-                    }
-                    if (sourceMetadata.quality.hasHDR()) {
-                        val hdrType = when {
-                            sourceMetadata.quality.dolbyVision -> "Dolby Vision"
-                            sourceMetadata.quality.hdr10Plus -> "HDR10+"
-                            sourceMetadata.quality.hdr10 -> "HDR10"
-                            else -> "None"
+                items =
+                    buildList {
+                        add("Resolution" to sourceMetadata.quality.resolution.displayName)
+                        sourceMetadata.quality.frameRate?.let { fps ->
+                            add("Frame Rate" to "$fps fps")
                         }
-                        add("HDR" to hdrType)
-                    }
-                }
+                        sourceMetadata.quality.bitrate?.let { bitrate ->
+                            add("Bitrate" to "${bitrate / 1_000_000} Mbps")
+                        }
+                        if (sourceMetadata.quality.hasHDR()) {
+                            val hdrType =
+                                when {
+                                    sourceMetadata.quality.dolbyVision -> "Dolby Vision"
+                                    sourceMetadata.quality.hdr10Plus -> "HDR10+"
+                                    sourceMetadata.quality.hdr10 -> "HDR10"
+                                    else -> "None"
+                                }
+                            add("HDR" to hdrType)
+                        }
+                    },
             )
         }
-        
+
         // Codec specifications
         item {
             SpecificationSection(
                 title = "Codec",
-                items = buildList {
-                    add("Type" to sourceMetadata.codec.type.displayName)
-                    add("Efficiency" to getEfficiencyRating(sourceMetadata.codec.type))
-                    sourceMetadata.codec.profile?.let { profile ->
-                        add("Profile" to profile)
-                    }
-                    sourceMetadata.codec.level?.let { level ->
-                        add("Level" to level)
-                    }
-                }
+                items =
+                    buildList {
+                        add("Type" to sourceMetadata.codec.type.displayName)
+                        add("Efficiency" to getEfficiencyRating(sourceMetadata.codec.type))
+                        sourceMetadata.codec.profile?.let { profile ->
+                            add("Profile" to profile)
+                        }
+                        sourceMetadata.codec.level?.let { level ->
+                            add("Level" to level)
+                        }
+                    },
             )
         }
-        
+
         // Audio specifications
         item {
             SpecificationSection(
                 title = "Audio",
-                items = buildList {
-                    when {
-                        sourceMetadata.audio.dolbyAtmos -> add("Format" to "Dolby Atmos")
-                        sourceMetadata.audio.dtsX -> add("Format" to "DTS:X")
-                        else -> add("Format" to sourceMetadata.audio.format.displayName)
-                    }
-                    sourceMetadata.audio.channels?.let { channels ->
-                        add("Channels" to channels)
-                    }
-                    sourceMetadata.audio.bitrate?.let { bitrate ->
-                        add("Bitrate" to "$bitrate kbps")
-                    }
-                    sourceMetadata.audio.language?.let { language ->
-                        add("Language" to language)
-                    }
-                }
+                items =
+                    buildList {
+                        when {
+                            sourceMetadata.audio.dolbyAtmos -> add("Format" to "Dolby Atmos")
+                            sourceMetadata.audio.dtsX -> add("Format" to "DTS:X")
+                            else -> add("Format" to sourceMetadata.audio.format.displayName)
+                        }
+                        sourceMetadata.audio.channels?.let { channels ->
+                            add("Channels" to channels)
+                        }
+                        sourceMetadata.audio.bitrate?.let { bitrate ->
+                            add("Bitrate" to "$bitrate kbps")
+                        }
+                        sourceMetadata.audio.language?.let { language ->
+                            add("Language" to language)
+                        }
+                    },
             )
         }
     }
@@ -252,86 +258,87 @@ private fun TechnicalSpecsTooltip(
 @Composable
 private fun P2PHealthTooltip(
     sourceMetadata: SourceMetadata,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Column(
         modifier = modifier.padding(20.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Text(
             text = "P2P Health & Statistics",
-            style = MaterialTheme.typography.headlineSmall.copy(
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold
-            ),
-            color = MaterialTheme.colorScheme.onSurface
+            style =
+                MaterialTheme.typography.headlineSmall.copy(
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                ),
+            color = MaterialTheme.colorScheme.onSurface,
         )
-        
+
         HorizontalDivider(
             thickness = 1.dp,
-            color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+            color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
         )
-        
+
         val health = sourceMetadata.health
-        
+
         // Peer information
         health.seeders?.let { seeders ->
             val leechers = health.leechers ?: 0
             val ratio = if (leechers > 0) seeders.toFloat() / leechers.toFloat() else Float.MAX_VALUE
-            
+
             InfoRow(
                 label = "Seeders",
                 value = seeders.toString(),
-                valueColor = getHealthColor(seeders)
+                valueColor = getHealthColor(seeders),
             )
-            
+
             InfoRow(
                 label = "Leechers",
-                value = leechers.toString()
+                value = leechers.toString(),
             )
-            
+
             InfoRow(
                 label = "Ratio",
                 value = if (ratio == Float.MAX_VALUE) "∞" else String.format("%.2f", ratio),
-                valueColor = getRatioColor(ratio)
+                valueColor = getRatioColor(ratio),
             )
-            
+
             InfoRow(
                 label = "Health Status",
                 value = health.getHealthStatus().name.lowercase().replaceFirstChar { it.uppercase() },
-                valueColor = getHealthStatusColor(health.getHealthStatus())
+                valueColor = getHealthStatusColor(health.getHealthStatus()),
             )
         }
-        
+
         // Availability
         health.availability?.let { availability ->
             InfoRow(
                 label = "Availability",
                 value = "${(availability * 100).toInt()}%",
-                valueColor = getAvailabilityColor(availability)
+                valueColor = getAvailabilityColor(availability),
             )
         }
-        
+
         // Download speeds
         health.downloadSpeed?.let { speed ->
             InfoRow(
                 label = "Download Speed",
-                value = formatSpeed(speed)
+                value = formatSpeed(speed),
             )
         }
-        
+
         health.uploadSpeed?.let { speed ->
             InfoRow(
                 label = "Upload Speed",
-                value = formatSpeed(speed)
+                value = formatSpeed(speed),
             )
         }
-        
+
         // Last checked
         health.lastChecked?.let { lastChecked ->
             InfoRow(
                 label = "Last Checked",
-                value = formatTimeAgo(lastChecked)
+                value = formatTimeAgo(lastChecked),
             )
         }
     }
@@ -343,143 +350,152 @@ private fun P2PHealthTooltip(
 @Composable
 private fun ComprehensiveTooltip(
     sourceMetadata: SourceMetadata,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     LazyColumn(
         modifier = modifier.padding(20.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         item {
             Text(
                 text = sourceMetadata.file.name ?: "Source Details",
-                style = MaterialTheme.typography.headlineSmall.copy(
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold
-                ),
+                style =
+                    MaterialTheme.typography.headlineSmall.copy(
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                    ),
                 color = MaterialTheme.colorScheme.onSurface,
-                maxLines = 2
+                maxLines = 2,
             )
-            
+
             HorizontalDivider(
                 modifier = Modifier.padding(vertical = 8.dp),
                 thickness = 1.dp,
-                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
             )
         }
-        
+
         // Provider & file info
         item {
             SpecificationSection(
                 title = "Source Information",
-                items = buildList {
-                    add("Provider" to sourceMetadata.provider.displayName)
-                    add("Type" to sourceMetadata.provider.type.name.lowercase().replaceFirstChar { it.uppercase() })
-                    add("Reliability" to sourceMetadata.provider.reliability.name.lowercase().replaceFirstChar { it.uppercase() })
-                    sourceMetadata.file.getFormattedSize()?.let { size ->
-                        add("File Size" to size)
-                    }
-                    sourceMetadata.file.extension?.let { ext ->
-                        add("Format" to ext.uppercase())
-                    }
-                    sourceMetadata.file.addedDate?.let { date ->
-                        add("Added" to formatTimeAgo(date))
-                    }
-                }
+                items =
+                    buildList {
+                        add("Provider" to sourceMetadata.provider.displayName)
+                        add("Type" to sourceMetadata.provider.type.name.lowercase().replaceFirstChar { it.uppercase() })
+                        add("Reliability" to sourceMetadata.provider.reliability.name.lowercase().replaceFirstChar { it.uppercase() })
+                        sourceMetadata.file.getFormattedSize()?.let { size ->
+                            add("File Size" to size)
+                        }
+                        sourceMetadata.file.extension?.let { ext ->
+                            add("Format" to ext.uppercase())
+                        }
+                        sourceMetadata.file.addedDate?.let { date ->
+                            add("Added" to formatTimeAgo(date))
+                        }
+                    },
             )
         }
-        
+
         // Technical specs
         item {
             SpecificationSection(
                 title = "Technical Specifications",
-                items = buildList {
-                    add("Quality" to sourceMetadata.quality.getDisplayText())
-                    add("Codec" to sourceMetadata.codec.getDisplayText())
-                    add("Audio" to sourceMetadata.audio.getDisplayText())
-                    add("Release Type" to sourceMetadata.release.type.displayName)
-                    sourceMetadata.release.group?.let { group ->
-                        add("Release Group" to group)
-                    }
-                    sourceMetadata.release.edition?.let { edition ->
-                        add("Edition" to edition)
-                    }
-                }
+                items =
+                    buildList {
+                        add("Quality" to sourceMetadata.quality.getDisplayText())
+                        add("Codec" to sourceMetadata.codec.getDisplayText())
+                        add("Audio" to sourceMetadata.audio.getDisplayText())
+                        add("Release Type" to sourceMetadata.release.type.displayName)
+                        sourceMetadata.release.group?.let { group ->
+                            add("Release Group" to group)
+                        }
+                        sourceMetadata.release.edition?.let { edition ->
+                            add("Edition" to edition)
+                        }
+                    },
             )
         }
-        
+
         // Availability info
         item {
             SpecificationSection(
                 title = "Availability",
-                items = buildList {
-                    add("Available" to if (sourceMetadata.availability.isAvailable) "Yes" else "No")
-                    if (sourceMetadata.availability.cached) {
-                        add("Status" to "Cached")
-                    }
-                    sourceMetadata.availability.debridService?.let { service ->
-                        add("Debrid Service" to service.uppercase())
-                    }
-                    sourceMetadata.availability.region?.let { region ->
-                        add("Region" to region.uppercase())
-                    }
-                    sourceMetadata.availability.expiryDate?.let { expiry ->
-                        add("Expires" to formatTimeAgo(expiry))
-                    }
-                }
+                items =
+                    buildList {
+                        add("Available" to if (sourceMetadata.availability.isAvailable) "Yes" else "No")
+                        if (sourceMetadata.availability.cached) {
+                            add("Status" to "Cached")
+                        }
+                        sourceMetadata.availability.debridService?.let { service ->
+                            add("Debrid Service" to service.uppercase())
+                        }
+                        sourceMetadata.availability.region?.let { region ->
+                            add("Region" to region.uppercase())
+                        }
+                        sourceMetadata.availability.expiryDate?.let { expiry ->
+                            add("Expires" to formatTimeAgo(expiry))
+                        }
+                    },
             )
         }
-        
+
         // P2P health if available
         if (sourceMetadata.health.seeders != null) {
             item {
                 SpecificationSection(
                     title = "P2P Health",
-                    items = buildList {
-                        sourceMetadata.health.seeders?.let { seeders ->
-                            add("Seeders" to seeders.toString())
-                        }
-                        sourceMetadata.health.leechers?.let { leechers ->
-                            add("Leechers" to leechers.toString())
-                        }
-                        sourceMetadata.health.availability?.let { availability ->
-                            add("Availability" to "${(availability * 100).toInt()}%")
-                        }
-                        sourceMetadata.health.lastChecked?.let { lastChecked ->
-                            add("Last Checked" to formatTimeAgo(lastChecked))
-                        }
-                    }
+                    items =
+                        buildList {
+                            sourceMetadata.health.seeders?.let { seeders ->
+                                add("Seeders" to seeders.toString())
+                            }
+                            sourceMetadata.health.leechers?.let { leechers ->
+                                add("Leechers" to leechers.toString())
+                            }
+                            sourceMetadata.health.availability?.let { availability ->
+                                add("Availability" to "${(availability * 100).toInt()}%")
+                            }
+                            sourceMetadata.health.lastChecked?.let { lastChecked ->
+                                add("Last Checked" to formatTimeAgo(lastChecked))
+                            }
+                        },
                 )
             }
         }
-        
+
         // Quality score
         item {
             Card(
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
-                )
+                colors =
+                    CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f),
+                    ),
             ) {
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
                         text = "Overall Quality Score",
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            fontWeight = FontWeight.Bold
-                        ),
-                        color = MaterialTheme.colorScheme.onSurface
+                        style =
+                            MaterialTheme.typography.titleMedium.copy(
+                                fontWeight = FontWeight.Bold,
+                            ),
+                        color = MaterialTheme.colorScheme.onSurface,
                     )
-                    
+
                     Text(
                         text = "${sourceMetadata.getQualityScore()}",
-                        style = MaterialTheme.typography.headlineMedium.copy(
-                            fontWeight = FontWeight.Bold
-                        ),
-                        color = getScoreColor(sourceMetadata.getQualityScore())
+                        style =
+                            MaterialTheme.typography.headlineMedium.copy(
+                                fontWeight = FontWeight.Bold,
+                            ),
+                        color = getScoreColor(sourceMetadata.getQualityScore()),
                     )
                 }
             }
@@ -494,25 +510,26 @@ private fun ComprehensiveTooltip(
 private fun SpecificationSection(
     title: String,
     items: List<Pair<String, String>>,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Column(
         modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Text(
             text = title,
-            style = MaterialTheme.typography.titleMedium.copy(
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold
-            ),
-            color = MaterialTheme.colorScheme.primary
+            style =
+                MaterialTheme.typography.titleMedium.copy(
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                ),
+            color = MaterialTheme.colorScheme.primary,
         )
-        
+
         items.forEach { (label, value) ->
             InfoRow(
                 label = label,
-                value = value
+                value = value,
             )
         }
     }
@@ -526,28 +543,29 @@ private fun InfoRow(
     label: String,
     value: String,
     modifier: Modifier = Modifier,
-    valueColor: Color = MaterialTheme.colorScheme.onSurface
+    valueColor: Color = MaterialTheme.colorScheme.onSurface,
 ) {
     Row(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
             text = "$label:",
             style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp),
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.weight(1f),
         )
-        
+
         Text(
             text = value,
-            style = MaterialTheme.typography.bodyMedium.copy(
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Medium
-            ),
+            style =
+                MaterialTheme.typography.bodyMedium.copy(
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                ),
             color = valueColor,
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.weight(1f),
         )
     }
 }
@@ -556,10 +574,10 @@ private fun InfoRow(
  * Tooltip types for different levels of detail
  */
 enum class TooltipType {
-    QUICK_INFO,        // Essential information only
-    TECHNICAL_SPECS,   // Detailed technical specifications
-    P2P_HEALTH,        // P2P download statistics
-    COMPREHENSIVE      // All available metadata
+    QUICK_INFO, // Essential information only
+    TECHNICAL_SPECS, // Detailed technical specifications
+    P2P_HEALTH, // P2P download statistics
+    COMPREHENSIVE, // All available metadata
 }
 
 /**
@@ -646,7 +664,7 @@ private fun formatTimeAgo(date: Date): String {
     val now = Date()
     val diffInMillis = now.time - date.time
     val diffInDays = diffInMillis / (1000 * 60 * 60 * 24)
-    
+
     return when {
         diffInDays < 1 -> "Today"
         diffInDays < 7 -> "${diffInDays}d ago"
