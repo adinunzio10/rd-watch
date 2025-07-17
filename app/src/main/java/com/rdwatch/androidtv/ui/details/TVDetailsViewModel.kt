@@ -40,6 +40,10 @@ class TVDetailsViewModel
         private val onDemandSeasonJobs = mutableMapOf<Int, Job>()
         private val activeSeasonRequests = mutableSetOf<Int>()
 
+        // External ID loading state tracking
+        private var externalIdLoadingJob: Job? = null
+        private val activeExternalIdRequests = mutableSetOf<Int>()
+
         private val _tvShowState = MutableStateFlow<TVShowContentDetail?>(null)
         val tvShowState: StateFlow<TVShowContentDetail?> = _tvShowState.asStateFlow()
 
@@ -1925,6 +1929,15 @@ class TVDetailsViewModel
                 if (tvShowDetail.imdbId.isNullOrBlank()) {
                     val tmdbId = currentTvShow.id.toIntOrNull()
                     if (tmdbId != null) {
+                        // Check if request is already in progress
+                        if (activeExternalIdRequests.contains(tmdbId)) {
+                            android.util.Log.d(
+                                "TVDetailsViewModel",
+                                "External ID request already in progress for TMDb ID: $tmdbId",
+                            )
+                            return
+                        }
+
                         android.util.Log.d(
                             "TVDetailsViewModel",
                             "IMDb ID missing for TV show ${currentTvShow.getDisplayTitle()}, fetching...",
@@ -1952,38 +1965,51 @@ class TVDetailsViewModel
             currentTvShow: TVShowContentDetail,
         ) {
             android.util.Log.d("TVDetailsViewModel", "fetchAndUpdateIMDbId called for TMDb ID: $tmdbId")
-            viewModelScope.launch {
-                android.util.Log.d("TVDetailsViewModel", "Calling tmdbTVRepository.getTVExternalIds($tmdbId)")
-                tmdbTVRepository.getTVExternalIds(tmdbId).collect { result ->
-                    when (result) {
-                        is Result.Success -> {
-                            android.util.Log.d("TVDetailsViewModel", "External IDs API response received: ${result.data}")
-                            result.data?.imdbId?.let { imdbId ->
-                                // Update the TV show with the fetched IMDb ID
-                                val updatedTvShowDetail = currentTvShow.getTVShowDetail().copy(imdbId = imdbId)
-                                val updatedTvShow = currentTvShow.withTVShowDetail(updatedTvShowDetail)
 
-                                _tvShowState.value = updatedTvShow
-                                updateState { copy(tvShow = updatedTvShow) }
+            // Add to active requests to prevent duplicates
+            activeExternalIdRequests.add(tmdbId)
 
-                                android.util.Log.d("TVDetailsViewModel", "Updated TV show ${currentTvShow.getDisplayTitle()} with IMDb ID: $imdbId")
-                            } ?: run {
-                                android.util.Log.w("TVDetailsViewModel", "External IDs response received but no IMDb ID found")
+            // Cancel any existing external ID job
+            externalIdLoadingJob?.cancel()
+
+            externalIdLoadingJob =
+                viewModelScope.launch {
+                    try {
+                        android.util.Log.d("TVDetailsViewModel", "Calling tmdbTVRepository.getTVExternalIds($tmdbId)")
+                        tmdbTVRepository.getTVExternalIds(tmdbId).collect { result ->
+                            when (result) {
+                                is Result.Success -> {
+                                    android.util.Log.d("TVDetailsViewModel", "External IDs API response received: ${result.data}")
+                                    result.data?.imdbId?.let { imdbId ->
+                                        // Update the TV show with the fetched IMDb ID
+                                        val updatedTvShowDetail = currentTvShow.getTVShowDetail().copy(imdbId = imdbId)
+                                        val updatedTvShow = currentTvShow.withTVShowDetail(updatedTvShowDetail)
+
+                                        _tvShowState.value = updatedTvShow
+                                        updateState { copy(tvShow = updatedTvShow) }
+
+                                        android.util.Log.d("TVDetailsViewModel", "Updated TV show ${currentTvShow.getDisplayTitle()} with IMDb ID: $imdbId")
+                                    } ?: run {
+                                        android.util.Log.w("TVDetailsViewModel", "External IDs response received but no IMDb ID found")
+                                    }
+                                }
+                                is Result.Error -> {
+                                    android.util.Log.w(
+                                        "TVDetailsViewModel",
+                                        "Failed to fetch external IDs for TV show: ${result.exception?.message}",
+                                    )
+                                    // Continue without IMDb ID - sources may still work with TMDb ID for some providers
+                                }
+                                is Result.Loading -> {
+                                    android.util.Log.d("TVDetailsViewModel", "External IDs API call in progress...")
+                                }
                             }
                         }
-                        is Result.Error -> {
-                            android.util.Log.w(
-                                "TVDetailsViewModel",
-                                "Failed to fetch external IDs for TV show: ${result.exception?.message}",
-                            )
-                            // Continue without IMDb ID - sources may still work with TMDb ID for some providers
-                        }
-                        is Result.Loading -> {
-                            android.util.Log.d("TVDetailsViewModel", "External IDs API call in progress...")
-                        }
+                    } finally {
+                        // Remove from active requests when done
+                        activeExternalIdRequests.remove(tmdbId)
                     }
                 }
-            }
         }
     }
 

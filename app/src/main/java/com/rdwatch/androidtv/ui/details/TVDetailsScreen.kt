@@ -57,8 +57,8 @@ fun TVDetailsScreen(
     // Initialize with TV show ID
     LaunchedEffect(tvShowId) { viewModel.loadTVShow(tvShowId) }
 
-    // Ensure IMDb ID is loaded for source scraping (even from cached data)
-    LaunchedEffect(tvShowState) {
+    // Ensure IMDb ID is loaded for source scraping (only when TV show ID changes)
+    LaunchedEffect(tvShowState?.id) {
         val currentTvShow = tvShowState
         if (currentTvShow != null) {
             android.util.Log.d("TVDetailsScreen", "=== ENSURE IMDB ID LOADED ===")
