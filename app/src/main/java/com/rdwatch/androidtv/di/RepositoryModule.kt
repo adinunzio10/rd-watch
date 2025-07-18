@@ -28,9 +28,7 @@ abstract class RepositoryModule {
 
     @Binds
     @Singleton
-    abstract fun bindRealDebridContentRepository(
-        realDebridContentRepositoryImpl: RealDebridContentRepositoryImpl,
-    ): RealDebridContentRepository
+    abstract fun bindRealDebridContentRepository(realDebridContentRepositoryImpl: RealDebridContentRepositoryImpl): RealDebridContentRepository
 
     @Binds
     @Singleton

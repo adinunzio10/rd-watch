@@ -225,7 +225,8 @@ class SourceProcessor(
         MainScope().launch {
             _isProcessing.value = true
 
-            delay(configuration.debounceMs) // Debounce rapid updates
+            // Debounce rapid updates
+            delay(configuration.debounceMs)
 
             val processed =
                 withContext(Dispatchers.Default) {
@@ -301,13 +302,20 @@ class PerformanceMonitor(
  * Configuration for performance optimization
  */
 data class PerformanceConfiguration(
-    val maxDisplaySources: Int = 50, // Max sources to show in UI
-    val maxCachedSources: Int = 20, // Max cached sources to prioritize
-    val chunkThreshold: Int = 100, // When to use chunked processing
-    val chunkSize: Int = 25, // Size of each processing chunk
-    val strictFilterThreshold: Int = 200, // When to apply strict filtering
-    val debounceMs: Long = 300, // Debounce time for reactive updates
-    val targetProcessingTimeMs: Long = 1000, // Target processing time
+    // Max sources to show in UI
+    val maxDisplaySources: Int = 50,
+    // Max cached sources to prioritize
+    val maxCachedSources: Int = 20,
+    // When to use chunked processing
+    val chunkThreshold: Int = 100,
+    // Size of each processing chunk
+    val chunkSize: Int = 25,
+    // When to apply strict filtering
+    val strictFilterThreshold: Int = 200,
+    // Debounce time for reactive updates
+    val debounceMs: Long = 300,
+    // Target processing time
+    val targetProcessingTimeMs: Long = 1000,
 )
 
 /**
@@ -326,8 +334,10 @@ data class ProcessedSourceResult(
  * Android TV specific optimization result
  */
 data class AndroidTVOptimizedResult(
-    val immediatelyAvailable: List<SourceMetadata>, // Cached sources for immediate display
-    val backgroundProcessed: List<SourceMetadata>, // Non-cached sources
+    // Cached sources for immediate display
+    val immediatelyAvailable: List<SourceMetadata>,
+    // Non-cached sources
+    val backgroundProcessed: List<SourceMetadata>,
     val totalProcessingTime: Long,
     val cacheHitRatio: Float,
 )
@@ -345,9 +355,7 @@ data class ProcessingMetrics(
 /**
  * Extension functions for easy performance optimization
  */
-suspend fun List<SourceMetadata>.optimizeForAndroidTV(
-    preferences: UserSortingPreferences = UserSortingPreferences(),
-): AndroidTVOptimizedResult {
+suspend fun List<SourceMetadata>.optimizeForAndroidTV(preferences: UserSortingPreferences = UserSortingPreferences()): AndroidTVOptimizedResult {
     val optimizer = SourcePerformanceOptimizer()
     return optimizer.optimizeForAndroidTV(this, preferences)
 }

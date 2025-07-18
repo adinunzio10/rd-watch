@@ -398,9 +398,7 @@ class ScraperManifestManager
         /**
          * Get manifests by capability
          */
-        suspend fun getManifestsByCapability(
-            capability: com.rdwatch.androidtv.scraper.models.ManifestCapability,
-        ): ManifestResult<List<ScraperManifest>> {
+        suspend fun getManifestsByCapability(capability: com.rdwatch.androidtv.scraper.models.ManifestCapability): ManifestResult<List<ScraperManifest>> {
             return repository.getManifestsByCapability(capability)
         }
 
@@ -482,7 +480,8 @@ class ScraperManifestManager
                                 repositoryStats = repoStats.data,
                                 cacheStats = cacheStats,
                                 usageStats = smartCacheStats,
-                                lastRefreshTime = Date(), // TODO: Track actual refresh times
+                                // TODO: Track actual refresh times
+                                lastRefreshTime = Date(),
                             ),
                         )
                     }

@@ -52,7 +52,8 @@ class TMDbToContentDetailMapper
                 productionCompanies = movieResponse.productionCompanies.map { it.name },
                 productionCountries = movieResponse.productionCountries.map { it.name },
                 spokenLanguages = movieResponse.spokenLanguages.map { it.name },
-                videoUrl = null, // TMDb doesn't provide direct video URLs
+                // TMDb doesn't provide direct video URLs
+                videoUrl = null,
             )
         }
 
@@ -111,9 +112,7 @@ class TMDbToContentDetailMapper
          * @param multiSearchResult TMDb multi-search result response
          * @return ContentDetail for UI consumption or null if unsupported type
          */
-        fun mapMultiSearchResultToContentDetail(
-            multiSearchResult: com.rdwatch.androidtv.network.models.tmdb.TMDbMultiSearchResultResponse,
-        ): ContentDetail? {
+        fun mapMultiSearchResultToContentDetail(multiSearchResult: com.rdwatch.androidtv.network.models.tmdb.TMDbMultiSearchResultResponse): ContentDetail? {
             android.util.Log.d(
                 "TMDbMapper",
                 "Mapping multi-search result: mediaType=${multiSearchResult.mediaType}, id=${multiSearchResult.id}, title=${multiSearchResult.title ?: multiSearchResult.name}",
@@ -142,18 +141,30 @@ class TMDbToContentDetailMapper
                         popularity = multiSearchResult.popularity.toFloat(),
                         adult = multiSearchResult.adult,
                         originalLanguage = multiSearchResult.originalLanguage,
-                        genres = emptyList(), // Genre names not available in search results, only IDs
-                        runtime = null, // Not available in search results
-                        budget = 0L, // Not available in search results
-                        revenue = 0L, // Not available in search results
-                        status = "", // Not available in search results
-                        tagline = null, // Not available in search results
-                        homepage = null, // Not available in search results
-                        imdbId = null, // Not available in search results
-                        productionCompanies = emptyList(), // Not available in search results
-                        productionCountries = emptyList(), // Not available in search results
-                        spokenLanguages = emptyList(), // Not available in search results
-                        videoUrl = null, // TMDb doesn't provide direct video URLs
+                        // Genre names not available in search results, only IDs
+                        genres = emptyList(),
+                        // Not available in search results
+                        runtime = null,
+                        // Not available in search results
+                        budget = 0L,
+                        // Not available in search results
+                        revenue = 0L,
+                        // Not available in search results
+                        status = "",
+                        // Not available in search results
+                        tagline = null,
+                        // Not available in search results
+                        homepage = null,
+                        // Not available in search results
+                        imdbId = null,
+                        // Not available in search results
+                        productionCompanies = emptyList(),
+                        // Not available in search results
+                        productionCountries = emptyList(),
+                        // Not available in search results
+                        spokenLanguages = emptyList(),
+                        // TMDb doesn't provide direct video URLs
+                        videoUrl = null,
                     )
                 }
                 "tv" -> {
@@ -172,27 +183,41 @@ class TMDbToContentDetailMapper
                             multiSearchResult.posterPath?.let {
                                 "${TMDbMovieService.IMAGE_BASE_URL}${TMDbMovieService.POSTER_SIZE}$it"
                             },
-                        videoUrl = null, // TMDb doesn't provide direct video URLs
+                        // TMDb doesn't provide direct video URLs
+                        videoUrl = null,
                         firstAirDate = multiSearchResult.firstAirDate,
-                        lastAirDate = null, // Not available in search results
+                        // Not available in search results
+                        lastAirDate = null,
                         voteAverage = multiSearchResult.voteAverage.toFloat(),
                         voteCount = multiSearchResult.voteCount,
                         popularity = multiSearchResult.popularity.toFloat(),
                         adult = multiSearchResult.adult,
                         originalLanguage = multiSearchResult.originalLanguage,
-                        genres = emptyList(), // Genre names not available in search results, only IDs
-                        numberOfEpisodes = null, // Not available in search results
-                        numberOfSeasons = null, // Not available in search results
-                        status = null, // Not available in search results
-                        type = null, // Not available in search results
-                        homepage = null, // Not available in search results
-                        inProduction = null, // Not available in search results
-                        imdbId = null, // TODO: Fetch from external IDs endpoint for TV shows
-                        networks = emptyList(), // Not available in search results
+                        // Genre names not available in search results, only IDs
+                        genres = emptyList(),
+                        // Not available in search results
+                        numberOfEpisodes = null,
+                        // Not available in search results
+                        numberOfSeasons = null,
+                        // Not available in search results
+                        status = null,
+                        // Not available in search results
+                        type = null,
+                        // Not available in search results
+                        homepage = null,
+                        // Not available in search results
+                        inProduction = null,
+                        // TODO: Fetch from external IDs endpoint for TV shows
+                        imdbId = null,
+                        // Not available in search results
+                        networks = emptyList(),
                         originCountry = multiSearchResult.originCountry,
-                        productionCompanies = emptyList(), // Not available in search results
-                        productionCountries = emptyList(), // Not available in search results
-                        spokenLanguages = emptyList(), // Not available in search results
+                        // Not available in search results
+                        productionCompanies = emptyList(),
+                        // Not available in search results
+                        productionCountries = emptyList(),
+                        // Not available in search results
+                        spokenLanguages = emptyList(),
                     )
                 }
                 "person" -> {
@@ -248,18 +273,30 @@ class TMDbToContentDetailMapper
                     popularity = searchResult.popularity.toFloat(),
                     adult = searchResult.adult,
                     originalLanguage = searchResult.originalLanguage,
-                    genres = emptyList(), // Genre names not available in search results, only IDs
-                    runtime = null, // Not available in search results
-                    budget = 0L, // Not available in search results
-                    revenue = 0L, // Not available in search results
-                    status = "", // Not available in search results
-                    tagline = null, // Not available in search results
-                    homepage = null, // Not available in search results
-                    imdbId = null, // Not available in search results
-                    productionCompanies = emptyList(), // Not available in search results
-                    productionCountries = emptyList(), // Not available in search results
-                    spokenLanguages = emptyList(), // Not available in search results
-                    videoUrl = null, // TMDb doesn't provide direct video URLs
+                    // Genre names not available in search results, only IDs
+                    genres = emptyList(),
+                    // Not available in search results
+                    runtime = null,
+                    // Not available in search results
+                    budget = 0L,
+                    // Not available in search results
+                    revenue = 0L,
+                    // Not available in search results
+                    status = "",
+                    // Not available in search results
+                    tagline = null,
+                    // Not available in search results
+                    homepage = null,
+                    // Not available in search results
+                    imdbId = null,
+                    // Not available in search results
+                    productionCompanies = emptyList(),
+                    // Not available in search results
+                    productionCountries = emptyList(),
+                    // Not available in search results
+                    spokenLanguages = emptyList(),
+                    // TMDb doesn't provide direct video URLs
+                    videoUrl = null,
                 )
             } else {
                 // Map as TV show (default for trending mixed results)
@@ -277,27 +314,41 @@ class TMDbToContentDetailMapper
                         searchResult.posterPath?.let {
                             "${TMDbMovieService.IMAGE_BASE_URL}${TMDbMovieService.POSTER_SIZE}$it"
                         },
-                    videoUrl = null, // TMDb doesn't provide direct video URLs
+                    // TMDb doesn't provide direct video URLs
+                    videoUrl = null,
                     firstAirDate = searchResult.firstAirDate,
-                    lastAirDate = null, // Not available in search results
+                    // Not available in search results
+                    lastAirDate = null,
                     voteAverage = searchResult.voteAverage.toFloat(),
                     voteCount = searchResult.voteCount,
                     popularity = searchResult.popularity.toFloat(),
                     adult = searchResult.adult,
                     originalLanguage = searchResult.originalLanguage,
-                    genres = emptyList(), // Genre names not available in search results, only IDs
-                    numberOfEpisodes = null, // Not available in search results
-                    numberOfSeasons = null, // Not available in search results
-                    status = null, // Not available in search results
-                    type = null, // Not available in search results
-                    homepage = null, // Not available in search results
-                    inProduction = null, // Not available in search results
-                    imdbId = null, // TODO: Fetch from external IDs endpoint for TV shows
-                    networks = emptyList(), // Not available in search results
+                    // Genre names not available in search results, only IDs
+                    genres = emptyList(),
+                    // Not available in search results
+                    numberOfEpisodes = null,
+                    // Not available in search results
+                    numberOfSeasons = null,
+                    // Not available in search results
+                    status = null,
+                    // Not available in search results
+                    type = null,
+                    // Not available in search results
+                    homepage = null,
+                    // Not available in search results
+                    inProduction = null,
+                    // TODO: Fetch from external IDs endpoint for TV shows
+                    imdbId = null,
+                    // Not available in search results
+                    networks = emptyList(),
                     originCountry = searchResult.originCountry,
-                    productionCompanies = emptyList(), // Not available in search results
-                    productionCountries = emptyList(), // Not available in search results
-                    spokenLanguages = emptyList(), // Not available in search results
+                    // Not available in search results
+                    productionCompanies = emptyList(),
+                    // Not available in search results
+                    productionCountries = emptyList(),
+                    // Not available in search results
+                    spokenLanguages = emptyList(),
                 )
             }
         }

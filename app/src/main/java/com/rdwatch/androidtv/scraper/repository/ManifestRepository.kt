@@ -44,9 +44,7 @@ interface ManifestRepository {
 
     suspend fun getManifestsByAuthor(author: String): ManifestResult<List<ScraperManifest>>
 
-    suspend fun getManifestsByCapability(
-        capability: com.rdwatch.androidtv.scraper.models.ManifestCapability,
-    ): ManifestResult<List<ScraperManifest>>
+    suspend fun getManifestsByCapability(capability: com.rdwatch.androidtv.scraper.models.ManifestCapability): ManifestResult<List<ScraperManifest>>
 
     // Validation operations
     suspend fun validateManifest(id: String): ManifestResult<Boolean>

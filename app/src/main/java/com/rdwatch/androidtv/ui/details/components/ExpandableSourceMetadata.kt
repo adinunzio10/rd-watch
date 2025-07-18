@@ -640,9 +640,7 @@ private fun buildReleaseMetadataItems(release: com.rdwatch.androidtv.ui.details.
     }
 }
 
-private fun buildAvailabilityMetadataItems(
-    availability: com.rdwatch.androidtv.ui.details.models.advanced.AvailabilityInfo,
-): List<Pair<String, String>> {
+private fun buildAvailabilityMetadataItems(availability: com.rdwatch.androidtv.ui.details.models.advanced.AvailabilityInfo): List<Pair<String, String>> {
     return buildList {
         add("Available" to if (availability.isAvailable) "Yes" else "No")
         if (availability.cached) {

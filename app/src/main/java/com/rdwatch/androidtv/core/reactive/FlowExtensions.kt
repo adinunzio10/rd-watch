@@ -43,8 +43,7 @@ fun <T> Flow<T>.throttleLatestWithTimeout(timeoutMs: Long = 1000): Flow<T> = thr
 
 fun <T> Flow<T>.timeoutWithDuration(duration: Duration = 30.seconds): Flow<T> = timeout(duration)
 
-fun <T> Flow<T>.distinctUntilChangedBy(keySelector: (T) -> Any?): Flow<T> =
-    distinctUntilChanged { old, new -> keySelector(old) == keySelector(new) }
+fun <T> Flow<T>.distinctUntilChangedBy(keySelector: (T) -> Any?): Flow<T> = distinctUntilChanged { old, new -> keySelector(old) == keySelector(new) }
 
 fun <T> Flow<T>.filterNotNull(): Flow<T> = filter { it != null }
 

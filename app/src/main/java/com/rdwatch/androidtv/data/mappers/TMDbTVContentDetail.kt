@@ -334,15 +334,11 @@ data class TMDbTVContentDetail(
         return genres.map { it.name }
     }
 
-    private fun extractProductionCompanyNames(
-        companies: List<com.rdwatch.androidtv.network.models.tmdb.TMDbProductionCompanyResponse>,
-    ): List<String> {
+    private fun extractProductionCompanyNames(companies: List<com.rdwatch.androidtv.network.models.tmdb.TMDbProductionCompanyResponse>): List<String> {
         return companies.map { it.name }
     }
 
-    private fun extractSpokenLanguageNames(
-        languages: List<com.rdwatch.androidtv.network.models.tmdb.TMDbSpokenLanguageResponse>,
-    ): List<String> {
+    private fun extractSpokenLanguageNames(languages: List<com.rdwatch.androidtv.network.models.tmdb.TMDbSpokenLanguageResponse>): List<String> {
         return languages.map { it.name }
     }
 

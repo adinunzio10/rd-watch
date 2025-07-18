@@ -49,7 +49,7 @@ class TVDetailsViewModel
         private val activeSourceRequests = mutableSetOf<String>()
         private var preloadingJob: Job? = null
         private var lastPreloadTime = 0L
-        private val PRELOAD_THROTTLE_MS = 5000L // 5 seconds throttle between preloads
+        private val preloadThrottleMs = 5000L // 5 seconds throttle between preloads
 
         private val _tvShowState = MutableStateFlow<TVShowContentDetail?>(null)
         val tvShowState: StateFlow<TVShowContentDetail?> = _tvShowState.asStateFlow()
@@ -82,9 +82,7 @@ class TVDetailsViewModel
         private val _showSourceSelection = MutableStateFlow(false)
         val showSourceSelection: StateFlow<Boolean> = _showSourceSelection.asStateFlow()
 
-        override fun createInitialState(): TVDetailsUiState {
-            return TVDetailsUiState()
-        }
+        override fun createInitialState(): TVDetailsUiState = TVDetailsUiState()
 
         /**
          * Load TV show details and related content from TMDb
@@ -152,22 +150,29 @@ class TVDetailsViewModel
                                                 originCountry = contentDetail.originCountry,
                                                 numberOfSeasons = contentDetail.numberOfSeasons ?: 1,
                                                 numberOfEpisodes = contentDetail.numberOfEpisodes ?: 0,
-                                                seasons = emptyList(), // Will be populated after loading season details
+                                                // Will be populated after loading season details
+                                                seasons = emptyList(),
                                                 networks = contentDetail.networks,
                                                 productionCompanies = contentDetail.productionCompanies,
-                                                creators = emptyList(), // TODO: Load from TMDb credits
-                                                cast = emptyList(), // TODO: Load from TMDb credits
+                                                // TODO: Load from TMDb credits
+                                                creators = emptyList(),
+                                                // TODO: Load from TMDb credits
+                                                cast = emptyList(),
                                                 voteAverage = contentDetail.voteAverage,
                                                 voteCount = contentDetail.voteCount,
                                                 popularity = contentDetail.popularity,
                                                 adult = contentDetail.adult,
                                                 homepage = contentDetail.homepage,
-                                                tagline = null, // Not available in this model
+                                                // Not available in this model
+                                                tagline = null,
                                                 inProduction = contentDetail.inProduction ?: false,
                                                 imdbId = contentDetail.imdbId,
-                                                episodeRunTime = emptyList(), // TODO: Parse from TMDb data
-                                                lastEpisodeToAir = null, // TODO: Load from TMDb
-                                                nextEpisodeToAir = null, // TODO: Load from TMDb
+                                                // TODO: Parse from TMDb data
+                                                episodeRunTime = emptyList(),
+                                                // TODO: Load from TMDb
+                                                lastEpisodeToAir = null,
+                                                // TODO: Load from TMDb
+                                                nextEpisodeToAir = null,
                                             )
                                         }
                                         is com.rdwatch.androidtv.data.mappers.TMDbTVContentDetail -> {
@@ -192,7 +197,8 @@ class TVDetailsViewModel
                                                 networks = contentDetail.getNetworks().map { it.name },
                                                 productionCompanies = contentDetail.getProductionCompanies().map { it.name },
                                                 creators = contentDetail.getCreatedBy().map { it.name },
-                                                cast = emptyList(), // TODO: Load from TMDb credits
+                                                // TODO: Load from TMDb credits
+                                                cast = emptyList(),
                                                 voteAverage = contentDetail.getFormattedVoteAverage().toFloat(),
                                                 voteCount = contentDetail.getVoteCount(),
                                                 popularity = contentDetail.getPopularity().toFloat(),
@@ -200,7 +206,8 @@ class TVDetailsViewModel
                                                 homepage = contentDetail.getHomepage(),
                                                 tagline = contentDetail.getTagline(),
                                                 inProduction = contentDetail.isInProduction(),
-                                                imdbId = null, // IMDb ID will be fetched separately below
+                                                // IMDb ID will be fetched separately below
+                                                imdbId = null,
                                                 episodeRunTime = contentDetail.getEpisodeRunTime(),
                                                 lastEpisodeToAir =
                                                     contentDetail.getLastEpisodeToAir()?.let {
@@ -792,7 +799,8 @@ class TVDetailsViewModel
                 overview = "",
                 posterPath = null,
                 airDate = null,
-                episodeCount = 1, // Show at least 1 to indicate there are episodes to load
+                // Show at least 1 to indicate there are episodes to load
+                episodeCount = 1,
                 episodes = emptyList(),
             )
         }
@@ -1270,7 +1278,8 @@ class TVDetailsViewModel
                     isWatched = false,
                     watchProgress = 0f,
                     resumePosition = 0L,
-                    videoUrl = null, // Will be populated later with streaming sources
+                    // Will be populated later with streaming sources
+                    videoUrl = null,
                 )
             }
 
@@ -1337,9 +1346,7 @@ class TVDetailsViewModel
         }
 
         // Legacy wrapper methods for backward compatibility
-        private fun mapTMDbSeasonResponseToTVSeason(
-            seasonResponse: com.rdwatch.androidtv.network.models.tmdb.TMDbSeasonResponse,
-        ): TVSeason {
+        private fun mapTMDbSeasonResponseToTVSeason(seasonResponse: com.rdwatch.androidtv.network.models.tmdb.TMDbSeasonResponse): TVSeason {
             return TMDbMapper.mapSeasonToTVSeason(seasonResponse)
         }
 
@@ -1398,7 +1405,8 @@ class TVDetailsViewModel
                                     tvShowDetail.copy(
                                         fullCast = castMembers,
                                         crew = crewMembers,
-                                        cast = castMembers.take(5).map { it.name }, // Keep top 5 for legacy compatibility
+                                        // Keep top 5 for legacy compatibility
+                                        cast = castMembers.take(5).map { it.name },
                                     )
                                 val updatedTvShow = tvShow.withTVShowDetail(updatedTvShowDetail)
 
@@ -1724,28 +1732,34 @@ class TVDetailsViewModel
                     QualityInfo(
                         resolution = mapStreamingQualityToVideoResolution(streamingSource.quality),
                         bitrate = null,
-                        hdr10 = false, // Not available in StreamingSource features
+                        // Not available in StreamingSource features
+                        hdr10 = false,
                         dolbyVision = streamingSource.features.supportsDolbyVision,
-                        hdr10Plus = false, // Not available in StreamingSource features
+                        // Not available in StreamingSource features
+                        hdr10Plus = false,
                     ),
                 codec =
                     CodecInfo(
-                        type = VideoCodec.H264, // Default, would need better detection
+                        // Default, would need better detection
+                        type = VideoCodec.H264,
                         profile = null,
                         level = null,
                     ),
                 audio =
                     AudioInfo(
-                        format = AudioFormat.AAC, // Default, would need better detection
+                        // Default, would need better detection
+                        format = AudioFormat.AAC,
                         channels = null,
                         bitrate = null,
                         language = null,
                         dolbyAtmos = streamingSource.features.supportsDolbyAtmos,
-                        dtsX = false, // Not available in StreamingSource features
+                        // Not available in StreamingSource features
+                        dtsX = false,
                     ),
                 release =
                     ReleaseInfo(
-                        type = ReleaseType.WEB_DL, // Default, would need better detection
+                        // Default, would need better detection
+                        type = ReleaseType.WEB_DL,
                         group = null,
                         edition = null,
                         year = null,
@@ -1754,7 +1768,8 @@ class TVDetailsViewModel
                     FileInfo(
                         name = null,
                         sizeInBytes = null,
-                        extension = "mkv", // Default
+                        // Default
+                        extension = "mkv",
                         hash = null,
                     ),
                 health =
@@ -1781,7 +1796,8 @@ class TVDetailsViewModel
                         region = null,
                         expiryDate = null,
                         debridService = null,
-                        cached = false, // Not available in StreamingSource
+                        // Not available in StreamingSource
+                        cached = false,
                     ),
                 metadata =
                     mapOf(
@@ -1802,7 +1818,7 @@ class TVDetailsViewModel
             val currentTime = System.currentTimeMillis()
 
             // Throttle preloading to prevent rapid API calls
-            if (currentTime - lastPreloadTime < PRELOAD_THROTTLE_MS) {
+            if (currentTime - lastPreloadTime < preloadThrottleMs) {
                 android.util.Log.d("TVDetailsViewModel", "Preloading throttled, skipping request")
                 return
             }
@@ -1864,7 +1880,7 @@ class TVDetailsViewModel
         /**
          * Map StreamingSource quality to VideoResolution
          */
-        private fun mapStreamingQualityToVideoResolution(quality: SourceQuality): VideoResolution {
+        private fun mapStreamingQualityToVideoResolution(quality: SourceQuality): VideoResolution =
             return when (quality) {
                 SourceQuality.QUALITY_8K -> VideoResolution.RESOLUTION_8K
                 SourceQuality.QUALITY_4K,
@@ -1881,7 +1897,6 @@ class TVDetailsViewModel
                 SourceQuality.QUALITY_240P -> VideoResolution.RESOLUTION_240P
                 else -> VideoResolution.UNKNOWN
             }
-        }
 
         /**
          * Clear all data
@@ -1937,8 +1952,8 @@ class TVDetailsViewModel
         /**
          * Get default seasons for TV shows that don't have season data
          */
-        private fun getDefaultSeasons(): List<TVSeason> {
-            return listOf(
+        private fun getDefaultSeasons(): List<TVSeason> =
+            listOf(
                 TVSeason(
                     id = "season_1",
                     seasonNumber = 1,
@@ -1965,13 +1980,9 @@ class TVDetailsViewModel
                         },
                 ),
             )
-        }
 
-        private fun mapTMDbSeasonsToTVSeasons(
-            tmdbSeasons: List<com.rdwatch.androidtv.network.models.tmdb.TMDbSeasonResponse>,
-        ): List<TVSeason> {
-            return TMDbMapper.mapSeasonsToTVSeasons(tmdbSeasons)
-        }
+        private fun mapTMDbSeasonsToTVSeasons(tmdbSeasons: List<com.rdwatch.androidtv.network.models.tmdb.TMDbSeasonResponse>): List<TVSeason> =
+            TMDbMapper.mapSeasonsToTVSeasons(tmdbSeasons)
 
         private fun mapTMDbEpisodesToTVEpisodes(
             tmdbEpisodes: List<com.rdwatch.androidtv.network.models.tmdb.TMDbEpisodeResponse>,
