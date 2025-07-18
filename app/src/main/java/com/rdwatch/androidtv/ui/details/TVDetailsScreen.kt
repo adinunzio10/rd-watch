@@ -1,14 +1,40 @@
 package com.rdwatch.androidtv.ui.details
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -19,12 +45,29 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.media3.common.util.UnstableApi
 import com.rdwatch.androidtv.ui.common.UiState
 import com.rdwatch.androidtv.ui.components.CastCrewSection
-import com.rdwatch.androidtv.ui.details.components.*
+import com.rdwatch.androidtv.ui.details.components.ActionSection
+import com.rdwatch.androidtv.ui.details.components.ContentDetailTabs
+import com.rdwatch.androidtv.ui.details.components.EpisodeGridSection
+import com.rdwatch.androidtv.ui.details.components.HeroSection
+import com.rdwatch.androidtv.ui.details.components.InfoSection
 import com.rdwatch.androidtv.ui.details.components.InfoSectionTabMode
+import com.rdwatch.androidtv.ui.details.components.RelatedSection
 import com.rdwatch.androidtv.ui.details.components.SourceListBottomSheet
 import com.rdwatch.androidtv.ui.details.components.SourceSelectionDialog
 import com.rdwatch.androidtv.ui.details.components.SourceSelectionSection
-import com.rdwatch.androidtv.ui.details.models.*
+import com.rdwatch.androidtv.ui.details.models.ContentAction
+import com.rdwatch.androidtv.ui.details.models.ContentProgress
+import com.rdwatch.androidtv.ui.details.models.ContentType
+import com.rdwatch.androidtv.ui.details.models.EpisodeGridUiState
+import com.rdwatch.androidtv.ui.details.models.ExtendedContentMetadata
+import com.rdwatch.androidtv.ui.details.models.SourceFeatures
+import com.rdwatch.androidtv.ui.details.models.SourceProvider
+import com.rdwatch.androidtv.ui.details.models.SourceQuality
+import com.rdwatch.androidtv.ui.details.models.SourceType
+import com.rdwatch.androidtv.ui.details.models.StreamingSource
+import com.rdwatch.androidtv.ui.details.models.TVEpisode
+import com.rdwatch.androidtv.ui.details.models.TVSeason
+import com.rdwatch.androidtv.ui.details.models.TVShowContentDetail
 import com.rdwatch.androidtv.ui.viewmodel.PlaybackViewModel
 
 /**
@@ -644,9 +687,7 @@ private fun TVDetailsErrorScreen(
 /**
  * Convert SourceMetadata (advanced sources) to StreamingSource (legacy format) for UI compatibility
  */
-private fun convertSourceMetadataToStreamingSource(
-    sourceMetadata: com.rdwatch.androidtv.ui.details.models.advanced.SourceMetadata,
-): StreamingSource {
+private fun convertSourceMetadataToStreamingSource(sourceMetadata: com.rdwatch.androidtv.ui.details.models.advanced.SourceMetadata): StreamingSource {
     return StreamingSource(
         id = sourceMetadata.id,
         provider =
