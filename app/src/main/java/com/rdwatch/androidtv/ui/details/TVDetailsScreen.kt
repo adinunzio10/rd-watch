@@ -32,7 +32,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -53,17 +52,11 @@ import com.rdwatch.androidtv.ui.details.components.InfoSection
 import com.rdwatch.androidtv.ui.details.components.InfoSectionTabMode
 import com.rdwatch.androidtv.ui.details.components.RelatedSection
 import com.rdwatch.androidtv.ui.details.components.SourceListBottomSheet
-import com.rdwatch.androidtv.ui.details.components.SourceSelectionDialog
-import com.rdwatch.androidtv.ui.details.components.SourceSelectionSection
 import com.rdwatch.androidtv.ui.details.models.ContentAction
 import com.rdwatch.androidtv.ui.details.models.ContentProgress
 import com.rdwatch.androidtv.ui.details.models.ContentType
 import com.rdwatch.androidtv.ui.details.models.EpisodeGridUiState
 import com.rdwatch.androidtv.ui.details.models.ExtendedContentMetadata
-import com.rdwatch.androidtv.ui.details.models.SourceFeatures
-import com.rdwatch.androidtv.ui.details.models.SourceProvider
-import com.rdwatch.androidtv.ui.details.models.SourceQuality
-import com.rdwatch.androidtv.ui.details.models.SourceType
 import com.rdwatch.androidtv.ui.details.models.StreamingSource
 import com.rdwatch.androidtv.ui.details.models.TVEpisode
 import com.rdwatch.androidtv.ui.details.models.TVSeason
@@ -105,15 +98,6 @@ fun TVDetailsScreen(
 
     // External IDs will be fetched on-demand at episode level when needed for source scraping
 
-    // Convert advanced sources to legacy format for UI compatibility
-    val advancedSources =
-        selectedEpisode?.let { episode ->
-            val episodeKey = "${episode.seasonNumber}-${episode.episodeNumber}"
-            episodeSourcesMap[episodeKey]?.map { sourceMetadata ->
-                convertSourceMetadataToStreamingSource(sourceMetadata)
-            } ?: emptyList()
-        } ?: emptyList()
-
     when {
         uiState.isLoading -> {
             TVDetailsLoadingScreen(modifier = modifier)
@@ -137,7 +121,6 @@ fun TVDetailsScreen(
                 progress = progress,
                 creditsState = creditsState,
                 sourcesState = sourcesState,
-                advancedSources = advancedSources,
                 episodeSourcesMap = episodeSourcesMap,
                 viewModel = viewModel,
                 playbackViewModel = playbackViewModel,
@@ -194,7 +177,6 @@ private fun TVDetailsContent(
     progress: List<com.rdwatch.androidtv.data.entities.WatchProgressEntity>,
     creditsState: UiState<ExtendedContentMetadata>,
     sourcesState: UiState<List<StreamingSource>>,
-    advancedSources: List<StreamingSource>,
     episodeSourcesMap: Map<String, List<com.rdwatch.androidtv.ui.details.models.advanced.SourceMetadata>>,
     viewModel: TVDetailsViewModel,
     playbackViewModel: PlaybackViewModel,
@@ -250,68 +232,6 @@ private fun TVDetailsContent(
                 onActionClick = onActionClick,
                 modifier = Modifier.padding(horizontal = 32.dp, vertical = 8.dp),
             )
-        }
-
-        // Source Selection Section - Only show when sources are available from advanced sources
-        if (advancedSources.isNotEmpty()) {
-            item {
-                var selectedSourceId by remember { mutableStateOf<String?>(null) }
-                var showSourceDialog by remember { mutableStateOf(false) }
-
-                // Use advanced sources converted to legacy format
-                val sources = advancedSources
-
-                Column {
-                    // Show current episode info
-                    selectedEpisode?.let { episode ->
-                        Text(
-                            text = "Sources for S${episode.seasonNumber}E${episode.episodeNumber} - ${episode.title}",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onBackground,
-                            modifier = Modifier.padding(horizontal = 32.dp, vertical = 8.dp),
-                        )
-                    }
-
-                    SourceSelectionSection(
-                        sources = sources,
-                        onSourceSelected = { source ->
-                            selectedSourceId = source.id
-                            // Play the selected episode with the chosen source
-                            selectedEpisode?.let { episode ->
-                                playbackViewModel.startEpisodePlayback(
-                                    tvShow = tvShow,
-                                    episode = episode,
-                                    source = source,
-                                )
-                            }
-                        },
-                        selectedSourceId = selectedSourceId,
-                        onViewAllClick = { showSourceDialog = true },
-                        modifier = Modifier.padding(horizontal = 32.dp, vertical = 8.dp),
-                    )
-
-                    if (showSourceDialog) {
-                        SourceSelectionDialog(
-                            sources = sources,
-                            onSourceSelected = { source ->
-                                selectedSourceId = source.id
-                                showSourceDialog = false
-                                // Play the selected episode with the chosen source
-                                selectedEpisode?.let { episode ->
-                                    playbackViewModel.startEpisodePlayback(
-                                        tvShow = tvShow,
-                                        episode = episode,
-                                        source = source,
-                                    )
-                                }
-                            },
-                            onDismiss = { showSourceDialog = false },
-                            selectedSourceId = selectedSourceId,
-                            title = "Select Episode Source",
-                        )
-                    }
-                }
-            }
         }
 
         // Tab navigation
@@ -681,55 +601,6 @@ private fun TVDetailsErrorScreen(
                 OutlinedButton(onClick = onBackPressed) { Text("Back") }
             }
         }
-    }
-}
-
-/**
- * Convert SourceMetadata (advanced sources) to StreamingSource (legacy format) for UI compatibility
- */
-private fun convertSourceMetadataToStreamingSource(sourceMetadata: com.rdwatch.androidtv.ui.details.models.advanced.SourceMetadata): StreamingSource {
-    return StreamingSource(
-        id = sourceMetadata.id,
-        provider =
-            com.rdwatch.androidtv.ui.details.models.SourceProvider(
-                id = sourceMetadata.provider.id,
-                name = sourceMetadata.provider.name,
-                displayName = sourceMetadata.provider.displayName,
-                logoUrl = sourceMetadata.provider.logoUrl,
-            ),
-        url = sourceMetadata.metadata["originalUrl"] ?: "",
-        quality = mapVideoResolutionToSourceQuality(sourceMetadata.quality.resolution),
-        sourceType =
-            com.rdwatch.androidtv.ui.details.models.SourceType(
-                com.rdwatch.androidtv.ui.details.models.SourceType.ScraperSourceType.DIRECT_LINK,
-            ),
-        features =
-            com.rdwatch.androidtv.ui.details.models.SourceFeatures(
-                supportsP2P = sourceMetadata.provider.type == com.rdwatch.androidtv.ui.details.models.advanced.SourceProviderInfo.ProviderType.TORRENT,
-                supportsDolbyVision = sourceMetadata.quality.dolbyVision,
-                supportsDolbyAtmos = sourceMetadata.audio.dolbyAtmos,
-                seeders = sourceMetadata.health.seeders,
-                leechers = sourceMetadata.health.leechers,
-            ),
-        isAvailable = sourceMetadata.availability.isAvailable,
-        metadata = sourceMetadata.metadata,
-    )
-}
-
-/**
- * Map VideoResolution to SourceQuality
- */
-private fun mapVideoResolutionToSourceQuality(resolution: com.rdwatch.androidtv.ui.details.models.advanced.VideoResolution): SourceQuality {
-    return when (resolution) {
-        com.rdwatch.androidtv.ui.details.models.advanced.VideoResolution.RESOLUTION_8K -> SourceQuality.QUALITY_8K
-        com.rdwatch.androidtv.ui.details.models.advanced.VideoResolution.RESOLUTION_4K -> SourceQuality.QUALITY_4K
-        com.rdwatch.androidtv.ui.details.models.advanced.VideoResolution.RESOLUTION_1440P -> SourceQuality.QUALITY_1080P // Map 1440p to 1080p
-        com.rdwatch.androidtv.ui.details.models.advanced.VideoResolution.RESOLUTION_1080P -> SourceQuality.QUALITY_1080P
-        com.rdwatch.androidtv.ui.details.models.advanced.VideoResolution.RESOLUTION_720P -> SourceQuality.QUALITY_720P
-        com.rdwatch.androidtv.ui.details.models.advanced.VideoResolution.RESOLUTION_480P -> SourceQuality.QUALITY_480P
-        com.rdwatch.androidtv.ui.details.models.advanced.VideoResolution.RESOLUTION_360P -> SourceQuality.QUALITY_360P
-        com.rdwatch.androidtv.ui.details.models.advanced.VideoResolution.RESOLUTION_240P -> SourceQuality.QUALITY_240P
-        com.rdwatch.androidtv.ui.details.models.advanced.VideoResolution.UNKNOWN -> SourceQuality.QUALITY_AUTO
     }
 }
 
