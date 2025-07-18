@@ -1749,6 +1749,131 @@ class TVDetailsViewModel
         }
 
         /**
+         * Update source filter
+         */
+        fun updateSourceFilter(filter: SourceFilter) {
+            android.util.Log.d("TVDetailsViewModel", "Updating source filter: $filter")
+            val currentState = _sourceSelectionState.value
+            val filteredSources =
+                currentState.sources.filter { source ->
+                    // Apply the filter logic
+                    var matches = true
+
+                    // Quality filter
+                    filter.minQuality?.let { minQuality ->
+                        matches = matches && source.quality.resolution.baseScore >= minQuality.baseScore
+                    }
+
+                    // HDR filter
+                    if (filter.requireHDR) {
+                        matches = matches && source.quality.hasHDR()
+                    }
+
+                    // Cached filter
+                    if (filter.requireCached) {
+                        matches = matches && source.availability.cached
+                    }
+
+                    // Seeders filter (for P2P sources)
+                    filter.minSeeders?.let { minSeeders ->
+                        matches = matches && (source.health.seeders ?: 0) >= minSeeders
+                    }
+
+                    matches
+                }
+
+            _sourceSelectionState.value =
+                currentState.copy(
+                    filter = filter,
+                    filteredSources = filteredSources,
+                )
+        }
+
+        /**
+         * Update sort option
+         */
+        fun updateSortOption(sortOption: SourceSortOption) {
+            val currentState = _sourceSelectionState.value
+
+            // Apply sorting to filtered sources
+            val sortedSources =
+                when (sortOption) {
+                    SourceSortOption.QUALITY_SCORE, SourceSortOption.QUALITY ->
+                        currentState.filteredSources.sortedByDescending {
+                            it.quality.resolution.baseScore
+                        }
+                    SourceSortOption.FILE_SIZE ->
+                        currentState.filteredSources.sortedByDescending {
+                            it.file.sizeInBytes ?: 0
+                        }
+                    SourceSortOption.SEEDERS ->
+                        currentState.filteredSources.sortedByDescending {
+                            it.health.seeders ?: 0
+                        }
+                    SourceSortOption.RELIABILITY ->
+                        currentState.filteredSources.sortedByDescending {
+                            it.provider.reliability.ordinal
+                        }
+                    SourceSortOption.PROVIDER ->
+                        currentState.filteredSources.sortedBy {
+                            it.provider.displayName
+                        }
+                    SourceSortOption.PRIORITY ->
+                        currentState.filteredSources.sortedByDescending { source ->
+                            // Priority combines quality and reliability
+                            val qualityScore = source.quality.resolution.baseScore
+                            val reliabilityScore = source.provider.reliability.ordinal * 1000
+                            qualityScore + reliabilityScore
+                        }
+                    SourceSortOption.AVAILABILITY ->
+                        currentState.filteredSources.sortedByDescending { source ->
+                            if (source.availability.isAvailable) 1 else 0
+                        }
+                    SourceSortOption.RELEASE_TYPE ->
+                        currentState.filteredSources.sortedBy { source ->
+                            source.release.type.ordinal
+                        }
+                    else -> currentState.filteredSources
+                }
+
+            _sourceSelectionState.value =
+                currentState.copy(
+                    sortOption = sortOption,
+                    filteredSources = sortedSources,
+                )
+        }
+
+        /**
+         * Update view mode
+         */
+        fun updateViewMode(viewMode: SourceSelectionState.ViewMode) {
+            android.util.Log.d("TVDetailsViewModel", "Updating view mode to: $viewMode")
+            _sourceSelectionState.value =
+                _sourceSelectionState.value.copy(
+                    viewMode = viewMode,
+                )
+        }
+
+        /**
+         * Toggle group expansion
+         */
+        fun toggleGroup(groupId: String) {
+            val currentState = _sourceSelectionState.value
+            val expandedGroups = currentState.expandedGroups.toMutableSet()
+
+            if (expandedGroups.contains(groupId)) {
+                expandedGroups.remove(groupId)
+            } else {
+                expandedGroups.add(groupId)
+            }
+
+            _sourceSelectionState.value =
+                currentState.copy(
+                    expandedGroups = expandedGroups,
+                )
+        }
+
+        /**
          * Handle source selection from UI
          */
         fun onSourceSelected(source: SourceMetadata) {

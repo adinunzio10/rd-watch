@@ -450,6 +450,18 @@ private fun TVDetailsContent(
                 viewModel.loadAdvancedSourcesForEpisode(tvShow, episode)
             }
         },
+        onFilterChanged = { filter ->
+            viewModel.updateSourceFilter(filter)
+        },
+        onSortChanged = { sortOption ->
+            viewModel.updateSortOption(sortOption)
+        },
+        onGroupToggle = { groupId ->
+            viewModel.toggleGroup(groupId)
+        },
+        onViewModeChanged = { viewMode ->
+            viewModel.updateViewMode(viewMode)
+        },
         onPlaySource = { source ->
             sourceSelectionState.selectedEpisode?.let { episode ->
                 playbackViewModel.startEpisodePlaybackWithSource(
@@ -458,6 +470,14 @@ private fun TVDetailsContent(
                     source = source,
                 )
             }
+        },
+        onDownloadSource = { source ->
+            // TODO: Implement download functionality
+            android.util.Log.d("TVDetailsScreen", "Download source requested for ${source.provider.displayName}")
+        },
+        onAddToPlaylist = { source ->
+            // TODO: Implement playlist functionality
+            android.util.Log.d("TVDetailsScreen", "Add to playlist requested for ${source.provider.displayName}")
         },
     )
 }
