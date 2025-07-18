@@ -170,11 +170,12 @@ class SeasonPackDetectorTest {
     fun `analyzeSeasonPack - handles edge cases gracefully`() {
         val edgeCases =
             listOf(
-                "", // Empty string
-                "random.file.name.without.season.info.mkv", // No season info
-                "Movie.2023.1080p.BluRay.x264-GROUP.mkv", // Movie, not TV show
-                "S1E1E2E3E4E5.weird.naming.mkv", // Weird episode naming
-                "Season.1.Episode.1.but.also.Season.2.mkv", // Conflicting info
+                // Empty string
+                "",
+                "random.file.name.without.season.info.mkv",
+                "Movie.2023.1080p.BluRay.x264-GROUP.mkv",
+                "S1E1E2E3E4E5.weird.naming.mkv",
+                "Season.1.Episode.1.but.also.Season.2.mkv",
             )
 
         edgeCases.forEach { filename ->
@@ -240,14 +241,14 @@ class SeasonPackDetectorTest {
     fun `analyzeSeasonPack - confidence scoring works correctly`() {
         val highConfidenceFiles =
             listOf(
-                "Show.Season.1.Complete.1080p.BluRay.Pack.x264-GROUP.mkv", // Multiple indicators
-                "Show.S01.Complete.720p.HDTV.x264-GROUP.mkv", // Clear season + complete
+                "Show.Season.1.Complete.1080p.BluRay.Pack.x264-GROUP.mkv",
+                "Show.S01.Complete.720p.HDTV.x264-GROUP.mkv",
             )
 
         val lowConfidenceFiles =
             listOf(
-                "show.s1.hdtv.mkv", // Minimal info
-                "random.video.file.mkv", // No season info
+                "show.s1.hdtv.mkv",
+                "random.video.file.mkv",
             )
 
         highConfidenceFiles.forEach { filename ->

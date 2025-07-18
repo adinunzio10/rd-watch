@@ -368,18 +368,15 @@ class TVDetailsViewModel
         /**
          * Determine if a season needs on-demand loading
          */
-        private fun shouldLoadSeasonOnDemand(season: TVSeason): Boolean {
-            return season.episodes.isEmpty() &&
+        private fun shouldLoadSeasonOnDemand(season: TVSeason): Boolean =
+            season.episodes.isEmpty() &&
                 season.episodeCount > 0 &&
                 !activeSeasonRequests.contains(season.seasonNumber)
-        }
 
         /**
          * Select appropriate episode from a season (first unwatched or first episode)
          */
-        private fun selectAppropriateEpisode(season: TVSeason): TVEpisode? {
-            return season.episodes.find { !it.isWatched } ?: season.episodes.firstOrNull()
-        }
+        private fun selectAppropriateEpisode(season: TVSeason): TVEpisode? = season.episodes.find { !it.isWatched } ?: season.episodes.firstOrNull()
 
         /**
          * Get current season data from single source of truth
@@ -400,16 +397,12 @@ class TVDetailsViewModel
          * Get all seasons from single source of truth
          * This ensures UI components always get consistent season list
          */
-        fun getAllSeasonsFromAuthoritativeSource(): List<TVSeason> {
-            return _tvShowState.value?.getSeasons() ?: emptyList()
-        }
+        fun getAllSeasonsFromAuthoritativeSource(): List<TVSeason> = _tvShowState.value?.getSeasons() ?: emptyList()
 
         /**
          * Get season by number from single source of truth
          */
-        fun getSeasonByNumberFromAuthoritativeSource(seasonNumber: Int): TVSeason? {
-            return _tvShowState.value?.getSeasons()?.find { it.seasonNumber == seasonNumber }
-        }
+        fun getSeasonByNumberFromAuthoritativeSource(seasonNumber: Int): TVSeason? = _tvShowState.value?.getSeasons()?.find { it.seasonNumber == seasonNumber }
 
         /**
          * Select an episode and load sources (called by user interaction)
@@ -656,13 +649,12 @@ class TVDetailsViewModel
         /**
          * Determine which season to load initially based on existing data
          */
-        private fun determineInitialSeasonToLoad(existingSeasons: List<TVSeason>): Int {
-            return if (existingSeasons.isNotEmpty()) {
+        private fun determineInitialSeasonToLoad(existingSeasons: List<TVSeason>): Int =
+            if (existingSeasons.isNotEmpty()) {
                 existingSeasons.filter { it.seasonNumber > 0 }.minByOrNull { it.seasonNumber }?.seasonNumber ?: 1
             } else {
                 1
             }
-        }
 
         /**
          * Load the initial season with comprehensive error handling
@@ -685,8 +677,10 @@ class TVDetailsViewModel
             try {
                 // Load season with timeout protection
                 val result =
-                    withTimeoutOrNull(30000) { // 30 second timeout
-                        tmdbTVRepository.getSeasonDetails(tmdbId, seasonNumber)
+                    withTimeoutOrNull(30000) {
+                        // 30 second timeout
+                        tmdbTVRepository
+                            .getSeasonDetails(tmdbId, seasonNumber)
                             .first { result ->
                                 // Wait for Success or Error, skip Loading states
                                 result !is com.rdwatch.androidtv.repository.base.Result.Loading
@@ -791,8 +785,8 @@ class TVDetailsViewModel
         /**
          * Create placeholder season for on-demand loading
          */
-        private fun createPlaceholderSeason(seasonNumber: Int): TVSeason {
-            return TVSeason(
+        private fun createPlaceholderSeason(seasonNumber: Int): TVSeason =
+            TVSeason(
                 id = "season_$seasonNumber",
                 seasonNumber = seasonNumber,
                 name = "Season $seasonNumber",
@@ -803,7 +797,6 @@ class TVDetailsViewModel
                 episodeCount = 1,
                 episodes = emptyList(),
             )
-        }
 
         /**
          * Handle various types of season loading errors
@@ -831,9 +824,13 @@ class TVDetailsViewModel
          * Sealed class for different types of season loading errors
          */
         private sealed class SeasonLoadingError {
-            data class ApiError(val exception: Throwable) : SeasonLoadingError()
+            data class ApiError(
+                val exception: Throwable,
+            ) : SeasonLoadingError()
 
-            data class CriticalError(val exception: Throwable) : SeasonLoadingError()
+            data class CriticalError(
+                val exception: Throwable,
+            ) : SeasonLoadingError()
 
             object Timeout : SeasonLoadingError()
 
@@ -965,8 +962,10 @@ class TVDetailsViewModel
 
                     try {
                         val result =
-                            withTimeoutOrNull(30000) { // 30 second timeout
-                                tmdbTVRepository.getSeasonDetails(tmdbId, seasonNumber)
+                            withTimeoutOrNull(30000) {
+                                // 30 second timeout
+                                tmdbTVRepository
+                                    .getSeasonDetails(tmdbId, seasonNumber)
                                     .first { result ->
                                         // Wait for Success or Error, skip Loading states
                                         result !is com.rdwatch.androidtv.repository.base.Result.Loading
@@ -1078,9 +1077,13 @@ class TVDetailsViewModel
          * Sealed class for on-demand season loading errors
          */
         private sealed class OnDemandSeasonLoadingError {
-            data class ApiError(val exception: Throwable) : OnDemandSeasonLoadingError()
+            data class ApiError(
+                val exception: Throwable,
+            ) : OnDemandSeasonLoadingError()
 
-            data class CriticalError(val exception: Throwable) : OnDemandSeasonLoadingError()
+            data class CriticalError(
+                val exception: Throwable,
+            ) : OnDemandSeasonLoadingError()
 
             object Timeout : OnDemandSeasonLoadingError()
 
@@ -1201,9 +1204,7 @@ class TVDetailsViewModel
         /**
          * Get default episode selection for a season (first unwatched or first episode)
          */
-        private fun getDefaultEpisodeSelection(season: TVSeason): TVEpisode? {
-            return season.episodes.find { !it.isWatched } ?: season.episodes.firstOrNull()
-        }
+        private fun getDefaultEpisodeSelection(season: TVSeason): TVEpisode? = season.episodes.find { !it.isWatched } ?: season.episodes.firstOrNull()
 
         /**
          * Consolidated TMDb to UI model mapper - handles both single seasons and season lists
@@ -1237,9 +1238,8 @@ class TVDetailsViewModel
             /**
              * Map list of TMDb seasons to UI TVSeason models
              */
-            fun mapSeasonsToTVSeasons(tmdbSeasons: List<com.rdwatch.androidtv.network.models.tmdb.TMDbSeasonResponse>): List<TVSeason> {
-                return tmdbSeasons.map { mapSeasonToTVSeason(it) }
-            }
+            fun mapSeasonsToTVSeasons(tmdbSeasons: List<com.rdwatch.androidtv.network.models.tmdb.TMDbSeasonResponse>): List<TVSeason> =
+                tmdbSeasons.map { mapSeasonToTVSeason(it) }
 
             /**
              * Map TMDb episodes to UI TVEpisode models with enhanced data preservation
@@ -1247,9 +1247,7 @@ class TVDetailsViewModel
             fun mapEpisodesToTVEpisodes(
                 tmdbEpisodes: List<com.rdwatch.androidtv.network.models.tmdb.TMDbEpisodeResponse>,
                 seasonNumber: Int,
-            ): List<TVEpisode> {
-                return tmdbEpisodes.map { mapEpisodeToTVEpisode(it, seasonNumber) }
-            }
+            ): List<TVEpisode> = tmdbEpisodes.map { mapEpisodeToTVEpisode(it, seasonNumber) }
 
             /**
              * Map single TMDb episode to UI TVEpisode model with complete data preservation
@@ -1282,10 +1280,6 @@ class TVDetailsViewModel
                     videoUrl = null,
                 )
             }
-
-            /**
-             * Data preservation validation methods
-             */
 
             /**
              * Validate essential season data to prevent data loss
@@ -1340,15 +1334,12 @@ class TVDetailsViewModel
             /**
              * Centralized image URL builder for consistency
              */
-            private fun buildImageUrl(path: String): String {
-                return "https://image.tmdb.org/t/p/w500$path"
-            }
+            private fun buildImageUrl(path: String): String = "https://image.tmdb.org/t/p/w500$path"
         }
 
         // Legacy wrapper methods for backward compatibility
-        private fun mapTMDbSeasonResponseToTVSeason(seasonResponse: com.rdwatch.androidtv.network.models.tmdb.TMDbSeasonResponse): TVSeason {
-            return TMDbMapper.mapSeasonToTVSeason(seasonResponse)
-        }
+        private fun mapTMDbSeasonResponseToTVSeason(seasonResponse: com.rdwatch.androidtv.network.models.tmdb.TMDbSeasonResponse): TVSeason =
+            TMDbMapper.mapSeasonToTVSeason(seasonResponse)
 
         /**
          * Load TV show credits (cast and crew) from TMDb
@@ -1716,12 +1707,15 @@ class TVDetailsViewModel
             streamingSource: StreamingSource,
             tvShow: TVShowContentDetail,
             episode: TVEpisode,
-        ): SourceMetadata {
-            return SourceMetadata(
+        ): SourceMetadata =
+            SourceMetadata(
                 id = streamingSource.id,
                 provider =
                     SourceProviderInfo(
-                        id = streamingSource.provider.name.lowercase().replace(" ", "-"),
+                        id =
+                            streamingSource.provider.name
+                                .lowercase()
+                                .replace(" ", "-"),
                         name = streamingSource.provider.name,
                         displayName = streamingSource.provider.displayName,
                         logoUrl = null,
@@ -1808,7 +1802,6 @@ class TVDetailsViewModel
                         "originalUrl" to (streamingSource.url ?: ""),
                     ),
             )
-        }
 
         /**
          * Preload sources for visible episodes in current season
@@ -1881,7 +1874,7 @@ class TVDetailsViewModel
          * Map StreamingSource quality to VideoResolution
          */
         private fun mapStreamingQualityToVideoResolution(quality: SourceQuality): VideoResolution =
-            return when (quality) {
+            when (quality) {
                 SourceQuality.QUALITY_8K -> VideoResolution.RESOLUTION_8K
                 SourceQuality.QUALITY_4K,
                 SourceQuality.QUALITY_4K_HDR,
@@ -1982,21 +1975,19 @@ class TVDetailsViewModel
             )
 
         private fun mapTMDbSeasonsToTVSeasons(tmdbSeasons: List<com.rdwatch.androidtv.network.models.tmdb.TMDbSeasonResponse>): List<TVSeason> =
-            TMDbMapper.mapSeasonsToTVSeasons(tmdbSeasons)
+            TMDbMapper.mapSeasonsToTVSeasons(
+                tmdbSeasons,
+            )
 
         private fun mapTMDbEpisodesToTVEpisodes(
             tmdbEpisodes: List<com.rdwatch.androidtv.network.models.tmdb.TMDbEpisodeResponse>,
             seasonNumber: Int,
-        ): List<TVEpisode> {
-            return TMDbMapper.mapEpisodesToTVEpisodes(tmdbEpisodes, seasonNumber)
-        }
+        ): List<TVEpisode> = TMDbMapper.mapEpisodesToTVEpisodes(tmdbEpisodes, seasonNumber)
 
         private fun mapTMDbEpisodeToTVEpisode(
             tmdbEpisode: com.rdwatch.androidtv.network.models.tmdb.TMDbEpisodeResponse,
             seasonNumber: Int? = null,
-        ): TVEpisode {
-            return TMDbMapper.mapEpisodeToTVEpisode(tmdbEpisode, seasonNumber)
-        }
+        ): TVEpisode = TMDbMapper.mapEpisodeToTVEpisode(tmdbEpisode, seasonNumber)
 
         /**
          * Public method to fetch IMDb ID if missing - called from UI when needed

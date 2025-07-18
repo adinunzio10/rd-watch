@@ -131,8 +131,14 @@ class AdvancedSourceFilterTest {
 
         testSources =
             listOf(
-                source4KHDR, source1080pHEVC, source720pH264, sourceDebridCached,
-                sourceTorrentHighSeed, sourceTorrentLowSeed, sourceRemuxLarge, sourceWebDLSmall,
+                source4KHDR,
+                source1080pHEVC,
+                source720pH264,
+                sourceDebridCached,
+                sourceTorrentHighSeed,
+                sourceTorrentLowSeed,
+                sourceRemuxLarge,
+                sourceWebDLSmall,
             )
     }
 
@@ -149,8 +155,8 @@ class AdvancedSourceFilterTest {
         seeders: Int,
         providerType: SourceProviderInfo.ProviderType,
         cached: Boolean = false,
-    ): SourceMetadata {
-        return SourceMetadata(
+    ): SourceMetadata =
+        SourceMetadata(
             id = id,
             provider =
                 SourceProviderInfo(
@@ -216,7 +222,6 @@ class AdvancedSourceFilterTest {
                     cached = cached,
                 ),
         )
-    }
 
     @Test
     fun `AdvancedSourceFilter isEmpty works correctly`() {
@@ -473,7 +478,7 @@ class AdvancedSourceFilterTest {
                 qualityFilters =
                     QualityFilters(
                         minResolution = VideoResolution.RESOLUTION_1080P,
-                        requireHDR = false, // Allow both HDR and non-HDR
+                        requireHDR = false,
                     ),
                 sourceTypeFilters =
                     SourceTypeFilters(
@@ -529,13 +534,16 @@ class AdvancedSourceFilterTest {
                     // Audio check
                     source.audio.format in
                     setOf(
-                        AudioFormat.TRUEHD, AudioFormat.DTS_HD_MA,
-                        AudioFormat.EAC3, AudioFormat.AC3,
+                        AudioFormat.TRUEHD,
+                        AudioFormat.DTS_HD_MA,
+                        AudioFormat.EAC3,
+                        AudioFormat.AC3,
                     ) &&
                     // Release type check
                     source.release.type in
                     setOf(
-                        ReleaseType.BLURAY, ReleaseType.BLURAY_REMUX,
+                        ReleaseType.BLURAY,
+                        ReleaseType.BLURAY_REMUX,
                         ReleaseType.WEB_DL,
                     )
             }
@@ -616,12 +624,12 @@ class AdvancedSourceFilterTest {
                 qualityFilters =
                     QualityFilters(
                         minResolution = VideoResolution.RESOLUTION_4K,
-                        maxResolution = VideoResolution.RESOLUTION_720P, // Max < Min
+                        maxResolution = VideoResolution.RESOLUTION_720P,
                     ),
                 fileSizeFilters =
                     FileSizeFilters(
                         minSizeGB = 50.0,
-                        maxSizeGB = 1.0, // Max < Min
+                        maxSizeGB = 1.0,
                     ),
             )
 

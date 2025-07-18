@@ -45,8 +45,8 @@ class HealthMonitorTest {
             HealthInfo(
                 seeders = 1500,
                 leechers = 200,
-                downloadSpeed = 50_000_000L, // 50 MB/s
-                uploadSpeed = 10_000_000L, // 10 MB/s
+                downloadSpeed = 50_000_000L,
+                uploadSpeed = 10_000_000L,
                 availability = 1.0f,
                 lastChecked = Date(),
             )
@@ -55,8 +55,8 @@ class HealthMonitorTest {
             HealthInfo(
                 seeders = 100,
                 leechers = 25,
-                downloadSpeed = 10_000_000L, // 10 MB/s
-                uploadSpeed = 2_000_000L, // 2 MB/s
+                downloadSpeed = 10_000_000L,
+                uploadSpeed = 2_000_000L,
                 availability = 0.95f,
                 lastChecked = Date(),
             )
@@ -65,10 +65,10 @@ class HealthMonitorTest {
             HealthInfo(
                 seeders = 3,
                 leechers = 10,
-                downloadSpeed = 500_000L, // 500 KB/s
-                uploadSpeed = 100_000L, // 100 KB/s
+                downloadSpeed = 500_000L,
+                uploadSpeed = 100_000L,
                 availability = 0.6f,
-                lastChecked = Date(System.currentTimeMillis() - 2 * 60 * 60 * 1000L), // 2 hours ago
+                lastChecked = Date(System.currentTimeMillis() - 2 * 60 * 60 * 1000L),
             )
 
         deadHealth =
@@ -78,7 +78,7 @@ class HealthMonitorTest {
                 downloadSpeed = 0L,
                 uploadSpeed = 0L,
                 availability = 0.0f,
-                lastChecked = Date(System.currentTimeMillis() - 24 * 60 * 60 * 1000L), // 24 hours ago
+                lastChecked = Date(System.currentTimeMillis() - 24 * 60 * 60 * 1000L),
             )
     }
 
@@ -199,11 +199,11 @@ class HealthMonitorTest {
         val freshHealth = goodHealth.copy(lastChecked = Date())
         val staleHealth =
             goodHealth.copy(
-                lastChecked = Date(System.currentTimeMillis() - 30 * 60 * 1000L), // 30 minutes ago
+                lastChecked = Date(System.currentTimeMillis() - 30 * 60 * 1000L),
             )
         val veryStaleHealth =
             goodHealth.copy(
-                lastChecked = Date(System.currentTimeMillis() - 25 * 60 * 60 * 1000L), // 25 hours ago
+                lastChecked = Date(System.currentTimeMillis() - 25 * 60 * 60 * 1000L),
             )
 
         val freshData = healthMonitor.calculateHealthScore(freshHealth, testProvider)
@@ -295,7 +295,7 @@ class HealthMonitorTest {
             repeat(5) { i ->
                 val healthData =
                     healthMonitor.calculateHealthScore(
-                        goodHealth.copy(seeders = 100 + i * 10), // Increasing seeders
+                        goodHealth.copy(seeders = 100 + i * 10),
                         testProvider,
                     )
                 healthMonitor.cacheHealthData(sourceId, healthData)
@@ -334,8 +334,8 @@ class HealthMonitorTest {
             HealthInfo(
                 seeders = 50,
                 leechers = 10,
-                downloadSpeed = 100_000L, // 100 KB/s
-                uploadSpeed = 50_000L, // 50 KB/s
+                downloadSpeed = 100_000L,
+                uploadSpeed = 50_000L,
                 availability = 1.0f,
                 lastChecked = Date(),
             )
@@ -344,8 +344,8 @@ class HealthMonitorTest {
             HealthInfo(
                 seeders = 50,
                 leechers = 10,
-                downloadSpeed = 100_000_000L, // 100 MB/s
-                uploadSpeed = 50_000_000L, // 50 MB/s
+                downloadSpeed = 100_000_000L,
+                uploadSpeed = 50_000_000L,
                 availability = 1.0f,
                 lastChecked = Date(),
             )
@@ -387,7 +387,7 @@ class HealthMonitorTest {
         assertTrue(noLeechersData.p2pHealth.ratioScore >= 90)
 
         // More leechers than seeders should result in ratio < 1
-        assertEquals(0.25f, moreLeechersData.p2pHealth.ratio) // 50/200
+        assertEquals(0.25f, moreLeechersData.p2pHealth.ratio)
         assertTrue(moreLeechersData.p2pHealth.ratioScore <= 70)
     }
 
@@ -410,15 +410,15 @@ class HealthMonitorTest {
 
     @Test
     fun `availability adjustment works correctly`() {
-        val highAvailability = goodHealth.copy(availability = 1.0f, seeders = 5) // Low seeders but high availability
-        val lowAvailability = goodHealth.copy(availability = 0.3f, seeders = 100) // High seeders but low availability
+        val highAvailability = goodHealth.copy(availability = 1.0f, seeders = 5)
+        val lowAvailability = goodHealth.copy(availability = 0.3f, seeders = 100)
 
         val highAvailData = healthMonitor.calculateHealthScore(highAvailability, testProvider)
         val lowAvailData = healthMonitor.calculateHealthScore(lowAvailability, testProvider)
 
         // Availability percentage should reflect the adjustments
-        assertTrue(highAvailData.availabilityPercentage >= 0.8f) // Should be adjusted down due to low seeders
-        assertTrue(lowAvailData.availabilityPercentage >= 0.3f) // Should reflect low base availability
+        assertTrue(highAvailData.availabilityPercentage >= 0.8f)
+        assertTrue(lowAvailData.availabilityPercentage >= 0.3f)
     }
 
     @Test

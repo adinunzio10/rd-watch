@@ -55,8 +55,8 @@ class SourceAggregationIntegrationTest {
         unmockkAll()
     }
 
-    private fun createTestSources(): List<SourceMetadata> {
-        return listOf(
+    private fun createTestSources(): List<SourceMetadata> =
+        listOf(
             // 4K HDR REMUX - Premium source
             createTestSource(
                 id = "premium_4k",
@@ -137,7 +137,6 @@ class SourceAggregationIntegrationTest {
                 providerType = SourceProviderInfo.ProviderType.TORRENT,
             ),
         )
-    }
 
     private fun createTestSource(
         id: String,
@@ -151,8 +150,8 @@ class SourceAggregationIntegrationTest {
         seeders: Int,
         providerType: SourceProviderInfo.ProviderType,
         cached: Boolean = false,
-    ): SourceMetadata {
-        return SourceMetadata(
+    ): SourceMetadata =
+        SourceMetadata(
             id = id,
             provider =
                 SourceProviderInfo(
@@ -215,7 +214,6 @@ class SourceAggregationIntegrationTest {
                     cached = cached,
                 ),
         )
-    }
 
     @Test
     fun `source aggregation pipeline processes all sources correctly`() =
@@ -381,7 +379,7 @@ class SourceAggregationIntegrationTest {
                         ),
                     sourceTypeFilters =
                         SourceTypeFilters(
-                            p2pOnly = false, // Allow both P2P and debrid
+                            p2pOnly = false,
                         ),
                 )
 
@@ -485,14 +483,14 @@ class SourceAggregationIntegrationTest {
                 listOf(
                     createTestSource(
                         id = "corrupted",
-                        filename = "", // Empty filename
+                        filename = "",
                         resolution = VideoResolution.UNKNOWN,
                         hdr10 = false,
                         codec = VideoCodec.UNKNOWN,
                         audio = AudioFormat.UNKNOWN,
                         releaseType = ReleaseType.UNKNOWN,
                         size = 0L,
-                        seeders = -1, // Invalid seeder count
+                        seeders = -1,
                         providerType = SourceProviderInfo.ProviderType.TORRENT,
                     ),
                 )
