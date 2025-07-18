@@ -13,6 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.media3.common.util.UnstableApi
@@ -20,6 +21,7 @@ import com.rdwatch.androidtv.ui.common.UiState
 import com.rdwatch.androidtv.ui.components.CastCrewSection
 import com.rdwatch.androidtv.ui.details.components.*
 import com.rdwatch.androidtv.ui.details.components.InfoSectionTabMode
+import com.rdwatch.androidtv.ui.details.components.SourceListBottomSheet
 import com.rdwatch.androidtv.ui.details.components.SourceSelectionDialog
 import com.rdwatch.androidtv.ui.details.components.SourceSelectionSection
 import com.rdwatch.androidtv.ui.details.models.*
@@ -84,82 +86,54 @@ fun TVDetailsScreen(
         tvShowState != null -> {
             val tvShow = tvShowState!!
 
-            // Conditional rendering: Episodes tab gets dedicated screen to avoid nested scrolling
-            if (selectedTabIndex == 2 && tvShow.contentType == ContentType.TV_SHOW) {
-                EpisodesTabScreen(
-                    tvShow = tvShow,
-                    selectedSeason = selectedSeason,
-                    selectedEpisode = selectedEpisode,
-                    onSeasonSelected = { season -> viewModel.selectSeason(season) },
-                    onEpisodeSelected = { episode ->
-                        viewModel.selectEpisode(episode)
-                        onEpisodeClick(episode)
-                    },
-                    onBackToDetails = { viewModel.selectTab(0) }, // Return to Overview tab
-                    viewModel = viewModel, // Pass ViewModel for advanced source management
-                    onSourceSelected = { source ->
-                        // Handle source selection for episode playback
-                        // This could trigger playback with the selected source
-                    },
-                    onPlayWithSource = { episode, source ->
-                        // Handle playing episode with specific source
-                        playbackViewModel.startEpisodePlaybackWithSource(
-                            tvShow = tvShow,
-                            episode = episode,
-                            source = source,
-                        )
-                    },
-                    modifier = modifier,
-                )
-            } else {
-                TVDetailsContent(
-                    tvShow = tvShow,
-                    selectedSeason = selectedSeason,
-                    selectedEpisode = selectedEpisode,
-                    selectedTabIndex = selectedTabIndex,
-                    progress = progress,
-                    creditsState = creditsState,
-                    sourcesState = sourcesState,
-                    advancedSources = advancedSources,
-                    viewModel = viewModel,
-                    playbackViewModel = playbackViewModel,
-                    onActionClick = { action ->
-                        when (action) {
-                            // TODO: Determine which episode to show advanced source selection for
-                            // Should consider: selected episode, next unwatched episode, or first episode
-                            // Remove ContentAction.Play - now handled by episode-specific source selection
-                            is ContentAction.AddToWatchlist -> {
-                                viewModel.toggleWatchlist(tvShow.id)
-                            }
-                            is ContentAction.Like -> {
-                                viewModel.toggleLike(tvShow.id)
-                            }
-                            is ContentAction.Share -> {
-                                viewModel.shareContent(tvShow)
-                            }
-                            is ContentAction.Download -> {
-                                selectedEpisode?.let { episode ->
-                                    viewModel.downloadEpisode(episode)
-                                }
-                            }
-                            else -> {
-                                // Handle other actions
+            TVDetailsContent(
+                tvShow = tvShow,
+                selectedSeason = selectedSeason,
+                selectedEpisode = selectedEpisode,
+                selectedTabIndex = selectedTabIndex,
+                progress = progress,
+                creditsState = creditsState,
+                sourcesState = sourcesState,
+                advancedSources = advancedSources,
+                episodeSourcesMap = episodeSourcesMap,
+                viewModel = viewModel,
+                playbackViewModel = playbackViewModel,
+                onActionClick = { action ->
+                    when (action) {
+                        // TODO: Determine which episode to show advanced source selection for
+                        // Should consider: selected episode, next unwatched episode, or first episode
+                        // Remove ContentAction.Play - now handled by episode-specific source selection
+                        is ContentAction.AddToWatchlist -> {
+                            viewModel.toggleWatchlist(tvShow.id)
+                        }
+                        is ContentAction.Like -> {
+                            viewModel.toggleLike(tvShow.id)
+                        }
+                        is ContentAction.Share -> {
+                            viewModel.shareContent(tvShow)
+                        }
+                        is ContentAction.Download -> {
+                            selectedEpisode?.let { episode ->
+                                viewModel.downloadEpisode(episode)
                             }
                         }
-                    },
-                    onSeasonSelected = { season -> viewModel.selectSeason(season) },
-                    onEpisodeSelected = { episode ->
-                        viewModel.selectEpisode(episode)
-                        onEpisodeClick(episode)
-                    },
-                    onTabSelected = { tabIndex -> viewModel.selectTab(tabIndex) },
-                    onBackPressed = onBackPressed,
-                    backButtonFocusRequester = backButtonFocusRequester,
-                    tabFocusRequester = tabFocusRequester,
-                    listState = listState,
-                    modifier = modifier,
-                )
-            }
+                        else -> {
+                            // Handle other actions
+                        }
+                    }
+                },
+                onSeasonSelected = { season -> viewModel.selectSeason(season) },
+                onEpisodeSelected = { episode ->
+                    viewModel.selectEpisode(episode)
+                    onEpisodeClick(episode)
+                },
+                onTabSelected = { tabIndex -> viewModel.selectTab(tabIndex) },
+                onBackPressed = onBackPressed,
+                backButtonFocusRequester = backButtonFocusRequester,
+                tabFocusRequester = tabFocusRequester,
+                listState = listState,
+                modifier = modifier,
+            )
         }
         else -> {
             // Initial state - show loading screen while tvShowState is being loaded
@@ -178,6 +152,7 @@ private fun TVDetailsContent(
     creditsState: UiState<ExtendedContentMetadata>,
     sourcesState: UiState<List<StreamingSource>>,
     advancedSources: List<StreamingSource>,
+    episodeSourcesMap: Map<String, List<com.rdwatch.androidtv.ui.details.models.advanced.SourceMetadata>>,
     viewModel: TVDetailsViewModel,
     playbackViewModel: PlaybackViewModel,
     onActionClick: (ContentAction) -> Unit,
@@ -353,15 +328,68 @@ private fun TVDetailsContent(
                 }
             }
             2 -> {
-                // Episodes Tab - now handled by dedicated EpisodesTabScreen
-                // This case should not be reached due to conditional rendering above
-                item {
-                    Text(
-                        text = "Episodes view moved to dedicated screen",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-                        modifier = Modifier.padding(horizontal = 32.dp, vertical = 16.dp),
-                    )
+                // Episodes Tab - integrated into normal tab flow
+                if (tvShow.contentType == ContentType.TV_SHOW) {
+                    item {
+                        // Get authoritative season data to ensure consistency
+                        val authoritativeSeasons = remember(tvShow.id) { tvShow.getSeasons() }
+                        val authoritativeSelectedSeason =
+                            remember(selectedSeason, authoritativeSeasons) {
+                                selectedSeason ?: authoritativeSeasons.firstOrNull()
+                            }
+
+                        authoritativeSelectedSeason?.let { season ->
+                            // Create proper UI state with current season episodes
+                            val episodeGridUiState =
+                                remember(season.seasonNumber, season.episodes.size, selectedEpisode?.id) {
+                                    EpisodeGridUiState(
+                                        isLoading = false,
+                                        selectedSeasonNumber = season.seasonNumber,
+                                        availableSeasons = authoritativeSeasons,
+                                        currentSeasonEpisodes = season.episodes,
+                                        focusedEpisodeId = selectedEpisode?.id,
+                                        error = null,
+                                        isRefreshing = false,
+                                    )
+                                }
+
+                            EpisodeGridSection(
+                                tvShowDetail = tvShow.getTVShowDetail(),
+                                selectedSeasonNumber = season.seasonNumber,
+                                onSeasonSelected = { seasonNumber ->
+                                    // Find season by number and call callback
+                                    authoritativeSeasons.find { s -> s.seasonNumber == seasonNumber }?.let { foundSeason ->
+                                        onSeasonSelected(foundSeason)
+                                    }
+                                },
+                                onEpisodeClick = { episode ->
+                                    // Always trigger advanced source selection on episode click
+                                    onEpisodeSelected(episode) // Update selected episode state
+                                    viewModel.selectSourcesForEpisode(episode) // Show source selection
+                                },
+                                uiState = episodeGridUiState,
+                                episodeSourcesMap = episodeSourcesMap,
+                                modifier = Modifier.padding(horizontal = 32.dp, vertical = 16.dp),
+                            )
+                        } ?: run {
+                            // No seasons available - show empty state
+                            Column(
+                                modifier =
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 32.dp, vertical = 32.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center,
+                            ) {
+                                Text(
+                                    text = "No episodes available",
+                                    style = MaterialTheme.typography.headlineSmall,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    textAlign = TextAlign.Center,
+                                )
+                            }
+                        }
+                    }
                 }
             }
             3 -> {
@@ -416,6 +444,43 @@ private fun TVDetailsContent(
             }
         }
     }
+
+    // Advanced Source Selection Bottom Sheet
+    val showSourceSelection by viewModel.showSourceSelection.collectAsState()
+    val sourceSelectionState by viewModel.sourceSelectionState.collectAsState()
+
+    SourceListBottomSheet(
+        isVisible = showSourceSelection,
+        sources = sourceSelectionState.filteredSources,
+        selectedSource = sourceSelectionState.selectedSource,
+        state = sourceSelectionState,
+        onDismiss = { viewModel.hideSourceSelection() },
+        onSourceSelected = { source ->
+            viewModel.onSourceSelected(source)
+            // Trigger playback if episode is selected
+            sourceSelectionState.selectedEpisode?.let { episode ->
+                playbackViewModel.startEpisodePlaybackWithSource(
+                    tvShow = tvShow,
+                    episode = episode,
+                    source = source,
+                )
+            }
+        },
+        onRefresh = {
+            sourceSelectionState.selectedEpisode?.let { episode ->
+                viewModel.loadAdvancedSourcesForEpisode(tvShow, episode)
+            }
+        },
+        onPlaySource = { source ->
+            sourceSelectionState.selectedEpisode?.let { episode ->
+                playbackViewModel.startEpisodePlaybackWithSource(
+                    tvShow = tvShow,
+                    episode = episode,
+                    source = source,
+                )
+            }
+        },
+    )
 }
 
 @Composable
