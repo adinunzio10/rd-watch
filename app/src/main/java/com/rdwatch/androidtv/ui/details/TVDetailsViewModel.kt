@@ -1600,12 +1600,43 @@ class TVDetailsViewModel
 
                         // Update episode sources map
                         val currentMap = _episodeSourcesMap.value.toMutableMap()
-                        currentMap[episodeKey] = processedSources.map { it.sourceMetadata }
+                        val loadedSources = processedSources.map { it.sourceMetadata }
+                        currentMap[episodeKey] = loadedSources
                         _episodeSourcesMap.value = currentMap
 
                         android.util.Log.d("TVDetailsViewModel", "Loaded ${processedSources.size} advanced sources for episode")
+
+                        // CRITICAL FIX: Update source selection state if this episode is currently being displayed
+                        val currentSelectionState = _sourceSelectionState.value
+                        if (_showSourceSelection.value && currentSelectionState.selectedEpisode?.let {
+                                "${it.seasonNumber}-${it.episodeNumber}"
+                            } == episodeKey
+                        ) {
+                            android.util.Log.d("TVDetailsViewModel", "Updating source selection state with loaded sources for episode $episodeKey")
+                            _sourceSelectionState.value =
+                                currentSelectionState.copy(
+                                    sources = loadedSources,
+                                    filteredSources = loadedSources,
+                                    isLoading = false,
+                                    error = null,
+                                )
+                        }
                     } catch (e: Exception) {
                         android.util.Log.e("TVDetailsViewModel", "Failed to load advanced sources: ${e.message}")
+
+                        // CRITICAL FIX: Update source selection state with error if this episode is currently being displayed
+                        val currentSelectionState = _sourceSelectionState.value
+                        if (_showSourceSelection.value && currentSelectionState.selectedEpisode?.let {
+                                "${it.seasonNumber}-${it.episodeNumber}"
+                            } == episodeKey
+                        ) {
+                            android.util.Log.d("TVDetailsViewModel", "Updating source selection state with error for episode $episodeKey")
+                            _sourceSelectionState.value =
+                                currentSelectionState.copy(
+                                    isLoading = false,
+                                    error = "Failed to load sources: ${e.message}",
+                                )
+                        }
                     } finally {
                         activeSourceRequests.remove(episodeKey)
                         activeSourceLoadingJobs.remove(episodeKey)
@@ -1623,7 +1654,7 @@ class TVDetailsViewModel
 
         /**
          * Trigger source selection UI for an episode
-         * Enhanced with defensive checks following movie pattern
+         * Enhanced with defensive checks and timeout handling
          */
         fun selectSourcesForEpisode(episode: TVEpisode) {
             android.util.Log.d("TVDetailsViewModel", "=== Select Sources for Episode ===")
@@ -1647,6 +1678,23 @@ class TVDetailsViewModel
 
             if (sources.isEmpty()) {
                 android.util.Log.d("TVDetailsViewModel", "No sources available, loading sources first")
+
+                // Check if already loading sources for this episode
+                val episodeKey = "${episode.seasonNumber}-${episode.episodeNumber}"
+                if (activeSourceRequests.contains(episodeKey)) {
+                    android.util.Log.d("TVDetailsViewModel", "Sources already loading for episode $episodeKey, showing loading state")
+                    // Still show the dialog with loading state
+                    _sourceSelectionState.value =
+                        SourceSelectionState(
+                            sources = emptyList(),
+                            filteredSources = emptyList(),
+                            selectedEpisode = episode,
+                            isLoading = true,
+                        )
+                    _showSourceSelection.value = true
+                    return
+                }
+
                 // Load sources first, then trigger selection automatically
                 loadAdvancedSourcesForEpisode(tvShow, episode)
 
@@ -1658,6 +1706,23 @@ class TVDetailsViewModel
                         selectedEpisode = episode,
                         isLoading = true,
                     )
+
+                // Set a timeout to show error if sources don't load within reasonable time
+                viewModelScope.launch {
+                    kotlinx.coroutines.delay(30000) // 30 seconds timeout
+                    val stillLoading =
+                        _sourceSelectionState.value.isLoading &&
+                            _sourceSelectionState.value.selectedEpisode?.id == episode.id &&
+                            _showSourceSelection.value
+                    if (stillLoading) {
+                        android.util.Log.w("TVDetailsViewModel", "Source loading timeout for episode $episodeKey")
+                        _sourceSelectionState.value =
+                            _sourceSelectionState.value.copy(
+                                isLoading = false,
+                                error = "Source loading timed out. Please try again.",
+                            )
+                    }
+                }
             } else {
                 android.util.Log.d("TVDetailsViewModel", "Using existing sources for episode")
                 // Update source selection state with available sources
@@ -1667,6 +1732,7 @@ class TVDetailsViewModel
                         filteredSources = sources,
                         selectedEpisode = episode,
                         isLoading = false,
+                        error = null,
                     )
             }
 
