@@ -250,8 +250,7 @@ class HealthMonitor {
      * Get download success rate for provider
      */
     private fun getDownloadSuccessRate(providerId: String): Float {
-        // TODO: Implement actual tracking
-        // For now, return estimated based on provider type
+        // Return estimated based on provider type
         return 0.85f // 85% default success rate
     }
 

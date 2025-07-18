@@ -481,36 +481,3 @@ private fun QualityFilterChip(
         )
     }
 }
-
-/**
- * Preview/Demo configurations for SourceSelectionSection
- */
-object SourceSelectionSectionPreview {
-    @Composable
-    fun SampleSourceSelection() {
-        val sampleSources = StreamingSource.createSampleSources()
-        var selectedSourceId by remember { mutableStateOf<String?>(null) }
-
-        SourceSelectionSection(
-            sources = sampleSources,
-            onSourceSelected = { selectedSourceId = it.id },
-            selectedSourceId = selectedSourceId,
-            onViewAllClick = { /* Handle view all */ },
-        )
-    }
-
-    @Composable
-    fun SourceSelectionWithFilter() {
-        val sampleSources = StreamingSource.createSampleSources()
-        var selectedSourceId by remember { mutableStateOf<String?>(null) }
-        var selectedQuality by remember { mutableStateOf<SourceQuality?>(null) }
-
-        SourceSelectionWithQualityFilter(
-            sources = sampleSources,
-            onSourceSelected = { selectedSourceId = it.id },
-            selectedSourceId = selectedSourceId,
-            selectedQuality = selectedQuality,
-            onQualitySelected = { selectedQuality = it },
-        )
-    }
-}
