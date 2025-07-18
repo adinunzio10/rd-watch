@@ -353,24 +353,40 @@ private fun TVDetailsContent(
                                     )
                                 }
 
-                            EpisodeGridSection(
-                                tvShowDetail = tvShow.getTVShowDetail(),
-                                selectedSeasonNumber = season.seasonNumber,
-                                onSeasonSelected = { seasonNumber ->
-                                    // Find season by number and call callback
-                                    authoritativeSeasons.find { s -> s.seasonNumber == seasonNumber }?.let { foundSeason ->
-                                        onSeasonSelected(foundSeason)
-                                    }
-                                },
-                                onEpisodeClick = { episode ->
-                                    // Always trigger advanced source selection on episode click
-                                    onEpisodeSelected(episode) // Update selected episode state
-                                    viewModel.selectSourcesForEpisode(episode) // Show source selection
-                                },
-                                uiState = episodeGridUiState,
-                                episodeSourcesMap = episodeSourcesMap,
-                                modifier = Modifier.padding(horizontal = 32.dp, vertical = 16.dp),
-                            )
+                            // Wrap in a Box with padding first, then apply fixed height to inner content
+                            Box(
+                                modifier =
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 32.dp, vertical = 16.dp),
+                            ) {
+                                // Fixed height container to prevent infinite height constraints for LazyVerticalGrid
+                                Box(
+                                    modifier =
+                                        Modifier
+                                            .fillMaxWidth()
+                                            .height(600.dp),
+                                ) {
+                                    EpisodeGridSection(
+                                        tvShowDetail = tvShow.getTVShowDetail(),
+                                        selectedSeasonNumber = season.seasonNumber,
+                                        onSeasonSelected = { seasonNumber ->
+                                            // Find season by number and call callback
+                                            authoritativeSeasons.find { s -> s.seasonNumber == seasonNumber }?.let { foundSeason ->
+                                                onSeasonSelected(foundSeason)
+                                            }
+                                        },
+                                        onEpisodeClick = { episode ->
+                                            // Always trigger advanced source selection on episode click
+                                            onEpisodeSelected(episode) // Update selected episode state
+                                            viewModel.selectSourcesForEpisode(episode) // Show source selection
+                                        },
+                                        uiState = episodeGridUiState,
+                                        episodeSourcesMap = episodeSourcesMap,
+                                        modifier = Modifier.fillMaxSize(),
+                                    )
+                                }
+                            }
                         } ?: run {
                             // No seasons available - show empty state
                             Column(
