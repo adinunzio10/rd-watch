@@ -72,7 +72,7 @@ import com.rdwatch.androidtv.ui.viewmodel.PlaybackViewModel
 fun TVDetailsScreen(
     tvShowId: String,
     modifier: Modifier = Modifier,
-    onPlayClick: (TVEpisode) -> Unit = {},
+    onNavigateToVideoPlayer: (videoUrl: String, title: String) -> Unit = { _, _ -> },
     onEpisodeClick: (TVEpisode) -> Unit = {},
     onBackPressed: () -> Unit = {},
     playbackViewModel: PlaybackViewModel = hiltViewModel(),
@@ -442,6 +442,7 @@ private fun TVDetailsContent(
                     tvShow = tvShow,
                     episode = episode,
                     source = source,
+                    onNavigateToVideoPlayer = onNavigateToVideoPlayer,
                 )
             }
         },
@@ -468,6 +469,7 @@ private fun TVDetailsContent(
                     tvShow = tvShow,
                     episode = episode,
                     source = source,
+                    onNavigateToVideoPlayer = onNavigateToVideoPlayer,
                 )
             }
         },

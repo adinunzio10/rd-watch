@@ -210,11 +210,11 @@ fun AppNavigation(
             TVDetailsScreen(
                 tvShowId = tvDetails.tvShowId,
                 viewModel = viewModel,
-                onPlayClick = { selectedEpisode ->
+                onNavigateToVideoPlayer = { videoUrl, title ->
                     navController.navigate(
                         Screen.VideoPlayer(
-                            videoUrl = selectedEpisode.videoUrl ?: "",
-                            title = selectedEpisode.title,
+                            videoUrl = videoUrl,
+                            title = title,
                         ),
                     )
                 },

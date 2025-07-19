@@ -199,6 +199,7 @@ class PlaybackViewModel
             tvShow: com.rdwatch.androidtv.ui.details.models.TVShowContentDetail,
             episode: com.rdwatch.androidtv.ui.details.models.TVEpisode,
             source: com.rdwatch.androidtv.ui.details.models.advanced.SourceMetadata,
+            onNavigateToVideoPlayer: (videoUrl: String, title: String) -> Unit = { _, _ -> },
         ) {
             viewModelScope.launch {
                 try {
@@ -238,6 +239,9 @@ class PlaybackViewModel
                     exoPlayerManager.play()
 
                     android.util.Log.d("PlaybackViewModel", "Advanced episode playback started successfully")
+
+                    // Navigate to video player after successful media preparation
+                    onNavigateToVideoPlayer(sourceUrl, episodeTitle)
                 } catch (e: Exception) {
                     android.util.Log.e("PlaybackViewModel", "Failed to start advanced episode playback: ${e.message}")
                     // Update UI state to show error
