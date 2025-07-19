@@ -34,7 +34,16 @@ class ExoPlayerManager
         private val subtitleManager: SubtitleManager,
     ) {
         private var _exoPlayer: ExoPlayer? = null
-        val exoPlayer: ExoPlayer get() = _exoPlayer ?: createPlayer()
+        val exoPlayer: ExoPlayer
+            get() {
+                if (_exoPlayer == null) {
+                    android.util.Log.d("ExoPlayerManager", "ExoPlayer instance is null, creating new instance")
+                    _exoPlayer = createPlayer()
+                } else {
+                    android.util.Log.d("ExoPlayerManager", "Returning existing ExoPlayer instance")
+                }
+                return _exoPlayer!!
+            }
 
         private val trackSelector = DefaultTrackSelector(context)
         private val scope = CoroutineScope(Dispatchers.Main)
@@ -112,7 +121,6 @@ class ExoPlayerManager
                 .also { player ->
                     android.util.Log.d("ExoPlayerManager", "ExoPlayer created successfully")
                     player.addListener(playerListener)
-                    _exoPlayer = player
 
                     // Initialize subtitle manager with the player
                     subtitleManager.initialize(player)
