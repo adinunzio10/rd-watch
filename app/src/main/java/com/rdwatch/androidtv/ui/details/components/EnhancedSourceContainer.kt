@@ -1,25 +1,18 @@
 package com.rdwatch.androidtv.ui.details.components
 
 import androidx.compose.animation.*
-import androidx.compose.animation.core.tween
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -44,23 +37,23 @@ fun EnhancedSourceContainer(
     onSourcePlay: (SourceMetadata) -> Unit,
     selectedSourceId: String? = null,
     showMetadataTooltips: Boolean = true,
-    maxDisplayedSources: Int = 10
+    maxDisplayedSources: Int = 10,
 ) {
     var currentDisplayMode by remember { mutableStateOf(displayMode) }
     val listState = rememberLazyListState()
-    
+
     Column(
         modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         // Header with view controls
         SourceContainerHeader(
             totalSources = sources.size,
             displayMode = currentDisplayMode,
             onDisplayModeChange = { currentDisplayMode = it },
-            maxDisplayed = maxDisplayedSources
+            maxDisplayed = maxDisplayedSources,
         )
-        
+
         // Source list with different display modes
         when (currentDisplayMode) {
             SourceDisplayMode.COMPACT -> {
@@ -70,7 +63,7 @@ fun EnhancedSourceContainer(
                     onSourceSelect = onSourceSelect,
                     onSourcePlay = onSourcePlay,
                     showTooltips = showMetadataTooltips,
-                    listState = listState
+                    listState = listState,
                 )
             }
             SourceDisplayMode.DETAILED -> {
@@ -80,7 +73,7 @@ fun EnhancedSourceContainer(
                     onSourceSelect = onSourceSelect,
                     onSourcePlay = onSourcePlay,
                     showTooltips = showMetadataTooltips,
-                    listState = listState
+                    listState = listState,
                 )
             }
             SourceDisplayMode.GRID -> {
@@ -89,16 +82,16 @@ fun EnhancedSourceContainer(
                     selectedSourceId = selectedSourceId,
                     onSourceSelect = onSourceSelect,
                     onSourcePlay = onSourcePlay,
-                    showTooltips = showMetadataTooltips
+                    showTooltips = showMetadataTooltips,
                 )
             }
         }
-        
+
         // Load more indicator if there are more sources
         if (sources.size > maxDisplayedSources) {
             LoadMoreIndicator(
                 remainingCount = sources.size - maxDisplayedSources,
-                onLoadMore = { /* Implement load more logic */ }
+                onLoadMore = { /* Implement load more logic */ },
             )
         }
     }
@@ -113,34 +106,35 @@ private fun SourceContainerHeader(
     displayMode: SourceDisplayMode,
     onDisplayModeChange: (SourceDisplayMode) -> Unit,
     maxDisplayed: Int,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Row(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         // Source count and quality indicator
         Column {
             Text(
                 text = "Available Sources",
-                style = MaterialTheme.typography.titleMedium.copy(
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold
-                ),
-                color = MaterialTheme.colorScheme.onSurface
+                style =
+                    MaterialTheme.typography.titleMedium.copy(
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                    ),
+                color = MaterialTheme.colorScheme.onSurface,
             )
             Text(
                 text = "$totalSources sources found",
                 style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp),
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
-        
+
         // Display mode toggle buttons
         DisplayModeToggle(
             currentMode = displayMode,
-            onModeChange = onDisplayModeChange
+            onModeChange = onDisplayModeChange,
         )
     }
 }
@@ -152,42 +146,46 @@ private fun SourceContainerHeader(
 private fun DisplayModeToggle(
     currentMode: SourceDisplayMode,
     onModeChange: (SourceDisplayMode) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Surface(
         modifier = modifier,
         shape = RoundedCornerShape(8.dp),
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
     ) {
         Row(
-            modifier = Modifier.padding(4.dp)
+            modifier = Modifier.padding(4.dp),
         ) {
             SourceDisplayMode.entries.forEach { mode ->
                 val isSelected = mode == currentMode
-                
+
                 Surface(
-                    modifier = Modifier
-                        .clickable { onModeChange(mode) }
-                        .padding(horizontal = 2.dp),
+                    modifier =
+                        Modifier
+                            .clickable { onModeChange(mode) }
+                            .padding(horizontal = 2.dp),
                     shape = RoundedCornerShape(6.dp),
-                    color = if (isSelected) {
-                        MaterialTheme.colorScheme.primary
-                    } else {
-                        Color.Transparent
-                    }
+                    color =
+                        if (isSelected) {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            Color.Transparent
+                        },
                 ) {
                     Text(
                         text = mode.displayName,
-                        style = MaterialTheme.typography.labelMedium.copy(
-                            fontSize = 12.sp,
-                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
-                        ),
-                        color = if (isSelected) {
-                            MaterialTheme.colorScheme.onPrimary
-                        } else {
-                            MaterialTheme.colorScheme.onSurfaceVariant
-                        },
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                        style =
+                            MaterialTheme.typography.labelMedium.copy(
+                                fontSize = 12.sp,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                            ),
+                        color =
+                            if (isSelected) {
+                                MaterialTheme.colorScheme.onPrimary
+                            } else {
+                                MaterialTheme.colorScheme.onSurfaceVariant
+                            },
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
                     )
                 }
             }
@@ -206,13 +204,13 @@ private fun CompactSourceList(
     onSourcePlay: (SourceMetadata) -> Unit,
     showTooltips: Boolean,
     listState: LazyListState,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     LazyColumn(
         modifier = modifier.heightIn(max = 400.dp),
         state = listState,
         verticalArrangement = Arrangement.spacedBy(8.dp),
-        contentPadding = PaddingValues(vertical = 4.dp)
+        contentPadding = PaddingValues(vertical = 4.dp),
     ) {
         items(sources, key = { it.id }) { source ->
             CompactSourceItem(
@@ -220,7 +218,7 @@ private fun CompactSourceList(
                 isSelected = source.id == selectedSourceId,
                 onSelect = { onSourceSelect(source) },
                 onPlay = { onSourcePlay(source) },
-                showTooltips = showTooltips
+                showTooltips = showTooltips,
             )
         }
     }
@@ -237,13 +235,13 @@ private fun DetailedSourceList(
     onSourcePlay: (SourceMetadata) -> Unit,
     showTooltips: Boolean,
     listState: LazyListState,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     LazyColumn(
         modifier = modifier.heightIn(max = 600.dp),
         state = listState,
         verticalArrangement = Arrangement.spacedBy(12.dp),
-        contentPadding = PaddingValues(vertical = 4.dp)
+        contentPadding = PaddingValues(vertical = 4.dp),
     ) {
         items(sources, key = { it.id }) { source ->
             DetailedSourceItem(
@@ -251,7 +249,7 @@ private fun DetailedSourceList(
                 isSelected = source.id == selectedSourceId,
                 onSelect = { onSourceSelect(source) },
                 onPlay = { onSourcePlay(source) },
-                showTooltips = showTooltips
+                showTooltips = showTooltips,
             )
         }
     }
@@ -267,20 +265,20 @@ private fun GridSourceList(
     onSourceSelect: (SourceMetadata) -> Unit,
     onSourcePlay: (SourceMetadata) -> Unit,
     showTooltips: Boolean,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     // For TV, we'll use a 2-column grid for better navigation
     val chunkedSources = sources.chunked(2)
-    
+
     LazyColumn(
         modifier = modifier.heightIn(max = 500.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
-        contentPadding = PaddingValues(vertical = 4.dp)
+        contentPadding = PaddingValues(vertical = 4.dp),
     ) {
         items(items = chunkedSources) { rowSources ->
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 rowSources.forEach { source ->
                     GridSourceItem(
@@ -289,10 +287,10 @@ private fun GridSourceList(
                         onSelect = { onSourceSelect(source) },
                         onPlay = { onSourcePlay(source) },
                         showTooltips = showTooltips,
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
                     )
                 }
-                
+
                 // Fill remaining space if odd number of items in last row
                 if (rowSources.size == 1) {
                     Spacer(modifier = Modifier.weight(1f))
@@ -312,114 +310,125 @@ private fun CompactSourceItem(
     onSelect: () -> Unit,
     onPlay: () -> Unit,
     showTooltips: Boolean,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     var isFocused by remember { mutableStateOf(false) }
     var showTooltip by remember { mutableStateOf(false) }
-    
+
     Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(80.dp)
-            .tvFocusable(
-                enabled = true,
-                onFocusChanged = { isFocused = it.isFocused },
-                onKeyEvent = null
-            )
-            .border(
-                width = if (isFocused || isSelected) 2.dp else 0.dp,
-                color = if (isSelected) MaterialTheme.colorScheme.primary 
-                       else if (isFocused) MaterialTheme.colorScheme.primary.copy(alpha = 0.6f) 
-                       else Color.Transparent,
-                shape = RoundedCornerShape(8.dp)
-            )
-            .clickable { 
-                onSelect()
-                if (showTooltips) showTooltip = true
-            },
-        colors = CardDefaults.cardColors(
-            containerColor = when {
-                isSelected -> MaterialTheme.colorScheme.primaryContainer
-                isFocused -> MaterialTheme.colorScheme.surfaceVariant
-                else -> MaterialTheme.colorScheme.surface
-            }
-        ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = if (isFocused) 6.dp else 2.dp
-        )
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .height(80.dp)
+                .tvFocusable(
+                    enabled = true,
+                    onFocusChanged = { isFocused = it.isFocused },
+                    onKeyEvent = null,
+                )
+                .border(
+                    width = if (isFocused || isSelected) 2.dp else 0.dp,
+                    color =
+                        if (isSelected) {
+                            MaterialTheme.colorScheme.primary
+                        } else if (isFocused) {
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
+                        } else {
+                            Color.Transparent
+                        },
+                    shape = RoundedCornerShape(8.dp),
+                )
+                .clickable {
+                    onSelect()
+                    if (showTooltips) showTooltip = true
+                },
+        colors =
+            CardDefaults.cardColors(
+                containerColor =
+                    when {
+                        isSelected -> MaterialTheme.colorScheme.primaryContainer
+                        isFocused -> MaterialTheme.colorScheme.surfaceVariant
+                        else -> MaterialTheme.colorScheme.surface
+                    },
+            ),
+        elevation =
+            CardDefaults.cardElevation(
+                defaultElevation = if (isFocused) 6.dp else 2.dp,
+            ),
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(12.dp),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             // Provider icon
             ProviderIcon(
                 provider = sourceMetadata.provider,
-                modifier = Modifier.size(32.dp)
+                modifier = Modifier.size(32.dp),
             )
-            
+
             // Main content
             Column(
                 modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
+                verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
                 // Title and size
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
                         text = sourceMetadata.quality.getDisplayText(),
-                        style = MaterialTheme.typography.bodyLarge.copy(
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Medium
-                        ),
+                        style =
+                            MaterialTheme.typography.bodyLarge.copy(
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Medium,
+                            ),
                         color = MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier.weight(1f),
                         maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
+                        overflow = TextOverflow.Ellipsis,
                     )
-                    
+
                     sourceMetadata.file.getFormattedSize()?.let { size ->
                         Text(
                             text = size,
                             style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
                 }
-                
+
                 // Essential metadata badges
                 EssentialMetadataRow(
                     sourceMetadata = sourceMetadata,
-                    maxItems = 4
+                    maxItems = 4,
                 )
             }
-            
+
             // Quality score
             QualityScoreIndicator(
                 score = sourceMetadata.getQualityScore(),
-                modifier = Modifier.size(40.dp)
+                modifier = Modifier.size(40.dp),
             )
         }
     }
-    
+
     // Tooltip
     if (showTooltips && showTooltip) {
         LaunchedEffect(showTooltip) {
             delay(3000) // Auto-dismiss after 3 seconds
             showTooltip = false
         }
-        
+
         MetadataTooltip(
             sourceMetadata = sourceMetadata,
             isVisible = showTooltip,
             onDismiss = { showTooltip = false },
-            tooltipType = TooltipType.QUICK_INFO
+            tooltipType = TooltipType.QUICK_INFO,
         )
     }
 }
@@ -434,14 +443,14 @@ private fun DetailedSourceItem(
     onSelect: () -> Unit,
     onPlay: () -> Unit,
     showTooltips: Boolean,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     ExpandableSourceMetadata(
         sourceMetadata = sourceMetadata,
         modifier = modifier.clickable { onSelect() },
         initiallyExpanded = isSelected,
         showTooltips = showTooltips,
-        maxCollapsedItems = 5
+        maxCollapsedItems = 5,
     )
 }
 
@@ -455,82 +464,93 @@ private fun GridSourceItem(
     onSelect: () -> Unit,
     onPlay: () -> Unit,
     showTooltips: Boolean,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     var isFocused by remember { mutableStateOf(false) }
-    
+
     Card(
-        modifier = modifier
-            .aspectRatio(1.5f)
-            .tvFocusable(
-                enabled = true,
-                onFocusChanged = { isFocused = it.isFocused },
-                onKeyEvent = null
-            )
-            .border(
-                width = if (isFocused || isSelected) 2.dp else 0.dp,
-                color = if (isSelected) MaterialTheme.colorScheme.primary 
-                       else if (isFocused) MaterialTheme.colorScheme.primary.copy(alpha = 0.6f) 
-                       else Color.Transparent,
-                shape = RoundedCornerShape(12.dp)
-            )
-            .clickable { onSelect() },
-        colors = CardDefaults.cardColors(
-            containerColor = when {
-                isSelected -> MaterialTheme.colorScheme.primaryContainer
-                isFocused -> MaterialTheme.colorScheme.surfaceVariant
-                else -> MaterialTheme.colorScheme.surface
-            }
-        ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = if (isFocused) 8.dp else 4.dp
-        )
+        modifier =
+            modifier
+                .aspectRatio(1.5f)
+                .tvFocusable(
+                    enabled = true,
+                    onFocusChanged = { isFocused = it.isFocused },
+                    onKeyEvent = null,
+                )
+                .border(
+                    width = if (isFocused || isSelected) 2.dp else 0.dp,
+                    color =
+                        if (isSelected) {
+                            MaterialTheme.colorScheme.primary
+                        } else if (isFocused) {
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
+                        } else {
+                            Color.Transparent
+                        },
+                    shape = RoundedCornerShape(12.dp),
+                )
+                .clickable { onSelect() },
+        colors =
+            CardDefaults.cardColors(
+                containerColor =
+                    when {
+                        isSelected -> MaterialTheme.colorScheme.primaryContainer
+                        isFocused -> MaterialTheme.colorScheme.surfaceVariant
+                        else -> MaterialTheme.colorScheme.surface
+                    },
+            ),
+        elevation =
+            CardDefaults.cardElevation(
+                defaultElevation = if (isFocused) 8.dp else 4.dp,
+            ),
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             // Provider and quality
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 ProviderIcon(
                     provider = sourceMetadata.provider,
-                    modifier = Modifier.size(28.dp)
+                    modifier = Modifier.size(28.dp),
                 )
-                
+
                 QualityScoreIndicator(
                     score = sourceMetadata.getQualityScore(),
-                    modifier = Modifier.size(36.dp)
+                    modifier = Modifier.size(36.dp),
                 )
             }
-            
+
             // Quality text
             Text(
                 text = sourceMetadata.quality.getDisplayText(),
-                style = MaterialTheme.typography.titleMedium.copy(
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold
-                ),
+                style =
+                    MaterialTheme.typography.titleMedium.copy(
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                    ),
                 color = MaterialTheme.colorScheme.onSurface,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
                 textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
             )
-            
+
             // Compact badges
             CompactBadgeRow(
                 sourceMetadata = sourceMetadata,
-                maxBadges = 3
+                maxBadges = 3,
             )
-            
+
             Spacer(modifier = Modifier.weight(1f))
-            
+
             // File size and provider
             Column {
                 sourceMetadata.file.getFormattedSize()?.let { size ->
@@ -539,7 +559,7 @@ private fun GridSourceItem(
                         style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = TextAlign.Center,
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
                     )
                 }
                 Text(
@@ -549,7 +569,7 @@ private fun GridSourceItem(
                     textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth(),
                     maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                    overflow = TextOverflow.Ellipsis,
                 )
             }
         }
@@ -563,50 +583,59 @@ private fun GridSourceItem(
 private fun LoadMoreIndicator(
     remainingCount: Int,
     onLoadMore: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     var isFocused by remember { mutableStateOf(false) }
-    
+
     Surface(
-        modifier = modifier
-            .fillMaxWidth()
-            .tvFocusable(
-                enabled = true,
-                onFocusChanged = { isFocused = it.isFocused },
-                onKeyEvent = null
-            )
-            .border(
-                width = if (isFocused) 2.dp else 1.dp,
-                color = if (isFocused) MaterialTheme.colorScheme.primary 
-                       else MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
-                shape = RoundedCornerShape(8.dp)
-            )
-            .clickable { onLoadMore() },
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .tvFocusable(
+                    enabled = true,
+                    onFocusChanged = { isFocused = it.isFocused },
+                    onKeyEvent = null,
+                )
+                .border(
+                    width = if (isFocused) 2.dp else 1.dp,
+                    color =
+                        if (isFocused) {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+                        },
+                    shape = RoundedCornerShape(8.dp),
+                )
+                .clickable { onLoadMore() },
         shape = RoundedCornerShape(8.dp),
-        color = if (isFocused) {
-            MaterialTheme.colorScheme.surfaceVariant
-        } else {
-            MaterialTheme.colorScheme.surface
-        }
+        color =
+            if (isFocused) {
+                MaterialTheme.colorScheme.surfaceVariant
+            } else {
+                MaterialTheme.colorScheme.surface
+            },
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
             horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
                 text = "Load $remainingCount more sources",
-                style = MaterialTheme.typography.bodyMedium.copy(
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Medium
-                ),
-                color = if (isFocused) {
-                    MaterialTheme.colorScheme.primary
-                } else {
-                    MaterialTheme.colorScheme.onSurfaceVariant
-                }
+                style =
+                    MaterialTheme.typography.bodyMedium.copy(
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
+                    ),
+                color =
+                    if (isFocused) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    },
             )
         }
     }
@@ -618,5 +647,5 @@ private fun LoadMoreIndicator(
 enum class SourceDisplayMode(val displayName: String) {
     COMPACT("Compact"),
     DETAILED("Detailed"),
-    GRID("Grid")
+    GRID("Grid"),
 }

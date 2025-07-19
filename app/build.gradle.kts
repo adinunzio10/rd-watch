@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.kotlin.ksp)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.ktlint)
 }
 
 android {
@@ -17,9 +18,9 @@ android {
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
-        
+
         testInstrumentationRunner = "com.rdwatch.androidtv.HiltTestRunner"
-        
+
         // TMDb API Key configuration
         buildConfigField("String", "TMDB_API_KEY", "\"${project.findProperty("TMDB_API_KEY") ?: "8b60f9fd09d374a08f5364f2e62c5661"}\"")
     }
@@ -29,7 +30,7 @@ android {
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
+                "proguard-rules.pro",
             )
         }
     }
@@ -45,19 +46,16 @@ android {
         compose = true
         buildConfig = true
     }
-    composeOptions {
-        kotlinCompilerExtensionVersion = libs.versions.composeCompiler.get()
-    }
     lint {
         abortOnError = false
     }
-    
+
     testOptions {
         unitTests {
             isReturnDefaultValues = true
         }
     }
-    
+
     packaging {
         resources {
             excludes += "META-INF/LICENSE.md"
@@ -69,41 +67,41 @@ android {
 dependencies {
     // Core library desugaring for Java 8+ API support on older Android versions
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
-    
+
     // Core Android dependencies
     implementation(libs.androidx.core.ktx)
-    
+
     // Compose BOM
     implementation(platform(libs.androidx.compose.bom))
-    
+
     // Compose dependencies
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.material.icons.extended)
     implementation(libs.androidx.activity.compose)
-    
+
     // TV Compose dependencies - will be added when stable versions are available
     // implementation(libs.androidx.tv.foundation)
     // implementation(libs.androidx.tv.material)
-    
+
     // Hilt dependencies
     implementation(libs.hilt.android)
     implementation(libs.hilt.navigation.compose)
     implementation(libs.hilt.work)
     ksp(libs.hilt.compiler)
-    
+
     // ViewModel dependencies
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
-    
+
     // Navigation dependencies
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.navigation.runtime.ktx)
-    
+
     // Serialization
     implementation(libs.kotlinx.serialization.json)
-    
+
     // Network dependencies
     implementation(libs.retrofit)
     implementation(libs.retrofit.converter.moshi)
@@ -112,32 +110,32 @@ dependencies {
     implementation(libs.moshi)
     implementation(libs.moshi.kotlin)
     ksp(libs.moshi.kotlin.codegen)
-    
+
     // Room dependencies
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)
     ksp(libs.room.compiler)
-    
+
     // Security
     implementation(libs.androidx.security.crypto)
-    
+
     // DataStore
     implementation(libs.androidx.datastore.preferences)
-    
+
     // WorkManager
     implementation(libs.androidx.work.runtime.ktx)
-    
+
     // Paging
     implementation(libs.androidx.paging.runtime)
     implementation(libs.androidx.paging.compose)
-    
+
     // Image loading
     implementation(libs.coil.compose)
-    
+
     // QR Code generation
     implementation(libs.zxing.core)
     implementation(libs.zxing.android.embedded)
-    
+
     // ExoPlayer dependencies
     implementation(libs.androidx.media3.exoplayer)
     implementation(libs.androidx.media3.ui)
@@ -145,7 +143,7 @@ dependencies {
     implementation(libs.androidx.media3.dash)
     implementation(libs.androidx.media3.hls)
     implementation(libs.androidx.media3.smoothstreaming)
-    
+
     // Testing dependencies
     testImplementation(libs.junit)
     testImplementation(libs.kotlin.test)
@@ -156,7 +154,7 @@ dependencies {
     testImplementation(libs.okhttp.mockwebserver)
     testImplementation(libs.androidx.work.testing)
     kspTest(libs.hilt.compiler)
-    
+
     // Android testing dependencies
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -168,7 +166,7 @@ dependencies {
     androidTestImplementation(libs.hilt.android.testing)
     androidTestImplementation(libs.room.testing)
     kspAndroidTest(libs.hilt.compiler)
-    
+
     // Debug dependencies
     debugImplementation(libs.androidx.compose.ui.tooling)
 }

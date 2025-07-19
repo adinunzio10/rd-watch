@@ -8,7 +8,7 @@ class BooleanAdapter {
     fun toJson(value: Boolean): Int {
         return if (value) 1 else 0
     }
-    
+
     @FromJson
     fun fromJson(value: Any?): Boolean {
         return when (value) {

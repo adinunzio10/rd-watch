@@ -15,7 +15,6 @@ import org.junit.Before
  */
 @HiltAndroidTest
 abstract class SubtitleTestBase : HiltTestBase() {
-
     @Before
     override fun setUp() {
         super.setUp()
@@ -27,12 +26,12 @@ abstract class SubtitleTestBase : HiltTestBase() {
     protected fun createTestCue(
         startMs: Long = 1000L,
         endMs: Long = 3000L,
-        text: String = "Test subtitle"
+        text: String = "Test subtitle",
     ): SubtitleCue {
         return SubtitleCue(
             startTimeMs = startMs,
             endTimeMs = endMs,
-            text = text
+            text = text,
         )
     }
 
@@ -43,20 +42,23 @@ abstract class SubtitleTestBase : HiltTestBase() {
         cues: List<SubtitleCue> = listOf(createTestCue()),
         format: SubtitleFormat = SubtitleFormat.SRT,
         language: String? = "en",
-        title: String? = "Test Track"
+        title: String? = "Test Track",
     ): SubtitleTrackData {
         return SubtitleTrackData(
             cues = cues,
             format = format,
             language = language,
-            title = title
+            title = title,
         )
     }
 
     /**
      * Assert that two subtitle cues are equal
      */
-    protected fun assertCueEquals(expected: SubtitleCue, actual: SubtitleCue) {
+    protected fun assertCueEquals(
+        expected: SubtitleCue,
+        actual: SubtitleCue,
+    ) {
         assertEquals("Start time mismatch", expected.startTimeMs, actual.startTimeMs)
         assertEquals("End time mismatch", expected.endTimeMs, actual.endTimeMs)
         assertEquals("Text mismatch", expected.text, actual.text)
@@ -73,13 +75,16 @@ abstract class SubtitleTestBase : HiltTestBase() {
     /**
      * Assert that two subtitle track data objects are equal
      */
-    protected fun assertTrackDataEquals(expected: SubtitleTrackData, actual: SubtitleTrackData) {
+    protected fun assertTrackDataEquals(
+        expected: SubtitleTrackData,
+        actual: SubtitleTrackData,
+    ) {
         assertEquals("Format mismatch", expected.format, actual.format)
         assertEquals("Language mismatch", expected.language, actual.language)
         assertEquals("Title mismatch", expected.title, actual.title)
         assertEquals("Encoding mismatch", expected.encoding, actual.encoding)
         assertEquals("Cue count mismatch", expected.cues.size, actual.cues.size)
-        
+
         expected.cues.zip(actual.cues).forEach { (expectedCue, actualCue) ->
             assertCueEquals(expectedCue, actualCue)
         }
@@ -92,7 +97,7 @@ abstract class SubtitleTestBase : HiltTestBase() {
         parser: suspend () -> SubtitleTrackData,
         expectedMessagePattern: String? = null,
         expectedFormat: SubtitleFormat? = null,
-        expectedLineNumber: Int? = null
+        expectedLineNumber: Int? = null,
     ) {
         try {
             parser()
@@ -101,7 +106,7 @@ abstract class SubtitleTestBase : HiltTestBase() {
             expectedMessagePattern?.let { pattern ->
                 assertTrue(
                     "Exception message '${e.message}' does not match pattern '$pattern'",
-                    e.message?.contains(pattern, ignoreCase = true) == true
+                    e.message?.contains(pattern, ignoreCase = true) == true,
                 )
             }
             expectedFormat?.let { format ->
@@ -118,20 +123,21 @@ abstract class SubtitleTestBase : HiltTestBase() {
     /**
      * Run test with coroutines
      */
-    protected fun runSubtitleTest(testBody: suspend () -> Unit) = runTest {
-        testBody()
-    }
+    protected fun runSubtitleTest(testBody: suspend () -> Unit) =
+        runTest {
+            testBody()
+        }
 }
 
 /**
  * Test data factory for creating subtitle content
  */
 object SubtitleTestData {
-    
     /**
      * Valid SRT content for testing
      */
-    val VALID_SRT_CONTENT = """
+    val VALID_SRT_CONTENT =
+        """
         1
         00:00:01,000 --> 00:00:03,000
         First subtitle line
@@ -144,12 +150,13 @@ object SubtitleTestData {
         3
         00:00:07,500 --> 00:00:09,000
         Third subtitle with <b>bold</b> text
-    """.trimIndent()
+        """.trimIndent()
 
     /**
      * Valid VTT content for testing
      */
-    val VALID_VTT_CONTENT = """
+    val VALID_VTT_CONTENT =
+        """
         WEBVTT
         
         NOTE This is a test VTT file
@@ -163,12 +170,13 @@ object SubtitleTestData {
         
         00:00:07.500 --> 00:00:09.000 position:50% line:85%
         Positioned subtitle text
-    """.trimIndent()
+        """.trimIndent()
 
     /**
      * Valid ASS content for testing
      */
-    val VALID_ASS_CONTENT = """
+    val VALID_ASS_CONTENT =
+        """
         [Script Info]
         Title: Test ASS
         ScriptType: v4.00+
@@ -182,12 +190,13 @@ object SubtitleTestData {
         Dialogue: 0,0:00:01.00,0:00:03.00,Default,,0,0,0,,First subtitle line
         Dialogue: 0,0:00:04.00,0:00:06.00,Default,,0,0,0,,Second subtitle line\Nwith multiple lines
         Dialogue: 0,0:00:07.50,0:00:09.00,Default,,0,0,0,,{\b1}Bold text{\b0}
-    """.trimIndent()
+        """.trimIndent()
 
     /**
      * Malformed SRT content for error testing
      */
-    val MALFORMED_SRT_CONTENT = """
+    val MALFORMED_SRT_CONTENT =
+        """
         1
         invalid timing format
         This should fail
@@ -195,16 +204,17 @@ object SubtitleTestData {
         2
         00:00:04,000 --> 00:00:06,000
         This line should work
-    """.trimIndent()
+        """.trimIndent()
 
     /**
      * SRT with invalid timing
      */
-    val INVALID_TIMING_SRT = """
+    val INVALID_TIMING_SRT =
+        """
         1
         00:00:05,000 --> 00:00:03,000
         End time before start time
-    """.trimIndent()
+        """.trimIndent()
 
     /**
      * Empty subtitle content
@@ -219,7 +229,8 @@ object SubtitleTestData {
     /**
      * SRT with Unicode and special characters
      */
-    val UNICODE_SRT_CONTENT = """
+    val UNICODE_SRT_CONTENT =
+        """
         1
         00:00:01,000 --> 00:00:03,000
         Héllo wörld! 你好世界 🎬
@@ -227,12 +238,13 @@ object SubtitleTestData {
         2
         00:00:04,000 --> 00:00:06,000
         Special chars: "quotes" & <tags> [brackets]
-    """.trimIndent()
+        """.trimIndent()
 
     /**
      * SRT with complex formatting
      */
-    val FORMATTED_SRT_CONTENT = """
+    val FORMATTED_SRT_CONTENT =
+        """
         1
         00:00:01,000 --> 00:00:03,000
         <font color="red" size="20">Red text</font>
@@ -244,5 +256,5 @@ object SubtitleTestData {
         3
         00:00:07,000 --> 00:00:09,000
         Mixed <b><i>bold italic</i></b> formatting
-    """.trimIndent()
+        """.trimIndent()
 }

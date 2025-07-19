@@ -13,7 +13,6 @@ data class TMDbMovieContentDetail(
     override val backgroundImageUrl: String?,
     override val cardImageUrl: String?,
     override val videoUrl: String?,
-    
     // Movie-specific fields
     val releaseDate: String?,
     val voteAverage: Float,
@@ -31,11 +30,10 @@ data class TMDbMovieContentDetail(
     val imdbId: String?,
     val productionCompanies: List<String>,
     val productionCountries: List<String>,
-    val spokenLanguages: List<String>
+    val spokenLanguages: List<String>,
 ) : ContentDetail {
-    
     override val contentType: ContentType = ContentType.MOVIE
-    
+
     override val metadata: ContentMetadata by lazy {
         ContentMetadata(
             year = releaseDate?.take(4),
@@ -49,39 +47,43 @@ data class TMDbMovieContentDetail(
             quality = null, // Not available from TMDb
             isHDR = false,
             is4K = false,
-            customMetadata = buildCustomMetadata()
+            customMetadata = buildCustomMetadata(),
         )
     }
-    
+
     override val actions: List<ContentAction> by lazy {
         buildList {
             // Play action (would need to be integrated with streaming sources)
             add(ContentAction.Play())
-            
+
             // Add to watchlist action
             add(ContentAction.AddToWatchlist())
-            
+
             // Like action
             add(ContentAction.Like())
-            
+
             // Share action
             add(ContentAction.Share())
-            
+
             // Custom TMDb actions
             homepage?.let {
-                add(ContentAction.Custom("Visit Homepage", "open_in_browser") { 
-                    // Would open homepage URL
-                })
+                add(
+                    ContentAction.Custom("Visit Homepage", "open_in_browser") {
+                        // Would open homepage URL
+                    },
+                )
             }
-            
+
             imdbId?.let {
-                add(ContentAction.Custom("View on IMDb", "movie") { 
-                    // Would open IMDb page
-                })
+                add(
+                    ContentAction.Custom("View on IMDb", "movie") {
+                        // Would open IMDb page
+                    },
+                )
             }
         }
     }
-    
+
     override fun getDisplayTitle(): String {
         return if (originalTitle != title && originalTitle.isNotBlank()) {
             "$title ($originalTitle)"
@@ -89,7 +91,7 @@ data class TMDbMovieContentDetail(
             title
         }
     }
-    
+
     override fun getDisplayDescription(): String {
         return when {
             !description.isNullOrBlank() -> description
@@ -97,7 +99,7 @@ data class TMDbMovieContentDetail(
             else -> "No description available"
         }
     }
-    
+
     private fun formatRuntime(runtime: Int): String {
         return if (runtime < 60) {
             "${runtime}m"
@@ -111,7 +113,7 @@ data class TMDbMovieContentDetail(
             }
         }
     }
-    
+
     private fun buildCustomMetadata(): Map<String, String> {
         return buildMap {
             put("tmdb_id", tmdbId.toString())
@@ -119,8 +121,8 @@ data class TMDbMovieContentDetail(
             put("popularity", popularity.toString())
             put("original_language", originalLanguage)
             put("status", status)
-            if (budget > 0) put("budget", "$${budget}")
-            if (revenue > 0) put("revenue", "$${revenue}")
+            if (budget > 0) put("budget", "$$budget")
+            if (revenue > 0) put("revenue", "$$revenue")
             imdbId?.let { put("imdb_id", it) }
             homepage?.let { put("homepage", it) }
             productionCountries.firstOrNull()?.let { put("country", it) }
@@ -141,7 +143,6 @@ data class TMDbTVContentDetail(
     override val backgroundImageUrl: String?,
     override val cardImageUrl: String?,
     override val videoUrl: String?,
-    
     // TV show-specific fields
     val firstAirDate: String?,
     val lastAirDate: String?,
@@ -157,15 +158,15 @@ data class TMDbTVContentDetail(
     val type: String?,
     val homepage: String?,
     val inProduction: Boolean?,
+    val imdbId: String?,
     val networks: List<String>,
     val originCountry: List<String>,
     val productionCompanies: List<String>,
     val productionCountries: List<String>,
-    val spokenLanguages: List<String>
+    val spokenLanguages: List<String>,
 ) : ContentDetail {
-    
     override val contentType: ContentType = ContentType.TV_SHOW
-    
+
     override val metadata: ContentMetadata by lazy {
         ContentMetadata(
             year = firstAirDate?.take(4),
@@ -179,33 +180,43 @@ data class TMDbTVContentDetail(
             quality = null, // Not available from TMDb
             isHDR = false,
             is4K = false,
-            customMetadata = buildCustomMetadata()
+            customMetadata = buildCustomMetadata(),
         )
     }
-    
+
     override val actions: List<ContentAction> by lazy {
         buildList {
             // Play action (would need to be integrated with streaming sources)
             add(ContentAction.Play())
-            
+
             // Add to watchlist action
             add(ContentAction.AddToWatchlist())
-            
+
             // Like action
             add(ContentAction.Like())
-            
+
             // Share action
             add(ContentAction.Share())
-            
+
             // Custom TMDb actions
             homepage?.let {
-                add(ContentAction.Custom("Visit Homepage", "open_in_browser") { 
-                    // Would open homepage URL
-                })
+                add(
+                    ContentAction.Custom("Visit Homepage", "open_in_browser") {
+                        // Would open homepage URL
+                    },
+                )
+            }
+
+            imdbId?.let {
+                add(
+                    ContentAction.Custom("View on IMDb", "tv") {
+                        // Would open IMDb page
+                    },
+                )
             }
         }
     }
-    
+
     override fun getDisplayTitle(): String {
         return if (originalTitle != title && originalTitle.isNotBlank()) {
             "$title ($originalTitle)"
@@ -213,11 +224,11 @@ data class TMDbTVContentDetail(
             title
         }
     }
-    
+
     override fun getDisplayDescription(): String {
         return description ?: "No description available"
     }
-    
+
     private fun buildCustomMetadata(): Map<String, String> {
         return buildMap {
             put("tmdb_id", tmdbId.toString())
@@ -230,6 +241,7 @@ data class TMDbTVContentDetail(
             numberOfEpisodes?.let { put("episodes", it.toString()) }
             inProduction?.let { put("in_production", it.toString()) }
             homepage?.let { put("homepage", it) }
+            imdbId?.let { put("imdb_id", it) }
             originCountry.firstOrNull()?.let { put("country", it) }
             if (networks.isNotEmpty()) put("networks", networks.joinToString(", "))
             if (lastAirDate != null) put("last_air_date", lastAirDate)
@@ -251,7 +263,6 @@ data class TMDbEpisodeContentDetail(
     override val backgroundImageUrl: String?,
     override val cardImageUrl: String?,
     override val videoUrl: String?,
-    
     // Episode-specific fields
     val episodeNumber: Int,
     val seasonNumber: Int,
@@ -260,11 +271,12 @@ data class TMDbEpisodeContentDetail(
     val voteCount: Int,
     val runtime: Int?,
     val stillPath: String?,
-    val productionCode: String?
+    val productionCode: String?,
+    // External IDs for enhanced source scraping (Torrentio, etc.)
+    val episodeExternalIds: com.rdwatch.androidtv.network.models.tmdb.TMDbExternalIdsResponse? = null,
 ) : ContentDetail {
-    
     override val contentType: ContentType = ContentType.TV_EPISODE
-    
+
     override val metadata: ContentMetadata by lazy {
         ContentMetadata(
             year = airDate?.take(4),
@@ -275,34 +287,34 @@ data class TMDbEpisodeContentDetail(
             quality = null,
             isHDR = false,
             is4K = false,
-            customMetadata = buildCustomMetadata()
+            customMetadata = buildCustomMetadata(),
         )
     }
-    
+
     override val actions: List<ContentAction> by lazy {
         buildList {
             // Play action
             add(ContentAction.Play())
-            
+
             // Add to watchlist action
             add(ContentAction.AddToWatchlist())
-            
+
             // Like action
             add(ContentAction.Like())
-            
+
             // Share action
             add(ContentAction.Share())
         }
     }
-    
+
     override fun getDisplayTitle(): String {
-        return "$showTitle - S${seasonNumber}E${episodeNumber}: $title"
+        return "$showTitle - S${seasonNumber}E$episodeNumber: $title"
     }
-    
+
     override fun getDisplayDescription(): String {
         return description ?: "No description available"
     }
-    
+
     private fun buildCustomMetadata(): Map<String, String> {
         return buildMap {
             put("tmdb_id", tmdbId.toString())
@@ -312,6 +324,25 @@ data class TMDbEpisodeContentDetail(
             put("vote_count", voteCount.toString())
             airDate?.let { put("air_date", it) }
             productionCode?.let { put("production_code", it) }
+
+            // External IDs for source scraping
+            episodeExternalIds?.let { externalIds ->
+                externalIds.imdbId?.let { put("imdb_id", it) }
+                externalIds.tvdbId?.let { put("tvdb_id", it.toString()) }
+                externalIds.facebookId?.let { put("facebook_id", it) }
+                externalIds.instagramId?.let { put("instagram_id", it) }
+                externalIds.twitterId?.let { put("twitter_id", it) }
+            }
         }
     }
+
+    /**
+     * Get episode IMDb ID for source scraping (Torrentio compatibility)
+     */
+    fun getEpisodeImdbId(): String? = episodeExternalIds?.imdbId
+
+    /**
+     * Get episode TVDB ID for source scraping
+     */
+    fun getEpisodeTvdbId(): Int? = episodeExternalIds?.tvdbId
 }

@@ -14,12 +14,12 @@ data class UnrestrictLinkResponse(
     @Json(name = "chunks") val chunks: Int,
     @Json(name = "crc") val crc: Int,
     @Json(name = "download") val download: String,
-    @Json(name = "streamable") val streamable: Int
+    @Json(name = "streamable") val streamable: Int,
 )
 
 @JsonClass(generateAdapter = true)
 data class Host(
     @Json(name = "id") val id: String,
     @Json(name = "name") val name: String,
-    @Json(name = "image") val image: String
+    @Json(name = "image") val image: String,
 )

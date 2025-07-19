@@ -1,13 +1,8 @@
 [versions]
-agp = "8.10.1"
+agp = "8.11.1"
 kotlin = "2.1.10"
 coreKtx = "1.16.0"
-leanback = "1.2.0"
-glide = "4.16.0"
 composeBom = "2025.06.01"
-composeCompiler = "1.6.0"
-tvFoundation = "1.0.0-alpha11"
-tvMaterial = "1.0.0-alpha11"
 hilt = "2.53"
 hiltNavigationCompose = "1.2.0"
 retrofit = "2.9.0"
@@ -27,11 +22,9 @@ kotlinxSerialization = "1.6.3"
 datastore = "1.1.1"
 workmanager = "2.10.0"
 paging = "3.3.6"
-
+ktlint = "12.1.0"
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
-androidx-leanback = { group = "androidx.leanback", name = "leanback", version.ref = "leanback" }
-glide = { group = "com.github.bumptech.glide", name = "glide", version.ref = "glide" }
 androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }
 androidx-compose-ui = { group = "androidx.compose.ui", name = "ui" }
 androidx-compose-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
@@ -39,8 +32,6 @@ androidx-compose-ui-tooling-preview = { group = "androidx.compose.ui", name = "u
 androidx-compose-material3 = { group = "androidx.compose.material3", name = "material3" }
 androidx-compose-material-icons-extended = { group = "androidx.compose.material", name = "material-icons-extended" }
 androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version = "1.9.3" }
-androidx-tv-foundation = { group = "androidx.tv", name = "tv-foundation", version = "1.0.0-alpha11" }
-androidx-tv-material = { group = "androidx.tv", name = "tv-material", version = "1.0.0-alpha11" }
 hilt-android = { group = "com.google.dagger", name = "hilt-android", version.ref = "hilt" }
 hilt-compiler = { group = "com.google.dagger", name = "hilt-compiler", version.ref = "hilt" }
 hilt-android-testing = { group = "com.google.dagger", name = "hilt-android-testing", version.ref = "hilt" }
@@ -84,7 +75,6 @@ zxing-android-embedded = { group = "com.journeyapps", name = "zxing-android-embe
 coil-compose = { group = "io.coil-kt", name = "coil-compose", version.ref = "coil" }
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinxSerialization" }
 androidx-datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastore" }
-androidx-datastore-preferences-core = { group = "androidx.datastore", name = "datastore-preferences-core", version.ref = "datastore" }
 androidx-work-runtime-ktx = { group = "androidx.work", name = "work-runtime-ktx", version.ref = "workmanager" }
 androidx-work-testing = { group = "androidx.work", name = "work-testing", version.ref = "workmanager" }
 androidx-paging-runtime = { group = "androidx.paging", name = "paging-runtime", version.ref = "paging" }
@@ -97,3 +87,4 @@ hilt-android = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
 kotlin-ksp = { id = "com.google.devtools.ksp", version = "2.1.10-1.0.29" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlint" }

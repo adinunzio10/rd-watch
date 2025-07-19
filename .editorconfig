@@ -1,0 +1,36 @@
+# EditorConfig for Android Compose project
+# https://editorconfig.org/
+
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+indent_style = space
+indent_size = 4
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.{kt,kts}]
+indent_size = 4
+max_line_length = 160
+
+# Ktlint rules configuration - disable strict rules for Android Compose
+ktlint_standard_function-naming = disabled
+ktlint_standard_max-line-length = disabled
+ktlint_standard_no-wildcard-imports = disabled
+
+[*.xml]
+indent_size = 4
+
+[*.json]
+indent_size = 2
+
+[*.{yml,yaml}]
+indent_size = 2
+
+[*.gradle.kts]
+indent_size = 4
+
+[*.properties]
+insert_final_newline = false

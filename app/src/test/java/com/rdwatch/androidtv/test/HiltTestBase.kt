@@ -11,7 +11,6 @@ import org.junit.Rule
  */
 @HiltAndroidTest
 abstract class HiltTestBase {
-
     @get:Rule
     val hiltRule = HiltAndroidRule(this)
 

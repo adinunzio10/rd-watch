@@ -16,14 +16,13 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object SettingsModule {
-    
     /**
      * Provides singleton instance of SettingsRepository
      */
     @Provides
     @Singleton
     fun provideSettingsRepository(
-        @ApplicationContext context: Context
+        @ApplicationContext context: Context,
     ): SettingsRepository {
         return SettingsRepository(context)
     }

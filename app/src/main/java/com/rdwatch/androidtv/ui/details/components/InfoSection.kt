@@ -10,7 +10,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.rdwatch.androidtv.ui.details.models.*
@@ -25,11 +24,11 @@ fun InfoSection(
     modifier: Modifier = Modifier,
     maxDescriptionLines: Int = 4,
     showExpandableDescription: Boolean = false,
-    tabMode: InfoSectionTabMode = InfoSectionTabMode.FULL
+    tabMode: InfoSectionTabMode = InfoSectionTabMode.FULL,
 ) {
     Column(
         modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         when (tabMode) {
             InfoSectionTabMode.OVERVIEW -> {
@@ -38,62 +37,62 @@ fun InfoSection(
                     InfoDescriptionSection(
                         description = content.description!!,
                         maxLines = 3,
-                        showExpandable = false
+                        showExpandable = false,
                     )
                 }
-                
+
                 // Key metadata only
                 InfoMetadataGrid(content = content, isOverview = true)
-                
+
                 // Genres
                 if (content.metadata.genre.isNotEmpty()) {
                     InfoGenresSection(genres = content.metadata.genre.take(4))
                 }
             }
-            
+
             InfoSectionTabMode.DETAILS -> {
                 // Details: Full description + complete metadata + cast
                 if (content.description != null) {
                     InfoDescriptionSection(
                         description = content.description!!,
                         maxLines = maxDescriptionLines,
-                        showExpandable = showExpandableDescription
+                        showExpandable = showExpandableDescription,
                     )
                 }
-                
+
                 // Complete metadata grid
                 InfoMetadataGrid(content = content, isOverview = false)
-                
+
                 // All genres
                 if (content.metadata.genre.isNotEmpty()) {
                     InfoGenresSection(genres = content.metadata.genre)
                 }
-                
+
                 // Cast & crew
                 if (content.metadata.cast.isNotEmpty()) {
                     InfoCastSection(cast = content.metadata.cast)
                 }
-                
+
                 // Quality indicators
                 InfoQualitySection(content = content)
             }
-            
+
             InfoSectionTabMode.FULL -> {
                 // Full mode (original behavior)
                 if (content.description != null) {
                     InfoDescriptionSection(
                         description = content.description!!,
                         maxLines = maxDescriptionLines,
-                        showExpandable = showExpandableDescription
+                        showExpandable = showExpandableDescription,
                     )
                 }
-                
+
                 InfoMetadataGrid(content = content)
-                
+
                 if (content.metadata.genre.isNotEmpty()) {
                     InfoGenresSection(genres = content.metadata.genre)
                 }
-                
+
                 if (content.metadata.cast.isNotEmpty()) {
                     InfoCastSection(cast = content.metadata.cast)
                 }
@@ -107,38 +106,38 @@ private fun InfoDescriptionSection(
     description: String,
     maxLines: Int,
     showExpandable: Boolean,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     var isExpanded by remember { mutableStateOf(false) }
-    
+
     Column(
         modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Text(
             text = "Description",
             style = MaterialTheme.typography.headlineSmall,
             color = MaterialTheme.colorScheme.onBackground,
-            fontWeight = FontWeight.SemiBold
+            fontWeight = FontWeight.SemiBold,
         )
-        
+
         Text(
             text = description,
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.8f),
             lineHeight = MaterialTheme.typography.bodyLarge.lineHeight * 1.2,
-            maxLines = if (showExpandable && isExpanded) Int.MAX_VALUE else maxLines
+            maxLines = if (showExpandable && isExpanded) Int.MAX_VALUE else maxLines,
         )
-        
+
         if (showExpandable && description.length > 200) {
             TextButton(
                 onClick = { isExpanded = !isExpanded },
-                modifier = Modifier.padding(0.dp)
+                modifier = Modifier.padding(0.dp),
             ) {
                 Text(
                     text = if (isExpanded) "Show Less" else "Show More",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.primary
+                    color = MaterialTheme.colorScheme.primary,
                 )
             }
         }
@@ -146,46 +145,50 @@ private fun InfoDescriptionSection(
 }
 
 @Composable
-private fun InfoMetadataGrid(content: ContentDetail, isOverview: Boolean = false) {
-    val metadataItems = buildList {
-        if (isOverview) {
-            // Overview: Show only key metadata
-            content.metadata.year?.let { add(InfoMetadataItem("Year", it)) }
-            content.metadata.duration?.let { add(InfoMetadataItem("Duration", it)) }
-            content.metadata.rating?.let { add(InfoMetadataItem("Rating", it)) }
-            
-            // Add season/episode info for TV content
-            if (content.contentType == ContentType.TV_EPISODE) {
-                content.metadata.season?.let { season ->
-                    content.metadata.episode?.let { episode ->
-                        add(InfoMetadataItem("Episode", "S${season}E${episode}"))
+private fun InfoMetadataGrid(
+    content: ContentDetail,
+    isOverview: Boolean = false,
+) {
+    val metadataItems =
+        buildList {
+            if (isOverview) {
+                // Overview: Show only key metadata
+                content.metadata.year?.let { add(InfoMetadataItem("Year", it)) }
+                content.metadata.duration?.let { add(InfoMetadataItem("Duration", it)) }
+                content.metadata.rating?.let { add(InfoMetadataItem("Rating", it)) }
+
+                // Add season/episode info for TV content
+                if (content.contentType == ContentType.TV_EPISODE) {
+                    content.metadata.season?.let { season ->
+                        content.metadata.episode?.let { episode ->
+                            add(InfoMetadataItem("Episode", "S${season}E$episode"))
+                        }
                     }
                 }
-            }
-        } else {
-            // Details: Show all available metadata
-            content.metadata.duration?.let { add(InfoMetadataItem("Duration", it)) }
-            content.metadata.language?.let { add(InfoMetadataItem("Language", it)) }
-            content.metadata.rating?.let { add(InfoMetadataItem("Rating", it)) }
-            content.metadata.year?.let { add(InfoMetadataItem("Year", it)) }
-            content.metadata.director?.let { add(InfoMetadataItem("Director", it)) }
-            content.metadata.studio?.let { add(InfoMetadataItem("Studio", it)) }
-            
-            // Add season/episode info for TV content
-            if (content.contentType == ContentType.TV_EPISODE) {
-                content.metadata.season?.let { season ->
-                    content.metadata.episode?.let { episode ->
-                        add(InfoMetadataItem("Episode", "S${season}E${episode}"))
+            } else {
+                // Details: Show all available metadata
+                content.metadata.duration?.let { add(InfoMetadataItem("Duration", it)) }
+                content.metadata.language?.let { add(InfoMetadataItem("Language", it)) }
+                content.metadata.rating?.let { add(InfoMetadataItem("Rating", it)) }
+                content.metadata.year?.let { add(InfoMetadataItem("Year", it)) }
+                content.metadata.director?.let { add(InfoMetadataItem("Director", it)) }
+                content.metadata.studio?.let { add(InfoMetadataItem("Studio", it)) }
+
+                // Add season/episode info for TV content
+                if (content.contentType == ContentType.TV_EPISODE) {
+                    content.metadata.season?.let { season ->
+                        content.metadata.episode?.let { episode ->
+                            add(InfoMetadataItem("Episode", "S${season}E$episode"))
+                        }
                     }
                 }
             }
         }
-    }
-    
+
     if (metadataItems.isNotEmpty()) {
         LazyRow(
             horizontalArrangement = Arrangement.spacedBy(32.dp),
-            contentPadding = PaddingValues(horizontal = 4.dp)
+            contentPadding = PaddingValues(horizontal = 4.dp),
         ) {
             items(metadataItems) { item ->
                 InfoMetadataItemCard(item = item)
@@ -197,18 +200,18 @@ private fun InfoMetadataGrid(content: ContentDetail, isOverview: Boolean = false
 @Composable
 private fun InfoMetadataItemCard(item: InfoMetadataItem) {
     Column(
-        verticalArrangement = Arrangement.spacedBy(4.dp)
+        verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         Text(
             text = item.label,
             style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
+            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
         )
         Text(
             text = item.value,
             style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.onBackground,
-            fontWeight = FontWeight.Medium
+            fontWeight = FontWeight.Medium,
         )
     }
 }
@@ -216,18 +219,18 @@ private fun InfoMetadataItemCard(item: InfoMetadataItem) {
 @Composable
 private fun InfoGenresSection(genres: List<String>) {
     Column(
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Text(
             text = "Genres",
             style = MaterialTheme.typography.headlineSmall,
             color = MaterialTheme.colorScheme.onBackground,
-            fontWeight = FontWeight.SemiBold
+            fontWeight = FontWeight.SemiBold,
         )
-        
+
         LazyRow(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
-            contentPadding = PaddingValues(horizontal = 4.dp)
+            contentPadding = PaddingValues(horizontal = 4.dp),
         ) {
             items(genres) { genre ->
                 InfoGenreChip(genre = genre)
@@ -240,13 +243,13 @@ private fun InfoGenresSection(genres: List<String>) {
 private fun InfoGenreChip(genre: String) {
     Surface(
         color = MaterialTheme.colorScheme.primaryContainer,
-        shape = RoundedCornerShape(16.dp)
+        shape = RoundedCornerShape(16.dp),
     ) {
         Text(
             text = genre,
             style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.onPrimaryContainer,
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
         )
     }
 }
@@ -254,18 +257,18 @@ private fun InfoGenreChip(genre: String) {
 @Composable
 private fun InfoCastSection(cast: List<String>) {
     Column(
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Text(
             text = "Cast",
             style = MaterialTheme.typography.headlineSmall,
             color = MaterialTheme.colorScheme.onBackground,
-            fontWeight = FontWeight.SemiBold
+            fontWeight = FontWeight.SemiBold,
         )
-        
+
         LazyRow(
             horizontalArrangement = Arrangement.spacedBy(16.dp),
-            contentPadding = PaddingValues(horizontal = 4.dp)
+            contentPadding = PaddingValues(horizontal = 4.dp),
         ) {
             items(cast.take(8)) { castMember ->
                 InfoCastMemberCard(name = castMember)
@@ -278,43 +281,45 @@ private fun InfoCastSection(cast: List<String>) {
 private fun InfoCastMemberCard(name: String) {
     Card(
         modifier = Modifier.width(120.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        colors =
+            CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surface,
+            ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
     ) {
         Column(
             modifier = Modifier.padding(12.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             // Placeholder for cast member image
             Surface(
-                modifier = Modifier
-                    .size(80.dp),
+                modifier =
+                    Modifier
+                        .size(80.dp),
                 shape = RoundedCornerShape(8.dp),
-                color = MaterialTheme.colorScheme.surfaceVariant
+                color = MaterialTheme.colorScheme.surfaceVariant,
             ) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
+                    contentAlignment = Alignment.Center,
                 ) {
                     Icon(
                         imageVector = Icons.Default.Person,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(32.dp)
+                        modifier = Modifier.size(32.dp),
                     )
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(8.dp))
-            
+
             Text(
                 text = name,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurface,
                 fontWeight = FontWeight.Medium,
-                maxLines = 2
+                maxLines = 2,
             )
         }
     }
@@ -326,29 +331,30 @@ private fun InfoCastMemberCard(name: String) {
 @Composable
 fun InfoQualitySection(
     content: ContentDetail,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
-    val qualityItems = buildList {
-        content.metadata.quality?.let { add(it) }
-        if (content.metadata.is4K) add("4K")
-        if (content.metadata.isHDR) add("HDR")
-    }
-    
+    val qualityItems =
+        buildList {
+            content.metadata.quality?.let { add(it) }
+            if (content.metadata.is4K) add("4K")
+            if (content.metadata.isHDR) add("HDR")
+        }
+
     if (qualityItems.isNotEmpty()) {
         Column(
             modifier = modifier,
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             Text(
                 text = "Quality",
                 style = MaterialTheme.typography.headlineSmall,
                 color = MaterialTheme.colorScheme.onBackground,
-                fontWeight = FontWeight.SemiBold
+                fontWeight = FontWeight.SemiBold,
             )
-            
+
             LazyRow(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
-                contentPadding = PaddingValues(horizontal = 4.dp)
+                contentPadding = PaddingValues(horizontal = 4.dp),
             ) {
                 items(qualityItems) { quality ->
                     InfoQualityBadge(quality = quality)
@@ -362,28 +368,29 @@ fun InfoQualitySection(
 private fun InfoQualityBadge(quality: String) {
     Surface(
         color = MaterialTheme.colorScheme.primary,
-        shape = RoundedCornerShape(8.dp)
+        shape = RoundedCornerShape(8.dp),
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
             horizontalArrangement = Arrangement.spacedBy(4.dp),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(
-                imageVector = when (quality) {
-                    "4K" -> Icons.Default.HighQuality
-                    "HDR" -> Icons.Default.HighQuality
-                    else -> Icons.Default.VideoLabel
-                },
+                imageVector =
+                    when (quality) {
+                        "4K" -> Icons.Default.HighQuality
+                        "HDR" -> Icons.Default.HighQuality
+                        else -> Icons.Default.VideoLabel
+                    },
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.onPrimary,
-                modifier = Modifier.size(16.dp)
+                modifier = Modifier.size(16.dp),
             )
             Text(
                 text = quality,
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onPrimary,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
             )
         }
     }
@@ -394,16 +401,16 @@ private fun InfoQualityBadge(quality: String) {
  */
 private data class InfoMetadataItem(
     val label: String,
-    val value: String
+    val value: String,
 )
 
 /**
  * Tab modes for InfoSection content filtering
  */
 enum class InfoSectionTabMode {
-    OVERVIEW,   // Essential information only
-    DETAILS,    // Complete detailed information
-    FULL        // Original full behavior (backward compatibility)
+    OVERVIEW, // Essential information only
+    DETAILS, // Complete detailed information
+    FULL, // Original full behavior (backward compatibility)
 }
 
 /**
@@ -419,23 +426,24 @@ object InfoSectionPreview {
             override val cardImageUrl: String? = null
             override val contentType: ContentType = ContentType.MOVIE
             override val videoUrl: String? = "https://example.com/video.mp4"
-            override val metadata: ContentMetadata = ContentMetadata(
-                year = "2023",
-                duration = "2h 15m",
-                rating = "PG-13",
-                language = "English",
-                genre = listOf("Action", "Adventure", "Drama", "Thriller"),
-                studio = "Studio Example",
-                cast = listOf("Actor One", "Actor Two", "Actor Three", "Actor Four", "Actor Five"),
-                director = "Director Name",
-                quality = "4K",
-                is4K = true,
-                isHDR = true
-            )
+            override val metadata: ContentMetadata =
+                ContentMetadata(
+                    year = "2023",
+                    duration = "2h 15m",
+                    rating = "PG-13",
+                    language = "English",
+                    genre = listOf("Action", "Adventure", "Drama", "Thriller"),
+                    studio = "Studio Example",
+                    cast = listOf("Actor One", "Actor Two", "Actor Three", "Actor Four", "Actor Five"),
+                    director = "Director Name",
+                    quality = "4K",
+                    is4K = true,
+                    isHDR = true,
+                )
             override val actions: List<ContentAction> = emptyList()
         }
     }
-    
+
     fun createSampleTVEpisodeContent(): ContentDetail {
         return object : ContentDetail {
             override val id: String = "2"
@@ -445,18 +453,19 @@ object InfoSectionPreview {
             override val cardImageUrl: String? = null
             override val contentType: ContentType = ContentType.TV_EPISODE
             override val videoUrl: String? = "https://example.com/episode.mp4"
-            override val metadata: ContentMetadata = ContentMetadata(
-                year = "2023",
-                duration = "45m",
-                rating = "TV-14",
-                language = "English",
-                genre = listOf("Drama", "Mystery"),
-                studio = "TV Network",
-                cast = listOf("Lead Actor", "Supporting Actor"),
-                director = "Episode Director",
-                season = 1,
-                episode = 5
-            )
+            override val metadata: ContentMetadata =
+                ContentMetadata(
+                    year = "2023",
+                    duration = "45m",
+                    rating = "TV-14",
+                    language = "English",
+                    genre = listOf("Drama", "Mystery"),
+                    studio = "TV Network",
+                    cast = listOf("Lead Actor", "Supporting Actor"),
+                    director = "Episode Director",
+                    season = 1,
+                    episode = 5,
+                )
             override val actions: List<ContentAction> = emptyList()
         }
     }

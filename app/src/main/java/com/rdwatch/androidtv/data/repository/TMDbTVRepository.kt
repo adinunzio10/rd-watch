@@ -1,13 +1,14 @@
 package com.rdwatch.androidtv.data.repository
 
-import com.rdwatch.androidtv.network.models.tmdb.TMDbTVResponse
 import com.rdwatch.androidtv.network.models.tmdb.TMDbCreditsResponse
+import com.rdwatch.androidtv.network.models.tmdb.TMDbEpisodeResponse
+import com.rdwatch.androidtv.network.models.tmdb.TMDbExternalIdsResponse
 import com.rdwatch.androidtv.network.models.tmdb.TMDbRecommendationsResponse
-import com.rdwatch.androidtv.network.models.tmdb.TMDbTVImagesResponse
-import com.rdwatch.androidtv.network.models.tmdb.TMDbTVVideosResponse
 import com.rdwatch.androidtv.network.models.tmdb.TMDbSearchResponse
 import com.rdwatch.androidtv.network.models.tmdb.TMDbSeasonResponse
-import com.rdwatch.androidtv.network.models.tmdb.TMDbEpisodeResponse
+import com.rdwatch.androidtv.network.models.tmdb.TMDbTVImagesResponse
+import com.rdwatch.androidtv.network.models.tmdb.TMDbTVResponse
+import com.rdwatch.androidtv.network.models.tmdb.TMDbTVVideosResponse
 import com.rdwatch.androidtv.repository.base.Result
 import com.rdwatch.androidtv.ui.details.models.ContentDetail
 import kotlinx.coroutines.flow.Flow
@@ -17,7 +18,6 @@ import kotlinx.coroutines.flow.Flow
  * Provides caching and offline-first access to TV show data
  */
 interface TMDbTVRepository {
-    
     /**
      * Get TV show details by TMDb ID
      * @param tvId TMDb TV show ID
@@ -28,9 +28,9 @@ interface TMDbTVRepository {
     fun getTVDetails(
         tvId: Int,
         forceRefresh: Boolean = false,
-        language: String = "en-US"
+        language: String = "en-US",
     ): Flow<Result<TMDbTVResponse>>
-    
+
     /**
      * Get TV show details as ContentDetail for UI consumption
      * @param tvId TMDb TV show ID
@@ -41,9 +41,9 @@ interface TMDbTVRepository {
     fun getTVContentDetail(
         tvId: Int,
         forceRefresh: Boolean = false,
-        language: String = "en-US"
+        language: String = "en-US",
     ): Flow<Result<ContentDetail>>
-    
+
     /**
      * Get TV show credits (cast and crew)
      * @param tvId TMDb TV show ID
@@ -54,9 +54,9 @@ interface TMDbTVRepository {
     fun getTVCredits(
         tvId: Int,
         forceRefresh: Boolean = false,
-        language: String = "en-US"
+        language: String = "en-US",
     ): Flow<Result<TMDbCreditsResponse>>
-    
+
     /**
      * Get TV show recommendations
      * @param tvId TMDb TV show ID
@@ -69,9 +69,9 @@ interface TMDbTVRepository {
         tvId: Int,
         page: Int = 1,
         forceRefresh: Boolean = false,
-        language: String = "en-US"
+        language: String = "en-US",
     ): Flow<Result<TMDbRecommendationsResponse>>
-    
+
     /**
      * Get similar TV shows
      * @param tvId TMDb TV show ID
@@ -84,9 +84,9 @@ interface TMDbTVRepository {
         tvId: Int,
         page: Int = 1,
         forceRefresh: Boolean = false,
-        language: String = "en-US"
+        language: String = "en-US",
     ): Flow<Result<TMDbRecommendationsResponse>>
-    
+
     /**
      * Get TV show images
      * @param tvId TMDb TV show ID
@@ -97,9 +97,9 @@ interface TMDbTVRepository {
     fun getTVImages(
         tvId: Int,
         forceRefresh: Boolean = false,
-        includeImageLanguage: String? = null
+        includeImageLanguage: String? = null,
     ): Flow<Result<TMDbTVImagesResponse>>
-    
+
     /**
      * Get TV show videos
      * @param tvId TMDb TV show ID
@@ -110,9 +110,20 @@ interface TMDbTVRepository {
     fun getTVVideos(
         tvId: Int,
         forceRefresh: Boolean = false,
-        language: String = "en-US"
+        language: String = "en-US",
     ): Flow<Result<TMDbTVVideosResponse>>
-    
+
+    /**
+     * Get TV show external IDs (IMDb ID, TVDB ID, etc.)
+     * @param tvId TMDb TV show ID
+     * @param forceRefresh Force refresh from network
+     * @return Flow of Result containing external IDs
+     */
+    fun getTVExternalIds(
+        tvId: Int,
+        forceRefresh: Boolean = false,
+    ): Flow<Result<TMDbExternalIdsResponse>>
+
     /**
      * Get season details
      * @param tvId TMDb TV show ID
@@ -125,9 +136,9 @@ interface TMDbTVRepository {
         tvId: Int,
         seasonNumber: Int,
         forceRefresh: Boolean = false,
-        language: String = "en-US"
+        language: String = "en-US",
     ): Flow<Result<TMDbSeasonResponse>>
-    
+
     /**
      * Get episode details
      * @param tvId TMDb TV show ID
@@ -142,9 +153,9 @@ interface TMDbTVRepository {
         seasonNumber: Int,
         episodeNumber: Int,
         forceRefresh: Boolean = false,
-        language: String = "en-US"
+        language: String = "en-US",
     ): Flow<Result<TMDbEpisodeResponse>>
-    
+
     /**
      * Get episode details as ContentDetail for UI consumption
      * @param tvId TMDb TV show ID
@@ -159,9 +170,25 @@ interface TMDbTVRepository {
         seasonNumber: Int,
         episodeNumber: Int,
         forceRefresh: Boolean = false,
-        language: String = "en-US"
+        language: String = "en-US",
     ): Flow<Result<ContentDetail>>
-    
+
+    /**
+     * Get episode external IDs (IMDb ID, TVDB ID, etc.)
+     * Critical for episode-specific source scraping with Torrentio
+     * @param tvId TMDb TV show ID
+     * @param seasonNumber Season number
+     * @param episodeNumber Episode number
+     * @param forceRefresh Force refresh from network
+     * @return Flow of Result containing external IDs
+     */
+    fun getEpisodeExternalIds(
+        tvId: Int,
+        seasonNumber: Int,
+        episodeNumber: Int,
+        forceRefresh: Boolean = false,
+    ): Flow<Result<TMDbExternalIdsResponse>>
+
     /**
      * Get popular TV shows
      * @param page Page number for pagination
@@ -172,9 +199,9 @@ interface TMDbTVRepository {
     fun getPopularTVShows(
         page: Int = 1,
         forceRefresh: Boolean = false,
-        language: String = "en-US"
+        language: String = "en-US",
     ): Flow<Result<TMDbRecommendationsResponse>>
-    
+
     /**
      * Get top rated TV shows
      * @param page Page number for pagination
@@ -185,9 +212,9 @@ interface TMDbTVRepository {
     fun getTopRatedTVShows(
         page: Int = 1,
         forceRefresh: Boolean = false,
-        language: String = "en-US"
+        language: String = "en-US",
     ): Flow<Result<TMDbRecommendationsResponse>>
-    
+
     /**
      * Get TV shows airing today
      * @param page Page number for pagination
@@ -198,9 +225,9 @@ interface TMDbTVRepository {
     fun getAiringTodayTVShows(
         page: Int = 1,
         forceRefresh: Boolean = false,
-        language: String = "en-US"
+        language: String = "en-US",
     ): Flow<Result<TMDbRecommendationsResponse>>
-    
+
     /**
      * Get TV shows on the air
      * @param page Page number for pagination
@@ -211,9 +238,9 @@ interface TMDbTVRepository {
     fun getOnTheAirTVShows(
         page: Int = 1,
         forceRefresh: Boolean = false,
-        language: String = "en-US"
+        language: String = "en-US",
     ): Flow<Result<TMDbRecommendationsResponse>>
-    
+
     /**
      * Search TV shows
      * @param query Search query
@@ -228,9 +255,9 @@ interface TMDbTVRepository {
         page: Int = 1,
         language: String = "en-US",
         includeAdult: Boolean = false,
-        firstAirDateYear: Int? = null
+        firstAirDateYear: Int? = null,
     ): Flow<Result<TMDbSearchResponse>>
-    
+
     /**
      * Discover TV shows with filtering
      * @param page Page number for pagination
@@ -283,9 +310,9 @@ interface TMDbTVRepository {
         watchRegion: String? = null,
         withStatus: String? = null,
         withType: String? = null,
-        withKeywords: String? = null
+        withKeywords: String? = null,
     ): Flow<Result<TMDbSearchResponse>>
-    
+
     /**
      * Get trending TV shows
      * @param timeWindow Time window (day, week)
@@ -296,32 +323,39 @@ interface TMDbTVRepository {
     fun getTrendingTVShows(
         timeWindow: String = "day",
         page: Int = 1,
-        language: String = "en-US"
+        language: String = "en-US",
     ): Flow<Result<TMDbSearchResponse>>
-    
+
     /**
      * Clear all cached TV show data
      */
     suspend fun clearCache()
-    
+
     /**
      * Clear specific TV show cache
      * @param tvId TMDb TV show ID
      */
     suspend fun clearTVCache(tvId: Int)
-    
+
     /**
      * Clear specific season cache
      * @param tvId TMDb TV show ID
      * @param seasonNumber Season number
      */
-    suspend fun clearSeasonCache(tvId: Int, seasonNumber: Int)
-    
+    suspend fun clearSeasonCache(
+        tvId: Int,
+        seasonNumber: Int,
+    )
+
     /**
      * Clear specific episode cache
      * @param tvId TMDb TV show ID
      * @param seasonNumber Season number
      * @param episodeNumber Episode number
      */
-    suspend fun clearEpisodeCache(tvId: Int, seasonNumber: Int, episodeNumber: Int)
+    suspend fun clearEpisodeCache(
+        tvId: Int,
+        seasonNumber: Int,
+        episodeNumber: Int,
+    )
 }

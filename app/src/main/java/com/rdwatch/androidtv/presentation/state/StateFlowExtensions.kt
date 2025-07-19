@@ -13,16 +13,14 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 
 @Composable
-fun <T> StateFlow<T>.collectAsStateWithLifecycle(
-    minActiveState: Lifecycle.State = Lifecycle.State.STARTED
-): State<T> {
+fun <T> StateFlow<T>.collectAsStateWithLifecycle(minActiveState: Lifecycle.State = Lifecycle.State.STARTED): State<T> {
     return collectAsState()
 }
 
 @Composable
 fun <T> Flow<T>.collectWithLifecycle(
     minActiveState: Lifecycle.State = Lifecycle.State.STARTED,
-    action: suspend (T) -> Unit
+    action: suspend (T) -> Unit,
 ) {
     val lifecycleOwner = LocalLifecycleOwner.current
     LaunchedEffect(this, lifecycleOwner) {

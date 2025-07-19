@@ -16,8 +16,8 @@ import java.util.Date
         Index(value = ["title"]),
         Index(value = ["addedDate"]),
         Index(value = ["isFavorite"]),
-        Index(value = ["isWatched"])
-    ]
+        Index(value = ["isWatched"]),
+    ],
 )
 data class ContentEntity(
     @PrimaryKey(autoGenerate = true)
@@ -44,10 +44,10 @@ data class ContentEntity(
     @ColumnInfo(defaultValue = "0")
     val isFavorite: Boolean = false,
     @ColumnInfo(defaultValue = "0")
-    val isWatched: Boolean = false
+    val isWatched: Boolean = false,
 )
 
 enum class ContentSource {
     LOCAL,
-    REAL_DEBRID
+    REAL_DEBRID,
 }

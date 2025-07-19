@@ -1,13 +1,14 @@
 package com.rdwatch.androidtv.network.api
 
-import com.rdwatch.androidtv.network.response.ApiResponse
-import com.rdwatch.androidtv.network.models.tmdb.TMDbTVResponse
 import com.rdwatch.androidtv.network.models.tmdb.TMDbCreditsResponse
-import com.rdwatch.androidtv.network.models.tmdb.TMDbRecommendationsResponse
-import com.rdwatch.androidtv.network.models.tmdb.TMDbTVImagesResponse
-import com.rdwatch.androidtv.network.models.tmdb.TMDbTVVideosResponse
-import com.rdwatch.androidtv.network.models.tmdb.TMDbSeasonResponse
 import com.rdwatch.androidtv.network.models.tmdb.TMDbEpisodeResponse
+import com.rdwatch.androidtv.network.models.tmdb.TMDbExternalIdsResponse
+import com.rdwatch.androidtv.network.models.tmdb.TMDbRecommendationsResponse
+import com.rdwatch.androidtv.network.models.tmdb.TMDbSeasonResponse
+import com.rdwatch.androidtv.network.models.tmdb.TMDbTVImagesResponse
+import com.rdwatch.androidtv.network.models.tmdb.TMDbTVResponse
+import com.rdwatch.androidtv.network.models.tmdb.TMDbTVVideosResponse
+import com.rdwatch.androidtv.network.response.ApiResponse
 import retrofit2.Call
 import retrofit2.http.GET
 import retrofit2.http.Path
@@ -18,7 +19,6 @@ import retrofit2.http.Query
  * Follows existing ApiService pattern with ApiResponse wrapper
  */
 interface TMDbTVService {
-    
     /**
      * Get TV show details by ID
      * @param tvId TMDb TV show ID
@@ -29,9 +29,9 @@ interface TMDbTVService {
     fun getTVDetails(
         @Path("tv_id") tvId: Int,
         @Query("append_to_response") appendToResponse: String? = null,
-        @Query("language") language: String = "en-US"
+        @Query("language") language: String = "en-US",
     ): Call<ApiResponse<TMDbTVResponse>>
-    
+
     /**
      * Get TV show credits (cast and crew)
      * @param tvId TMDb TV show ID
@@ -40,9 +40,9 @@ interface TMDbTVService {
     @GET("tv/{tv_id}/credits")
     fun getTVCredits(
         @Path("tv_id") tvId: Int,
-        @Query("language") language: String = "en-US"
+        @Query("language") language: String = "en-US",
     ): Call<ApiResponse<TMDbCreditsResponse>>
-    
+
     /**
      * Get TV show recommendations
      * @param tvId TMDb TV show ID
@@ -53,9 +53,9 @@ interface TMDbTVService {
     fun getTVRecommendations(
         @Path("tv_id") tvId: Int,
         @Query("language") language: String = "en-US",
-        @Query("page") page: Int = 1
+        @Query("page") page: Int = 1,
     ): Call<ApiResponse<TMDbRecommendationsResponse>>
-    
+
     /**
      * Get similar TV shows
      * @param tvId TMDb TV show ID
@@ -66,9 +66,9 @@ interface TMDbTVService {
     fun getSimilarTVShows(
         @Path("tv_id") tvId: Int,
         @Query("language") language: String = "en-US",
-        @Query("page") page: Int = 1
+        @Query("page") page: Int = 1,
     ): Call<ApiResponse<TMDbRecommendationsResponse>>
-    
+
     /**
      * Get TV show images (posters, backdrops, logos)
      * @param tvId TMDb TV show ID
@@ -77,9 +77,9 @@ interface TMDbTVService {
     @GET("tv/{tv_id}/images")
     fun getTVImages(
         @Path("tv_id") tvId: Int,
-        @Query("include_image_language") includeImageLanguage: String? = null
+        @Query("include_image_language") includeImageLanguage: String? = null,
     ): Call<ApiResponse<TMDbTVImagesResponse>>
-    
+
     /**
      * Get TV show videos (trailers, teasers, etc.)
      * @param tvId TMDb TV show ID
@@ -88,9 +88,19 @@ interface TMDbTVService {
     @GET("tv/{tv_id}/videos")
     fun getTVVideos(
         @Path("tv_id") tvId: Int,
-        @Query("language") language: String = "en-US"
+        @Query("language") language: String = "en-US",
     ): Call<ApiResponse<TMDbTVVideosResponse>>
-    
+
+    /**
+     * Get TV show external IDs (IMDb ID, TVDB ID, etc.)
+     * @param tvId TMDb TV show ID
+     * @return External IDs including IMDb ID needed for source scraping
+     */
+    @GET("tv/{tv_id}/external_ids")
+    fun getTVExternalIds(
+        @Path("tv_id") tvId: Int,
+    ): Call<ApiResponse<TMDbExternalIdsResponse>>
+
     /**
      * Get TV show season details
      * @param tvId TMDb TV show ID
@@ -101,9 +111,9 @@ interface TMDbTVService {
     fun getSeasonDetails(
         @Path("tv_id") tvId: Int,
         @Path("season_number") seasonNumber: Int,
-        @Query("language") language: String = "en-US"
+        @Query("language") language: String = "en-US",
     ): Call<ApiResponse<TMDbSeasonResponse>>
-    
+
     /**
      * Get TV show episode details
      * @param tvId TMDb TV show ID
@@ -116,9 +126,24 @@ interface TMDbTVService {
         @Path("tv_id") tvId: Int,
         @Path("season_number") seasonNumber: Int,
         @Path("episode_number") episodeNumber: Int,
-        @Query("language") language: String = "en-US"
+        @Query("language") language: String = "en-US",
     ): Call<ApiResponse<TMDbEpisodeResponse>>
-    
+
+    /**
+     * Get TV show episode external IDs (IMDb ID, TVDB ID, etc.)
+     * Critical for episode-specific source scraping with Torrentio
+     * @param tvId TMDb TV show ID
+     * @param seasonNumber Season number
+     * @param episodeNumber Episode number
+     * @return External IDs including IMDb ID needed for episode source scraping
+     */
+    @GET("tv/{tv_id}/season/{season_number}/episode/{episode_number}/external_ids")
+    fun getEpisodeExternalIds(
+        @Path("tv_id") tvId: Int,
+        @Path("season_number") seasonNumber: Int,
+        @Path("episode_number") episodeNumber: Int,
+    ): Call<ApiResponse<TMDbExternalIdsResponse>>
+
     /**
      * Get popular TV shows
      * @param language Language for the response (default: en-US)
@@ -127,9 +152,9 @@ interface TMDbTVService {
     @GET("tv/popular")
     fun getPopularTVShows(
         @Query("language") language: String = "en-US",
-        @Query("page") page: Int = 1
+        @Query("page") page: Int = 1,
     ): Call<ApiResponse<TMDbRecommendationsResponse>>
-    
+
     /**
      * Get top rated TV shows
      * @param language Language for the response (default: en-US)
@@ -138,9 +163,9 @@ interface TMDbTVService {
     @GET("tv/top_rated")
     fun getTopRatedTVShows(
         @Query("language") language: String = "en-US",
-        @Query("page") page: Int = 1
+        @Query("page") page: Int = 1,
     ): Call<ApiResponse<TMDbRecommendationsResponse>>
-    
+
     /**
      * Get TV shows airing today
      * @param language Language for the response (default: en-US)
@@ -149,9 +174,9 @@ interface TMDbTVService {
     @GET("tv/airing_today")
     fun getAiringTodayTVShows(
         @Query("language") language: String = "en-US",
-        @Query("page") page: Int = 1
+        @Query("page") page: Int = 1,
     ): Call<ApiResponse<TMDbRecommendationsResponse>>
-    
+
     /**
      * Get TV shows on the air
      * @param language Language for the response (default: en-US)
@@ -160,6 +185,6 @@ interface TMDbTVService {
     @GET("tv/on_the_air")
     fun getOnTheAirTVShows(
         @Query("language") language: String = "en-US",
-        @Query("page") page: Int = 1
+        @Query("page") page: Int = 1,
     ): Call<ApiResponse<TMDbRecommendationsResponse>>
 }

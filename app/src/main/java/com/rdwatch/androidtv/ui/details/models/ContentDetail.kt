@@ -16,60 +16,57 @@ interface ContentDetail {
     val videoUrl: String?
     val sources: List<StreamingSource>
         get() = emptyList() // Default implementation for backward compatibility
-    
+
     /**
      * Get display title for the content
      */
     fun getDisplayTitle(): String = title
-    
+
     /**
      * Get formatted description or fallback text
      */
     fun getDisplayDescription(): String = description ?: "No description available"
-    
+
     /**
      * Get primary image URL (background or card)
      */
     fun getPrimaryImageUrl(): String? = backgroundImageUrl ?: cardImageUrl
-    
+
     /**
      * Check if content is playable
      */
     fun isPlayable(): Boolean = videoUrl != null || sources.isNotEmpty()
-    
+
     /**
      * Get content-specific metadata chips
      */
     fun getMetadataChips(): List<MetadataChip> = metadata.toChips()
-    
+
     /**
      * Get available streaming sources
      */
     fun getAvailableSources(): List<StreamingSource> = sources.filter { it.isCurrentlyAvailable() }
-    
+
     /**
      * Get the best quality source (if available)
      */
-    fun getBestQualitySource(): StreamingSource? = 
-        getAvailableSources().maxByOrNull { it.quality.priority }
-    
+    fun getBestQualitySource(): StreamingSource? = getAvailableSources().maxByOrNull { it.quality.priority }
+
     /**
      * Get reliable streaming sources
      */
-    fun getReliableSources(): List<StreamingSource> = 
-        getAvailableSources().filter { it.isReliable() }
-    
+    fun getReliableSources(): List<StreamingSource> = getAvailableSources().filter { it.isReliable() }
+
     /**
      * Get P2P streaming sources
      */
-    fun getP2PSources(): List<StreamingSource> = 
-        getAvailableSources().filter { it.isP2P() }
-    
+    fun getP2PSources(): List<StreamingSource> = getAvailableSources().filter { it.isP2P() }
+
     /**
      * Check if content has reliable streaming options
      */
     fun hasReliableStreaming(): Boolean = getReliableSources().isNotEmpty()
-    
+
     /**
      * Check if content has P2P streaming options
      */
@@ -86,7 +83,7 @@ enum class ContentType {
     DOCUMENTARY,
     SPORTS,
     MUSIC_VIDEO,
-    PODCAST
+    PODCAST,
 }
 
 /**
@@ -106,14 +103,14 @@ data class ContentMetadata(
     val quality: String? = null,
     val isHDR: Boolean = false,
     val is4K: Boolean = false,
-    val customMetadata: Map<String, String> = emptyMap()
+    val customMetadata: Map<String, String> = emptyMap(),
 ) {
     /**
      * Convert metadata to display chips
      */
     fun toChips(): List<MetadataChip> {
         val chips = mutableListOf<MetadataChip>()
-        
+
         quality?.let { chips.add(MetadataChip.Quality(it)) }
         if (is4K) chips.add(MetadataChip.Quality("4K"))
         if (isHDR) chips.add(MetadataChip.Quality("HDR"))
@@ -121,7 +118,7 @@ data class ContentMetadata(
         rating?.let { chips.add(MetadataChip.Rating(it)) }
         duration?.let { chips.add(MetadataChip.Duration(it)) }
         studio?.let { chips.add(MetadataChip.Studio(it)) }
-        
+
         return chips
     }
 }
@@ -131,12 +128,19 @@ data class ContentMetadata(
  */
 sealed class MetadataChip(val text: String, val icon: String? = null) {
     class Quality(quality: String) : MetadataChip(quality)
+
     class Year(year: String) : MetadataChip(year)
+
     class Rating(rating: String) : MetadataChip(rating)
+
     class Duration(duration: String) : MetadataChip(duration)
+
     class Studio(studio: String) : MetadataChip(studio)
+
     class Genre(genre: String) : MetadataChip(genre)
+
     class Language(language: String) : MetadataChip(language)
+
     class Custom(text: String, icon: String? = null) : MetadataChip(text, icon)
 }
 
@@ -146,29 +150,37 @@ sealed class MetadataChip(val text: String, val icon: String? = null) {
 sealed class ContentAction(val title: String, val icon: String) {
     class Play(val isResume: Boolean = false) : ContentAction(
         title = if (isResume) "Resume" else "Play",
-        icon = "play_arrow"
+        icon = "play_arrow",
     )
+
     class AddToWatchlist(val isInWatchlist: Boolean = false) : ContentAction(
         title = if (isInWatchlist) "Remove from Watchlist" else "Add to Watchlist",
-        icon = if (isInWatchlist) "remove" else "add"
+        icon = if (isInWatchlist) "remove" else "add",
     )
+
     class Like(val isLiked: Boolean = false) : ContentAction(
         title = if (isLiked) "Unlike" else "Like",
-        icon = if (isLiked) "favorite" else "thumb_up"
+        icon = if (isLiked) "favorite" else "thumb_up",
     )
+
     class Share : ContentAction("Share", "share")
+
     class Download(val isDownloaded: Boolean = false, val isDownloading: Boolean = false) : ContentAction(
-        title = when {
-            isDownloaded -> "Downloaded"
-            isDownloading -> "Downloading..."
-            else -> "Download"
-        },
-        icon = when {
-            isDownloaded -> "cloud_done"
-            else -> "download"
-        }
+        title =
+            when {
+                isDownloaded -> "Downloaded"
+                isDownloading -> "Downloading..."
+                else -> "Download"
+            },
+        icon =
+            when {
+                isDownloaded -> "cloud_done"
+                else -> "download"
+            },
     )
+
     class Delete : ContentAction("Delete", "delete")
+
     class Custom(title: String, icon: String, val action: () -> Unit) : ContentAction(title, icon)
 }
 
@@ -179,11 +191,11 @@ data class ContentProgress(
     val watchPercentage: Float = 0f,
     val isCompleted: Boolean = false,
     val resumePosition: Long = 0L,
-    val totalDuration: Long = 0L
+    val totalDuration: Long = 0L,
 ) {
     val hasProgress: Boolean get() = watchPercentage > 0f
     val isPartiallyWatched: Boolean get() = hasProgress && !isCompleted
-    
+
     fun getProgressText(): String {
         return if (isCompleted) {
             "Watched"
@@ -206,37 +218,44 @@ data class DetailLayoutConfig(
     val showSeasonEpisodeGrid: Boolean = false,
     val showCastCrew: Boolean = false,
     val customSections: List<String> = emptyList(),
-    val overscanMargin: Int = 32
+    val overscanMargin: Int = 32,
 ) {
     companion object {
         fun forContentType(contentType: ContentType): DetailLayoutConfig {
             return when (contentType) {
-                ContentType.MOVIE -> DetailLayoutConfig(
-                    showCastCrew = true
-                )
-                ContentType.TV_SHOW -> DetailLayoutConfig(
-                    showSeasonEpisodeGrid = true,
-                    showCastCrew = true
-                )
-                ContentType.TV_EPISODE -> DetailLayoutConfig(
-                    showSeasonEpisodeGrid = false,
-                    showCastCrew = true
-                )
-                ContentType.DOCUMENTARY -> DetailLayoutConfig(
-                    showCastCrew = true
-                )
-                ContentType.SPORTS -> DetailLayoutConfig(
-                    showCastCrew = false,
-                    showRelatedContent = true
-                )
-                ContentType.MUSIC_VIDEO -> DetailLayoutConfig(
-                    showCastCrew = false,
-                    showRelatedContent = true
-                )
-                ContentType.PODCAST -> DetailLayoutConfig(
-                    showCastCrew = false,
-                    showRelatedContent = true
-                )
+                ContentType.MOVIE ->
+                    DetailLayoutConfig(
+                        showCastCrew = true,
+                    )
+                ContentType.TV_SHOW ->
+                    DetailLayoutConfig(
+                        showSeasonEpisodeGrid = true,
+                        showCastCrew = true,
+                    )
+                ContentType.TV_EPISODE ->
+                    DetailLayoutConfig(
+                        showSeasonEpisodeGrid = false,
+                        showCastCrew = true,
+                    )
+                ContentType.DOCUMENTARY ->
+                    DetailLayoutConfig(
+                        showCastCrew = true,
+                    )
+                ContentType.SPORTS ->
+                    DetailLayoutConfig(
+                        showCastCrew = false,
+                        showRelatedContent = true,
+                    )
+                ContentType.MUSIC_VIDEO ->
+                    DetailLayoutConfig(
+                        showCastCrew = false,
+                        showRelatedContent = true,
+                    )
+                ContentType.PODCAST ->
+                    DetailLayoutConfig(
+                        showCastCrew = false,
+                        showRelatedContent = true,
+                    )
             }
         }
     }

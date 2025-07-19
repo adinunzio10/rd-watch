@@ -35,19 +35,20 @@ fun GridViewItem(
     onSelect: (FileItem) -> Unit,
     onLongPress: (FileItem) -> Unit,
     onClick: (FileItem) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     var isFocused by remember { mutableStateOf(false) }
-    
+
     val cardElevation by animateDpAsState(
-        targetValue = when {
-            isSelected -> 10.dp
-            isFocused -> 6.dp
-            else -> 2.dp
-        },
-        animationSpec = tween(200)
+        targetValue =
+            when {
+                isSelected -> 10.dp
+                isFocused -> 6.dp
+                else -> 2.dp
+            },
+        animationSpec = tween(200),
     )
-    
+
     TVFocusIndicator(isFocused = isFocused) {
         Card(
             onClick = {
@@ -57,60 +58,66 @@ fun GridViewItem(
                     onClick(item)
                 }
             },
-            modifier = modifier
-                .fillMaxWidth()
-                .aspectRatio(1f) // Square aspect ratio
-                .tvFocusable(
-                    onFocusChanged = { isFocused = it.isFocused }
+            modifier =
+                modifier
+                    .fillMaxWidth()
+                    .aspectRatio(1f) // Square aspect ratio
+                    .tvFocusable(
+                        onFocusChanged = { isFocused = it.isFocused },
+                    ),
+            colors =
+                CardDefaults.cardColors(
+                    containerColor =
+                        when {
+                            isSelected -> MaterialTheme.colorScheme.primaryContainer
+                            isFocused -> MaterialTheme.colorScheme.surfaceVariant
+                            else -> MaterialTheme.colorScheme.surface
+                        },
                 ),
-            colors = CardDefaults.cardColors(
-                containerColor = when {
-                    isSelected -> MaterialTheme.colorScheme.primaryContainer
-                    isFocused -> MaterialTheme.colorScheme.surfaceVariant
-                    else -> MaterialTheme.colorScheme.surface
-                }
-            ),
-            elevation = CardDefaults.cardElevation(
-                defaultElevation = cardElevation
-            )
+            elevation =
+                CardDefaults.cardElevation(
+                    defaultElevation = cardElevation,
+                ),
         ) {
             Box(
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier.fillMaxSize(),
             ) {
                 Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(8.dp),
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            .padding(8.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
+                    verticalArrangement = Arrangement.Center,
                 ) {
                     // Compact icon with status
                     Box(
                         contentAlignment = Alignment.Center,
-                        modifier = Modifier.size(48.dp)
+                        modifier = Modifier.size(48.dp),
                     ) {
                         Icon(
                             imageVector = getFileTypeIcon(item),
                             contentDescription = null,
                             modifier = Modifier.size(40.dp),
-                            tint = getFileTypeIconTint(item, isSelected, isFocused)
+                            tint = getFileTypeIconTint(item, isSelected, isFocused),
                         )
-                        
+
                         // Small status indicator
                         when (item) {
                             is FileItem.File -> {
                                 if (item.status == FileStatus.DOWNLOADING) {
                                     Box(
-                                        modifier = Modifier
-                                            .align(Alignment.BottomEnd)
-                                            .size(16.dp)
-                                            .clip(RoundedCornerShape(8.dp))
-                                            .background(MaterialTheme.colorScheme.surface)
+                                        modifier =
+                                            Modifier
+                                                .align(Alignment.BottomEnd)
+                                                .size(16.dp)
+                                                .clip(RoundedCornerShape(8.dp))
+                                                .background(MaterialTheme.colorScheme.surface),
                                     ) {
                                         CircularProgressIndicator(
                                             modifier = Modifier.fillMaxSize(),
                                             color = MaterialTheme.colorScheme.primary,
-                                            strokeWidth = 2.dp
+                                            strokeWidth = 2.dp,
                                         )
                                     }
                                 }
@@ -118,17 +125,18 @@ fun GridViewItem(
                             is FileItem.Torrent -> {
                                 if (item.status == TorrentStatus.DOWNLOADING) {
                                     Box(
-                                        modifier = Modifier
-                                            .align(Alignment.BottomEnd)
-                                            .size(16.dp)
-                                            .clip(RoundedCornerShape(8.dp))
-                                            .background(MaterialTheme.colorScheme.surface)
+                                        modifier =
+                                            Modifier
+                                                .align(Alignment.BottomEnd)
+                                                .size(16.dp)
+                                                .clip(RoundedCornerShape(8.dp))
+                                                .background(MaterialTheme.colorScheme.surface),
                                     ) {
                                         CircularProgressIndicator(
                                             progress = item.progress,
                                             modifier = Modifier.fillMaxSize(),
                                             color = MaterialTheme.colorScheme.primary,
-                                            strokeWidth = 2.dp
+                                            strokeWidth = 2.dp,
                                         )
                                     }
                                 }
@@ -136,40 +144,42 @@ fun GridViewItem(
                             else -> {}
                         }
                     }
-                    
+
                     Spacer(modifier = Modifier.height(4.dp))
-                    
+
                     // Compact file name
                     Text(
                         text = item.name,
                         style = MaterialTheme.typography.bodySmall,
                         fontWeight = if (isFocused) FontWeight.Medium else FontWeight.Normal,
                         fontSize = 11.sp,
-                        color = if (isSelected) {
-                            MaterialTheme.colorScheme.onPrimaryContainer
-                        } else {
-                            MaterialTheme.colorScheme.onSurface
-                        },
+                        color =
+                            if (isSelected) {
+                                MaterialTheme.colorScheme.onPrimaryContainer
+                            } else {
+                                MaterialTheme.colorScheme.onSurface
+                            },
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
                         textAlign = TextAlign.Center,
-                        lineHeight = 13.sp
+                        lineHeight = 13.sp,
                     )
-                    
+
                     // Very compact size info
                     if (item.size > 0) {
                         Text(
                             text = formatCompactFileSize(item.size),
                             style = MaterialTheme.typography.bodySmall,
                             fontSize = 10.sp,
-                            color = if (isSelected) {
-                                MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.6f)
-                            } else {
-                                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                            }
+                            color =
+                                if (isSelected) {
+                                    MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.6f)
+                                } else {
+                                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                                },
                         )
                     }
-                    
+
                     // Special indicators
                     when (item) {
                         is FileItem.Folder -> {
@@ -178,11 +188,12 @@ fun GridViewItem(
                                     text = "${item.itemCount}",
                                     style = MaterialTheme.typography.bodySmall,
                                     fontSize = 10.sp,
-                                    color = if (isSelected) {
-                                        MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.6f)
-                                    } else {
-                                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                                    }
+                                    color =
+                                        if (isSelected) {
+                                            MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.6f)
+                                        } else {
+                                            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                                        },
                                 )
                             }
                         }
@@ -192,39 +203,41 @@ fun GridViewItem(
                                     imageVector = Icons.Default.PlayCircle,
                                     contentDescription = "Playable",
                                     modifier = Modifier.size(12.dp),
-                                    tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
+                                    tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f),
                                 )
                             }
                         }
                         else -> {}
                     }
                 }
-                
+
                 // Compact selection indicator
                 if (isMultiSelectMode) {
                     Surface(
                         shape = RoundedCornerShape(8.dp),
-                        color = if (isSelected) {
-                            MaterialTheme.colorScheme.primary
-                        } else {
-                            MaterialTheme.colorScheme.surface.copy(alpha = 0.9f)
-                        },
+                        color =
+                            if (isSelected) {
+                                MaterialTheme.colorScheme.primary
+                            } else {
+                                MaterialTheme.colorScheme.surface.copy(alpha = 0.9f)
+                            },
                         tonalElevation = 2.dp,
-                        modifier = Modifier
-                            .size(20.dp)
-                            .align(Alignment.TopEnd)
-                            .padding(4.dp)
+                        modifier =
+                            Modifier
+                                .size(20.dp)
+                                .align(Alignment.TopEnd)
+                                .padding(4.dp),
                     ) {
                         Box(
                             contentAlignment = Alignment.Center,
-                            modifier = Modifier.fillMaxSize()
+                            modifier = Modifier.fillMaxSize(),
                         ) {
                             if (isSelected) {
                                 Icon(
                                     imageVector = Icons.Default.Check,
                                     contentDescription = "Selected",
                                     modifier = Modifier.size(14.dp),
-                                    tint = MaterialTheme.colorScheme.onPrimary
+                                    tint = MaterialTheme.colorScheme.onPrimary,
                                 )
                             }
                         }
@@ -259,16 +272,17 @@ private fun getFileTypeIcon(item: FileItem): androidx.compose.ui.graphics.vector
 private fun getFileTypeIconTint(
     item: FileItem,
     isSelected: Boolean,
-    isFocused: Boolean
+    isFocused: Boolean,
 ): androidx.compose.ui.graphics.Color {
-    val baseColor = if (isSelected) {
-        MaterialTheme.colorScheme.onPrimaryContainer
-    } else if (isFocused) {
-        MaterialTheme.colorScheme.primary
-    } else {
-        MaterialTheme.colorScheme.onSurface
-    }
-    
+    val baseColor =
+        if (isSelected) {
+            MaterialTheme.colorScheme.onPrimaryContainer
+        } else if (isFocused) {
+            MaterialTheme.colorScheme.primary
+        } else {
+            MaterialTheme.colorScheme.onSurface
+        }
+
     return when (item) {
         is FileItem.Folder -> baseColor
         is FileItem.Torrent -> baseColor
@@ -288,12 +302,12 @@ private fun formatCompactFileSize(bytes: Long): String {
     val units = arrayOf("B", "K", "M", "G", "T")
     var size = bytes.toDouble()
     var unitIndex = 0
-    
+
     while (size >= 1024 && unitIndex < units.size - 1) {
         size /= 1024
         unitIndex++
     }
-    
+
     return if (size >= 100) {
         "${size.toInt()}${units[unitIndex]}"
     } else if (size >= 10) {

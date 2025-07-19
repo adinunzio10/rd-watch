@@ -17,9 +17,8 @@ data class FileBrowserPreferences(
     val showFileStatus: Boolean = true,
     val autoPlayOnSelect: Boolean = false,
     val confirmBeforeDelete: Boolean = true,
-    val defaultFileTypeFilter: Set<FileType> = emptySet()
+    val defaultFileTypeFilter: Set<FileType> = emptySet(),
 )
-
 
 /**
  * Preference keys for DataStore

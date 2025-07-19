@@ -38,33 +38,35 @@ fun TVImageLoader(
     showShimmer: Boolean = true,
     crossfadeEnabled: Boolean = true,
     errorIcon: ImageVector = Icons.Default.ErrorOutline,
-    placeholderIcon: ImageVector = Icons.Default.ImageNotSupported
+    placeholderIcon: ImageVector = Icons.Default.ImageNotSupported,
 ) {
-    val painter = rememberAsyncImagePainter(
-        model = ImageRequest.Builder(LocalContext.current)
-            .data(imageUrl)
-            .size(Size.ORIGINAL)
-            .crossfade(if (crossfadeEnabled) 300 else 0)
-            .build()
-    )
+    val painter =
+        rememberAsyncImagePainter(
+            model =
+                ImageRequest.Builder(LocalContext.current)
+                    .data(imageUrl)
+                    .size(Size.ORIGINAL)
+                    .crossfade(if (crossfadeEnabled) 300 else 0)
+                    .build(),
+        )
 
     val state = painter.state
 
     Box(
         modifier = modifier.clip(shape),
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Center,
     ) {
         when (state) {
             is AsyncImagePainter.State.Loading -> {
                 if (showShimmer) {
                     TVImageShimmer(
                         modifier = Modifier.fillMaxSize(),
-                        shape = shape
+                        shape = shape,
                     )
                 } else if (showPlaceholder) {
                     TVImagePlaceholder(
                         icon = placeholderIcon,
-                        modifier = Modifier.fillMaxSize()
+                        modifier = Modifier.fillMaxSize(),
                     )
                 }
             }
@@ -72,9 +74,9 @@ fun TVImageLoader(
                 TVImageError(
                     icon = errorIcon,
                     modifier = Modifier.fillMaxSize(),
-                    onClick = { 
+                    onClick = {
                         // TODO: Implement retry logic
-                    }
+                    },
                 )
             }
             is AsyncImagePainter.State.Success -> {
@@ -82,14 +84,14 @@ fun TVImageLoader(
                     painter = painter,
                     contentDescription = contentDescription,
                     contentScale = contentScale,
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier.fillMaxSize(),
                 )
             }
             else -> {
                 if (showPlaceholder) {
                     TVImagePlaceholder(
                         icon = placeholderIcon,
-                        modifier = Modifier.fillMaxSize()
+                        modifier = Modifier.fillMaxSize(),
                     )
                 }
             }
@@ -100,49 +102,53 @@ fun TVImageLoader(
 @Composable
 fun TVImageShimmer(
     modifier: Modifier = Modifier,
-    shape: RoundedCornerShape = RoundedCornerShape(8.dp)
+    shape: RoundedCornerShape = RoundedCornerShape(8.dp),
 ) {
     val infiniteTransition = rememberInfiniteTransition(label = "shimmer")
     val alpha by infiniteTransition.animateFloat(
         initialValue = 0.2f,
         targetValue = 0.8f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(1000, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "shimmer_alpha"
+        animationSpec =
+            infiniteRepeatable(
+                animation = tween(1000, easing = LinearEasing),
+                repeatMode = RepeatMode.Reverse,
+            ),
+        label = "shimmer_alpha",
     )
 
-    val shimmerColors = listOf(
-        MaterialTheme.colorScheme.surface.copy(alpha = alpha),
-        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = alpha),
-        MaterialTheme.colorScheme.surface.copy(alpha = alpha)
-    )
+    val shimmerColors =
+        listOf(
+            MaterialTheme.colorScheme.surface.copy(alpha = alpha),
+            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = alpha),
+            MaterialTheme.colorScheme.surface.copy(alpha = alpha),
+        )
 
     Box(
-        modifier = modifier
-            .clip(shape)
-            .background(
-                brush = Brush.horizontalGradient(shimmerColors)
-            )
+        modifier =
+            modifier
+                .clip(shape)
+                .background(
+                    brush = Brush.horizontalGradient(shimmerColors),
+                ),
     )
 }
 
 @Composable
 fun TVImagePlaceholder(
     icon: ImageVector,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Box(
-        modifier = modifier
-            .background(MaterialTheme.colorScheme.surfaceVariant),
-        contentAlignment = Alignment.Center
+        modifier =
+            modifier
+                .background(MaterialTheme.colorScheme.surfaceVariant),
+        contentAlignment = Alignment.Center,
     ) {
         Icon(
             imageVector = icon,
             contentDescription = "Image placeholder",
             tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-            modifier = Modifier.size(48.dp)
+            modifier = Modifier.size(48.dp),
         )
     }
 }
@@ -152,35 +158,37 @@ fun TVImagePlaceholder(
 fun TVImageError(
     icon: ImageVector,
     modifier: Modifier = Modifier,
-    onClick: () -> Unit = {}
+    onClick: () -> Unit = {},
 ) {
     Card(
         onClick = onClick,
         modifier = modifier,
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.errorContainer
-        )
+        colors =
+            CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.errorContainer,
+            ),
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+            verticalArrangement = Arrangement.Center,
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = "Error loading image",
                 tint = MaterialTheme.colorScheme.onErrorContainer,
-                modifier = Modifier.size(32.dp)
+                modifier = Modifier.size(32.dp),
             )
-            
+
             Spacer(modifier = Modifier.height(8.dp))
-            
+
             Text(
                 text = "Tap to retry",
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onErrorContainer
+                color = MaterialTheme.colorScheme.onErrorContainer,
             )
         }
     }
@@ -192,24 +200,25 @@ fun TVLazyImageRow(
     contentDescriptions: List<String> = emptyList(),
     modifier: Modifier = Modifier,
     itemModifier: Modifier = Modifier,
-    onImageClick: (Int, String) -> Unit = { _, _ -> }
+    onImageClick: (Int, String) -> Unit = { _, _ -> },
 ) {
     LazyRow(
         modifier = modifier,
         horizontalArrangement = Arrangement.spacedBy(16.dp),
-        contentPadding = PaddingValues(horizontal = 4.dp)
+        contentPadding = PaddingValues(horizontal = 4.dp),
     ) {
         items(images.size) { index ->
             Card(
                 onClick = { onImageClick(index, images[index]) },
-                modifier = itemModifier
-                    .size(160.dp, 90.dp)
+                modifier =
+                    itemModifier
+                        .size(160.dp, 90.dp),
             ) {
                 TVImageLoader(
                     imageUrl = images[index],
                     contentDescription = contentDescriptions.getOrNull(index),
                     modifier = Modifier.fillMaxSize(),
-                    shape = RoundedCornerShape(8.dp)
+                    shape = RoundedCornerShape(8.dp),
                 )
             }
         }
@@ -221,7 +230,7 @@ fun TVBackgroundImage(
     imageUrl: String?,
     contentDescription: String?,
     modifier: Modifier = Modifier,
-    overlayAlpha: Float = 0.5f
+    overlayAlpha: Float = 0.5f,
 ) {
     Box(modifier = modifier) {
         TVImageLoader(
@@ -230,23 +239,25 @@ fun TVBackgroundImage(
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop,
             shape = RoundedCornerShape(0.dp),
-            showShimmer = false
+            showShimmer = false,
         )
-        
+
         // Dark overlay for text readability
         if (overlayAlpha > 0f) {
             Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        Brush.verticalGradient(
-                            colors = listOf(
-                                Color.Transparent,
-                                Color.Black.copy(alpha = overlayAlpha)
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .background(
+                            Brush.verticalGradient(
+                                colors =
+                                    listOf(
+                                        Color.Transparent,
+                                        Color.Black.copy(alpha = overlayAlpha),
+                                    ),
+                                startY = 0.3f,
                             ),
-                            startY = 0.3f
-                        )
-                    )
+                        ),
             )
         }
     }
@@ -262,63 +273,63 @@ fun SmartTVImageLoader(
     modifier: Modifier = Modifier,
     contentScale: ContentScale = ContentScale.Crop,
     priority: ImagePriority = ImagePriority.NORMAL,
-    cacheStrategy: CacheStrategy = CacheStrategy.MEMORY_AND_DISK
+    cacheStrategy: CacheStrategy = CacheStrategy.MEMORY_AND_DISK,
 ) {
     val context = LocalContext.current
-    
-    val imageRequest = remember(imageUrl, priority, cacheStrategy) {
-        ImageRequest.Builder(context)
-            .data(imageUrl)
-            .crossfade(300)
-            .apply {
-                when (priority) {
-                    ImagePriority.HIGH -> {
-                        memoryCachePolicy(coil.request.CachePolicy.ENABLED)
-                        diskCachePolicy(coil.request.CachePolicy.ENABLED)
+
+    val imageRequest =
+        remember(imageUrl, priority, cacheStrategy) {
+            ImageRequest.Builder(context)
+                .data(imageUrl)
+                .crossfade(300)
+                .apply {
+                    when (priority) {
+                        ImagePriority.HIGH -> {
+                            memoryCachePolicy(coil.request.CachePolicy.ENABLED)
+                            diskCachePolicy(coil.request.CachePolicy.ENABLED)
+                        }
+                        ImagePriority.NORMAL -> {
+                            memoryCachePolicy(coil.request.CachePolicy.ENABLED)
+                            diskCachePolicy(coil.request.CachePolicy.ENABLED)
+                        }
+                        ImagePriority.LOW -> {
+                            memoryCachePolicy(coil.request.CachePolicy.DISABLED)
+                            diskCachePolicy(coil.request.CachePolicy.ENABLED)
+                        }
                     }
-                    ImagePriority.NORMAL -> {
-                        memoryCachePolicy(coil.request.CachePolicy.ENABLED)
-                        diskCachePolicy(coil.request.CachePolicy.ENABLED)
-                    }
-                    ImagePriority.LOW -> {
-                        memoryCachePolicy(coil.request.CachePolicy.DISABLED)
-                        diskCachePolicy(coil.request.CachePolicy.ENABLED)
+
+                    when (cacheStrategy) {
+                        CacheStrategy.MEMORY_ONLY -> {
+                            diskCachePolicy(coil.request.CachePolicy.DISABLED)
+                        }
+                        CacheStrategy.DISK_ONLY -> {
+                            memoryCachePolicy(coil.request.CachePolicy.DISABLED)
+                        }
+                        CacheStrategy.MEMORY_AND_DISK -> {
+                            // Default behavior
+                        }
+                        CacheStrategy.NO_CACHE -> {
+                            memoryCachePolicy(coil.request.CachePolicy.DISABLED)
+                            diskCachePolicy(coil.request.CachePolicy.DISABLED)
+                        }
                     }
                 }
-                
-                when (cacheStrategy) {
-                    CacheStrategy.MEMORY_ONLY -> {
-                        diskCachePolicy(coil.request.CachePolicy.DISABLED)
-                    }
-                    CacheStrategy.DISK_ONLY -> {
-                        memoryCachePolicy(coil.request.CachePolicy.DISABLED)
-                    }
-                    CacheStrategy.MEMORY_AND_DISK -> {
-                        // Default behavior
-                    }
-                    CacheStrategy.NO_CACHE -> {
-                        memoryCachePolicy(coil.request.CachePolicy.DISABLED)
-                        diskCachePolicy(coil.request.CachePolicy.DISABLED)
-                    }
-                }
-            }
-            .build()
-    }
-    
+                .build()
+        }
+
     val painter = rememberAsyncImagePainter(model = imageRequest)
-    
+
     TVImageLoader(
         imageUrl = imageUrl,
         contentDescription = contentDescription,
         modifier = modifier,
-        contentScale = contentScale
+        contentScale = contentScale,
     )
 }
 
-
 enum class CacheStrategy {
-    MEMORY_ONLY,      // Fast access, limited storage
-    DISK_ONLY,        // Persistent, slower access
-    MEMORY_AND_DISK,  // Balanced approach
-    NO_CACHE          // Always fetch from network
+    MEMORY_ONLY, // Fast access, limited storage
+    DISK_ONLY, // Persistent, slower access
+    MEMORY_AND_DISK, // Balanced approach
+    NO_CACHE, // Always fetch from network
 }

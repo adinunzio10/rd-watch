@@ -8,5 +8,5 @@ data class OAuth2ErrorResponse(
     @Json(name = "error")
     val error: String,
     @Json(name = "error_description")
-    val errorDescription: String?
+    val errorDescription: String?,
 )

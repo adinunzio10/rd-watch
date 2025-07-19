@@ -22,7 +22,7 @@ data class ScraperManifest(
     val configuration: ManifestConfiguration = ManifestConfiguration(),
     val metadata: ManifestMetadata,
     val isEnabled: Boolean = true,
-    val priorityOrder: Int = 0
+    val priorityOrder: Int = 0,
 )
 
 /**
@@ -38,7 +38,7 @@ data class ManifestConfiguration(
     val cacheTtlMinutes: Int = 60,
     val supportedTypes: List<String> = emptyList(),
     val requiresAuth: Boolean = false,
-    val additionalParams: Map<String, String> = emptyMap()
+    val additionalParams: Map<String, String> = emptyMap(),
 )
 
 /**
@@ -54,7 +54,7 @@ data class ManifestMetadata(
     val fetchAttempts: Int = 0,
     val lastError: String? = null,
     val validationStatus: ValidationStatus = ValidationStatus.PENDING,
-    val capabilities: List<ManifestCapability> = emptyList()
+    val capabilities: List<ManifestCapability> = emptyList(),
 )
 
 /**
@@ -65,7 +65,7 @@ enum class ValidationStatus {
     VALID,
     INVALID,
     ERROR,
-    OUTDATED
+    OUTDATED,
 }
 
 /**
@@ -78,7 +78,7 @@ enum class ManifestCapability {
     SUBTITLES,
     ADDON_CATALOG,
     P2P,
-    CONFIGURABLE
+    CONFIGURABLE,
 }
 
 /**
@@ -105,5 +105,5 @@ data class ManifestEntry(
     val lastFetchedAt: Date? = null,
     val fetchAttempts: Int = 0,
     val lastError: String? = null,
-    val validationStatus: String = ValidationStatus.PENDING.name
+    val validationStatus: String = ValidationStatus.PENDING.name,
 )

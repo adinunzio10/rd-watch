@@ -1,11 +1,10 @@
 package com.rdwatch.androidtv.network.api
 
-import com.rdwatch.androidtv.network.models.tmdb.TMDbMovieResponse
 import com.rdwatch.androidtv.network.models.tmdb.TMDbCreditsResponse
-import com.rdwatch.androidtv.network.models.tmdb.TMDbRecommendationsResponse
-import com.rdwatch.androidtv.network.models.tmdb.TMDbSearchResponse
 import com.rdwatch.androidtv.network.models.tmdb.TMDbMovieImagesResponse
+import com.rdwatch.androidtv.network.models.tmdb.TMDbMovieResponse
 import com.rdwatch.androidtv.network.models.tmdb.TMDbMovieVideosResponse
+import com.rdwatch.androidtv.network.models.tmdb.TMDbRecommendationsResponse
 import retrofit2.Call
 import retrofit2.http.GET
 import retrofit2.http.Path
@@ -16,7 +15,6 @@ import retrofit2.http.Query
  * Follows existing ApiService pattern with ApiResponse wrapper
  */
 interface TMDbMovieService {
-    
     companion object {
         const val BASE_URL = "https://api.themoviedb.org/3/"
         const val IMAGE_BASE_URL = "https://image.tmdb.org/t/p/"
@@ -24,7 +22,7 @@ interface TMDbMovieService {
         const val POSTER_SIZE = "w500"
         const val PROFILE_SIZE = "w185"
     }
-    
+
     /**
      * Get movie details by ID
      * @param movieId TMDb movie ID
@@ -35,9 +33,9 @@ interface TMDbMovieService {
     fun getMovieDetails(
         @Path("movie_id") movieId: Int,
         @Query("append_to_response") appendToResponse: String? = null,
-        @Query("language") language: String = "en-US"
+        @Query("language") language: String = "en-US",
     ): Call<TMDbMovieResponse>
-    
+
     /**
      * Get movie credits (cast and crew)
      * @param movieId TMDb movie ID
@@ -46,9 +44,9 @@ interface TMDbMovieService {
     @GET("movie/{movie_id}/credits")
     fun getMovieCredits(
         @Path("movie_id") movieId: Int,
-        @Query("language") language: String = "en-US"
+        @Query("language") language: String = "en-US",
     ): Call<TMDbCreditsResponse>
-    
+
     /**
      * Get movie recommendations
      * @param movieId TMDb movie ID
@@ -59,9 +57,9 @@ interface TMDbMovieService {
     fun getMovieRecommendations(
         @Path("movie_id") movieId: Int,
         @Query("language") language: String = "en-US",
-        @Query("page") page: Int = 1
+        @Query("page") page: Int = 1,
     ): Call<TMDbRecommendationsResponse>
-    
+
     /**
      * Get similar movies
      * @param movieId TMDb movie ID
@@ -72,9 +70,9 @@ interface TMDbMovieService {
     fun getSimilarMovies(
         @Path("movie_id") movieId: Int,
         @Query("language") language: String = "en-US",
-        @Query("page") page: Int = 1
+        @Query("page") page: Int = 1,
     ): Call<TMDbRecommendationsResponse>
-    
+
     /**
      * Get movie images (posters, backdrops, logos)
      * @param movieId TMDb movie ID
@@ -83,9 +81,9 @@ interface TMDbMovieService {
     @GET("movie/{movie_id}/images")
     fun getMovieImages(
         @Path("movie_id") movieId: Int,
-        @Query("include_image_language") includeImageLanguage: String? = null
+        @Query("include_image_language") includeImageLanguage: String? = null,
     ): Call<TMDbMovieImagesResponse>
-    
+
     /**
      * Get movie videos (trailers, teasers, etc.)
      * @param movieId TMDb movie ID
@@ -94,9 +92,9 @@ interface TMDbMovieService {
     @GET("movie/{movie_id}/videos")
     fun getMovieVideos(
         @Path("movie_id") movieId: Int,
-        @Query("language") language: String = "en-US"
+        @Query("language") language: String = "en-US",
     ): Call<TMDbMovieVideosResponse>
-    
+
     /**
      * Get popular movies
      * @param language Language for the response (default: en-US)
@@ -107,9 +105,9 @@ interface TMDbMovieService {
     fun getPopularMovies(
         @Query("language") language: String = "en-US",
         @Query("page") page: Int = 1,
-        @Query("region") region: String? = null
+        @Query("region") region: String? = null,
     ): Call<TMDbRecommendationsResponse>
-    
+
     /**
      * Get top rated movies
      * @param language Language for the response (default: en-US)
@@ -120,9 +118,9 @@ interface TMDbMovieService {
     fun getTopRatedMovies(
         @Query("language") language: String = "en-US",
         @Query("page") page: Int = 1,
-        @Query("region") region: String? = null
+        @Query("region") region: String? = null,
     ): Call<TMDbRecommendationsResponse>
-    
+
     /**
      * Get now playing movies
      * @param language Language for the response (default: en-US)
@@ -133,9 +131,9 @@ interface TMDbMovieService {
     fun getNowPlayingMovies(
         @Query("language") language: String = "en-US",
         @Query("page") page: Int = 1,
-        @Query("region") region: String? = null
+        @Query("region") region: String? = null,
     ): Call<TMDbRecommendationsResponse>
-    
+
     /**
      * Get upcoming movies
      * @param language Language for the response (default: en-US)
@@ -146,6 +144,6 @@ interface TMDbMovieService {
     fun getUpcomingMovies(
         @Query("language") language: String = "en-US",
         @Query("page") page: Int = 1,
-        @Query("region") region: String? = null
+        @Query("region") region: String? = null,
     ): Call<TMDbRecommendationsResponse>
 }

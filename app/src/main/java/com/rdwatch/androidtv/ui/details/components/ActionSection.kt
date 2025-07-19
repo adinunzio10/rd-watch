@@ -11,7 +11,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -33,40 +32,40 @@ fun ActionSection(
     onActionClick: (ContentAction) -> Unit,
     modifier: Modifier = Modifier,
     maxVisibleActions: Int = 5,
-    showLabels: Boolean = true
+    showLabels: Boolean = true,
 ) {
     val availableActions = content.actions.take(maxVisibleActions)
-    
+
     // Debug logging
     android.util.Log.d("ActionSection", "Content type: ${content.contentType}")
     android.util.Log.d("ActionSection", "Actions count: ${content.actions.size}")
     content.actions.forEachIndexed { index, action ->
         android.util.Log.d("ActionSection", "Action $index: ${action.javaClass.simpleName} - ${action.title}")
     }
-    
+
     if (availableActions.isNotEmpty()) {
         Column(
             modifier = modifier,
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             // Section title (optional)
             Text(
                 text = "Actions",
                 style = MaterialTheme.typography.headlineSmall,
                 color = MaterialTheme.colorScheme.onBackground,
-                fontWeight = FontWeight.SemiBold
+                fontWeight = FontWeight.SemiBold,
             )
-            
+
             // Action buttons row
             LazyRow(
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
-                contentPadding = PaddingValues(horizontal = 4.dp)
+                contentPadding = PaddingValues(horizontal = 4.dp),
             ) {
                 items(availableActions) { action ->
                     ActionButton(
                         action = action,
                         onClick = { onActionClick(action) },
-                        showLabel = showLabels
+                        showLabel = showLabels,
                     )
                 }
             }
@@ -80,16 +79,17 @@ private fun ActionButton(
     action: ContentAction,
     onClick: () -> Unit,
     showLabel: Boolean = true,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     var isFocused by remember { mutableStateOf(false) }
     val hapticFeedback = LocalHapticFeedback.current
-    
-    val isEnabled = when (action) {
-        is ContentAction.Download -> !action.isDownloading
-        else -> true
-    }
-    
+
+    val isEnabled =
+        when (action) {
+            is ContentAction.Download -> !action.isDownloading
+            else -> true
+        }
+
     TVFocusIndicator(isFocused = isFocused) {
         OutlinedCard(
             onClick = {
@@ -99,37 +99,43 @@ private fun ActionButton(
                 }
             },
             enabled = isEnabled,
-            modifier = modifier
-                .width(if (showLabel) 140.dp else 64.dp)
-                .tvFocusable(
-                    onFocusChanged = { isFocused = it.isFocused }
-                ),
-            colors = CardDefaults.outlinedCardColors(
-                containerColor = when {
-                    !isEnabled -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-                    isFocused -> MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
-                    else -> MaterialTheme.colorScheme.surface
-                }
-            ),
-            border = if (isFocused) {
-                CardDefaults.outlinedCardBorder().copy(
-                    brush = Brush.linearGradient(
-                        colors = listOf(
-                            MaterialTheme.colorScheme.primary,
-                            MaterialTheme.colorScheme.primary
-                        )
+            modifier =
+                modifier
+                    .width(if (showLabel) 140.dp else 64.dp)
+                    .tvFocusable(
+                        onFocusChanged = { isFocused = it.isFocused },
                     ),
-                    width = 2.dp
-                )
-            } else {
-                CardDefaults.outlinedCardBorder()
-            }
+            colors =
+                CardDefaults.outlinedCardColors(
+                    containerColor =
+                        when {
+                            !isEnabled -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                            isFocused -> MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+                            else -> MaterialTheme.colorScheme.surface
+                        },
+                ),
+            border =
+                if (isFocused) {
+                    CardDefaults.outlinedCardBorder().copy(
+                        brush =
+                            Brush.linearGradient(
+                                colors =
+                                    listOf(
+                                        MaterialTheme.colorScheme.primary,
+                                        MaterialTheme.colorScheme.primary,
+                                    ),
+                            ),
+                        width = 2.dp,
+                    )
+                } else {
+                    CardDefaults.outlinedCardBorder()
+                },
         ) {
             ActionButtonContent(
                 action = action,
                 isFocused = isFocused,
                 isEnabled = isEnabled,
-                showLabel = showLabel
+                showLabel = showLabel,
             )
         }
     }
@@ -140,28 +146,30 @@ private fun ActionButtonContent(
     action: ContentAction,
     isFocused: Boolean,
     isEnabled: Boolean,
-    showLabel: Boolean
+    showLabel: Boolean,
 ) {
     val icon = getActionIcon(action)
-    val contentColor = when {
-        !isEnabled -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
-        isFocused -> MaterialTheme.colorScheme.primary
-        else -> MaterialTheme.colorScheme.onSurface
-    }
-    
+    val contentColor =
+        when {
+            !isEnabled -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+            isFocused -> MaterialTheme.colorScheme.primary
+            else -> MaterialTheme.colorScheme.onSurface
+        }
+
     if (showLabel) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
                 tint = contentColor,
-                modifier = Modifier.size(24.dp)
+                modifier = Modifier.size(24.dp),
             )
             Text(
                 text = action.title,
@@ -170,21 +178,22 @@ private fun ActionButtonContent(
                 fontWeight = FontWeight.Medium,
                 textAlign = TextAlign.Center,
                 maxLines = 2,
-                overflow = TextOverflow.Ellipsis
+                overflow = TextOverflow.Ellipsis,
             )
         }
     } else {
         Box(
-            modifier = Modifier
-                .size(64.dp)
-                .padding(16.dp),
-            contentAlignment = Alignment.Center
+            modifier =
+                Modifier
+                    .size(64.dp)
+                    .padding(16.dp),
+            contentAlignment = Alignment.Center,
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = action.title,
                 tint = contentColor,
-                modifier = Modifier.size(24.dp)
+                modifier = Modifier.size(24.dp),
             )
         }
     }
@@ -198,52 +207,57 @@ fun PrimaryActionButton(
     action: ContentAction,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    isLarge: Boolean = false
+    isLarge: Boolean = false,
 ) {
     var isFocused by remember { mutableStateOf(false) }
     val hapticFeedback = LocalHapticFeedback.current
-    
+
     TVFocusIndicator(isFocused = isFocused) {
         Button(
             onClick = {
                 hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
                 onClick()
             },
-            modifier = modifier
-                .tvFocusable(
-                    onFocusChanged = { isFocused = it.isFocused }
+            modifier =
+                modifier
+                    .tvFocusable(
+                        onFocusChanged = { isFocused = it.isFocused },
+                    ),
+            colors =
+                ButtonDefaults.buttonColors(
+                    containerColor =
+                        if (isFocused) {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.9f)
+                        },
                 ),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = if (isFocused) {
-                    MaterialTheme.colorScheme.primary
+            contentPadding =
+                if (isLarge) {
+                    PaddingValues(horizontal = 32.dp, vertical = 16.dp)
                 } else {
-                    MaterialTheme.colorScheme.primary.copy(alpha = 0.9f)
-                }
-            ),
-            contentPadding = if (isLarge) {
-                PaddingValues(horizontal = 32.dp, vertical = 16.dp)
-            } else {
-                PaddingValues(horizontal = 24.dp, vertical = 12.dp)
-            },
-            shape = RoundedCornerShape(if (isLarge) 12.dp else 8.dp)
+                    PaddingValues(horizontal = 24.dp, vertical = 12.dp)
+                },
+            shape = RoundedCornerShape(if (isLarge) 12.dp else 8.dp),
         ) {
             Row(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 Icon(
                     imageVector = getActionIcon(action),
                     contentDescription = null,
-                    modifier = Modifier.size(if (isLarge) 28.dp else 24.dp)
+                    modifier = Modifier.size(if (isLarge) 28.dp else 24.dp),
                 )
                 Text(
                     text = action.title,
-                    style = if (isLarge) {
-                        MaterialTheme.typography.titleLarge
-                    } else {
-                        MaterialTheme.typography.titleMedium
-                    },
-                    fontWeight = FontWeight.SemiBold
+                    style =
+                        if (isLarge) {
+                            MaterialTheme.typography.titleLarge
+                        } else {
+                            MaterialTheme.typography.titleMedium
+                        },
+                    fontWeight = FontWeight.SemiBold,
                 )
             }
         }
@@ -257,17 +271,17 @@ fun PrimaryActionButton(
 fun SecondaryActionRow(
     actions: List<ContentAction>,
     onActionClick: (ContentAction) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     LazyRow(
         modifier = modifier,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
-        contentPadding = PaddingValues(horizontal = 4.dp)
+        contentPadding = PaddingValues(horizontal = 4.dp),
     ) {
         items(actions) { action ->
             SecondaryActionButton(
                 action = action,
-                onClick = { onActionClick(action) }
+                onClick = { onActionClick(action) },
             )
         }
     }
@@ -276,44 +290,47 @@ fun SecondaryActionRow(
 @Composable
 private fun SecondaryActionButton(
     action: ContentAction,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     var isFocused by remember { mutableStateOf(false) }
     val hapticFeedback = LocalHapticFeedback.current
-    
+
     TVFocusIndicator(isFocused = isFocused) {
         FilledTonalButton(
             onClick = {
                 hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
                 onClick()
             },
-            modifier = Modifier
-                .tvFocusable(
-                    onFocusChanged = { isFocused = it.isFocused }
+            modifier =
+                Modifier
+                    .tvFocusable(
+                        onFocusChanged = { isFocused = it.isFocused },
+                    ),
+            colors =
+                ButtonDefaults.filledTonalButtonColors(
+                    containerColor =
+                        if (isFocused) {
+                            MaterialTheme.colorScheme.primaryContainer
+                        } else {
+                            MaterialTheme.colorScheme.surfaceVariant
+                        },
                 ),
-            colors = ButtonDefaults.filledTonalButtonColors(
-                containerColor = if (isFocused) {
-                    MaterialTheme.colorScheme.primaryContainer
-                } else {
-                    MaterialTheme.colorScheme.surfaceVariant
-                }
-            ),
-            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
         ) {
             Row(
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 Icon(
                     imageVector = getActionIcon(action),
                     contentDescription = null,
-                    modifier = Modifier.size(18.dp)
+                    modifier = Modifier.size(18.dp),
                 )
                 Text(
                     text = action.title,
                     style = MaterialTheme.typography.labelLarge,
                     maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                    overflow = TextOverflow.Ellipsis,
                 )
             }
         }
@@ -347,7 +364,7 @@ private fun getActionIcon(action: ContentAction): ImageVector {
 @Composable
 fun ActionStatusIndicator(
     action: ContentAction,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     when (action) {
         is ContentAction.Download -> {
@@ -355,17 +372,17 @@ fun ActionStatusIndicator(
                 Row(
                     modifier = modifier,
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
                     CircularProgressIndicator(
                         modifier = Modifier.size(16.dp),
                         strokeWidth = 2.dp,
-                        color = MaterialTheme.colorScheme.primary
+                        color = MaterialTheme.colorScheme.primary,
                     )
                     Text(
                         text = "Downloading...",
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurface
+                        color = MaterialTheme.colorScheme.onSurface,
                     )
                 }
             }
@@ -390,16 +407,17 @@ object ActionSectionPreview {
             override val contentType: ContentType = ContentType.MOVIE
             override val videoUrl: String? = "https://example.com/video.mp4"
             override val metadata: ContentMetadata = ContentMetadata()
-            override val actions: List<ContentAction> = listOf(
-                ContentAction.Play(isResume = false),
-                ContentAction.AddToWatchlist(isInWatchlist = false),
-                ContentAction.Like(isLiked = false),
-                ContentAction.Share(),
-                ContentAction.Download(isDownloaded = false, isDownloading = false)
-            )
+            override val actions: List<ContentAction> =
+                listOf(
+                    ContentAction.Play(isResume = false),
+                    ContentAction.AddToWatchlist(isInWatchlist = false),
+                    ContentAction.Like(isLiked = false),
+                    ContentAction.Share(),
+                    ContentAction.Download(isDownloaded = false, isDownloading = false),
+                )
         }
     }
-    
+
     fun createSampleContentWithDownloading(): ContentDetail {
         return object : ContentDetail {
             override val id: String = "2"
@@ -410,13 +428,14 @@ object ActionSectionPreview {
             override val contentType: ContentType = ContentType.MOVIE
             override val videoUrl: String? = "https://example.com/video.mp4"
             override val metadata: ContentMetadata = ContentMetadata()
-            override val actions: List<ContentAction> = listOf(
-                ContentAction.Play(isResume = true),
-                ContentAction.AddToWatchlist(isInWatchlist = true),
-                ContentAction.Like(isLiked = true),
-                ContentAction.Share(),
-                ContentAction.Download(isDownloaded = false, isDownloading = true)
-            )
+            override val actions: List<ContentAction> =
+                listOf(
+                    ContentAction.Play(isResume = true),
+                    ContentAction.AddToWatchlist(isInWatchlist = true),
+                    ContentAction.Like(isLiked = true),
+                    ContentAction.Share(),
+                    ContentAction.Download(isDownloaded = false, isDownloading = true),
+                )
         }
     }
 }

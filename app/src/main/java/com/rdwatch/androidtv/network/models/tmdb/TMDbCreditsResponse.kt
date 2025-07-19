@@ -10,7 +10,7 @@ import com.squareup.moshi.JsonClass
 data class TMDbCreditsResponse(
     @Json(name = "id") val id: Int = 0,
     @Json(name = "cast") val cast: List<TMDbCastResponse> = emptyList(),
-    @Json(name = "crew") val crew: List<TMDbCrewResponse> = emptyList()
+    @Json(name = "crew") val crew: List<TMDbCrewResponse> = emptyList(),
 )
 
 /**
@@ -29,7 +29,7 @@ data class TMDbCastResponse(
     @Json(name = "cast_id") val castId: Int = 0,
     @Json(name = "character") val character: String = "",
     @Json(name = "credit_id") val creditId: String = "",
-    @Json(name = "order") val order: Int = 0
+    @Json(name = "order") val order: Int = 0,
 )
 
 /**
@@ -47,7 +47,7 @@ data class TMDbCrewResponse(
     @Json(name = "profile_path") val profilePath: String? = null,
     @Json(name = "credit_id") val creditId: String = "",
     @Json(name = "department") val department: String = "",
-    @Json(name = "job") val job: String = ""
+    @Json(name = "job") val job: String = "",
 )
 
 /**
@@ -69,7 +69,7 @@ data class TMDbPersonResponse(
     @Json(name = "place_of_birth") val placeOfBirth: String? = null,
     @Json(name = "popularity") val popularity: Double = 0.0,
     @Json(name = "profile_path") val profilePath: String? = null,
-    @Json(name = "known_for") val knownFor: List<TMDbKnownForResponse> = emptyList()
+    @Json(name = "known_for") val knownFor: List<TMDbKnownForResponse> = emptyList(),
 )
 
 /**
@@ -96,7 +96,7 @@ data class TMDbKnownForResponse(
     @Json(name = "first_air_date") val firstAirDate: String? = null,
     @Json(name = "name") val name: String? = null,
     @Json(name = "origin_country") val originCountry: List<String> = emptyList(),
-    @Json(name = "original_name") val originalName: String? = null
+    @Json(name = "original_name") val originalName: String? = null,
 )
 
 /**

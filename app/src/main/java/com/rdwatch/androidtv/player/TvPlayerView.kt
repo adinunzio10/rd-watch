@@ -7,10 +7,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.media3.ui.PlayerView
 import androidx.media3.common.util.UnstableApi
-import com.rdwatch.androidtv.player.controls.TvPlayerControls
+import androidx.media3.ui.PlayerView
 import com.rdwatch.androidtv.player.controls.TvKeyHandler
+import com.rdwatch.androidtv.player.controls.TvPlayerControls
 import com.rdwatch.androidtv.player.subtitle.SubtitleManager
 import kotlinx.coroutines.delay
 
@@ -21,15 +21,15 @@ fun TvPlayerView(
     subtitleManager: SubtitleManager,
     modifier: Modifier = Modifier,
     onMenuToggle: () -> Unit = {},
-    autoHideDelay: Long = 5000L
+    autoHideDelay: Long = 5000L,
 ) {
     val context = LocalContext.current
     val playerState by exoPlayerManager.playerState.collectAsState()
     val keyHandler = remember { TvKeyHandler() }
-    
+
     var showControls by remember { mutableStateOf(true) }
     var lastInteractionTime by remember { mutableStateOf(System.currentTimeMillis()) }
-    
+
     // Auto-hide controls after inactivity
     LaunchedEffect(lastInteractionTime, playerState.isPlaying) {
         if (playerState.isPlaying) {
@@ -39,54 +39,55 @@ fun TvPlayerView(
             }
         }
     }
-    
+
     // Show controls on any user interaction
     fun onUserInteraction() {
         showControls = true
         lastInteractionTime = System.currentTimeMillis()
     }
-    
+
     Box(
-        modifier = modifier
-            .fillMaxSize()
-            .onKeyEvent { keyEvent ->
-                keyHandler.handleKeyEvent(
-                    keyEvent = keyEvent,
-                    onPlayPause = {
-                        onUserInteraction()
-                        if (playerState.isPlaying) {
-                            exoPlayerManager.pause()
-                        } else {
-                            exoPlayerManager.play()
-                        }
-                    },
-                    onSeekBackward = {
-                        onUserInteraction()
-                        exoPlayerManager.seekBackward()
-                    },
-                    onSeekForward = {
-                        onUserInteraction()
-                        exoPlayerManager.seekForward()
-                    },
-                    onMenuToggle = {
-                        onUserInteraction()
-                        onMenuToggle()
-                    },
-                    onShowControls = {
-                        onUserInteraction()
-                    },
-                    onSpeedIncrease = {
-                        onUserInteraction()
-                        val newSpeed = TvKeyHandler.getNextSpeed(playerState.playbackSpeed, true)
-                        exoPlayerManager.setPlaybackSpeed(newSpeed)
-                    },
-                    onSpeedDecrease = {
-                        onUserInteraction()
-                        val newSpeed = TvKeyHandler.getNextSpeed(playerState.playbackSpeed, false)
-                        exoPlayerManager.setPlaybackSpeed(newSpeed)
-                    }
-                )
-            }
+        modifier =
+            modifier
+                .fillMaxSize()
+                .onKeyEvent { keyEvent ->
+                    keyHandler.handleKeyEvent(
+                        keyEvent = keyEvent,
+                        onPlayPause = {
+                            onUserInteraction()
+                            if (playerState.isPlaying) {
+                                exoPlayerManager.pause()
+                            } else {
+                                exoPlayerManager.play()
+                            }
+                        },
+                        onSeekBackward = {
+                            onUserInteraction()
+                            exoPlayerManager.seekBackward()
+                        },
+                        onSeekForward = {
+                            onUserInteraction()
+                            exoPlayerManager.seekForward()
+                        },
+                        onMenuToggle = {
+                            onUserInteraction()
+                            onMenuToggle()
+                        },
+                        onShowControls = {
+                            onUserInteraction()
+                        },
+                        onSpeedIncrease = {
+                            onUserInteraction()
+                            val newSpeed = TvKeyHandler.getNextSpeed(playerState.playbackSpeed, true)
+                            exoPlayerManager.setPlaybackSpeed(newSpeed)
+                        },
+                        onSpeedDecrease = {
+                            onUserInteraction()
+                            val newSpeed = TvKeyHandler.getNextSpeed(playerState.playbackSpeed, false)
+                            exoPlayerManager.setPlaybackSpeed(newSpeed)
+                        },
+                    )
+                },
     ) {
         // ExoPlayer view with subtitle support
         AndroidView(
@@ -96,12 +97,12 @@ fun TvPlayerView(
                     useController = false // We use our custom controls
                     setShowBuffering(PlayerView.SHOW_BUFFERING_WHEN_PLAYING)
                     setKeepContentOnPlayerReset(true)
-                    
+
                     // Configure subtitle view
                     subtitleView?.let { subtitleView ->
                         subtitleManager.configureSubtitleView(subtitleView)
                     }
-                    
+
                     setOnClickListener {
                         onUserInteraction()
                     }
@@ -109,15 +110,15 @@ fun TvPlayerView(
             },
             update = { playerView ->
                 playerView.player = exoPlayerManager.exoPlayer
-                
+
                 // Update subtitle styling if changed
                 playerView.subtitleView?.let { subtitleView ->
                     subtitleManager.configureSubtitleView(subtitleView)
                 }
             },
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier.fillMaxSize(),
         )
-        
+
         // Custom TV controls overlay
         TvPlayerControls(
             playerState = playerState,
@@ -149,7 +150,7 @@ fun TvPlayerView(
             onMenuToggle = {
                 onUserInteraction()
                 onMenuToggle()
-            }
+            },
         )
     }
 }

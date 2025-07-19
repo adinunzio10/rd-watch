@@ -18,28 +18,28 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun LoadingState(
     message: String? = null,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Box(
         modifier = modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Center,
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             CircularProgressIndicator(
                 modifier = Modifier.size(48.dp),
-                color = MaterialTheme.colorScheme.primary
+                color = MaterialTheme.colorScheme.primary,
             )
-            
+
             if (message != null) {
                 Text(
                     text = message,
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onBackground,
                     textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(horizontal = 32.dp)
+                    modifier = Modifier.padding(horizontal = 32.dp),
                 )
             }
         }
@@ -51,15 +51,15 @@ fun LoadingOverlay(
     isLoading: Boolean,
     message: String? = null,
     modifier: Modifier = Modifier,
-    content: @Composable () -> Unit
+    content: @Composable () -> Unit,
 ) {
     Box(modifier = modifier) {
         content()
-        
+
         if (isLoading) {
             LoadingState(
                 message = message,
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier.fillMaxSize(),
             )
         }
     }

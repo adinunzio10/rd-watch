@@ -38,7 +38,7 @@ data class TMDbMovieEntity(
     val productionCompanies: List<String>?,
     val productionCountries: List<String>?,
     val genres: List<String>?,
-    val lastUpdated: Long = System.currentTimeMillis()
+    val lastUpdated: Long = System.currentTimeMillis(),
 )
 
 /**
@@ -77,7 +77,13 @@ data class TMDbTVEntity(
     val spokenLanguages: List<String>?,
     val seasons: List<String>?,
     val genres: List<String>?,
-    val lastUpdated: Long = System.currentTimeMillis()
+    // External IDs for improved source scraping
+    val imdbId: String?,
+    val tvdbId: String?,
+    val facebookId: String?,
+    val instagramId: String?,
+    val twitterId: String?,
+    val lastUpdated: Long = System.currentTimeMillis(),
 )
 
 /**
@@ -94,7 +100,7 @@ data class TMDbSearchResultEntity(
     val totalResults: Int,
     val searchType: String, // "movie", "tv", "multi"
     val results: List<TMDbSearchItemEntity>,
-    val lastUpdated: Long = System.currentTimeMillis()
+    val lastUpdated: Long = System.currentTimeMillis(),
 )
 
 /**
@@ -119,7 +125,7 @@ data class TMDbSearchItemEntity(
     val adult: Boolean,
     val video: Boolean?,
     val originalLanguage: String,
-    val genreIds: List<Int>
+    val genreIds: List<Int>,
 )
 
 /**
@@ -133,7 +139,7 @@ data class TMDbCreditsEntity(
     val contentType: String, // "movie" or "tv"
     val cast: List<TMDbCastMemberEntity>,
     val crew: List<TMDbCrewMemberEntity>,
-    val lastUpdated: Long = System.currentTimeMillis()
+    val lastUpdated: Long = System.currentTimeMillis(),
 )
 
 /**
@@ -152,7 +158,7 @@ data class TMDbCastMemberEntity(
     val gender: Int?,
     val knownForDepartment: String?,
     val originalName: String,
-    val popularity: Float
+    val popularity: Float,
 )
 
 /**
@@ -170,7 +176,7 @@ data class TMDbCrewMemberEntity(
     val gender: Int?,
     val knownForDepartment: String?,
     val originalName: String,
-    val popularity: Float
+    val popularity: Float,
 )
 
 /**
@@ -187,7 +193,7 @@ data class TMDbRecommendationEntity(
     val totalPages: Int,
     val totalResults: Int,
     val results: List<TMDbSearchItemEntity>,
-    val lastUpdated: Long = System.currentTimeMillis()
+    val lastUpdated: Long = System.currentTimeMillis(),
 )
 
 /**
@@ -202,7 +208,7 @@ data class TMDbImagesEntity(
     val backdrops: List<TMDbImageEntity>,
     val posters: List<TMDbImageEntity>,
     val logos: List<TMDbImageEntity>?,
-    val lastUpdated: Long = System.currentTimeMillis()
+    val lastUpdated: Long = System.currentTimeMillis(),
 )
 
 /**
@@ -216,7 +222,7 @@ data class TMDbImageEntity(
     val aspectRatio: Float,
     val voteAverage: Float,
     val voteCount: Int,
-    val iso6391: String?
+    val iso6391: String?,
 )
 
 /**
@@ -229,7 +235,7 @@ data class TMDbVideosEntity(
     val contentId: Int,
     val contentType: String, // "movie" or "tv"
     val results: List<TMDbVideoEntity>,
-    val lastUpdated: Long = System.currentTimeMillis()
+    val lastUpdated: Long = System.currentTimeMillis(),
 )
 
 /**
@@ -246,7 +252,7 @@ data class TMDbVideoEntity(
     val official: Boolean,
     val publishedAt: String,
     val iso6391: String,
-    val iso31661: String
+    val iso31661: String,
 )
 
 /**
@@ -257,7 +263,7 @@ data class TMDbGenreEntity(
     @PrimaryKey val id: Int,
     val name: String,
     val mediaType: String, // "movie" or "tv"
-    val lastUpdated: Long = System.currentTimeMillis()
+    val lastUpdated: Long = System.currentTimeMillis(),
 )
 
 /**
@@ -275,7 +281,25 @@ data class TMDbConfigEntity(
     val profileSizes: List<String>,
     val stillSizes: List<String>,
     val changeKeys: List<String>,
-    val lastUpdated: Long = System.currentTimeMillis()
+    val lastUpdated: Long = System.currentTimeMillis(),
+)
+
+/**
+ * Room entity for TMDb episode external IDs
+ * Caches episode-specific external IDs for improved source scraping (Torrentio, etc.)
+ */
+@Entity(tableName = "tmdb_episode_external_ids")
+data class TMDbEpisodeExternalIdsEntity(
+    @PrimaryKey val id: String, // Composite key: "tvId_seasonNumber_episodeNumber"
+    val tvId: Int,
+    val seasonNumber: Int,
+    val episodeNumber: Int,
+    val imdbId: String?,
+    val tvdbId: String?,
+    val facebookId: String?,
+    val instagramId: String?,
+    val twitterId: String?,
+    val lastUpdated: Long = System.currentTimeMillis(),
 )
 
 /**
@@ -296,7 +320,7 @@ data class TMDbTrendingItem(
     val popularity: Float = 0f,
     val genreIds: List<Int> = emptyList(),
     val originalLanguage: String = "",
-    val adult: Boolean = false
+    val adult: Boolean = false,
 )
 
 data class TMDbDiscoveryFilters(
@@ -326,10 +350,10 @@ data class TMDbDiscoveryFilters(
     val firstAirDateGte: String? = null,
     val firstAirDateLte: String? = null,
     val timezone: String? = null,
-    val includeNullFirstAirDates: Boolean? = null
+    val includeNullFirstAirDates: Boolean? = null,
 )
 
 data class TMDbGenreItem(
     val id: Int,
-    val name: String
+    val name: String,
 )

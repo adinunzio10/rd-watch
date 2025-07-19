@@ -19,7 +19,7 @@ data class TVEpisode(
     val isWatched: Boolean = false,
     val watchProgress: Float = 0f, // 0.0 to 1.0
     val resumePosition: Long = 0L, // in milliseconds
-    val videoUrl: String? = null
+    val videoUrl: String? = null,
 ) {
     /**
      * Get formatted episode title with episode number
@@ -27,21 +27,21 @@ data class TVEpisode(
     fun getFormattedTitle(): String {
         return "E${episodeNumber.toString().padStart(2, '0')} • $title"
     }
-    
+
     /**
      * Get episode description or fallback
      */
     fun getDisplayDescription(): String {
         return description ?: overview ?: "No description available"
     }
-    
+
     /**
      * Get formatted runtime
      */
     fun getFormattedRuntime(): String? {
         return runtime?.let { "${it}m" }
     }
-    
+
     /**
      * Get progress percentage as string
      */
@@ -52,12 +52,12 @@ data class TVEpisode(
             else -> ""
         }
     }
-    
+
     /**
      * Check if episode has progress
      */
     fun hasProgress(): Boolean = watchProgress > 0f || isWatched
-    
+
     /**
      * Check if episode is partially watched
      */
@@ -76,7 +76,7 @@ data class TVSeason(
     val airDate: String?,
     val episodeCount: Int,
     val episodes: List<TVEpisode> = emptyList(),
-    val voteAverage: Float = 0f
+    val voteAverage: Float = 0f,
 ) {
     /**
      * Get formatted season title
@@ -88,21 +88,21 @@ data class TVSeason(
             "Season $seasonNumber"
         }
     }
-    
+
     /**
      * Get season description or fallback
      */
     fun getDisplayDescription(): String {
         return overview ?: "Season $seasonNumber"
     }
-    
+
     /**
      * Get watched episodes count
      */
     fun getWatchedEpisodesCount(): Int {
         return episodes.count { it.isWatched }
     }
-    
+
     /**
      * Get season watch progress (0.0 to 1.0)
      */
@@ -110,17 +110,17 @@ data class TVSeason(
         if (episodes.isEmpty()) return 0f
         return getWatchedEpisodesCount() / episodes.size.toFloat()
     }
-    
+
     /**
      * Check if season is fully watched
      */
     fun isFullyWatched(): Boolean = episodes.isNotEmpty() && episodes.all { it.isWatched }
-    
+
     /**
      * Check if season has any progress
      */
     fun hasProgress(): Boolean = episodes.any { it.hasProgress() }
-    
+
     /**
      * Get formatted episode count
      */
@@ -162,9 +162,10 @@ data class TVShowDetail(
     val homepage: String? = null,
     val tagline: String? = null,
     val inProduction: Boolean = false,
+    val imdbId: String? = null,
     val episodeRunTime: List<Int> = emptyList(),
     val lastEpisodeToAir: TVEpisode? = null,
-    val nextEpisodeToAir: TVEpisode? = null
+    val nextEpisodeToAir: TVEpisode? = null,
 ) {
     /**
      * Get formatted air date range
@@ -176,21 +177,21 @@ data class TVShowDetail(
             else -> null
         }
     }
-    
+
     /**
      * Get formatted runtime
      */
     fun getFormattedRuntime(): String? {
         return episodeRunTime.firstOrNull()?.let { "${it}m" }
     }
-    
+
     /**
      * Get formatted season/episode count
      */
     fun getFormattedCount(): String {
         return "$numberOfSeasons season${if (numberOfSeasons != 1) "s" else ""} • $numberOfEpisodes episode${if (numberOfEpisodes != 1) "s" else ""}"
     }
-    
+
     /**
      * Get overall watch progress
      */
@@ -199,21 +200,21 @@ data class TVShowDetail(
         val totalProgress = seasons.sumOf { it.getWatchProgress().toDouble() }
         return (totalProgress / seasons.size).toFloat()
     }
-    
+
     /**
      * Check if show is currently airing
      */
     fun isCurrentlyAiring(): Boolean {
         return status == "Returning Series" || inProduction
     }
-    
+
     /**
      * Get latest available season
      */
     fun getLatestSeason(): TVSeason? {
         return seasons.maxByOrNull { it.seasonNumber }
     }
-    
+
     /**
      * Get next unwatched episode
      */
@@ -222,7 +223,7 @@ data class TVShowDetail(
             .flatMap { it.episodes.sortedBy { episode -> episode.episodeNumber } }
             .firstOrNull { !it.isWatched }
     }
-    
+
     /**
      * Get current watching episode (partially watched)
      */
@@ -243,7 +244,7 @@ data class EpisodeGridUiState(
     val currentSeasonEpisodes: List<TVEpisode> = emptyList(),
     val focusedEpisodeId: String? = null,
     val error: String? = null,
-    val isRefreshing: Boolean = false
+    val isRefreshing: Boolean = false,
 ) {
     /**
      * Get currently selected season
@@ -251,46 +252,47 @@ data class EpisodeGridUiState(
     fun getCurrentSeason(): TVSeason? {
         return availableSeasons.find { it.seasonNumber == selectedSeasonNumber }
     }
-    
+
     /**
      * Check if there are episodes to display
      */
     fun hasEpisodes(): Boolean = currentSeasonEpisodes.isNotEmpty()
-    
+
     /**
      * Check if in error state
      */
     fun isInError(): Boolean = error != null
-    
+
     /**
      * Check if should show loading state
      */
     fun shouldShowLoading(): Boolean = isLoading && currentSeasonEpisodes.isEmpty()
-    
+
     /**
      * Check if loading episodes for current season
      */
     fun isLoadingCurrentSeason(): Boolean = isLoading && currentSeasonEpisodes.isEmpty()
-    
+
     /**
      * Check if refreshing episodes (already has some episodes)
      */
     fun isRefreshingEpisodes(): Boolean = (isLoading || isRefreshing) && currentSeasonEpisodes.isNotEmpty()
-    
+
     /**
      * Check if has episodes to display
      */
     fun hasEpisodesToDisplay(): Boolean = currentSeasonEpisodes.isNotEmpty()
-    
+
     /**
      * Get loading message based on current state
      */
-    fun getLoadingMessage(): String = when {
-        isRefreshingEpisodes() -> "Refreshing episodes..."
-        currentSeasonEpisodes.isEmpty() -> "Loading season details and episodes..."
-        else -> "Loading more episodes..."
-    }
-    
+    fun getLoadingMessage(): String =
+        when {
+            isRefreshingEpisodes() -> "Refreshing episodes..."
+            currentSeasonEpisodes.isEmpty() -> "Loading season details and episodes..."
+            else -> "Loading more episodes..."
+        }
+
     /**
      * Get formatted season title for selector
      */
@@ -310,23 +312,23 @@ data class EpisodePaginationState(
     val totalEpisodes: Int = 0,
     val hasNextPage: Boolean = false,
     val hasPreviousPage: Boolean = false,
-    val isLoadingNextPage: Boolean = false
+    val isLoadingNextPage: Boolean = false,
 ) {
     /**
      * Check if pagination is needed
      */
     fun needsPagination(): Boolean = totalEpisodes > pageSize
-    
+
     /**
      * Get start index for current page
      */
     fun getStartIndex(): Int = (currentPage - 1) * pageSize
-    
+
     /**
      * Get end index for current page
      */
     fun getEndIndex(): Int = minOf(getStartIndex() + pageSize, totalEpisodes)
-    
+
     /**
      * Get formatted page info
      */

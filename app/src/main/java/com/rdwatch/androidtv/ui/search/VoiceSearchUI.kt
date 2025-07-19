@@ -23,7 +23,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 
 /**
  * Voice search UI component with TV-optimized visual feedback
@@ -36,93 +35,97 @@ fun VoiceSearchUI(
     partialText: String = "",
     recognizedText: String = "",
     error: String? = null,
-    suggestions: List<String> = emptyList()
+    suggestions: List<String> = emptyList(),
 ) {
     val cancelButtonFocusRequester = remember { FocusRequester() }
-    
+
     LaunchedEffect(Unit) {
         cancelButtonFocusRequester.requestFocus()
     }
-    
+
     Surface(
-        modifier = modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background.copy(alpha = 0.95f)),
-        color = Color.Transparent
+        modifier =
+            modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background.copy(alpha = 0.95f)),
+        color = Color.Transparent,
     ) {
         Box(
             modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
+            contentAlignment = Alignment.Center,
         ) {
             Card(
-                modifier = Modifier
-                    .fillMaxWidth(0.8f)
-                    .wrapContentHeight(),
+                modifier =
+                    Modifier
+                        .fillMaxWidth(0.8f)
+                        .wrapContentHeight(),
                 shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                ),
-                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+                colors =
+                    CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surface,
+                    ),
+                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
             ) {
                 Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(32.dp),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(32.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(24.dp)
+                    verticalArrangement = Arrangement.spacedBy(24.dp),
                 ) {
                     // Header with close button
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(
                             text = "Voice Search",
                             style = MaterialTheme.typography.headlineSmall,
                             color = MaterialTheme.colorScheme.onSurface,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
                         )
-                        
+
                         IconButton(
                             onClick = onCancel,
-                            modifier = Modifier.focusRequester(cancelButtonFocusRequester)
+                            modifier = Modifier.focusRequester(cancelButtonFocusRequester),
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Close,
                                 contentDescription = "Cancel",
-                                tint = MaterialTheme.colorScheme.onSurface
+                                tint = MaterialTheme.colorScheme.onSurface,
                             )
                         }
                     }
-                    
+
                     // Voice indicator with animation
                     VoiceIndicator(
                         state = listeningState,
-                        modifier = Modifier.size(120.dp)
+                        modifier = Modifier.size(120.dp),
                     )
-                    
+
                     // Status text
                     VoiceStatusText(
                         state = listeningState,
-                        error = error
+                        error = error,
                     )
-                    
+
                     // Partial/recognized text display
                     VoiceTextDisplay(
                         partialText = partialText,
                         recognizedText = recognizedText,
-                        state = listeningState
+                        state = listeningState,
                     )
-                    
+
                     // Error display
                     error?.let { errorMessage ->
                         VoiceErrorDisplay(
                             error = errorMessage,
-                            onRetry = { /* Could trigger retry */ }
+                            onRetry = { /* Could trigger retry */ },
                         )
                     }
-                    
+
                     // Suggestions when idle or error
                     if (listeningState == VoiceSearchState.IDLE || listeningState == VoiceSearchState.ERROR) {
                         VoiceSuggestions(suggestions = suggestions)
@@ -136,63 +139,67 @@ fun VoiceSearchUI(
 @Composable
 private fun VoiceIndicator(
     state: VoiceSearchState,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val infiniteTransition = rememberInfiniteTransition(label = "voice_animation")
-    
+
     // Pulsing animation for listening state
     val scale by infiniteTransition.animateFloat(
         initialValue = 1f,
         targetValue = 1.2f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(1000, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "pulse_scale"
+        animationSpec =
+            infiniteRepeatable(
+                animation = tween(1000, easing = LinearEasing),
+                repeatMode = RepeatMode.Reverse,
+            ),
+        label = "pulse_scale",
     )
-    
+
     // Color animation
     val pulseColor by infiniteTransition.animateColor(
         initialValue = MaterialTheme.colorScheme.primary,
         targetValue = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f),
-        animationSpec = infiniteRepeatable(
-            animation = tween(1000, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "pulse_color"
+        animationSpec =
+            infiniteRepeatable(
+                animation = tween(1000, easing = LinearEasing),
+                repeatMode = RepeatMode.Reverse,
+            ),
+        label = "pulse_color",
     )
-    
+
     Box(
         modifier = modifier,
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Center,
     ) {
         // Outer pulsing circle (only when listening)
         if (state == VoiceSearchState.LISTENING) {
             Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .scale(scale)
-                    .clip(CircleShape)
-                    .background(pulseColor.copy(alpha = 0.3f))
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .scale(scale)
+                        .clip(CircleShape)
+                        .background(pulseColor.copy(alpha = 0.3f)),
             )
         }
-        
+
         // Inner circle with icon
         Surface(
             modifier = Modifier.size(80.dp),
             shape = CircleShape,
-            color = when (state) {
-                VoiceSearchState.LISTENING -> MaterialTheme.colorScheme.primary
-                VoiceSearchState.PROCESSING -> MaterialTheme.colorScheme.secondary
-                VoiceSearchState.COMPLETED -> MaterialTheme.colorScheme.tertiary
-                VoiceSearchState.ERROR -> MaterialTheme.colorScheme.error
-                VoiceSearchState.IDLE -> MaterialTheme.colorScheme.surfaceVariant
-            },
-            shadowElevation = 4.dp
+            color =
+                when (state) {
+                    VoiceSearchState.LISTENING -> MaterialTheme.colorScheme.primary
+                    VoiceSearchState.PROCESSING -> MaterialTheme.colorScheme.secondary
+                    VoiceSearchState.COMPLETED -> MaterialTheme.colorScheme.tertiary
+                    VoiceSearchState.ERROR -> MaterialTheme.colorScheme.error
+                    VoiceSearchState.IDLE -> MaterialTheme.colorScheme.surfaceVariant
+                },
+            shadowElevation = 4.dp,
         ) {
             Box(
                 modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
+                contentAlignment = Alignment.Center,
             ) {
                 when (state) {
                     VoiceSearchState.LISTENING -> {
@@ -200,14 +207,14 @@ private fun VoiceIndicator(
                             imageVector = Icons.Default.Mic,
                             contentDescription = "Listening",
                             tint = MaterialTheme.colorScheme.onPrimary,
-                            modifier = Modifier.size(36.dp)
+                            modifier = Modifier.size(36.dp),
                         )
                     }
                     VoiceSearchState.PROCESSING -> {
                         CircularProgressIndicator(
                             modifier = Modifier.size(32.dp),
                             color = MaterialTheme.colorScheme.onSecondary,
-                            strokeWidth = 3.dp
+                            strokeWidth = 3.dp,
                         )
                     }
                     VoiceSearchState.COMPLETED -> {
@@ -215,7 +222,7 @@ private fun VoiceIndicator(
                             imageVector = Icons.Default.Mic,
                             contentDescription = "Completed",
                             tint = MaterialTheme.colorScheme.onTertiary,
-                            modifier = Modifier.size(36.dp)
+                            modifier = Modifier.size(36.dp),
                         )
                     }
                     VoiceSearchState.ERROR -> {
@@ -223,7 +230,7 @@ private fun VoiceIndicator(
                             imageVector = Icons.Default.Warning,
                             contentDescription = "Error",
                             tint = MaterialTheme.colorScheme.onError,
-                            modifier = Modifier.size(36.dp)
+                            modifier = Modifier.size(36.dp),
                         )
                     }
                     VoiceSearchState.IDLE -> {
@@ -231,7 +238,7 @@ private fun VoiceIndicator(
                             imageVector = Icons.Default.MicOff,
                             contentDescription = "Idle",
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(36.dp)
+                            modifier = Modifier.size(36.dp),
                         )
                     }
                 }
@@ -244,32 +251,34 @@ private fun VoiceIndicator(
 private fun VoiceStatusText(
     state: VoiceSearchState,
     error: String?,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
-    val statusText = when {
-        error != null -> "Error occurred"
-        state == VoiceSearchState.LISTENING -> "Listening..."
-        state == VoiceSearchState.PROCESSING -> "Processing..."
-        state == VoiceSearchState.COMPLETED -> "Search completed"
-        state == VoiceSearchState.IDLE -> "Ready to listen"
-        else -> "Voice search"
-    }
-    
-    val statusColor = when {
-        error != null -> MaterialTheme.colorScheme.error
-        state == VoiceSearchState.LISTENING -> MaterialTheme.colorScheme.primary
-        state == VoiceSearchState.PROCESSING -> MaterialTheme.colorScheme.secondary
-        state == VoiceSearchState.COMPLETED -> MaterialTheme.colorScheme.tertiary
-        else -> MaterialTheme.colorScheme.onSurface
-    }
-    
+    val statusText =
+        when {
+            error != null -> "Error occurred"
+            state == VoiceSearchState.LISTENING -> "Listening..."
+            state == VoiceSearchState.PROCESSING -> "Processing..."
+            state == VoiceSearchState.COMPLETED -> "Search completed"
+            state == VoiceSearchState.IDLE -> "Ready to listen"
+            else -> "Voice search"
+        }
+
+    val statusColor =
+        when {
+            error != null -> MaterialTheme.colorScheme.error
+            state == VoiceSearchState.LISTENING -> MaterialTheme.colorScheme.primary
+            state == VoiceSearchState.PROCESSING -> MaterialTheme.colorScheme.secondary
+            state == VoiceSearchState.COMPLETED -> MaterialTheme.colorScheme.tertiary
+            else -> MaterialTheme.colorScheme.onSurface
+        }
+
     Text(
         text = statusText,
         style = MaterialTheme.typography.titleMedium,
         color = statusColor,
         fontWeight = FontWeight.Medium,
         textAlign = TextAlign.Center,
-        modifier = modifier
+        modifier = modifier,
     )
 }
 
@@ -278,44 +287,45 @@ private fun VoiceTextDisplay(
     partialText: String,
     recognizedText: String,
     state: VoiceSearchState,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
-    val displayText = when {
-        recognizedText.isNotEmpty() -> recognizedText
-        partialText.isNotEmpty() && state == VoiceSearchState.LISTENING -> partialText
-        else -> ""
-    }
-    
+    val displayText =
+        when {
+            recognizedText.isNotEmpty() -> recognizedText
+            partialText.isNotEmpty() && state == VoiceSearchState.LISTENING -> partialText
+            else -> ""
+        }
+
     AnimatedVisibility(
         visible = displayText.isNotEmpty(),
         enter = fadeIn() + slideInVertically(),
         exit = fadeOut() + slideOutVertically(),
-        modifier = modifier
+        modifier = modifier,
     ) {
         Surface(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(8.dp),
-            color = MaterialTheme.colorScheme.surfaceVariant
+            color = MaterialTheme.colorScheme.surfaceVariant,
         ) {
             Column(
                 modifier = Modifier.padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Text(
                     text = if (partialText.isNotEmpty() && recognizedText.isEmpty()) "Hearing:" else "Recognized:",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    fontWeight = FontWeight.Medium
+                    fontWeight = FontWeight.Medium,
                 )
-                
+
                 Spacer(modifier = Modifier.height(8.dp))
-                
+
                 Text(
                     text = displayText,
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
-                    fontWeight = if (recognizedText.isNotEmpty()) FontWeight.Bold else FontWeight.Normal
+                    fontWeight = if (recognizedText.isNotEmpty()) FontWeight.Bold else FontWeight.Normal,
                 )
             }
         }
@@ -326,41 +336,41 @@ private fun VoiceTextDisplay(
 private fun VoiceErrorDisplay(
     error: String,
     onRetry: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Surface(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(8.dp),
-        color = MaterialTheme.colorScheme.errorContainer
+        color = MaterialTheme.colorScheme.errorContainer,
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 Icon(
                     imageVector = Icons.Default.Warning,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.onErrorContainer,
-                    modifier = Modifier.size(20.dp)
+                    modifier = Modifier.size(20.dp),
                 )
                 Text(
                     text = "Voice Search Error",
                     style = MaterialTheme.typography.titleSmall,
                     color = MaterialTheme.colorScheme.onErrorContainer,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
                 )
             }
-            
+
             Text(
                 text = error,
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onErrorContainer,
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
             )
         }
     }
@@ -369,28 +379,28 @@ private fun VoiceErrorDisplay(
 @Composable
 private fun VoiceSuggestions(
     suggestions: List<String>,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     if (suggestions.isNotEmpty()) {
         Column(
             modifier = modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             Text(
                 text = "Try saying:",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                fontWeight = FontWeight.Medium
+                fontWeight = FontWeight.Medium,
             )
-            
+
             suggestions.take(3).forEach { suggestion ->
                 Text(
                     text = suggestion,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.primary,
                     textAlign = TextAlign.Center,
-                    fontWeight = FontWeight.Medium
+                    fontWeight = FontWeight.Medium,
                 )
             }
         }
@@ -405,29 +415,30 @@ fun VoiceSearchButton(
     onClick: () -> Unit,
     isEnabled: Boolean = true,
     isListening: Boolean = false,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val scale by animateFloatAsState(
         targetValue = if (isListening) 1.1f else 1f,
         animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
-        label = "button_scale"
+        label = "button_scale",
     )
-    
+
     IconButton(
         onClick = onClick,
         enabled = isEnabled,
-        modifier = modifier.scale(scale)
+        modifier = modifier.scale(scale),
     ) {
         Icon(
             imageVector = if (isListening) Icons.Default.Mic else Icons.Default.MicOff,
             contentDescription = if (isListening) "Stop voice search" else "Start voice search",
-            tint = if (isListening) {
-                MaterialTheme.colorScheme.primary
-            } else if (isEnabled) {
-                MaterialTheme.colorScheme.onSurface
-            } else {
-                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
-            }
+            tint =
+                if (isListening) {
+                    MaterialTheme.colorScheme.primary
+                } else if (isEnabled) {
+                    MaterialTheme.colorScheme.onSurface
+                } else {
+                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                },
         )
     }
 }
@@ -438,43 +449,47 @@ fun VoiceSearchButton(
 @Composable
 fun VoiceWaveform(
     isActive: Boolean,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val infiniteTransition = rememberInfiniteTransition(label = "waveform")
-    
+
     Row(
         modifier = modifier,
         horizontalArrangement = Arrangement.spacedBy(4.dp),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         repeat(5) { index ->
             val animationDelay = index * 100
             val height by infiniteTransition.animateFloat(
                 initialValue = 4.dp.value,
                 targetValue = if (isActive) 16.dp.value else 4.dp.value,
-                animationSpec = infiniteRepeatable(
-                    animation = tween(
-                        durationMillis = 600,
-                        delayMillis = animationDelay,
-                        easing = LinearEasing
+                animationSpec =
+                    infiniteRepeatable(
+                        animation =
+                            tween(
+                                durationMillis = 600,
+                                delayMillis = animationDelay,
+                                easing = LinearEasing,
+                            ),
+                        repeatMode = RepeatMode.Reverse,
                     ),
-                    repeatMode = RepeatMode.Reverse
-                ),
-                label = "wave_$index"
+                label = "wave_$index",
             )
-            
+
             Box(
-                modifier = Modifier
-                    .width(3.dp)
-                    .height(height.dp)
-                    .background(
-                        color = if (isActive) {
-                            MaterialTheme.colorScheme.primary
-                        } else {
-                            MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-                        },
-                        shape = RoundedCornerShape(1.5.dp)
-                    )
+                modifier =
+                    Modifier
+                        .width(3.dp)
+                        .height(height.dp)
+                        .background(
+                            color =
+                                if (isActive) {
+                                    MaterialTheme.colorScheme.primary
+                                } else {
+                                    MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                                },
+                            shape = RoundedCornerShape(1.5.dp),
+                        ),
             )
         }
     }

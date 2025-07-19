@@ -17,41 +17,42 @@ fun <T> StateHandler(
     emptyActionText: String? = null,
     onEmptyAction: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
-    content: @Composable (data: T) -> Unit
+    content: @Composable (data: T) -> Unit,
 ) {
     when (uiState) {
         is UiState.Loading -> {
             LoadingState(
                 message = loadingMessage,
-                modifier = modifier
+                modifier = modifier,
             )
         }
-        
+
         is UiState.Success -> {
             content(uiState.data)
         }
-        
+
         is UiState.Error -> {
             ErrorState(
-                errorInfo = ErrorInfo(
-                    type = com.rdwatch.androidtv.core.error.ErrorType.UNKNOWN,
-                    message = uiState.message ?: uiState.exception.message ?: "An error occurred",
-                    canRetry = onRetry != null,
-                    exception = uiState.exception.toAppException()
-                ),
+                errorInfo =
+                    ErrorInfo(
+                        type = com.rdwatch.androidtv.core.error.ErrorType.UNKNOWN,
+                        message = uiState.message ?: uiState.exception.message ?: "An error occurred",
+                        canRetry = onRetry != null,
+                        exception = uiState.exception.toAppException(),
+                    ),
                 onRetry = onRetry,
                 onDismiss = onErrorDismiss,
-                modifier = modifier
+                modifier = modifier,
             )
         }
-        
+
         is UiState.Empty -> {
             EmptyState(
                 title = emptyTitle,
                 description = emptyDescription,
                 actionText = emptyActionText,
                 onAction = onEmptyAction,
-                modifier = modifier
+                modifier = modifier,
             )
         }
     }
@@ -69,41 +70,42 @@ fun <T> StateHandler(
     emptyActionText: String? = null,
     onEmptyAction: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
-    content: @Composable (data: T) -> Unit
+    content: @Composable (data: T) -> Unit,
 ) {
     when (uiState) {
         is UiState.Loading -> {
             LoadingState(
                 message = loadingMessage,
-                modifier = modifier
+                modifier = modifier,
             )
         }
-        
+
         is UiState.Success -> {
             content(uiState.data)
         }
-        
+
         is UiState.Error -> {
             ErrorState(
-                errorInfo = errorInfo ?: ErrorInfo(
-                    type = com.rdwatch.androidtv.core.error.ErrorType.UNKNOWN,
-                    message = uiState.message ?: uiState.exception.message ?: "An error occurred",
-                    canRetry = onRetry != null,
-                    exception = uiState.exception.toAppException()
-                ),
+                errorInfo =
+                    errorInfo ?: ErrorInfo(
+                        type = com.rdwatch.androidtv.core.error.ErrorType.UNKNOWN,
+                        message = uiState.message ?: uiState.exception.message ?: "An error occurred",
+                        canRetry = onRetry != null,
+                        exception = uiState.exception.toAppException(),
+                    ),
                 onRetry = onRetry,
                 onDismiss = onErrorDismiss,
-                modifier = modifier
+                modifier = modifier,
             )
         }
-        
+
         is UiState.Empty -> {
             EmptyState(
                 title = emptyTitle,
                 description = emptyDescription,
                 actionText = emptyActionText,
                 onAction = onEmptyAction,
-                modifier = modifier
+                modifier = modifier,
             )
         }
     }

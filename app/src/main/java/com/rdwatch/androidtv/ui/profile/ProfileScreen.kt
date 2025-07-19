@@ -23,14 +23,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.rdwatch.androidtv.Movie
-import com.rdwatch.androidtv.ui.components.SmartTVImageLoader
-import com.rdwatch.androidtv.ui.components.ImagePriority
-import com.rdwatch.androidtv.ui.focus.tvFocusable
-import com.rdwatch.androidtv.ui.focus.TVFocusIndicator
-import com.rdwatch.androidtv.ui.viewmodel.PlaybackViewModel
-import com.rdwatch.androidtv.presentation.navigation.Screen
 import androidx.media3.common.util.UnstableApi
+import com.rdwatch.androidtv.Movie
+import com.rdwatch.androidtv.presentation.navigation.Screen
+import com.rdwatch.androidtv.ui.components.ImagePriority
+import com.rdwatch.androidtv.ui.components.SmartTVImageLoader
+import com.rdwatch.androidtv.ui.focus.TVFocusIndicator
+import com.rdwatch.androidtv.ui.focus.tvFocusable
+import com.rdwatch.androidtv.ui.viewmodel.PlaybackViewModel
 
 /**
  * Profile Screen with user preferences and watch history
@@ -44,60 +44,62 @@ fun ProfileScreen(
     onMovieClick: (Movie) -> Unit = {},
     onNavigateToScreen: ((Any) -> Unit)? = null,
     playbackViewModel: PlaybackViewModel = hiltViewModel(),
-    viewModel: ProfileViewModel = hiltViewModel()
+    viewModel: ProfileViewModel = hiltViewModel(),
 ) {
     val overscanMargin = 32.dp
     val firstFocusRequester = remember { FocusRequester() }
-    
+
     // Observe ViewModel state
     val uiState by viewModel.uiState.collectAsState()
     val favoriteMovies by viewModel.favoriteMovies.collectAsState()
     val watchHistory by viewModel.watchHistory.collectAsState()
-    
+
     // Observe playback data
     val inProgressContent by playbackViewModel.inProgressContent.collectAsState()
-    
+
     // Get watched movies from progress data
-    val watchedMovies = remember(inProgressContent, favoriteMovies, watchHistory) {
-        // Combine all available movies from favorites and history to find matches
-        val allAvailableMovies = (favoriteMovies + watchHistory).distinctBy { it.id }
-        inProgressContent.mapNotNull { progress ->
-            allAvailableMovies.find { it.videoUrl == progress.contentId }
-        }.take(10)
-    }
-    
+    val watchedMovies =
+        remember(inProgressContent, favoriteMovies, watchHistory) {
+            // Combine all available movies from favorites and history to find matches
+            val allAvailableMovies = (favoriteMovies + watchHistory).distinctBy { it.id }
+            inProgressContent.mapNotNull { progress ->
+                allAvailableMovies.find { it.videoUrl == progress.contentId }
+            }.take(10)
+        }
+
     LaunchedEffect(Unit) {
         firstFocusRequester.requestFocus()
     }
-    
+
     LazyColumn(
-        modifier = modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .padding(overscanMargin),
-        verticalArrangement = Arrangement.spacedBy(24.dp)
+        modifier =
+            modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+                .padding(overscanMargin),
+        verticalArrangement = Arrangement.spacedBy(24.dp),
     ) {
         // Header with back button
         item {
             ProfileHeader(
                 onBackPressed = onBackPressed,
-                firstFocusRequester = firstFocusRequester
+                firstFocusRequester = firstFocusRequester,
             )
         }
-        
+
         // User profile section
         item {
             UserProfileSection(
                 userProfile = uiState.userProfile,
-                isLoading = uiState.isLoading
+                isLoading = uiState.isLoading,
             )
         }
-        
+
         // Watch statistics cards
         item {
             WatchStatisticsSection(watchStatistics = uiState.watchStatistics)
         }
-        
+
         // Continue watching section
         if (watchedMovies.isNotEmpty()) {
             item {
@@ -105,28 +107,28 @@ fun ProfileScreen(
                     movies = watchedMovies,
                     onMovieClick = onMovieClick,
                     onNavigateToScreen = onNavigateToScreen,
-                    playbackViewModel = playbackViewModel
+                    playbackViewModel = playbackViewModel,
                 )
             }
         }
-        
+
         // Favorites section
         item {
             FavoriteMoviesSection(
                 movies = favoriteMovies,
                 onMovieClick = onMovieClick,
-                onRemoveFromFavorites = { movie -> viewModel.removeFromFavorites(movie) }
+                onRemoveFromFavorites = { movie -> viewModel.removeFromFavorites(movie) },
             )
         }
-        
+
         // Profile actions section
         item {
             ProfileActionsSection(
                 viewModel = viewModel,
-                onNavigateToScreen = onNavigateToScreen
+                onNavigateToScreen = onNavigateToScreen,
             )
         }
-        
+
         // Bottom spacing for TV overscan
         item {
             Spacer(modifier = Modifier.height(overscanMargin))
@@ -137,43 +139,45 @@ fun ProfileScreen(
 @Composable
 private fun ProfileHeader(
     onBackPressed: () -> Unit,
-    firstFocusRequester: FocusRequester
+    firstFocusRequester: FocusRequester,
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(16.dp),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         // Back button
         var backButtonFocused by remember { mutableStateOf(false) }
-        
+
         TVFocusIndicator(isFocused = backButtonFocused) {
             IconButton(
                 onClick = onBackPressed,
-                modifier = Modifier
-                    .focusRequester(firstFocusRequester)
-                    .tvFocusable(
-                        onFocusChanged = { backButtonFocused = it.isFocused }
-                    )
+                modifier =
+                    Modifier
+                        .focusRequester(firstFocusRequester)
+                        .tvFocusable(
+                            onFocusChanged = { backButtonFocused = it.isFocused },
+                        ),
             ) {
                 Icon(
                     imageVector = Icons.Default.ArrowBack,
                     contentDescription = "Back",
-                    tint = if (backButtonFocused) {
-                        MaterialTheme.colorScheme.primary
-                    } else {
-                        MaterialTheme.colorScheme.onBackground
-                    }
+                    tint =
+                        if (backButtonFocused) {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            MaterialTheme.colorScheme.onBackground
+                        },
                 )
             }
         }
-        
+
         // Title
         Text(
             text = "Profile",
             style = MaterialTheme.typography.displaySmall,
             color = MaterialTheme.colorScheme.onBackground,
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.Bold,
         )
     }
 }
@@ -181,81 +185,85 @@ private fun ProfileHeader(
 @Composable
 private fun UserProfileSection(
     userProfile: UserProfile?,
-    isLoading: Boolean
+    isLoading: Boolean,
 ) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         color = MaterialTheme.colorScheme.surface,
         shape = RoundedCornerShape(16.dp),
-        shadowElevation = 4.dp
+        shadowElevation = 4.dp,
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(24.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(24.dp),
             horizontalArrangement = Arrangement.spacedBy(24.dp),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             // Profile avatar
             Box(
-                modifier = Modifier
-                    .size(80.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primary),
-                contentAlignment = Alignment.Center
+                modifier =
+                    Modifier
+                        .size(80.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.primary),
+                contentAlignment = Alignment.Center,
             ) {
                 Icon(
                     imageVector = Icons.Default.Person,
                     contentDescription = "Profile",
                     tint = MaterialTheme.colorScheme.onPrimary,
-                    modifier = Modifier.size(40.dp)
+                    modifier = Modifier.size(40.dp),
                 )
             }
-            
+
             // User info
             if (isLoading) {
                 Column(
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     Box(
-                        modifier = Modifier
-                            .height(24.dp)
-                            .width(120.dp)
-                            .background(
-                                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
-                                RoundedCornerShape(4.dp)
-                            )
+                        modifier =
+                            Modifier
+                                .height(24.dp)
+                                .width(120.dp)
+                                .background(
+                                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
+                                    RoundedCornerShape(4.dp),
+                                ),
                     )
                     Box(
-                        modifier = Modifier
-                            .height(16.dp)
-                            .width(180.dp)
-                            .background(
-                                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
-                                RoundedCornerShape(4.dp)
-                            )
+                        modifier =
+                            Modifier
+                                .height(16.dp)
+                                .width(180.dp)
+                                .background(
+                                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
+                                    RoundedCornerShape(4.dp),
+                                ),
                     )
                 }
             } else if (userProfile != null) {
                 Column(
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     Text(
                         text = userProfile.name,
                         style = MaterialTheme.typography.headlineMedium,
                         color = MaterialTheme.colorScheme.onSurface,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
                     )
                     Text(
                         text = userProfile.email,
                         style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                     )
                     Text(
                         text = "${userProfile.membershipType} Member",
                         style = MaterialTheme.typography.labelLarge,
                         color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.SemiBold
+                        fontWeight = FontWeight.SemiBold,
                     )
                 }
             }
@@ -264,40 +272,38 @@ private fun UserProfileSection(
 }
 
 @Composable
-private fun WatchStatisticsSection(
-    watchStatistics: WatchStatistics?
-) {
+private fun WatchStatisticsSection(watchStatistics: WatchStatistics?) {
     Column(
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         Text(
             text = "Watch Statistics",
             style = MaterialTheme.typography.headlineSmall,
             color = MaterialTheme.colorScheme.onBackground,
-            fontWeight = FontWeight.SemiBold
+            fontWeight = FontWeight.SemiBold,
         )
-        
+
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             StatisticCard(
                 title = "Movies Watched",
                 value = watchStatistics?.moviesWatched?.toString() ?: "0",
                 icon = Icons.Default.Movie,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
             )
             StatisticCard(
                 title = "Hours Watched",
                 value = watchStatistics?.hoursWatched?.toString() ?: "0",
                 icon = Icons.Default.AccessTime,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
             )
             StatisticCard(
                 title = "Favorites",
                 value = watchStatistics?.favoritesCount?.toString() ?: "0",
                 icon = Icons.Default.Favorite,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
             )
         }
     }
@@ -308,34 +314,34 @@ private fun StatisticCard(
     title: String,
     value: String,
     icon: ImageVector,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Surface(
         modifier = modifier,
         color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f),
-        shape = RoundedCornerShape(12.dp)
+        shape = RoundedCornerShape(12.dp),
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(24.dp)
+                modifier = Modifier.size(24.dp),
             )
             Text(
                 text = value,
                 style = MaterialTheme.typography.headlineMedium,
                 color = MaterialTheme.colorScheme.onSurface,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
             )
             Text(
                 text = title,
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
             )
         }
     }
@@ -346,46 +352,46 @@ private fun ContinueWatchingSection(
     movies: List<Movie>,
     onMovieClick: (Movie) -> Unit,
     onNavigateToScreen: ((Any) -> Unit)?,
-    playbackViewModel: PlaybackViewModel
+    playbackViewModel: PlaybackViewModel,
 ) {
     Column(
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
                 text = "Continue Watching",
                 style = MaterialTheme.typography.headlineSmall,
                 color = MaterialTheme.colorScheme.onBackground,
-                fontWeight = FontWeight.SemiBold
+                fontWeight = FontWeight.SemiBold,
             )
-            
+
             // View all button
-            TextButton(onClick = { 
+            TextButton(onClick = {
                 // Navigate to Browse screen to see all content
                 onNavigateToScreen?.invoke(Screen.Browse)
             }) {
                 Text(
                     text = "View All",
                     style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.primary
+                    color = MaterialTheme.colorScheme.primary,
                 )
             }
         }
-        
+
         LazyRow(
             horizontalArrangement = Arrangement.spacedBy(16.dp),
-            contentPadding = PaddingValues(horizontal = 4.dp)
+            contentPadding = PaddingValues(horizontal = 4.dp),
         ) {
             items(movies) { movie ->
                 val progress = playbackViewModel.getContentProgress(movie.videoUrl ?: "")
                 ProfileMovieCard(
                     movie = movie,
                     progress = progress,
-                    onClick = { onMovieClick(movie) }
+                    onClick = { onMovieClick(movie) },
                 )
             }
         }
@@ -396,28 +402,28 @@ private fun ContinueWatchingSection(
 private fun FavoriteMoviesSection(
     movies: List<Movie>,
     onMovieClick: (Movie) -> Unit,
-    onRemoveFromFavorites: (Movie) -> Unit
+    onRemoveFromFavorites: (Movie) -> Unit,
 ) {
     Column(
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         Text(
             text = "My Favorites",
             style = MaterialTheme.typography.headlineSmall,
             color = MaterialTheme.colorScheme.onBackground,
-            fontWeight = FontWeight.SemiBold
+            fontWeight = FontWeight.SemiBold,
         )
-        
+
         LazyRow(
             horizontalArrangement = Arrangement.spacedBy(16.dp),
-            contentPadding = PaddingValues(horizontal = 4.dp)
+            contentPadding = PaddingValues(horizontal = 4.dp),
         ) {
             items(movies) { movie ->
                 ProfileMovieCard(
                     movie = movie,
                     onClick = { onMovieClick(movie) },
                     showFavoriteIcon = true,
-                    onRemoveFromFavorites = { onRemoveFromFavorites(movie) }
+                    onRemoveFromFavorites = { onRemoveFromFavorites(movie) },
                 )
             }
         }
@@ -431,60 +437,66 @@ private fun ProfileMovieCard(
     onClick: () -> Unit,
     progress: Float = 0f,
     showFavoriteIcon: Boolean = false,
-    onRemoveFromFavorites: (() -> Unit)? = null
+    onRemoveFromFavorites: (() -> Unit)? = null,
 ) {
     var isFocused by remember { mutableStateOf(false) }
-    
+
     TVFocusIndicator(isFocused = isFocused) {
         Card(
             onClick = onClick,
-            modifier = Modifier
-                .size(
-                    width = if (isFocused) 180.dp else 160.dp,
-                    height = if (isFocused) 240.dp else 220.dp
-                )
-                .tvFocusable(
-                    onFocusChanged = { isFocused = it.isFocused }
+            modifier =
+                Modifier
+                    .size(
+                        width = if (isFocused) 180.dp else 160.dp,
+                        height = if (isFocused) 240.dp else 220.dp,
+                    )
+                    .tvFocusable(
+                        onFocusChanged = { isFocused = it.isFocused },
+                    ),
+            colors =
+                CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surface,
                 ),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surface
-            ),
-            elevation = CardDefaults.cardElevation(
-                defaultElevation = if (isFocused) 8.dp else 2.dp
-            ),
-            shape = RoundedCornerShape(8.dp)
+            elevation =
+                CardDefaults.cardElevation(
+                    defaultElevation = if (isFocused) 8.dp else 2.dp,
+                ),
+            shape = RoundedCornerShape(8.dp),
         ) {
             Box {
                 Column {
                     // Movie poster
                     Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .weight(1f)
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .weight(1f),
                     ) {
                         SmartTVImageLoader(
                             imageUrl = movie.cardImageUrl,
                             contentDescription = movie.title,
                             priority = ImagePriority.NORMAL,
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .clip(RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp))
+                            modifier =
+                                Modifier
+                                    .fillMaxSize()
+                                    .clip(RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp)),
                         )
-                        
+
                         // Progress indicator
                         if (progress > 0f) {
                             LinearProgressIndicator(
                                 progress = { progress },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(3.dp)
-                                    .align(Alignment.BottomCenter),
+                                modifier =
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .height(3.dp)
+                                        .align(Alignment.BottomCenter),
                                 color = MaterialTheme.colorScheme.primary,
-                                trackColor = Color.White.copy(alpha = 0.3f)
+                                trackColor = Color.White.copy(alpha = 0.3f),
                             )
                         }
                     }
-                    
+
                     // Movie title
                     Text(
                         text = movie.title ?: "Unknown Title",
@@ -493,23 +505,24 @@ private fun ProfileMovieCard(
                         fontWeight = FontWeight.Medium,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.padding(12.dp)
+                        modifier = Modifier.padding(12.dp),
                     )
                 }
-                
+
                 // Favorite icon
                 if (showFavoriteIcon) {
                     IconButton(
                         onClick = { onRemoveFromFavorites?.invoke() },
-                        modifier = Modifier
-                            .align(Alignment.TopEnd)
-                            .padding(4.dp)
+                        modifier =
+                            Modifier
+                                .align(Alignment.TopEnd)
+                                .padding(4.dp),
                     ) {
                         Icon(
                             imageVector = Icons.Default.Favorite,
                             contentDescription = "Remove from favorites",
                             tint = MaterialTheme.colorScheme.error,
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(20.dp),
                         )
                     }
                 }
@@ -521,47 +534,47 @@ private fun ProfileMovieCard(
 @Composable
 private fun ProfileActionsSection(
     viewModel: ProfileViewModel,
-    onNavigateToScreen: ((Any) -> Unit)?
+    onNavigateToScreen: ((Any) -> Unit)?,
 ) {
     Column(
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         Text(
             text = "Account Actions",
             style = MaterialTheme.typography.headlineSmall,
             color = MaterialTheme.colorScheme.onBackground,
-            fontWeight = FontWeight.SemiBold
+            fontWeight = FontWeight.SemiBold,
         )
-        
+
         LazyRow(
             horizontalArrangement = Arrangement.spacedBy(16.dp),
-            contentPadding = PaddingValues(horizontal = 4.dp)
+            contentPadding = PaddingValues(horizontal = 4.dp),
         ) {
             items(
                 listOf(
-                    ProfileAction("Edit Profile", Icons.Default.Edit) { 
+                    ProfileAction("Edit Profile", Icons.Default.Edit) {
                         // Navigate to Settings screen for profile editing
                         onNavigateToScreen?.invoke(Screen.Settings)
                     },
-                    ProfileAction("Privacy Settings", Icons.Default.Security) { 
+                    ProfileAction("Privacy Settings", Icons.Default.Security) {
                         // Navigate to Settings screen for privacy options
                         onNavigateToScreen?.invoke(Screen.Settings)
                     },
-                    ProfileAction("Notifications", Icons.Default.Notifications) { 
+                    ProfileAction("Notifications", Icons.Default.Notifications) {
                         // Navigate to Settings screen for notification preferences
                         onNavigateToScreen?.invoke(Screen.Settings)
                     },
-                    ProfileAction("Help & Support", Icons.Default.Help) { 
+                    ProfileAction("Help & Support", Icons.Default.Help) {
                         // Navigate to Settings screen for help options
                         onNavigateToScreen?.invoke(Screen.Settings)
                     },
-                    ProfileAction("Sign Out", Icons.Default.ExitToApp) { viewModel.signOut() }
-                )
+                    ProfileAction("Sign Out", Icons.Default.ExitToApp) { viewModel.signOut() },
+                ),
             ) { action ->
                 ProfileActionCard(
                     title = action.title,
                     icon = action.icon,
-                    onClick = action.onClick
+                    onClick = action.onClick,
                 )
             }
         }
@@ -573,61 +586,68 @@ private fun ProfileActionsSection(
 private fun ProfileActionCard(
     title: String,
     icon: ImageVector,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     var isFocused by remember { mutableStateOf(false) }
-    
+
     TVFocusIndicator(isFocused = isFocused) {
         OutlinedCard(
             onClick = onClick,
-            modifier = Modifier
-                .width(140.dp)
-                .tvFocusable(
-                    onFocusChanged = { isFocused = it.isFocused }
+            modifier =
+                Modifier
+                    .width(140.dp)
+                    .tvFocusable(
+                        onFocusChanged = { isFocused = it.isFocused },
+                    ),
+            colors =
+                CardDefaults.outlinedCardColors(
+                    containerColor =
+                        if (isFocused) {
+                            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+                        } else {
+                            MaterialTheme.colorScheme.surface
+                        },
                 ),
-            colors = CardDefaults.outlinedCardColors(
-                containerColor = if (isFocused) {
-                    MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+            border =
+                if (isFocused) {
+                    CardDefaults.outlinedCardBorder().copy(
+                        width = 2.dp,
+                    )
                 } else {
-                    MaterialTheme.colorScheme.surface
-                }
-            ),
-            border = if (isFocused) {
-                CardDefaults.outlinedCardBorder().copy(
-                    width = 2.dp
-                )
-            } else {
-                CardDefaults.outlinedCardBorder()
-            }
+                    CardDefaults.outlinedCardBorder()
+                },
         ) {
             Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
-                    tint = if (isFocused) {
-                        MaterialTheme.colorScheme.primary
-                    } else {
-                        MaterialTheme.colorScheme.onSurface
-                    },
-                    modifier = Modifier.size(24.dp)
+                    tint =
+                        if (isFocused) {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            MaterialTheme.colorScheme.onSurface
+                        },
+                    modifier = Modifier.size(24.dp),
                 )
                 Text(
                     text = title,
                     style = MaterialTheme.typography.labelLarge,
-                    color = if (isFocused) {
-                        MaterialTheme.colorScheme.primary
-                    } else {
-                        MaterialTheme.colorScheme.onSurface
-                    },
+                    color =
+                        if (isFocused) {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            MaterialTheme.colorScheme.onSurface
+                        },
                     fontWeight = FontWeight.Medium,
                     maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
+                    overflow = TextOverflow.Ellipsis,
                 )
             }
         }
@@ -637,5 +657,5 @@ private fun ProfileActionCard(
 private data class ProfileAction(
     val title: String,
     val icon: ImageVector,
-    val onClick: () -> Unit
+    val onClick: () -> Unit,
 )

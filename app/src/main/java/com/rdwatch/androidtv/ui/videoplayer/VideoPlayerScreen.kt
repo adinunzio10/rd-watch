@@ -11,14 +11,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.media3.common.util.UnstableApi
-import com.rdwatch.androidtv.player.TvPlayerView
 import com.rdwatch.androidtv.player.ExoPlayerManager
+import com.rdwatch.androidtv.player.TvPlayerView
 import com.rdwatch.androidtv.player.subtitle.SubtitleManager
-import com.rdwatch.androidtv.ui.viewmodel.PlaybackViewModel
 import com.rdwatch.androidtv.presentation.viewmodel.BaseViewModel
-import com.rdwatch.androidtv.ui.common.UiState
+import com.rdwatch.androidtv.ui.viewmodel.PlaybackViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.StateFlow
 import javax.inject.Inject
 
 @UnstableApi
@@ -29,18 +27,18 @@ fun VideoPlayerScreen(
     onBackPressed: () -> Unit,
     modifier: Modifier = Modifier,
     playbackViewModel: PlaybackViewModel = hiltViewModel(),
-    videoPlayerViewModel: VideoPlayerViewModel = hiltViewModel()
+    videoPlayerViewModel: VideoPlayerViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
     val uiState by videoPlayerViewModel.uiState.collectAsState()
     val playbackUiState by playbackViewModel.uiState.collectAsState()
     val playerState by playbackViewModel.playerState.collectAsState()
-    
+
     // Initialize the video when the screen loads
     LaunchedEffect(videoUrl, title) {
         videoPlayerViewModel.initializeVideo(videoUrl, title)
     }
-    
+
     // Handle back navigation with confirmation if video is playing
     BackHandler(enabled = true) {
         if (playerState.isPlaying) {
@@ -49,26 +47,26 @@ fun VideoPlayerScreen(
             onBackPressed()
         }
     }
-    
+
     Box(modifier = modifier.fillMaxSize()) {
         when {
             uiState.isLoading -> {
                 LoadingScreen(
                     title = title,
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier.fillMaxSize(),
                 )
             }
-            
+
             uiState.hasError -> {
                 ErrorScreen(
                     title = title,
                     error = uiState.errorMessage ?: "Unknown error occurred",
                     onRetry = { videoPlayerViewModel.retry(videoUrl, title) },
                     onBack = onBackPressed,
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier.fillMaxSize(),
                 )
             }
-            
+
             uiState.hasVideo -> {
                 uiState.exoPlayerManager?.let { exoPlayerManager ->
                     uiState.subtitleManager?.let { subtitleManager ->
@@ -78,13 +76,13 @@ fun VideoPlayerScreen(
                             onMenuToggle = {
                                 videoPlayerViewModel.togglePlayerMenu()
                             },
-                            modifier = Modifier.fillMaxSize()
+                            modifier = Modifier.fillMaxSize(),
                         )
                     }
                 }
             }
         }
-        
+
         // Exit confirmation dialog
         if (uiState.showExitConfirmation) {
             ExitConfirmationDialog(
@@ -94,17 +92,17 @@ fun VideoPlayerScreen(
                 },
                 onDismiss = {
                     videoPlayerViewModel.dismissExitConfirmation()
-                }
+                },
             )
         }
-        
+
         // Resume dialog
         if (playbackUiState.showResumeDialog && playbackUiState.resumePosition != null) {
             ResumeDialog(
                 resumePosition = playbackUiState.formattedResumePosition,
                 onResume = playbackViewModel::resumeFromDialog,
                 onRestart = playbackViewModel::restartFromBeginning,
-                onDismiss = playbackViewModel::dismissResumeDialog
+                onDismiss = playbackViewModel::dismissResumeDialog,
             )
         }
     }
@@ -113,25 +111,25 @@ fun VideoPlayerScreen(
 @Composable
 private fun LoadingScreen(
     title: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        verticalArrangement = Arrangement.Center,
     ) {
         CircularProgressIndicator(
             modifier = Modifier.size(64.dp),
-            color = MaterialTheme.colorScheme.primary
+            color = MaterialTheme.colorScheme.primary,
         )
-        
+
         Spacer(modifier = Modifier.height(16.dp))
-        
+
         Text(
             text = "Loading $title...",
             style = MaterialTheme.typography.titleMedium,
             textAlign = TextAlign.Center,
-            color = MaterialTheme.colorScheme.onSurface
+            color = MaterialTheme.colorScheme.onSurface,
         )
     }
 }
@@ -142,42 +140,42 @@ private fun ErrorScreen(
     error: String,
     onRetry: () -> Unit,
     onBack: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Column(
         modifier = modifier.padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        verticalArrangement = Arrangement.Center,
     ) {
         Text(
             text = "Error Playing $title",
             style = MaterialTheme.typography.headlineMedium,
             textAlign = TextAlign.Center,
-            color = MaterialTheme.colorScheme.error
+            color = MaterialTheme.colorScheme.error,
         )
-        
+
         Spacer(modifier = Modifier.height(16.dp))
-        
+
         Text(
             text = error,
             style = MaterialTheme.typography.bodyLarge,
             textAlign = TextAlign.Center,
-            color = MaterialTheme.colorScheme.onSurface
+            color = MaterialTheme.colorScheme.onSurface,
         )
-        
+
         Spacer(modifier = Modifier.height(32.dp))
-        
+
         Row(
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             OutlinedButton(
-                onClick = onBack
+                onClick = onBack,
             ) {
                 Text("Go Back")
             }
-            
+
             Button(
-                onClick = onRetry
+                onClick = onRetry,
             ) {
                 Text("Retry")
             }
@@ -188,7 +186,7 @@ private fun ErrorScreen(
 @Composable
 private fun ExitConfirmationDialog(
     onConfirm: () -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -207,7 +205,7 @@ private fun ExitConfirmationDialog(
             TextButton(onClick = onDismiss) {
                 Text("Continue Watching")
             }
-        }
+        },
     )
 }
 
@@ -216,7 +214,7 @@ private fun ResumeDialog(
     resumePosition: String,
     onResume: () -> Unit,
     onRestart: () -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -235,87 +233,94 @@ private fun ResumeDialog(
             TextButton(onClick = onRestart) {
                 Text("Start Over")
             }
-        }
+        },
     )
 }
 
 @HiltViewModel
-class VideoPlayerViewModel @Inject constructor(
-    private val exoPlayerManager: ExoPlayerManager,
-    private val subtitleManager: SubtitleManager
-) : BaseViewModel<VideoPlayerUiState>() {
-    
-    override fun createInitialState(): VideoPlayerUiState {
-        return VideoPlayerUiState()
-    }
-    
-    fun initializeVideo(videoUrl: String, title: String) {
-        updateState { copy(isLoading = true, errorMessage = null, title = title) }
-        
-        launchSafely(
-            onError = { exception ->
-                updateState { 
-                    copy(
-                        isLoading = false,
-                        hasError = true,
-                        errorMessage = "Failed to load video: ${exception.message}"
-                    )
-                }
-            }
+class VideoPlayerViewModel
+    @Inject
+    constructor(
+        private val exoPlayerManager: ExoPlayerManager,
+        private val subtitleManager: SubtitleManager,
+    ) : BaseViewModel<VideoPlayerUiState>() {
+        override fun createInitialState(): VideoPlayerUiState {
+            return VideoPlayerUiState()
+        }
+
+        fun initializeVideo(
+            videoUrl: String,
+            title: String,
         ) {
-            try {
-                // Initialize ExoPlayer with the video URL
-                exoPlayerManager.prepareMedia(videoUrl, title)
-                
-                updateState { 
-                    copy(
-                        isLoading = false,
-                        hasVideo = true,
-                        hasError = false,
-                        exoPlayerManager = exoPlayerManager,
-                        subtitleManager = subtitleManager,
-                        videoUrl = videoUrl,
-                        title = title
-                    )
-                }
-            } catch (e: Exception) {
-                updateState { 
-                    copy(
-                        isLoading = false,
-                        hasError = true,
-                        errorMessage = "Failed to initialize video player: ${e.message}"
-                    )
+            updateState { copy(isLoading = true, errorMessage = null, title = title) }
+
+            launchSafely(
+                onError = { exception ->
+                    updateState {
+                        copy(
+                            isLoading = false,
+                            hasError = true,
+                            errorMessage = "Failed to load video: ${exception.message}",
+                        )
+                    }
+                },
+            ) {
+                try {
+                    // Initialize ExoPlayer with the video URL
+                    exoPlayerManager.prepareMedia(videoUrl, title)
+
+                    updateState {
+                        copy(
+                            isLoading = false,
+                            hasVideo = true,
+                            hasError = false,
+                            exoPlayerManager = exoPlayerManager,
+                            subtitleManager = subtitleManager,
+                            videoUrl = videoUrl,
+                            title = title,
+                        )
+                    }
+                } catch (e: Exception) {
+                    updateState {
+                        copy(
+                            isLoading = false,
+                            hasError = true,
+                            errorMessage = "Failed to initialize video player: ${e.message}",
+                        )
+                    }
                 }
             }
         }
-    }
-    
-    fun retry(videoUrl: String, title: String) {
-        initializeVideo(videoUrl, title)
-    }
-    
-    fun showExitConfirmation() {
-        updateState { copy(showExitConfirmation = true) }
-    }
-    
-    fun dismissExitConfirmation() {
-        updateState { copy(showExitConfirmation = false) }
-    }
-    
-    fun togglePlayerMenu() {
-        updateState { copy(showPlayerMenu = !showPlayerMenu) }
-    }
-    
-    override fun handleError(exception: Throwable) {
-        updateState { 
-            copy(
-                isLoading = false,
-                hasError = true,
-                errorMessage = "An error occurred: ${exception.message}"
-            )
+
+        fun retry(
+            videoUrl: String,
+            title: String,
+        ) {
+            initializeVideo(videoUrl, title)
+        }
+
+        fun showExitConfirmation() {
+            updateState { copy(showExitConfirmation = true) }
+        }
+
+        fun dismissExitConfirmation() {
+            updateState { copy(showExitConfirmation = false) }
+        }
+
+        fun togglePlayerMenu() {
+            updateState { copy(showPlayerMenu = !showPlayerMenu) }
+        }
+
+        override fun handleError(exception: Throwable) {
+            updateState {
+                copy(
+                    isLoading = false,
+                    hasError = true,
+                    errorMessage = "An error occurred: ${exception.message}",
+                )
+            }
         }
     }
-}
 
 data class VideoPlayerUiState(
     val isLoading: Boolean = false,
@@ -327,5 +332,5 @@ data class VideoPlayerUiState(
     val showExitConfirmation: Boolean = false,
     val showPlayerMenu: Boolean = false,
     val exoPlayerManager: ExoPlayerManager? = null,
-    val subtitleManager: SubtitleManager? = null
+    val subtitleManager: SubtitleManager? = null,
 )

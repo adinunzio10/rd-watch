@@ -22,7 +22,6 @@ import androidx.compose.ui.unit.sp
 import com.rdwatch.androidtv.ui.filebrowser.models.*
 import com.rdwatch.androidtv.ui.focus.TVFocusIndicator
 import com.rdwatch.androidtv.ui.focus.tvFocusable
-import java.text.SimpleDateFormat
 import java.util.*
 
 /**
@@ -37,21 +36,22 @@ fun TileViewItem(
     onSelect: (FileItem) -> Unit,
     onLongPress: (FileItem) -> Unit,
     onClick: (FileItem) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     var isFocused by remember { mutableStateOf(false) }
-    
+
     val cardElevation by animateDpAsState(
-        targetValue = when {
-            isSelected -> 12.dp
-            isFocused -> 8.dp
-            else -> 4.dp
-        },
-        animationSpec = tween(200)
+        targetValue =
+            when {
+                isSelected -> 12.dp
+                isFocused -> 8.dp
+                else -> 4.dp
+            },
+        animationSpec = tween(200),
     )
-    
+
     // Remove scale animation for now - will use elevation only
-    
+
     TVFocusIndicator(isFocused = isFocused) {
         Card(
             onClick = {
@@ -61,125 +61,135 @@ fun TileViewItem(
                     onClick(item)
                 }
             },
-            modifier = modifier
-                .fillMaxWidth()
-                .aspectRatio(1.2f) // Slightly wider than tall
-                .tvFocusable(
-                    onFocusChanged = { isFocused = it.isFocused }
+            modifier =
+                modifier
+                    .fillMaxWidth()
+                    .aspectRatio(1.2f) // Slightly wider than tall
+                    .tvFocusable(
+                        onFocusChanged = { isFocused = it.isFocused },
+                    ),
+            colors =
+                CardDefaults.cardColors(
+                    containerColor =
+                        when {
+                            isSelected -> MaterialTheme.colorScheme.primaryContainer
+                            isFocused -> MaterialTheme.colorScheme.surfaceVariant
+                            else -> MaterialTheme.colorScheme.surface
+                        },
                 ),
-            colors = CardDefaults.cardColors(
-                containerColor = when {
-                    isSelected -> MaterialTheme.colorScheme.primaryContainer
-                    isFocused -> MaterialTheme.colorScheme.surfaceVariant
-                    else -> MaterialTheme.colorScheme.surface
-                }
-            ),
-            elevation = CardDefaults.cardElevation(
-                defaultElevation = cardElevation
-            )
+            elevation =
+                CardDefaults.cardElevation(
+                    defaultElevation = cardElevation,
+                ),
         ) {
             Box(
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier.fillMaxSize(),
             ) {
                 Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(12.dp),
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            .padding(12.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.SpaceBetween
+                    verticalArrangement = Arrangement.SpaceBetween,
                 ) {
                     // Icon and status area
                     Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxWidth(),
-                        contentAlignment = Alignment.Center
+                        modifier =
+                            Modifier
+                                .weight(1f)
+                                .fillMaxWidth(),
+                        contentAlignment = Alignment.Center,
                     ) {
                         // Large file type icon
                         Icon(
                             imageVector = getFileTypeIcon(item),
                             contentDescription = null,
                             modifier = Modifier.size(64.dp),
-                            tint = getFileTypeIconTint(item, isSelected, isFocused)
+                            tint = getFileTypeIconTint(item, isSelected, isFocused),
                         )
-                        
+
                         // Status overlay (for downloading, error, etc.)
                         when (item) {
                             is FileItem.File -> {
                                 if (item.status != FileStatus.READY) {
                                     Box(
-                                        modifier = Modifier
-                                            .align(Alignment.BottomEnd)
-                                            .clip(RoundedCornerShape(12.dp))
-                                            .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.9f))
-                                            .padding(4.dp)
+                                        modifier =
+                                            Modifier
+                                                .align(Alignment.BottomEnd)
+                                                .clip(RoundedCornerShape(12.dp))
+                                                .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.9f))
+                                                .padding(4.dp),
                                     ) {
                                         FileStatusIndicator(
                                             status = item.status,
                                             progress = item.progress,
-                                            isSelected = isSelected
+                                            isSelected = isSelected,
                                         )
                                     }
                                 }
                             }
                             is FileItem.Torrent -> {
                                 Box(
-                                    modifier = Modifier
-                                        .align(Alignment.BottomEnd)
-                                        .clip(RoundedCornerShape(12.dp))
-                                        .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.9f))
-                                        .padding(4.dp)
+                                    modifier =
+                                        Modifier
+                                            .align(Alignment.BottomEnd)
+                                            .clip(RoundedCornerShape(12.dp))
+                                            .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.9f))
+                                            .padding(4.dp),
                                 ) {
                                     TorrentStatusIndicator(
                                         status = item.status,
                                         progress = item.progress,
-                                        isSelected = isSelected
+                                        isSelected = isSelected,
                                     )
                                 }
                             }
                             else -> {}
                         }
                     }
-                    
+
                     // File details
                     Column(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
                     ) {
                         // File name
                         Text(
                             text = item.name,
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = if (isFocused) FontWeight.SemiBold else FontWeight.Medium,
-                            color = if (isSelected) {
-                                MaterialTheme.colorScheme.onPrimaryContainer
-                            } else {
-                                MaterialTheme.colorScheme.onSurface
-                            },
+                            color =
+                                if (isSelected) {
+                                    MaterialTheme.colorScheme.onPrimaryContainer
+                                } else {
+                                    MaterialTheme.colorScheme.onSurface
+                                },
                             maxLines = 2,
                             overflow = TextOverflow.Ellipsis,
-                            textAlign = TextAlign.Center
+                            textAlign = TextAlign.Center,
                         )
-                        
+
                         // Size and additional info
                         Row(
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalAlignment = Alignment.CenterVertically
+                            verticalAlignment = Alignment.CenterVertically,
                         ) {
                             if (item.size > 0) {
                                 Text(
                                     text = formatFileSize(item.size),
                                     style = MaterialTheme.typography.bodySmall,
                                     fontSize = 11.sp,
-                                    color = if (isSelected) {
-                                        MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
-                                    } else {
-                                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-                                    }
+                                    color =
+                                        if (isSelected) {
+                                            MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                                        } else {
+                                            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                                        },
                                 )
                             }
-                            
+
                             // Additional info based on type
                             when (item) {
                                 is FileItem.Folder -> {
@@ -188,11 +198,12 @@ fun TileViewItem(
                                             text = "${item.itemCount} items",
                                             style = MaterialTheme.typography.bodySmall,
                                             fontSize = 11.sp,
-                                            color = if (isSelected) {
-                                                MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
-                                            } else {
-                                                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-                                            }
+                                            color =
+                                                if (isSelected) {
+                                                    MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                                                } else {
+                                                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                                                },
                                         )
                                     }
                                 }
@@ -202,7 +213,7 @@ fun TileViewItem(
                                             imageVector = Icons.Default.PlayCircle,
                                             contentDescription = "Playable",
                                             modifier = Modifier.size(16.dp),
-                                            tint = MaterialTheme.colorScheme.primary
+                                            tint = MaterialTheme.colorScheme.primary,
                                         )
                                     }
                                 }
@@ -211,29 +222,32 @@ fun TileViewItem(
                         }
                     }
                 }
-                
+
                 // Selection overlay
                 if (isMultiSelectMode) {
                     Surface(
                         shape = RoundedCornerShape(12.dp),
-                        color = if (isSelected) {
-                            MaterialTheme.colorScheme.primary
-                        } else {
-                            MaterialTheme.colorScheme.surface.copy(alpha = 0.9f)
-                        },
+                        color =
+                            if (isSelected) {
+                                MaterialTheme.colorScheme.primary
+                            } else {
+                                MaterialTheme.colorScheme.surface.copy(alpha = 0.9f)
+                            },
                         tonalElevation = 4.dp,
-                        modifier = Modifier
-                            .align(Alignment.TopStart)
-                            .padding(8.dp)
+                        modifier =
+                            Modifier
+                                .align(Alignment.TopStart)
+                                .padding(8.dp),
                     ) {
                         Checkbox(
                             checked = isSelected,
                             onCheckedChange = { onSelect(item) },
                             modifier = Modifier.size(32.dp),
-                            colors = CheckboxDefaults.colors(
-                                checkedColor = MaterialTheme.colorScheme.primary,
-                                uncheckedColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                            )
+                            colors =
+                                CheckboxDefaults.colors(
+                                    checkedColor = MaterialTheme.colorScheme.primary,
+                                    uncheckedColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                                ),
                         )
                     }
                 }
@@ -266,16 +280,17 @@ private fun getFileTypeIcon(item: FileItem): androidx.compose.ui.graphics.vector
 private fun getFileTypeIconTint(
     item: FileItem,
     isSelected: Boolean,
-    isFocused: Boolean
+    isFocused: Boolean,
 ): androidx.compose.ui.graphics.Color {
-    val baseColor = if (isSelected) {
-        MaterialTheme.colorScheme.onPrimaryContainer
-    } else if (isFocused) {
-        MaterialTheme.colorScheme.primary
-    } else {
-        MaterialTheme.colorScheme.onSurface
-    }
-    
+    val baseColor =
+        if (isSelected) {
+            MaterialTheme.colorScheme.onPrimaryContainer
+        } else if (isFocused) {
+            MaterialTheme.colorScheme.primary
+        } else {
+            MaterialTheme.colorScheme.onSurface
+        }
+
     return when (item) {
         is FileItem.Folder -> baseColor
         is FileItem.Torrent -> baseColor
@@ -294,38 +309,39 @@ private fun getFileTypeIconTint(
 private fun FileStatusIndicator(
     status: FileStatus,
     progress: Float?,
-    isSelected: Boolean
+    isSelected: Boolean,
 ) {
-    val color = if (isSelected) {
-        MaterialTheme.colorScheme.onPrimaryContainer
-    } else {
-        MaterialTheme.colorScheme.onSurface
-    }
-    
+    val color =
+        if (isSelected) {
+            MaterialTheme.colorScheme.onPrimaryContainer
+        } else {
+            MaterialTheme.colorScheme.onSurface
+        }
+
     when (status) {
         FileStatus.DOWNLOADING -> {
             Row(
                 horizontalArrangement = Arrangement.spacedBy(2.dp),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 if (progress != null) {
                     CircularProgressIndicator(
                         progress = progress,
                         modifier = Modifier.size(20.dp),
                         color = color,
-                        strokeWidth = 2.dp
+                        strokeWidth = 2.dp,
                     )
                     Text(
                         text = "${(progress * 100).toInt()}%",
                         style = MaterialTheme.typography.bodySmall,
                         fontSize = 10.sp,
-                        color = color.copy(alpha = 0.7f)
+                        color = color.copy(alpha = 0.7f),
                     )
                 } else {
                     CircularProgressIndicator(
                         modifier = Modifier.size(20.dp),
                         color = color,
-                        strokeWidth = 2.dp
+                        strokeWidth = 2.dp,
                     )
                 }
             }
@@ -335,7 +351,7 @@ private fun FileStatusIndicator(
                 imageVector = Icons.Default.Error,
                 contentDescription = "Error",
                 modifier = Modifier.size(20.dp),
-                tint = MaterialTheme.colorScheme.error
+                tint = MaterialTheme.colorScheme.error,
             )
         }
         FileStatus.UNAVAILABLE -> {
@@ -343,7 +359,7 @@ private fun FileStatusIndicator(
                 imageVector = Icons.Default.CloudOff,
                 contentDescription = "Unavailable",
                 modifier = Modifier.size(20.dp),
-                tint = color.copy(alpha = 0.5f)
+                tint = color.copy(alpha = 0.5f),
             )
         }
         FileStatus.READY -> {
@@ -356,17 +372,18 @@ private fun FileStatusIndicator(
 private fun TorrentStatusIndicator(
     status: TorrentStatus,
     progress: Float,
-    isSelected: Boolean
+    isSelected: Boolean,
 ) {
-    val color = if (isSelected) {
-        MaterialTheme.colorScheme.onPrimaryContainer
-    } else {
-        MaterialTheme.colorScheme.onSurface
-    }
-    
+    val color =
+        if (isSelected) {
+            MaterialTheme.colorScheme.onPrimaryContainer
+        } else {
+            MaterialTheme.colorScheme.onSurface
+        }
+
     Row(
         horizontalArrangement = Arrangement.spacedBy(2.dp),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         when (status) {
             TorrentStatus.DOWNLOADING -> {
@@ -374,13 +391,13 @@ private fun TorrentStatusIndicator(
                     progress = progress,
                     modifier = Modifier.size(20.dp),
                     color = color,
-                    strokeWidth = 2.dp
+                    strokeWidth = 2.dp,
                 )
                 Text(
                     text = "${(progress * 100).toInt()}%",
                     style = MaterialTheme.typography.bodySmall,
                     fontSize = 10.sp,
-                    color = color.copy(alpha = 0.7f)
+                    color = color.copy(alpha = 0.7f),
                 )
             }
             TorrentStatus.DOWNLOADED -> {
@@ -388,7 +405,7 @@ private fun TorrentStatusIndicator(
                     imageVector = Icons.Default.CheckCircle,
                     contentDescription = "Downloaded",
                     modifier = Modifier.size(20.dp),
-                    tint = MaterialTheme.colorScheme.primary
+                    tint = MaterialTheme.colorScheme.primary,
                 )
             }
             TorrentStatus.ERROR, TorrentStatus.DEAD -> {
@@ -396,7 +413,7 @@ private fun TorrentStatusIndicator(
                     imageVector = Icons.Default.Error,
                     contentDescription = "Error",
                     modifier = Modifier.size(20.dp),
-                    tint = MaterialTheme.colorScheme.error
+                    tint = MaterialTheme.colorScheme.error,
                 )
             }
             else -> {
@@ -404,7 +421,7 @@ private fun TorrentStatusIndicator(
                     text = status.displayName,
                     style = MaterialTheme.typography.bodySmall,
                     fontSize = 10.sp,
-                    color = color.copy(alpha = 0.7f)
+                    color = color.copy(alpha = 0.7f),
                 )
             }
         }
@@ -415,12 +432,12 @@ private fun formatFileSize(bytes: Long): String {
     val units = arrayOf("B", "KB", "MB", "GB", "TB")
     var size = bytes.toDouble()
     var unitIndex = 0
-    
+
     while (size >= 1024 && unitIndex < units.size - 1) {
         size /= 1024
         unitIndex++
     }
-    
+
     return if (size >= 100) {
         "${size.toInt()} ${units[unitIndex]}"
     } else {

@@ -14,5 +14,5 @@ data class OAuth2DeviceCodeResponse(
     @Json(name = "expires_in")
     val expiresIn: Int,
     @Json(name = "interval")
-    val interval: Int
+    val interval: Int,
 )

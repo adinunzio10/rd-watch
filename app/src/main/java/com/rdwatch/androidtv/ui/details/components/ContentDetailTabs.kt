@@ -23,30 +23,32 @@ fun ContentDetailTabs(
     contentType: ContentType,
     onTabSelected: (Int) -> Unit,
     modifier: Modifier = Modifier,
-    firstTabFocusRequester: FocusRequester? = null
+    firstTabFocusRequester: FocusRequester? = null,
 ) {
     val tabs = getTabsForContentType(contentType)
-    
+
     Row(
-        modifier = modifier
-            .selectableGroup()
-            .padding(vertical = 16.dp),
+        modifier =
+            modifier
+                .selectableGroup()
+                .padding(vertical = 16.dp),
         horizontalArrangement = Arrangement.spacedBy(24.dp),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         tabs.forEachIndexed { index, tab ->
             ContentDetailTabItem(
                 text = tab.title,
                 selected = selectedTabIndex == index,
                 onClick = { onTabSelected(index) },
-                modifier = Modifier
-                    .then(
-                        if (index == 0 && firstTabFocusRequester != null) {
-                            Modifier.focusRequester(firstTabFocusRequester)
-                        } else {
-                            Modifier
-                        }
-                    )
+                modifier =
+                    Modifier
+                        .then(
+                            if (index == 0 && firstTabFocusRequester != null) {
+                                Modifier.focusRequester(firstTabFocusRequester)
+                            } else {
+                                Modifier
+                            },
+                        ),
             )
         }
     }
@@ -60,33 +62,36 @@ fun ContentDetailTabItem(
     text: String,
     selected: Boolean,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Surface(
-        modifier = modifier
-            .tvFocusable(
-                onFocusChanged = { /* Focus handled by Surface styling */ }
-            ),
+        modifier =
+            modifier
+                .tvFocusable(
+                    onFocusChanged = { /* Focus handled by Surface styling */ },
+                ),
         onClick = onClick,
-        color = if (selected) {
-            MaterialTheme.colorScheme.primary
-        } else {
-            Color.Transparent
-        },
-        contentColor = if (selected) {
-            MaterialTheme.colorScheme.onPrimary
-        } else {
-            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-        },
-        shape = MaterialTheme.shapes.large
+        color =
+            if (selected) {
+                MaterialTheme.colorScheme.primary
+            } else {
+                Color.Transparent
+            },
+        contentColor =
+            if (selected) {
+                MaterialTheme.colorScheme.onPrimary
+            } else {
+                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+            },
+        shape = MaterialTheme.shapes.large,
     ) {
         Box(
             modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp),
-            contentAlignment = Alignment.Center
+            contentAlignment = Alignment.Center,
         ) {
             Text(
                 text = text,
-                style = MaterialTheme.typography.titleMedium
+                style = MaterialTheme.typography.titleMedium,
             )
         }
     }
@@ -97,7 +102,7 @@ fun ContentDetailTabItem(
  */
 data class ContentDetailTab(
     val title: String,
-    val key: String
+    val key: String,
 )
 
 /**
@@ -105,29 +110,35 @@ data class ContentDetailTab(
  */
 private fun getTabsForContentType(contentType: ContentType): List<ContentDetailTab> {
     return when (contentType) {
-        ContentType.MOVIE, ContentType.DOCUMENTARY -> listOf(
-            ContentDetailTab("Overview", "overview"),
-            ContentDetailTab("Details", "details"),
-            ContentDetailTab("Cast & Crew", "cast_crew")
-        )
-        ContentType.TV_SHOW, ContentType.TV_EPISODE -> listOf(
-            ContentDetailTab("Overview", "overview"),
-            ContentDetailTab("Details", "details"),
-            ContentDetailTab("Episodes", "episodes"),
-            ContentDetailTab("Cast & Crew", "cast_crew")
-        )
-        else -> listOf(
-            ContentDetailTab("Overview", "overview"),
-            ContentDetailTab("Details", "details"),
-            ContentDetailTab("Cast & Crew", "cast_crew")
-        )
+        ContentType.MOVIE, ContentType.DOCUMENTARY ->
+            listOf(
+                ContentDetailTab("Overview", "overview"),
+                ContentDetailTab("Details", "details"),
+                ContentDetailTab("Cast & Crew", "cast_crew"),
+            )
+        ContentType.TV_SHOW, ContentType.TV_EPISODE ->
+            listOf(
+                ContentDetailTab("Overview", "overview"),
+                ContentDetailTab("Details", "details"),
+                ContentDetailTab("Episodes", "episodes"),
+                ContentDetailTab("Cast & Crew", "cast_crew"),
+            )
+        else ->
+            listOf(
+                ContentDetailTab("Overview", "overview"),
+                ContentDetailTab("Details", "details"),
+                ContentDetailTab("Cast & Crew", "cast_crew"),
+            )
     }
 }
 
 /**
  * Get tab index by key
  */
-fun getTabIndexByKey(contentType: ContentType, key: String): Int {
+fun getTabIndexByKey(
+    contentType: ContentType,
+    key: String,
+): Int {
     val tabs = getTabsForContentType(contentType)
     return tabs.indexOfFirst { it.key == key }.takeIf { it >= 0 } ?: 0
 }
@@ -135,7 +146,10 @@ fun getTabIndexByKey(contentType: ContentType, key: String): Int {
 /**
  * Get tab key by index
  */
-fun getTabKeyByIndex(contentType: ContentType, index: Int): String {
+fun getTabKeyByIndex(
+    contentType: ContentType,
+    index: Int,
+): String {
     val tabs = getTabsForContentType(contentType)
     return tabs.getOrNull(index)?.key ?: "overview"
 }

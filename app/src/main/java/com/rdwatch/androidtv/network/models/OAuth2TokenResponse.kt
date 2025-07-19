@@ -14,5 +14,5 @@ data class OAuth2TokenResponse(
     @Json(name = "refresh_token")
     val refreshToken: String?,
     @Json(name = "scope")
-    val scope: String?
+    val scope: String?,
 )

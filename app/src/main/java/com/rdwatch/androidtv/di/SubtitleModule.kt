@@ -5,7 +5,6 @@ import com.rdwatch.androidtv.data.AppDatabase
 import com.rdwatch.androidtv.data.dao.SubtitleDao
 import com.rdwatch.androidtv.di.qualifiers.CachingClient
 import com.rdwatch.androidtv.di.qualifiers.PublicClient
-import com.rdwatch.androidtv.player.subtitle.SubtitleApiOrchestrator
 import com.rdwatch.androidtv.player.subtitle.SubtitleRateLimiter
 import com.rdwatch.androidtv.player.subtitle.api.SubtitleApiClient
 import com.rdwatch.androidtv.player.subtitle.api.SubtitleApiProvider
@@ -28,21 +27,20 @@ import javax.inject.Singleton
 
 /**
  * Dependency injection module for the external subtitle integration system.
- * 
+ *
  * Provides all necessary components for:
  * - Multiple subtitle API clients
  * - Caching and rate limiting
  * - Result ranking and coordination
  * - Repository pattern implementation
- * 
+ *
  * Integrates with existing app architecture (Hilt, Room, OkHttp).
  */
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class SubtitleModule {
-    
     // ============ API Client Bindings ============
-    
+
     /**
      * Bind all subtitle API clients into a set for orchestration.
      * Each provider is automatically included in the coordination system.
@@ -50,67 +48,66 @@ abstract class SubtitleModule {
     @Binds
     @IntoSet
     abstract fun bindSubdlApiClient(client: SubdlApiClient): SubtitleApiClient
-    
+
     @Binds
     @IntoSet
     abstract fun bindSubDbApiClient(client: SubDbApiClient): SubtitleApiClient
-    
+
     @Binds
     @IntoSet
     abstract fun bindPodnapisiApiClient(client: PodnapisiApiClient): SubtitleApiClient
-    
+
     @Binds
     @IntoSet
     abstract fun bindAddic7edApiClient(client: Addic7edApiClient): SubtitleApiClient
-    
+
     @Binds
     @IntoSet
     abstract fun bindLocalFilesApiClient(client: LocalFilesApiClient): SubtitleApiClient
-    
+
     // ============ Repository Binding ============
     // Note: Repository will be implemented by other agents
-    
+
     companion object {
-        
         // ============ Database Components ============
-        
+
         @Provides
         @Singleton
         fun provideSubtitleDao(database: AppDatabase): SubtitleDao {
             return database.subtitleDao()
         }
-        
+
         // ============ Core Subtitle Components ============
-        
+
         @Provides
         @Singleton
         fun provideSubtitleCache(
             @ApplicationContext context: Context,
-            subtitleDao: SubtitleDao
+            subtitleDao: SubtitleDao,
         ): SubtitleCache {
             return SubtitleCache(context, subtitleDao)
         }
-        
+
         @Provides
         @Singleton
         fun provideSubtitleRateLimiter(): SubtitleRateLimiter {
             return SubtitleRateLimiter()
         }
-        
+
         @Provides
         @Singleton
         fun provideSubtitleResultRanker(): SubtitleResultRanker {
             return SubtitleResultRanker()
         }
-        
+
         // ============ Network Components for Subtitle APIs ============
-        
+
         @Provides
         @Singleton
         @SubtitleApi
         fun provideSubtitleRetrofit(
             @PublicClient okHttpClient: OkHttpClient,
-            moshi: Moshi
+            moshi: Moshi,
         ): Retrofit {
             return Retrofit.Builder()
                 .baseUrl("https://api.subdl.com/") // Default base URL, clients override as needed
@@ -118,13 +115,13 @@ abstract class SubtitleModule {
                 .addConverterFactory(MoshiConverterFactory.create(moshi))
                 .build()
         }
-        
+
         @Provides
         @Singleton
         @SubtitleApi
         fun provideSubtitleCachingRetrofit(
             @CachingClient okHttpClient: OkHttpClient,
-            moshi: Moshi
+            moshi: Moshi,
         ): Retrofit {
             return Retrofit.Builder()
                 .baseUrl("https://api.subdl.com/")
@@ -132,59 +129,67 @@ abstract class SubtitleModule {
                 .addConverterFactory(MoshiConverterFactory.create(moshi))
                 .build()
         }
-        
+
         // ============ API Service Providers ============
-        
+
         /**
          * Subdl API service for free subtitle downloads.
          */
         @Provides
         @Singleton
-        fun provideSubdlApiService(@SubtitleApi retrofit: Retrofit): SubdlApiService {
+        fun provideSubdlApiService(
+            @SubtitleApi retrofit: Retrofit,
+        ): SubdlApiService {
             return retrofit.newBuilder()
                 .baseUrl(SubtitleApiProvider.SUBDL.baseUrl + "/")
                 .build()
                 .create(SubdlApiService::class.java)
         }
-        
+
         /**
          * SubDB API service for hash-based subtitle matching.
          */
         @Provides
         @Singleton
-        fun provideSubDbApiService(@SubtitleApi retrofit: Retrofit): SubDbApiService {
+        fun provideSubDbApiService(
+            @SubtitleApi retrofit: Retrofit,
+        ): SubDbApiService {
             return retrofit.newBuilder()
                 .baseUrl(SubtitleApiProvider.SUBDB.baseUrl + "/")
                 .build()
                 .create(SubDbApiService::class.java)
         }
-        
+
         /**
          * Podnapisi API service for European subtitle content.
          */
         @Provides
         @Singleton
-        fun providePodnapisiApiService(@SubtitleApi retrofit: Retrofit): PodnapisiApiService {
+        fun providePodnapisiApiService(
+            @SubtitleApi retrofit: Retrofit,
+        ): PodnapisiApiService {
             return retrofit.newBuilder()
                 .baseUrl(SubtitleApiProvider.PODNAPISI.baseUrl + "/")
                 .build()
                 .create(PodnapisiApiService::class.java)
         }
-        
+
         /**
          * Addic7ed alternative API service for TV show subtitles.
          */
         @Provides
         @Singleton
-        fun provideAddic7edApiService(@SubtitleApi retrofit: Retrofit): Addic7edApiService {
+        fun provideAddic7edApiService(
+            @SubtitleApi retrofit: Retrofit,
+        ): Addic7edApiService {
             return retrofit.newBuilder()
                 .baseUrl(SubtitleApiProvider.ADDIC7ED_ALT.baseUrl + "/")
                 .build()
                 .create(Addic7edApiService::class.java)
         }
-        
+
         // ============ Configuration and Settings ============
-        
+
         /**
          * Provide subtitle search configuration.
          * This can be made configurable through user settings in the future.
@@ -199,14 +204,15 @@ abstract class SubtitleModule {
                 timeoutMs = 10000,
                 retryAttempts = 2,
                 cacheExpirationHours = 24,
-                preferredProviders = listOf(
-                    SubtitleApiProvider.SUBDB,    // Hash-based, most accurate
-                    SubtitleApiProvider.SUBDL,    // Good API coverage
-                    SubtitleApiProvider.PODNAPISI // European content
-                ),
+                preferredProviders =
+                    listOf(
+                        SubtitleApiProvider.SUBDB, // Hash-based, most accurate
+                        SubtitleApiProvider.SUBDL, // Good API coverage
+                        SubtitleApiProvider.PODNAPISI, // European content
+                    ),
                 excludedProviders = emptyList(),
                 autoDownloadBest = false,
-                hearingImpairedPreference = null
+                hearingImpairedPreference = null,
             )
         }
     }
@@ -233,7 +239,7 @@ data class SubtitleSearchConfig(
     val preferredProviders: List<SubtitleApiProvider>,
     val excludedProviders: List<SubtitleApiProvider>,
     val autoDownloadBest: Boolean,
-    val hearingImpairedPreference: Boolean?
+    val hearingImpairedPreference: Boolean?,
 )
 
 // ============ Placeholder API Service Interfaces ============
@@ -279,71 +285,104 @@ interface Addic7edApiService {
  * Will be implemented by specialized agents.
  */
 @Singleton
-class SubdlApiClient @Inject constructor() : SubtitleApiClient {
-    override fun getProvider() = SubtitleApiProvider.SUBDL
-    override fun isEnabled() = false // Disabled until implemented
-    override suspend fun searchSubtitles(request: com.rdwatch.androidtv.player.subtitle.models.SubtitleSearchRequest) = emptyList<com.rdwatch.androidtv.player.subtitle.models.SubtitleSearchResult>()
-    override suspend fun downloadSubtitle(result: com.rdwatch.androidtv.player.subtitle.models.SubtitleSearchResult) = ""
-    override suspend fun testConnection() = false
-}
+class SubdlApiClient
+    @Inject
+    constructor() : SubtitleApiClient {
+        override fun getProvider() = SubtitleApiProvider.SUBDL
+
+        override fun isEnabled() = false // Disabled until implemented
+
+        override suspend fun searchSubtitles(request: com.rdwatch.androidtv.player.subtitle.models.SubtitleSearchRequest) =
+            emptyList<com.rdwatch.androidtv.player.subtitle.models.SubtitleSearchResult>()
+
+        override suspend fun downloadSubtitle(result: com.rdwatch.androidtv.player.subtitle.models.SubtitleSearchResult) = ""
+
+        override suspend fun testConnection() = false
+    }
 
 /**
  * Placeholder implementation for SubDB API client.
  */
 @Singleton
-class SubDbApiClient @Inject constructor() : SubtitleApiClient {
-    override fun getProvider() = SubtitleApiProvider.SUBDB
-    override fun isEnabled() = false
-    override suspend fun searchSubtitles(request: com.rdwatch.androidtv.player.subtitle.models.SubtitleSearchRequest) = emptyList<com.rdwatch.androidtv.player.subtitle.models.SubtitleSearchResult>()
-    override suspend fun downloadSubtitle(result: com.rdwatch.androidtv.player.subtitle.models.SubtitleSearchResult) = ""
-    override suspend fun testConnection() = false
-}
+class SubDbApiClient
+    @Inject
+    constructor() : SubtitleApiClient {
+        override fun getProvider() = SubtitleApiProvider.SUBDB
+
+        override fun isEnabled() = false
+
+        override suspend fun searchSubtitles(request: com.rdwatch.androidtv.player.subtitle.models.SubtitleSearchRequest) =
+            emptyList<com.rdwatch.androidtv.player.subtitle.models.SubtitleSearchResult>()
+
+        override suspend fun downloadSubtitle(result: com.rdwatch.androidtv.player.subtitle.models.SubtitleSearchResult) = ""
+
+        override suspend fun testConnection() = false
+    }
 
 /**
  * Placeholder implementation for Podnapisi API client.
  */
 @Singleton
-class PodnapisiApiClient @Inject constructor() : SubtitleApiClient {
-    override fun getProvider() = SubtitleApiProvider.PODNAPISI
-    override fun isEnabled() = false
-    override suspend fun searchSubtitles(request: com.rdwatch.androidtv.player.subtitle.models.SubtitleSearchRequest) = emptyList<com.rdwatch.androidtv.player.subtitle.models.SubtitleSearchResult>()
-    override suspend fun downloadSubtitle(result: com.rdwatch.androidtv.player.subtitle.models.SubtitleSearchResult) = ""
-    override suspend fun testConnection() = false
-}
+class PodnapisiApiClient
+    @Inject
+    constructor() : SubtitleApiClient {
+        override fun getProvider() = SubtitleApiProvider.PODNAPISI
+
+        override fun isEnabled() = false
+
+        override suspend fun searchSubtitles(request: com.rdwatch.androidtv.player.subtitle.models.SubtitleSearchRequest) =
+            emptyList<com.rdwatch.androidtv.player.subtitle.models.SubtitleSearchResult>()
+
+        override suspend fun downloadSubtitle(result: com.rdwatch.androidtv.player.subtitle.models.SubtitleSearchResult) = ""
+
+        override suspend fun testConnection() = false
+    }
 
 /**
  * Placeholder implementation for Addic7ed API client.
  */
 @Singleton
-class Addic7edApiClient @Inject constructor() : SubtitleApiClient {
-    override fun getProvider() = SubtitleApiProvider.ADDIC7ED_ALT
-    override fun isEnabled() = false
-    override suspend fun searchSubtitles(request: com.rdwatch.androidtv.player.subtitle.models.SubtitleSearchRequest) = emptyList<com.rdwatch.androidtv.player.subtitle.models.SubtitleSearchResult>()
-    override suspend fun downloadSubtitle(result: com.rdwatch.androidtv.player.subtitle.models.SubtitleSearchResult) = ""
-    override suspend fun testConnection() = false
-}
+class Addic7edApiClient
+    @Inject
+    constructor() : SubtitleApiClient {
+        override fun getProvider() = SubtitleApiProvider.ADDIC7ED_ALT
+
+        override fun isEnabled() = false
+
+        override suspend fun searchSubtitles(request: com.rdwatch.androidtv.player.subtitle.models.SubtitleSearchRequest) =
+            emptyList<com.rdwatch.androidtv.player.subtitle.models.SubtitleSearchResult>()
+
+        override suspend fun downloadSubtitle(result: com.rdwatch.androidtv.player.subtitle.models.SubtitleSearchResult) = ""
+
+        override suspend fun testConnection() = false
+    }
 
 /**
  * Implementation for local subtitle files.
  * This is fully functional and handles manually added subtitle files.
  */
 @Singleton
-class LocalFilesApiClient @Inject constructor(
-    @ApplicationContext private val context: Context
-) : SubtitleApiClient {
-    override fun getProvider() = SubtitleApiProvider.LOCAL_FILES
-    override fun isEnabled() = true
-    
-    override suspend fun searchSubtitles(request: com.rdwatch.androidtv.player.subtitle.models.SubtitleSearchRequest): List<com.rdwatch.androidtv.player.subtitle.models.SubtitleSearchResult> {
-        // Scan for local subtitle files
-        // Implementation would search app's subtitle directory
-        return emptyList()
+class LocalFilesApiClient
+    @Inject
+    constructor(
+        @ApplicationContext private val context: Context,
+    ) : SubtitleApiClient {
+        override fun getProvider() = SubtitleApiProvider.LOCAL_FILES
+
+        override fun isEnabled() = true
+
+        override suspend fun searchSubtitles(
+            request: com.rdwatch.androidtv.player.subtitle.models.SubtitleSearchRequest,
+        ): List<com.rdwatch.androidtv.player.subtitle.models.SubtitleSearchResult> {
+            // Scan for local subtitle files
+            // Implementation would search app's subtitle directory
+            return emptyList()
+        }
+
+        override suspend fun downloadSubtitle(result: com.rdwatch.androidtv.player.subtitle.models.SubtitleSearchResult): String {
+            // For local files, this just returns the existing path
+            return result.downloadUrl
+        }
+
+        override suspend fun testConnection() = true
     }
-    
-    override suspend fun downloadSubtitle(result: com.rdwatch.androidtv.player.subtitle.models.SubtitleSearchResult): String {
-        // For local files, this just returns the existing path
-        return result.downloadUrl
-    }
-    
-    override suspend fun testConnection() = true
-}

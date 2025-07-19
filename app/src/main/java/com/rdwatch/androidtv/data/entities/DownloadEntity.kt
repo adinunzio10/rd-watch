@@ -16,16 +16,16 @@ import java.util.Date
         Index(value = ["mimeType"]),
         Index(value = ["streamable"]),
         Index(value = ["generated"]),
-        Index(value = ["contentId"])
+        Index(value = ["contentId"]),
     ],
     foreignKeys = [
         ForeignKey(
             entity = ContentEntity::class,
             parentColumns = ["id"],
             childColumns = ["contentId"],
-            onDelete = ForeignKey.SET_NULL
-        )
-    ]
+            onDelete = ForeignKey.SET_NULL,
+        ),
+    ],
 )
 data class DownloadEntity(
     @PrimaryKey
@@ -41,5 +41,5 @@ data class DownloadEntity(
     val generated: Date,
     val type: String? = null,
     val alternative: List<String>? = null,
-    val contentId: Long? = null // Foreign key to ContentEntity
+    val contentId: Long? = null, // Foreign key to ContentEntity
 )

@@ -8,5 +8,5 @@ data class OAuth2CredentialsResponse(
     @Json(name = "client_id")
     val clientId: String,
     @Json(name = "client_secret")
-    val clientSecret: String
+    val clientSecret: String,
 )

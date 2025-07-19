@@ -18,21 +18,21 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun Modifier.tvFocusable(
-    onFocusChanged: ((Boolean) -> Unit)? = null
-): Modifier = this
-    .focusable()
-    .onFocusChanged { focusState ->
-        onFocusChanged?.invoke(focusState.isFocused)
-    }
+fun Modifier.tvFocusable(onFocusChanged: ((Boolean) -> Unit)? = null): Modifier =
+    this
+        .focusable()
+        .onFocusChanged { focusState ->
+            onFocusChanged?.invoke(focusState.isFocused)
+        }
 
 @Composable
 fun Modifier.tvClickable(
     onClick: () -> Unit,
-    onFocusChanged: ((Boolean) -> Unit)? = null
-): Modifier = this
-    .tvFocusable(onFocusChanged)
-    .clip(RoundedCornerShape(8.dp))
+    onFocusChanged: ((Boolean) -> Unit)? = null,
+): Modifier =
+    this
+        .tvFocusable(onFocusChanged)
+        .clip(RoundedCornerShape(8.dp))
 
 @Composable
 fun rememberTvFocusRequester(): FocusRequester = remember { FocusRequester() }
@@ -43,7 +43,7 @@ fun rememberTVFocusRequester(): FocusRequester = remember { FocusRequester() }
 @Composable
 fun Modifier.tvFocusRequester(
     focusRequester: FocusRequester,
-    requestFocus: Boolean = false
+    requestFocus: Boolean = false,
 ): Modifier {
     if (requestFocus) {
         LaunchedEffect(focusRequester) {
@@ -57,40 +57,42 @@ fun Modifier.tvFocusRequester(
 fun Modifier.tvFocusBorder(
     isFocused: Boolean,
     focusedColor: Color = MaterialTheme.colorScheme.primary,
-    unfocusedColor: Color = Color.Transparent
-): Modifier = this.border(
-    width = if (isFocused) 3.dp else 0.dp,
-    color = if (isFocused) focusedColor else unfocusedColor,
-    shape = RoundedCornerShape(8.dp)
-)
+    unfocusedColor: Color = Color.Transparent,
+): Modifier =
+    this.border(
+        width = if (isFocused) 3.dp else 0.dp,
+        color = if (isFocused) focusedColor else unfocusedColor,
+        shape = RoundedCornerShape(8.dp),
+    )
 
 @Composable
 fun Modifier.tvFocusScale(
     isFocused: Boolean,
     focusedScale: Float = 1.1f,
-    unfocusedScale: Float = 1.0f
+    unfocusedScale: Float = 1.0f,
 ): Modifier = this.scale(if (isFocused) focusedScale else unfocusedScale)
 
 @Composable
-fun Modifier.tvCardPadding(
-    isFocused: Boolean = false
-): Modifier = this.padding(
-    horizontal = if (isFocused) 8.dp else 12.dp,
-    vertical = if (isFocused) 8.dp else 12.dp
-)
+fun Modifier.tvCardPadding(isFocused: Boolean = false): Modifier =
+    this.padding(
+        horizontal = if (isFocused) 8.dp else 12.dp,
+        vertical = if (isFocused) 8.dp else 12.dp,
+    )
 
 @Composable
-fun Modifier.tvSafeFocusable(): Modifier = this
-    .focusable()
-    .padding(4.dp)
-    .clip(RoundedCornerShape(4.dp))
+fun Modifier.tvSafeFocusable(): Modifier =
+    this
+        .focusable()
+        .padding(4.dp)
+        .clip(RoundedCornerShape(4.dp))
 
 @Composable
 fun Modifier.tvCardFocus(
     isFocused: Boolean,
-    onClick: (() -> Unit)? = null
-): Modifier = this
-    .tvFocusBorder(isFocused)
-    .tvFocusScale(isFocused)
-    .tvCardPadding(isFocused)
-    .tvSafeFocusable()
+    onClick: (() -> Unit)? = null,
+): Modifier =
+    this
+        .tvFocusBorder(isFocused)
+        .tvFocusScale(isFocused)
+        .tvCardPadding(isFocused)
+        .tvSafeFocusable()
