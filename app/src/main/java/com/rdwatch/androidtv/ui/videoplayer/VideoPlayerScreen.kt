@@ -52,6 +52,13 @@ fun VideoPlayerScreen(
         }
     }
 
+    // Debug UI State
+    android.util.Log.d("VideoPlayerScreen", "UI State Debug: hasVideo=${uiState.hasVideo}, isLoading=${uiState.isLoading}, hasError=${uiState.hasError}")
+    android.util.Log.d(
+        "VideoPlayerScreen",
+        "UI State Managers: exoPlayerManager=${uiState.exoPlayerManager != null}, subtitleManager=${uiState.subtitleManager != null}",
+    )
+
     Box(modifier = modifier.fillMaxSize()) {
         when {
             uiState.isLoading -> {
@@ -72,8 +79,11 @@ fun VideoPlayerScreen(
             }
 
             uiState.hasVideo -> {
+                android.util.Log.d("VideoPlayerScreen", "hasVideo condition met - checking managers")
                 uiState.exoPlayerManager?.let { exoPlayerManager ->
+                    android.util.Log.d("VideoPlayerScreen", "exoPlayerManager is not null - checking subtitleManager")
                     uiState.subtitleManager?.let { subtitleManager ->
+                        android.util.Log.d("VideoPlayerScreen", "subtitleManager is not null - creating TvPlayerView")
                         TvPlayerView(
                             exoPlayerManager = exoPlayerManager,
                             subtitleManager = subtitleManager,
@@ -82,8 +92,19 @@ fun VideoPlayerScreen(
                             },
                             modifier = Modifier.fillMaxSize(),
                         )
+                    } ?: run {
+                        android.util.Log.w("VideoPlayerScreen", "subtitleManager is NULL - TvPlayerView not created")
                     }
+                } ?: run {
+                    android.util.Log.w("VideoPlayerScreen", "exoPlayerManager is NULL - TvPlayerView not created")
                 }
+            }
+
+            else -> {
+                android.util.Log.w(
+                    "VideoPlayerScreen",
+                    "NO CONDITION MET - Gray screen shown! isLoading=${uiState.isLoading}, hasError=${uiState.hasError}, hasVideo=${uiState.hasVideo}",
+                )
             }
         }
 
