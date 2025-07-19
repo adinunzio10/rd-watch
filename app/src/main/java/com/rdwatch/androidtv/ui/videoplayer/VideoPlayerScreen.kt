@@ -56,7 +56,7 @@ fun VideoPlayerScreen(
     android.util.Log.d("VideoPlayerScreen", "UI State Debug: hasVideo=${uiState.hasVideo}, isLoading=${uiState.isLoading}, hasError=${uiState.hasError}")
     android.util.Log.d(
         "VideoPlayerScreen",
-        "UI State Managers: exoPlayerManager=${uiState.exoPlayerManager != null}, subtitleManager=${uiState.subtitleManager != null}",
+        "UI State Managers: exoPlayerManager=${uiState.exoPlayerManager != null} (hashCode: ${uiState.exoPlayerManager?.hashCode()}), subtitleManager=${uiState.subtitleManager != null} (hashCode: ${uiState.subtitleManager?.hashCode()})",
     )
 
     Box(modifier = modifier.fillMaxSize()) {
@@ -269,6 +269,12 @@ class VideoPlayerViewModel
         private val exoPlayerManager: ExoPlayerManager,
         private val subtitleManager: SubtitleManager,
     ) : BaseViewModel<VideoPlayerUiState>() {
+        init {
+            android.util.Log.d("VideoPlayerViewModel", "VideoPlayerViewModel created")
+            android.util.Log.d("VideoPlayerViewModel", "Injected exoPlayerManager: $exoPlayerManager (hashCode: ${exoPlayerManager.hashCode()})")
+            android.util.Log.d("VideoPlayerViewModel", "Injected subtitleManager: $subtitleManager (hashCode: ${subtitleManager.hashCode()})")
+        }
+
         override fun createInitialState(): VideoPlayerUiState {
             return VideoPlayerUiState()
         }
@@ -299,8 +305,8 @@ class VideoPlayerViewModel
                             isLoading = false,
                             hasVideo = true,
                             hasError = false,
-                            exoPlayerManager = exoPlayerManager,
-                            subtitleManager = subtitleManager,
+                            exoPlayerManager = this@VideoPlayerViewModel.exoPlayerManager,
+                            subtitleManager = this@VideoPlayerViewModel.subtitleManager,
                             videoUrl = videoUrl,
                             title = title,
                         )
@@ -320,6 +326,10 @@ class VideoPlayerViewModel
         fun connectToExistingPlayback(title: String) {
             android.util.Log.d("VideoPlayerViewModel", "connectToExistingPlayback called with title: $title")
 
+            // Log the injected manager instances
+            android.util.Log.d("VideoPlayerViewModel", "Injected exoPlayerManager: $exoPlayerManager (hashCode: ${exoPlayerManager.hashCode()})")
+            android.util.Log.d("VideoPlayerViewModel", "Injected subtitleManager: $subtitleManager (hashCode: ${subtitleManager.hashCode()})")
+
             // Since ExoPlayerManager is a singleton, this should be the same instance used by PlaybackViewModel
             // that already has media prepared and playing
             android.util.Log.d("VideoPlayerViewModel", "Using singleton ExoPlayerManager instance")
@@ -331,11 +341,17 @@ class VideoPlayerViewModel
                     hasVideo = false,
                     hasError = false,
                     errorMessage = null,
-                    exoPlayerManager = exoPlayerManager,
-                    subtitleManager = subtitleManager,
+                    exoPlayerManager = this@VideoPlayerViewModel.exoPlayerManager,
+                    subtitleManager = this@VideoPlayerViewModel.subtitleManager,
                     title = title,
                 )
             }
+
+            // Log the state after update
+            android.util.Log.d(
+                "VideoPlayerViewModel",
+                "State after initial update - exoPlayerManager: ${uiState.value.exoPlayerManager != null}, subtitleManager: ${uiState.value.subtitleManager != null}",
+            )
             android.util.Log.d("VideoPlayerViewModel", "Initial state set to loading, starting ExoPlayer state observation")
 
             // Start observing ExoPlayer state changes reactively
@@ -378,10 +394,14 @@ class VideoPlayerViewModel
                                 hasError = true,
                                 errorMessage = playerState.error,
                                 // IMPORTANT: Preserve the manager references even in error state!
-                                exoPlayerManager = exoPlayerManager,
-                                subtitleManager = subtitleManager,
+                                exoPlayerManager = this@VideoPlayerViewModel.exoPlayerManager,
+                                subtitleManager = this@VideoPlayerViewModel.subtitleManager,
                             )
                         }
+                        android.util.Log.d(
+                            "VideoPlayerViewModel",
+                            "State after error update - exoPlayerManager: ${uiState.value.exoPlayerManager != null}, subtitleManager: ${uiState.value.subtitleManager != null}",
+                        )
                         return@collect
                     }
 
@@ -402,10 +422,14 @@ class VideoPlayerViewModel
                             hasError = false,
                             errorMessage = null,
                             // IMPORTANT: Preserve the manager references!
-                            exoPlayerManager = exoPlayerManager,
-                            subtitleManager = subtitleManager,
+                            exoPlayerManager = this@VideoPlayerViewModel.exoPlayerManager,
+                            subtitleManager = this@VideoPlayerViewModel.subtitleManager,
                         )
                     }
+                    android.util.Log.d(
+                        "VideoPlayerViewModel",
+                        "State after video ready update - exoPlayerManager: ${uiState.value.exoPlayerManager != null}, subtitleManager: ${uiState.value.subtitleManager != null}",
+                    )
 
                     if (hasVideoContent) {
                         android.util.Log.d("VideoPlayerViewModel", "Video is ready - transitioning to video display")
@@ -434,10 +458,14 @@ class VideoPlayerViewModel
                             hasError = true,
                             errorMessage = "Video loading timed out. The video may be too large or the connection is slow. Please try again.",
                             // IMPORTANT: Preserve the manager references in timeout case!
-                            exoPlayerManager = exoPlayerManager,
-                            subtitleManager = subtitleManager,
+                            exoPlayerManager = this@VideoPlayerViewModel.exoPlayerManager,
+                            subtitleManager = this@VideoPlayerViewModel.subtitleManager,
                         )
                     }
+                    android.util.Log.d(
+                        "VideoPlayerViewModel",
+                        "State after timeout update - exoPlayerManager: ${uiState.value.exoPlayerManager != null}, subtitleManager: ${uiState.value.subtitleManager != null}",
+                    )
                 }
             }
         }
@@ -462,16 +490,21 @@ class VideoPlayerViewModel
         }
 
         override fun handleError(exception: Throwable) {
+            android.util.Log.e("VideoPlayerViewModel", "handleError called", exception)
             updateState {
                 copy(
                     isLoading = false,
                     hasError = true,
                     errorMessage = "An error occurred: ${exception.message}",
                     // IMPORTANT: Preserve the manager references in error handling!
-                    exoPlayerManager = exoPlayerManager,
-                    subtitleManager = subtitleManager,
+                    exoPlayerManager = this@VideoPlayerViewModel.exoPlayerManager,
+                    subtitleManager = this@VideoPlayerViewModel.subtitleManager,
                 )
             }
+            android.util.Log.d(
+                "VideoPlayerViewModel",
+                "State after handleError update - exoPlayerManager: ${uiState.value.exoPlayerManager != null}, subtitleManager: ${uiState.value.subtitleManager != null}",
+            )
         }
     }
 
