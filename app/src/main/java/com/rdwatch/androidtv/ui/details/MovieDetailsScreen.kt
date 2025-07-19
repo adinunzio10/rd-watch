@@ -401,12 +401,22 @@ fun MovieDetailsScreen(
         onSourceSelected = { source ->
             viewModel.onSourceSelected(source)
 
-            // Trigger movie playback with selected source
+            // Navigate to video player with selected source
             movie?.let { currentMovie ->
+                // Start the advanced source playback in the background
                 playbackViewModel.startMoviePlaybackWithSource(
                     movie = currentMovie,
                     source = source,
                 )
+
+                // Create a movie with the source URL for navigation
+                val movieWithSource =
+                    currentMovie.copy(
+                        videoUrl = source.metadata["originalUrl"] ?: "",
+                    )
+
+                // Navigate to video player screen
+                onPlayClick(movieWithSource)
             }
         },
         onRefresh = {
