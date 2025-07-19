@@ -12,64 +12,84 @@ from typing import List, Set
 
 class AndroidLogCleaner:
     def __init__(self):
-        # Patterns to remove (noise)
+        # Patterns to remove (noise) - be more selective
         self.noise_patterns = [
-            # HTTP request/response details
-            r'.*okhttp\.OkHttpClient.*',
-            r'.*content-type:.*',
+            # Very repetitive buffer pool stats
+            r'.*BufferPoolAccessor2\.0.*bufferpool2.*total buffers.*',
+            # Excessive MediaCodec internal details but keep key ones
+            r'.*ReflectedParamUpdater.*extent\(\) != 1 for single value type.*',
+            r'.*c2::u32 (raw\.sar\.|raw\.rotation\.|algo\.buffers\.).*',
+            r'.*c2::i32 raw\.rotation\.(flip|value) = \d+.*',
+            # HTTP headers but keep important ones
+            r'.*content-type: application/json.*',
             r'.*cache-control:.*',
-            r'.*x-memc.*',
             r'.*etag:.*',
             r'.*age:.*',
             r'.*vary:.*',
-            r'.*server:.*',
-            r'.*date:.*',
+            r'.*server: (nginx|cloudflare).*',
+            r'.*date: [A-Z][a-z]{2}, \d{2}.*',
             r'.*alt-svc:.*',
             r'.*via:.*',
-            r'.*x-amz-cf.*',
             r'.*x-cache:.*',
-            r'.*x-task-id:.*',
-            r'.*x-az:.*',
-            # Raw JSON responses (keep summary only)
+            # Specific JSON fields that add noise
             r'.*"adult":false.*',
             r'.*"gender":\d+.*',
-            r'.*"known_for_department".*',
             r'.*"popularity":\d+\.\d+.*',
             r'.*"profile_path".*',
-            r'.*"credit_id".*',
-            r'.*"order":\d+.*',
             r'.*"backdrop_path".*',
             r'.*"poster_path".*',
             r'.*"vote_average".*',
             r'.*"vote_count".*',
-            # Repetitive debug messages
-            r'.*DEBUG \[TVDetailsViewModel\]: State updated.*',
-            r'.*System\.out.*DEBUG \[TVDetailsViewModel\].*',
         ]
         
         # Patterns to keep (important)
         self.important_patterns = [
+            # Core app flow
+            r'.*MovieDetailsViewModel.*',
+            r'.*PlaybackViewModel.*',
+            r'.*ExoPlayer.*',
+            r'.*MediaCodec.*',
+            # TV show related
             r'.*SeasonSelector.*',
             r'.*TVDetailsViewModel.*(?:Season|Episode).*',
             r'.*TMDbTVRepository.*',
+            # Network and API
             r'.*NetworkBoundResource.*API call.*',
             r'.*API CALL:.*',
             r'.*API RESULT:.*',
             r'.*shouldFetch.*',
+            r'.*URL:.*',
+            r'.*Using URL.*',
+            # Playback and streaming
+            r'.*Source selected.*',
+            r'.*playback.*',
+            r'.*ExoPlayerImpl.*Init.*',
+            r'.*MediaSourceFactory.*',
+            r'.*CCodec.*allocate.*',
+            r'.*Created component.*',
+            # Errors and important events
             r'.*Error.*',
             r'.*WARNING.*',
+            r'.*WARN.*',
+            r'.*failed.*',
+            r'.*CORRUPTED.*',
+            r'.*BAD_INDEX.*',
             r'.*===.*===.*',  # Debug section headers
-            r'.*Mapped season from DB.*',
-            r'.*Loading season.*',
-            r'.*validation.*',
+            # State and UI updates
+            r'.*UI state.*',
+            r'.*Sources state.*',
+            r'.*DEBUG \[.*\]:.*',
         ]
         
         # Keywords that indicate important log lines
         self.important_keywords = [
-            'ERROR', 'WARNING', 'EXCEPTION', 'CRASH', 'FAIL',
+            'ERROR', 'WARNING', 'EXCEPTION', 'CRASH', 'FAIL', 'failed',
             'Season Selection', 'Episode Selection', 'Loading',
             'API CALL', 'API RESULT', 'shouldFetch', 'validation',
-            'SeasonSelector', 'episodes.size', 'episodeCount'
+            'SeasonSelector', 'episodes.size', 'episodeCount',
+            'ExoPlayer', 'playback', 'Source selected', 'MediaCodec',
+            'CCodec', 'allocate', 'Init', 'Created component',
+            'UI state', 'Sources state', 'MovieDetails', 'PlaybackViewModel'
         ]
 
     def is_noise(self, line: str) -> bool:
@@ -123,22 +143,29 @@ class AndroidLogCleaner:
             line = line.strip()
             if not line:
                 continue
-                
-            # Skip noise
+            
+            # Skip obvious noise first
             if self.is_noise(line):
                 continue
             
             # Simplify long JSON responses
-            line = self.simplify_json_response(line)
+            simplified_line = self.simplify_json_response(line)
             
             # Keep important lines
             if self.is_important(line):
-                cleaned_lines.append(line)
-            # Also keep lines that aren't clearly noise and aren't too long
-            elif not self.is_noise(line) and len(line) < 500:
-                # Check if it's a basic log line with app info
-                if 'com.rdwatch.androidtv' in line and any(word in line.lower() for word in ['debug', 'info', 'warn', 'error']):
-                    cleaned_lines.append(line)
+                cleaned_lines.append(simplified_line)
+                continue
+            
+            # Keep Android TV app logs that aren't too verbose
+            if 'com.rdwatch.androidtv' in line:
+                # Keep most logs under 800 chars unless they're clearly verbose internals
+                if len(line) < 800:
+                    # Skip extremely verbose MediaCodec config dumps
+                    if not ('Dict {' in line and 'c2::' in line and len(line) > 400):
+                        cleaned_lines.append(simplified_line)
+                elif any(keyword in line.lower() for keyword in ['error', 'warning', 'fail', 'exception']):
+                    # Always keep errors even if long
+                    cleaned_lines.append(simplified_line)
         
         return '\n'.join(cleaned_lines)
 
