@@ -37,7 +37,9 @@ fun VideoPlayerScreen(
     // Note: Video should already be prepared by PlaybackViewModel before navigation
     // We don't need to initialize a new video here, just connect to the existing ExoPlayer
     LaunchedEffect(videoUrl, title) {
+        android.util.Log.d("VideoPlayerScreen", "LaunchedEffect called with videoUrl: $videoUrl, title: $title")
         videoPlayerViewModel.connectToExistingPlayback(title)
+        android.util.Log.d("VideoPlayerScreen", "connectToExistingPlayback call completed")
     }
 
     // Handle back navigation with confirmation if video is playing
@@ -294,6 +296,7 @@ class VideoPlayerViewModel
         }
 
         fun connectToExistingPlayback(title: String) {
+            android.util.Log.d("VideoPlayerViewModel", "connectToExistingPlayback called with title: $title")
             updateState {
                 copy(
                     isLoading = false,
@@ -304,6 +307,7 @@ class VideoPlayerViewModel
                     title = title,
                 )
             }
+            android.util.Log.d("VideoPlayerViewModel", "connectToExistingPlayback state updated")
         }
 
         fun retry(
