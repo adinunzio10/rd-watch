@@ -124,6 +124,7 @@ fun TVDetailsScreen(
                 episodeSourcesMap = episodeSourcesMap,
                 viewModel = viewModel,
                 playbackViewModel = playbackViewModel,
+                onNavigateToVideoPlayer = onNavigateToVideoPlayer,
                 onActionClick = { action ->
                     when (action) {
                         // TODO: Determine which episode to show advanced source selection for
@@ -180,6 +181,7 @@ private fun TVDetailsContent(
     episodeSourcesMap: Map<String, List<com.rdwatch.androidtv.ui.details.models.advanced.SourceMetadata>>,
     viewModel: TVDetailsViewModel,
     playbackViewModel: PlaybackViewModel,
+    onNavigateToVideoPlayer: (videoUrl: String, title: String) -> Unit,
     onActionClick: (ContentAction) -> Unit,
     onSeasonSelected: (TVSeason) -> Unit,
     onEpisodeSelected: (TVEpisode) -> Unit,
