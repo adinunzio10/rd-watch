@@ -234,10 +234,21 @@ class ManifestParser
 
         /**
          * Extract base URL from source URL
+         * For Torrentio URLs, preserve the configuration path to maintain Real-Debrid integration
          */
         private fun extractBaseUrl(sourceUrl: String): String {
             return try {
                 val url = java.net.URL(sourceUrl)
+
+                // Special handling for Torrentio to preserve configuration path
+                if (url.host.contains("torrentio.strem.fun")) {
+                    // For Torrentio, keep everything except /manifest.json
+                    // Example: https://torrentio.strem.fun/config/manifest.json -> https://torrentio.strem.fun/config
+                    val fullUrl = "${url.protocol}://${url.host}${if (url.port != -1) ":${url.port}" else ""}${url.path}"
+                    return fullUrl.removeSuffix("/manifest.json")
+                }
+
+                // For other scrapers, use domain only
                 "${url.protocol}://${url.host}${if (url.port != -1) ":${url.port}" else ""}"
             } catch (e: Exception) {
                 sourceUrl.substringBeforeLast("/")

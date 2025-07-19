@@ -80,13 +80,19 @@ class ManifestValidator
                 println("DEBUG [ManifestValidator]: Validation passed successfully")
             }
 
-            return if (errors.isEmpty()) {
+            // Only treat ERROR severity issues as validation failures
+            val criticalErrors = errors.filter { it.severity == ValidationSeverity.ERROR }
+
+            return if (criticalErrors.isEmpty()) {
+                if (errors.isNotEmpty()) {
+                    println("DEBUG [ManifestValidator]: Validation passed with ${errors.size} warnings")
+                }
                 ManifestResult.Success(true)
             } else {
                 ManifestResult.Error(
                     ManifestValidationException(
-                        "Manifest validation failed with ${errors.size} errors",
-                        validationErrors = errors,
+                        "Manifest validation failed with ${criticalErrors.size} critical errors",
+                        validationErrors = criticalErrors,
                     ),
                 )
             }
@@ -139,13 +145,19 @@ class ManifestValidator
                 println("DEBUG [ManifestValidator]: ScraperManifest validation passed successfully")
             }
 
-            return if (errors.isEmpty()) {
+            // Only treat ERROR severity issues as validation failures
+            val criticalErrors = errors.filter { it.severity == ValidationSeverity.ERROR }
+
+            return if (criticalErrors.isEmpty()) {
+                if (errors.isNotEmpty()) {
+                    println("DEBUG [ManifestValidator]: ScraperManifest validation passed with ${errors.size} warnings")
+                }
                 ManifestResult.Success(true)
             } else {
                 ManifestResult.Error(
                     ManifestValidationException(
-                        "Scraper manifest validation failed with ${errors.size} errors",
-                        validationErrors = errors,
+                        "Scraper manifest validation failed with ${criticalErrors.size} critical errors",
+                        validationErrors = criticalErrors,
                     ),
                 )
             }
