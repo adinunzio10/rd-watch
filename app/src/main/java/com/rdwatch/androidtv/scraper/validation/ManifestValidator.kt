@@ -39,24 +39,46 @@ class ManifestValidator
             sourceUrl: String? = null,
         ): ManifestResult<Boolean> {
             val errors = mutableListOf<ValidationError>()
+            println("DEBUG [ManifestValidator]: Starting validation for manifest: ${manifest.name} (${manifest.id})")
 
             // Required field validation
             validateRequiredFields(manifest, errors)
+            println("DEBUG [ManifestValidator]: After required fields validation: ${errors.size} errors")
 
             // Format validation
             validateFormats(manifest, errors)
+            println("DEBUG [ManifestValidator]: After format validation: ${errors.size} errors")
 
             // Business rule validation
             validateBusinessRules(manifest, errors)
+            println("DEBUG [ManifestValidator]: After business rules validation: ${errors.size} errors")
 
             // Resource validation
             validateResources(manifest, errors)
+            println("DEBUG [ManifestValidator]: After resource validation: ${errors.size} errors")
 
             // Catalog validation
             validateCatalogs(manifest, errors)
+            println("DEBUG [ManifestValidator]: After catalog validation: ${errors.size} errors")
 
             // URL validation
-            sourceUrl?.let { validateSourceUrl(it, errors) }
+            sourceUrl?.let {
+                println("DEBUG [ManifestValidator]: Validating source URL: $it")
+                validateSourceUrl(it, errors)
+                println("DEBUG [ManifestValidator]: After source URL validation: ${errors.size} errors")
+            }
+
+            // Log all validation errors
+            if (errors.isNotEmpty()) {
+                println("DEBUG [ManifestValidator]: Validation failed with ${errors.size} errors:")
+                errors.forEachIndexed { index, error ->
+                    println(
+                        "DEBUG [ManifestValidator]:   Error ${index + 1}: Field='${error.field}', Rule='${error.rule}', Message='${error.message}', Value='${error.value}', Severity='${error.severity}'",
+                    )
+                }
+            } else {
+                println("DEBUG [ManifestValidator]: Validation passed successfully")
+            }
 
             return if (errors.isEmpty()) {
                 ManifestResult.Success(true)
@@ -75,10 +97,14 @@ class ManifestValidator
          */
         fun validateScraperManifest(manifest: ScraperManifest): ManifestResult<Boolean> {
             val errors = mutableListOf<ValidationError>()
+            println("DEBUG [ManifestValidator]: Starting ScraperManifest validation for: ${manifest.name} (${manifest.id})")
+            println("DEBUG [ManifestValidator]: BaseUrl: ${manifest.baseUrl}")
+            println("DEBUG [ManifestValidator]: SourceUrl: ${manifest.sourceUrl}")
 
             // Validate the underlying Stremio manifest
             when (val stremioResult = validateStremioManifest(manifest.stremioManifest, manifest.sourceUrl)) {
                 is ManifestResult.Error -> {
+                    println("DEBUG [ManifestValidator]: Stremio manifest validation failed")
                     if (stremioResult.exception is ManifestValidationException) {
                         errors.addAll(stremioResult.exception.validationErrors)
                     } else {
@@ -91,11 +117,27 @@ class ManifestValidator
                         )
                     }
                 }
-                is ManifestResult.Success -> { /* Continue with additional validation */ }
+                is ManifestResult.Success -> {
+                    println("DEBUG [ManifestValidator]: Stremio manifest validation passed")
+                }
             }
 
             // Additional ScraperManifest validation
+            println("DEBUG [ManifestValidator]: Starting ScraperManifest fields validation, current errors: ${errors.size}")
             validateScraperManifestFields(manifest, errors)
+            println("DEBUG [ManifestValidator]: After ScraperManifest fields validation: ${errors.size} errors")
+
+            // Log all validation errors for ScraperManifest
+            if (errors.isNotEmpty()) {
+                println("DEBUG [ManifestValidator]: ScraperManifest validation failed with ${errors.size} errors:")
+                errors.forEachIndexed { index, error ->
+                    println(
+                        "DEBUG [ManifestValidator]:   Error ${index + 1}: Field='${error.field}', Rule='${error.rule}', Message='${error.message}', Value='${error.value}', Severity='${error.severity}'",
+                    )
+                }
+            } else {
+                println("DEBUG [ManifestValidator]: ScraperManifest validation passed successfully")
+            }
 
             return if (errors.isEmpty()) {
                 ManifestResult.Success(true)
