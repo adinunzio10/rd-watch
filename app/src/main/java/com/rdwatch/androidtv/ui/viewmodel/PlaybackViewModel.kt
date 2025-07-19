@@ -105,11 +105,17 @@ class PlaybackViewModel
                         "Starting episode playback: ${episode.title} from ${source.provider.displayName}",
                     )
 
-                    // Start playback with the source URL
-                    exoPlayerManager.startPlaybackSession(
+                    // Prepare and start playback with the source URL
+                    val episodeTitle = "${tvShow.title} - S${episode.seasonNumber}E${episode.episodeNumber}: ${episode.title}"
+                    exoPlayerManager.prepareMedia(
                         mediaUrl = source.url,
-                        title = "${tvShow.title} - S${episode.seasonNumber}E${episode.episodeNumber}: ${episode.title}",
+                        contentId = episodeContentId,
+                        title = episodeTitle,
+                        shouldResume = true,
                     )
+
+                    // Start playback
+                    exoPlayerManager.play()
 
                     android.util.Log.d("PlaybackViewModel", "Episode playback started successfully")
                 } catch (e: Exception) {
@@ -151,11 +157,20 @@ class PlaybackViewModel
                         throw IllegalArgumentException("Source URL is missing or empty")
                     }
 
-                    // Start playback with the source URL
-                    exoPlayerManager.startPlaybackSession(
+                    // Log the actual URL being used
+                    android.util.Log.d("PlaybackViewModel", "  URL: $sourceUrl")
+
+                    // Prepare and start playback with the source URL
+                    val episodeTitle = "${tvShow.title} - S${episode.seasonNumber}E${episode.episodeNumber}: ${episode.title} [${source.quality.resolution}]"
+                    exoPlayerManager.prepareMedia(
                         mediaUrl = sourceUrl,
-                        title = "${tvShow.title} - S${episode.seasonNumber}E${episode.episodeNumber}: ${episode.title} [${source.quality.resolution}]",
+                        contentId = "${tvShow.id}:${episode.seasonNumber}:${episode.episodeNumber}",
+                        title = episodeTitle,
+                        shouldResume = true,
                     )
+
+                    // Start playback
+                    exoPlayerManager.play()
 
                     android.util.Log.d("PlaybackViewModel", "Advanced episode playback started successfully")
                 } catch (e: Exception) {
@@ -193,11 +208,20 @@ class PlaybackViewModel
                         throw IllegalArgumentException("Source URL is missing or empty")
                     }
 
-                    // Start playback with the source URL
-                    exoPlayerManager.startPlaybackSession(
+                    // Log the actual URL being used
+                    android.util.Log.d("PlaybackViewModel", "  URL: $sourceUrl")
+
+                    // Prepare and start playback with the source URL
+                    val movieTitle = "${movie.title} [${source.quality.resolution}]"
+                    exoPlayerManager.prepareMedia(
                         mediaUrl = sourceUrl,
-                        title = "${movie.title} [${source.quality.resolution}]",
+                        contentId = movie.id ?: movie.title ?: "unknown",
+                        title = movieTitle,
+                        shouldResume = true,
                     )
+
+                    // Start playback
+                    exoPlayerManager.play()
 
                     android.util.Log.d("PlaybackViewModel", "Advanced movie playback started successfully")
                 } catch (e: Exception) {
