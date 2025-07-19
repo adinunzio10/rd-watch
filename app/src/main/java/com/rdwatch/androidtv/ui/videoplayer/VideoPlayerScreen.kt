@@ -246,7 +246,6 @@ class VideoPlayerViewModel
     constructor(
         private val exoPlayerManager: ExoPlayerManager,
         private val subtitleManager: SubtitleManager,
-        private val playbackViewModel: PlaybackViewModel,
     ) : BaseViewModel<VideoPlayerUiState>() {
         override fun createInitialState(): VideoPlayerUiState {
             return VideoPlayerUiState()
@@ -299,29 +298,20 @@ class VideoPlayerViewModel
         fun connectToExistingPlayback(title: String) {
             android.util.Log.d("VideoPlayerViewModel", "connectToExistingPlayback called with title: $title")
 
-            // Get the active ExoPlayer instance from PlaybackViewModel that's already playing
-            val activeExoPlayerManager = getActiveExoPlayerManager()
-
-            android.util.Log.d("VideoPlayerViewModel", "Using active ExoPlayer from PlaybackViewModel")
+            // Since ExoPlayerManager is a singleton, this should be the same instance used by PlaybackViewModel
+            // that already has media prepared and playing
+            android.util.Log.d("VideoPlayerViewModel", "Using singleton ExoPlayerManager instance")
             updateState {
                 copy(
                     isLoading = false,
                     hasVideo = true,
                     hasError = false,
-                    exoPlayerManager = activeExoPlayerManager,
+                    exoPlayerManager = exoPlayerManager,
                     subtitleManager = subtitleManager,
                     title = title,
                 )
             }
-            android.util.Log.d("VideoPlayerViewModel", "connectToExistingPlayback state updated with active ExoPlayer")
-        }
-
-        private fun getActiveExoPlayerManager(): ExoPlayerManager {
-            // Both ViewModels should receive the same singleton ExoPlayerManager instance from Hilt
-            // The issue was that we weren't using the same instance that was already playing
-            // Since ExoPlayerManager is a singleton, this should be the same instance used by PlaybackViewModel
-            android.util.Log.d("VideoPlayerViewModel", "Returning singleton ExoPlayerManager instance")
-            return exoPlayerManager
+            android.util.Log.d("VideoPlayerViewModel", "connectToExistingPlayback state updated with singleton ExoPlayer")
         }
 
         fun retry(
