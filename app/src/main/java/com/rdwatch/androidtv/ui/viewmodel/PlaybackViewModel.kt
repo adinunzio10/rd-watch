@@ -222,14 +222,13 @@ class PlaybackViewModel
                     // Log the actual URL being used
                     android.util.Log.d("PlaybackViewModel", "  URL: $sourceUrl")
 
-                    // Resolve the URL to get the final playable stream URL
-                    val resolvedUrl = resolvePlayableUrl(sourceUrl)
-                    android.util.Log.d("PlaybackViewModel", "  Resolved URL: $resolvedUrl")
+                    // Test: Use URL directly without resolution to see if ExoPlayer can handle Torrentio redirects
+                    android.util.Log.d("PlaybackViewModel", "  Using URL directly (testing ExoPlayer redirect handling): $sourceUrl")
 
-                    // Prepare and start playback with the resolved URL
+                    // Prepare and start playback with the original URL
                     val episodeTitle = "${tvShow.title} - S${episode.seasonNumber}E${episode.episodeNumber}: ${episode.title} [${source.quality.resolution}]"
                     exoPlayerManager.prepareMedia(
-                        mediaUrl = resolvedUrl,
+                        mediaUrl = sourceUrl,
                         contentId = "${tvShow.id}:${episode.seasonNumber}:${episode.episodeNumber}",
                         title = episodeTitle,
                         shouldResume = true,
@@ -277,14 +276,13 @@ class PlaybackViewModel
                     // Log the actual URL being used
                     android.util.Log.d("PlaybackViewModel", "  URL: $sourceUrl")
 
-                    // Resolve the URL to get the final playable stream URL
-                    val resolvedUrl = resolvePlayableUrl(sourceUrl)
-                    android.util.Log.d("PlaybackViewModel", "  Resolved URL: $resolvedUrl")
+                    // Test: Use URL directly without resolution to see if ExoPlayer can handle Torrentio redirects
+                    android.util.Log.d("PlaybackViewModel", "  Using URL directly (testing ExoPlayer redirect handling): $sourceUrl")
 
-                    // Prepare and start playback with the resolved URL
+                    // Prepare and start playback with the original URL
                     val movieTitle = "${movie.title} [${source.quality.resolution}]"
                     exoPlayerManager.prepareMedia(
-                        mediaUrl = resolvedUrl,
+                        mediaUrl = sourceUrl,
                         contentId = movie.id?.toString() ?: movie.title ?: "unknown",
                         title = movieTitle,
                         shouldResume = true,
