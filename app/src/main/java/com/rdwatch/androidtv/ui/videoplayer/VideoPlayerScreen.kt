@@ -34,9 +34,10 @@ fun VideoPlayerScreen(
     val playbackUiState by playbackViewModel.uiState.collectAsState()
     val playerState by playbackViewModel.playerState.collectAsState()
 
-    // Initialize the video when the screen loads
+    // Note: Video should already be prepared by PlaybackViewModel before navigation
+    // We don't need to initialize a new video here, just connect to the existing ExoPlayer
     LaunchedEffect(videoUrl, title) {
-        videoPlayerViewModel.initializeVideo(videoUrl, title)
+        videoPlayerViewModel.connectToExistingPlayback(title)
     }
 
     // Handle back navigation with confirmation if video is playing
@@ -289,6 +290,19 @@ class VideoPlayerViewModel
                         )
                     }
                 }
+            }
+        }
+
+        fun connectToExistingPlayback(title: String) {
+            updateState {
+                copy(
+                    isLoading = false,
+                    hasVideo = true,
+                    hasError = false,
+                    exoPlayerManager = exoPlayerManager,
+                    subtitleManager = subtitleManager,
+                    title = title,
+                )
             }
         }
 
