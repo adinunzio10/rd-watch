@@ -3,20 +3,34 @@ package com.rdwatch.androidtv.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.util.UnstableApi
+import com.rdwatch.androidtv.auth.UserSessionManager
 import com.rdwatch.androidtv.data.entities.WatchProgressEntity
 import com.rdwatch.androidtv.data.repository.PlaybackProgressRepository
 import com.rdwatch.androidtv.player.ExoPlayerManager
+import com.rdwatch.androidtv.player.PlaybackState
 import com.rdwatch.androidtv.player.PlayerState
 import com.rdwatch.androidtv.player.state.PlaybackStateRepository
 import com.rdwatch.androidtv.player.state.WatchStatistics
 import com.rdwatch.androidtv.repository.RealDebridContentRepository
 import com.rdwatch.androidtv.repository.base.Result
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+
+// Media ready state to track preparation status
+sealed class MediaReadyState {
+    object Idle : MediaReadyState()
+
+    object Preparing : MediaReadyState()
+
+    object Ready : MediaReadyState()
+
+    data class Error(val message: String) : MediaReadyState()
+}
 
 @UnstableApi
 @HiltViewModel
@@ -27,6 +41,7 @@ class PlaybackViewModel
         private val playbackStateRepository: PlaybackStateRepository,
         private val playbackProgressRepository: PlaybackProgressRepository,
         private val realDebridRepository: RealDebridContentRepository,
+        private val userSessionManager: UserSessionManager,
     ) : ViewModel() {
         // Expose player state from ExoPlayerManager
         val playerState: StateFlow<PlayerState> = exoPlayerManager.playerState
@@ -34,8 +49,12 @@ class PlaybackViewModel
         private val _uiState = MutableStateFlow(PlaybackUiState())
         val uiState: StateFlow<PlaybackUiState> = _uiState.asStateFlow()
 
-        // Default user ID for now - in a real app this would come from user context
-        private val currentUserId: Long get() = 1L
+        // Media ready state flow to track preparation status
+        private val _mediaReadyState = MutableStateFlow<MediaReadyState>(MediaReadyState.Idle)
+        val mediaReadyState: StateFlow<MediaReadyState> = _mediaReadyState.asStateFlow()
+
+        // Get current user ID from session manager
+        private suspend fun getCurrentUserId(): Long = userSessionManager.getCurrentUserId()
 
         private val _inProgressContent = MutableStateFlow<List<WatchProgressEntity>>(emptyList())
         val inProgressContent: StateFlow<List<WatchProgressEntity>> = _inProgressContent.asStateFlow()
@@ -203,6 +222,9 @@ class PlaybackViewModel
         ) {
             viewModelScope.launch {
                 try {
+                    // Set state to preparing
+                    _mediaReadyState.value = MediaReadyState.Preparing
+
                     // Create a unique content ID for the episode
                     val episodeContentId = "${tvShow.id}:${episode.seasonNumber}:${episode.episodeNumber}"
 
@@ -217,7 +239,9 @@ class PlaybackViewModel
                     android.util.Log.d("PlaybackViewModel", "  Health Score: ${source.health.seeders}/${source.health.leechers}")
 
                     if (sourceUrl.isBlank()) {
-                        throw IllegalArgumentException("Source URL is missing or empty")
+                        val errorMessage = "Source URL is missing or empty"
+                        _mediaReadyState.value = MediaReadyState.Error(errorMessage)
+                        throw IllegalArgumentException(errorMessage)
                     }
 
                     // Log the actual URL being used
@@ -238,12 +262,49 @@ class PlaybackViewModel
                     // Start playback
                     exoPlayerManager.play()
 
-                    android.util.Log.d("PlaybackViewModel", "Advanced episode playback started successfully")
+                    // Create a coroutine job to monitor media preparation
+                    val mediaPreparationJob =
+                        launch {
+                            var timeoutCounter = 0
+                            while (timeoutCounter < 150) { // 15 seconds timeout (100ms * 150)
+                                val currentState = playerState.value
 
-                    // Navigate to video player after successful media preparation
-                    onNavigateToVideoPlayer(sourceUrl, episodeTitle)
+                                // Check for errors first
+                                if (currentState.error != null) {
+                                    android.util.Log.e("PlaybackViewModel", "Media preparation error: ${currentState.error}")
+                                    _mediaReadyState.value = MediaReadyState.Error(currentState.error)
+                                    return@launch
+                                }
+
+                                // Check if media is ready
+                                if (currentState.hasVideo &&
+                                    (
+                                        currentState.playbackState == PlaybackState.READY ||
+                                            currentState.playbackState == PlaybackState.BUFFERING
+                                    )
+                                ) {
+                                    android.util.Log.d("PlaybackViewModel", "Media is ready, navigating to video player")
+                                    _mediaReadyState.value = MediaReadyState.Ready
+
+                                    // Navigate to video player only when media is ready
+                                    onNavigateToVideoPlayer(sourceUrl, episodeTitle)
+                                    return@launch
+                                }
+
+                                // Wait a bit before checking again
+                                delay(100)
+                                timeoutCounter++
+                            }
+
+                            // Timeout reached
+                            android.util.Log.e("PlaybackViewModel", "Media preparation timeout")
+                            _mediaReadyState.value = MediaReadyState.Error("Media preparation timed out")
+                        }
+
+                    android.util.Log.d("PlaybackViewModel", "Waiting for media preparation...")
                 } catch (e: Exception) {
                     android.util.Log.e("PlaybackViewModel", "Failed to start advanced episode playback: ${e.message}")
+                    _mediaReadyState.value = MediaReadyState.Error(e.message ?: "Unknown error")
                     // Update UI state to show error
                     _uiState.value =
                         _uiState.value.copy(
@@ -316,14 +377,16 @@ class PlaybackViewModel
 
         fun removeFromContinueWatching(contentId: String) {
             viewModelScope.launch {
-                playbackProgressRepository.removeProgress(currentUserId, contentId)
+                val userId = getCurrentUserId()
+                playbackProgressRepository.removeProgress(userId, contentId)
                 refreshWatchData()
             }
         }
 
         fun markAsCompleted(contentId: String) {
             viewModelScope.launch {
-                playbackProgressRepository.markAsCompleted(currentUserId, contentId)
+                val userId = getCurrentUserId()
+                playbackProgressRepository.markAsCompleted(userId, contentId)
                 refreshWatchData()
             }
         }
@@ -331,15 +394,17 @@ class PlaybackViewModel
         // Data Loading Methods
         private fun loadWatchData() {
             viewModelScope.launch {
+                val userId = getCurrentUserId()
                 // Load in-progress content
-                playbackProgressRepository.getInProgressContent(currentUserId).collect { progress ->
+                playbackProgressRepository.getInProgressContent(userId).collect { progress ->
                     _inProgressContent.value = progress
                 }
             }
 
             viewModelScope.launch {
+                val userId = getCurrentUserId()
                 // Load completed content
-                playbackProgressRepository.getCompletedContent(currentUserId).collect { completed ->
+                playbackProgressRepository.getCompletedContent(userId).collect { completed ->
                     _completedContent.value = completed
                 }
             }
@@ -356,6 +421,11 @@ class PlaybackViewModel
                 val stats = playbackStateRepository.getWatchStatistics()
                 _watchStatistics.value = stats
             }
+        }
+
+        // Reset media ready state
+        fun resetMediaReadyState() {
+            _mediaReadyState.value = MediaReadyState.Idle
         }
 
         // Player State Observation

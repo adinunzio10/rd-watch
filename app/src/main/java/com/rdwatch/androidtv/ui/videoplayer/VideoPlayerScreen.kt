@@ -16,6 +16,7 @@ import com.rdwatch.androidtv.player.PlaybackState
 import com.rdwatch.androidtv.player.TvPlayerView
 import com.rdwatch.androidtv.player.subtitle.SubtitleManager
 import com.rdwatch.androidtv.presentation.viewmodel.BaseViewModel
+import com.rdwatch.androidtv.ui.viewmodel.MediaReadyState
 import com.rdwatch.androidtv.ui.viewmodel.PlaybackViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -34,6 +35,7 @@ fun VideoPlayerScreen(
     val uiState by videoPlayerViewModel.uiState.collectAsState()
     val playbackUiState by playbackViewModel.uiState.collectAsState()
     val playerState by playbackViewModel.playerState.collectAsState()
+    val mediaReadyState by playbackViewModel.mediaReadyState.collectAsState()
 
     // Note: Video should already be prepared by PlaybackViewModel before navigation
     // We don't need to initialize a new video here, just connect to the existing ExoPlayer
@@ -41,6 +43,22 @@ fun VideoPlayerScreen(
         android.util.Log.d("VideoPlayerScreen", "LaunchedEffect called with videoUrl: $videoUrl, title: $title")
         videoPlayerViewModel.connectToExistingPlayback(title)
         android.util.Log.d("VideoPlayerScreen", "connectToExistingPlayback call completed")
+    }
+
+    // Monitor media ready state and handle errors
+    LaunchedEffect(mediaReadyState) {
+        when (mediaReadyState) {
+            is MediaReadyState.Error -> {
+                android.util.Log.e("VideoPlayerScreen", "Media preparation error: ${mediaReadyState.message}")
+                // The error will be shown via the UI state
+            }
+            is MediaReadyState.Ready -> {
+                android.util.Log.d("VideoPlayerScreen", "Media is ready for playback")
+            }
+            else -> {
+                android.util.Log.d("VideoPlayerScreen", "Media state: $mediaReadyState")
+            }
+        }
     }
 
     // Handle back navigation with confirmation if video is playing
@@ -54,56 +72,58 @@ fun VideoPlayerScreen(
 
     // Debug UI State
     android.util.Log.d("VideoPlayerScreen", "UI State Debug: hasVideo=${uiState.hasVideo}, isLoading=${uiState.isLoading}, hasError=${uiState.hasError}")
-    android.util.Log.d(
-        "VideoPlayerScreen",
-        "UI State Managers: exoPlayerManager=${uiState.exoPlayerManager != null} (hashCode: ${uiState.exoPlayerManager?.hashCode()}), subtitleManager=${uiState.subtitleManager != null} (hashCode: ${uiState.subtitleManager?.hashCode()})",
-    )
+    // Managers are now accessed directly from ViewModel, not from UI state
 
     Box(modifier = modifier.fillMaxSize()) {
         when {
-            uiState.isLoading -> {
+            uiState.isLoading || mediaReadyState is MediaReadyState.Preparing -> {
                 LoadingScreen(
                     title = title,
                     modifier = Modifier.fillMaxSize(),
                 )
             }
 
-            uiState.hasError -> {
+            uiState.hasError || mediaReadyState is MediaReadyState.Error -> {
+                val errorMessage =
+                    when {
+                        mediaReadyState is MediaReadyState.Error -> mediaReadyState.message
+                        uiState.hasError -> uiState.errorMessage ?: "Unknown error occurred"
+                        else -> "Unknown error occurred"
+                    }
                 ErrorScreen(
                     title = title,
-                    error = uiState.errorMessage ?: "Unknown error occurred",
-                    onRetry = { videoPlayerViewModel.retry(videoUrl, title) },
+                    error = errorMessage,
+                    onRetry = {
+                        // Reset media ready state and retry
+                        playbackViewModel.resetMediaReadyState()
+                        videoPlayerViewModel.retry(videoUrl, title)
+                    },
                     onBack = onBackPressed,
                     modifier = Modifier.fillMaxSize(),
                 )
             }
 
-            uiState.hasVideo -> {
-                android.util.Log.d("VideoPlayerScreen", "hasVideo condition met - checking managers")
-                uiState.exoPlayerManager?.let { exoPlayerManager ->
-                    android.util.Log.d("VideoPlayerScreen", "exoPlayerManager is not null - checking subtitleManager")
-                    uiState.subtitleManager?.let { subtitleManager ->
-                        android.util.Log.d("VideoPlayerScreen", "subtitleManager is not null - creating TvPlayerView")
-                        TvPlayerView(
-                            exoPlayerManager = exoPlayerManager,
-                            subtitleManager = subtitleManager,
-                            onMenuToggle = {
-                                videoPlayerViewModel.togglePlayerMenu()
-                            },
-                            modifier = Modifier.fillMaxSize(),
-                        )
-                    } ?: run {
-                        android.util.Log.w("VideoPlayerScreen", "subtitleManager is NULL - TvPlayerView not created")
-                    }
-                } ?: run {
-                    android.util.Log.w("VideoPlayerScreen", "exoPlayerManager is NULL - TvPlayerView not created")
-                }
+            uiState.hasVideo && mediaReadyState is MediaReadyState.Ready -> {
+                android.util.Log.d("VideoPlayerScreen", "hasVideo condition met and media is ready - creating TvPlayerView")
+                TvPlayerView(
+                    exoPlayerManager = videoPlayerViewModel.exoPlayerManager,
+                    subtitleManager = videoPlayerViewModel.subtitleManager,
+                    onMenuToggle = {
+                        videoPlayerViewModel.togglePlayerMenu()
+                    },
+                    modifier = Modifier.fillMaxSize(),
+                )
             }
 
             else -> {
                 android.util.Log.w(
                     "VideoPlayerScreen",
-                    "NO CONDITION MET - Gray screen shown! isLoading=${uiState.isLoading}, hasError=${uiState.hasError}, hasVideo=${uiState.hasVideo}",
+                    "NO CONDITION MET - Gray screen shown! isLoading=${uiState.isLoading}, hasError=${uiState.hasError}, hasVideo=${uiState.hasVideo}, mediaReadyState=$mediaReadyState",
+                )
+                // Show loading state for any unhandled cases
+                LoadingScreen(
+                    title = title,
+                    modifier = Modifier.fillMaxSize(),
                 )
             }
         }
@@ -266,8 +286,8 @@ private fun ResumeDialog(
 class VideoPlayerViewModel
     @Inject
     constructor(
-        private val exoPlayerManager: ExoPlayerManager,
-        private val subtitleManager: SubtitleManager,
+        val exoPlayerManager: ExoPlayerManager,
+        val subtitleManager: SubtitleManager,
     ) : BaseViewModel<VideoPlayerUiState>() {
         init {
             android.util.Log.d("VideoPlayerViewModel", "VideoPlayerViewModel created")
@@ -305,8 +325,6 @@ class VideoPlayerViewModel
                             isLoading = false,
                             hasVideo = true,
                             hasError = false,
-                            exoPlayerManager = this@VideoPlayerViewModel.exoPlayerManager,
-                            subtitleManager = this@VideoPlayerViewModel.subtitleManager,
                             videoUrl = videoUrl,
                             title = title,
                         )
@@ -341,17 +359,9 @@ class VideoPlayerViewModel
                     hasVideo = false,
                     hasError = false,
                     errorMessage = null,
-                    exoPlayerManager = this@VideoPlayerViewModel.exoPlayerManager,
-                    subtitleManager = this@VideoPlayerViewModel.subtitleManager,
                     title = title,
                 )
             }
-
-            // Log the state after update
-            android.util.Log.d(
-                "VideoPlayerViewModel",
-                "State after initial update - exoPlayerManager: ${uiState.value.exoPlayerManager != null}, subtitleManager: ${uiState.value.subtitleManager != null}",
-            )
             android.util.Log.d("VideoPlayerViewModel", "Initial state set to loading, starting ExoPlayer state observation")
 
             // Start observing ExoPlayer state changes reactively
@@ -393,15 +403,8 @@ class VideoPlayerViewModel
                                 hasVideo = false,
                                 hasError = true,
                                 errorMessage = playerState.error,
-                                // IMPORTANT: Preserve the manager references even in error state!
-                                exoPlayerManager = this@VideoPlayerViewModel.exoPlayerManager,
-                                subtitleManager = this@VideoPlayerViewModel.subtitleManager,
                             )
                         }
-                        android.util.Log.d(
-                            "VideoPlayerViewModel",
-                            "State after error update - exoPlayerManager: ${uiState.value.exoPlayerManager != null}, subtitleManager: ${uiState.value.subtitleManager != null}",
-                        )
                         return@collect
                     }
 
@@ -421,15 +424,8 @@ class VideoPlayerViewModel
                             hasVideo = hasVideoContent,
                             hasError = false,
                             errorMessage = null,
-                            // IMPORTANT: Preserve the manager references!
-                            exoPlayerManager = this@VideoPlayerViewModel.exoPlayerManager,
-                            subtitleManager = this@VideoPlayerViewModel.subtitleManager,
                         )
                     }
-                    android.util.Log.d(
-                        "VideoPlayerViewModel",
-                        "State after video ready update - exoPlayerManager: ${uiState.value.exoPlayerManager != null}, subtitleManager: ${uiState.value.subtitleManager != null}",
-                    )
 
                     if (hasVideoContent) {
                         android.util.Log.d("VideoPlayerViewModel", "Video is ready - transitioning to video display")
@@ -457,15 +453,8 @@ class VideoPlayerViewModel
                             hasVideo = false,
                             hasError = true,
                             errorMessage = "Video loading timed out. The video may be too large or the connection is slow. Please try again.",
-                            // IMPORTANT: Preserve the manager references in timeout case!
-                            exoPlayerManager = this@VideoPlayerViewModel.exoPlayerManager,
-                            subtitleManager = this@VideoPlayerViewModel.subtitleManager,
                         )
                     }
-                    android.util.Log.d(
-                        "VideoPlayerViewModel",
-                        "State after timeout update - exoPlayerManager: ${uiState.value.exoPlayerManager != null}, subtitleManager: ${uiState.value.subtitleManager != null}",
-                    )
                 }
             }
         }
@@ -496,15 +485,8 @@ class VideoPlayerViewModel
                     isLoading = false,
                     hasError = true,
                     errorMessage = "An error occurred: ${exception.message}",
-                    // IMPORTANT: Preserve the manager references in error handling!
-                    exoPlayerManager = this@VideoPlayerViewModel.exoPlayerManager,
-                    subtitleManager = this@VideoPlayerViewModel.subtitleManager,
                 )
             }
-            android.util.Log.d(
-                "VideoPlayerViewModel",
-                "State after handleError update - exoPlayerManager: ${uiState.value.exoPlayerManager != null}, subtitleManager: ${uiState.value.subtitleManager != null}",
-            )
         }
     }
 
@@ -517,6 +499,4 @@ data class VideoPlayerUiState(
     val videoUrl: String = "",
     val showExitConfirmation: Boolean = false,
     val showPlayerMenu: Boolean = false,
-    val exoPlayerManager: ExoPlayerManager? = null,
-    val subtitleManager: SubtitleManager? = null,
 )
