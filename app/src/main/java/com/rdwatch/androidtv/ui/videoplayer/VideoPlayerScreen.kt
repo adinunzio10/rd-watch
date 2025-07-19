@@ -12,6 +12,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.media3.common.util.UnstableApi
 import com.rdwatch.androidtv.player.ExoPlayerManager
+import com.rdwatch.androidtv.player.PlaybackState
 import com.rdwatch.androidtv.player.TvPlayerView
 import com.rdwatch.androidtv.player.subtitle.SubtitleManager
 import com.rdwatch.androidtv.presentation.viewmodel.BaseViewModel
@@ -301,17 +302,56 @@ class VideoPlayerViewModel
             // Since ExoPlayerManager is a singleton, this should be the same instance used by PlaybackViewModel
             // that already has media prepared and playing
             android.util.Log.d("VideoPlayerViewModel", "Using singleton ExoPlayerManager instance")
+
+            // Get current player state to verify video readiness
+            val playerState = exoPlayerManager.playerState.value
+            android.util.Log.d("VideoPlayerViewModel", "Current ExoPlayer state:")
+            android.util.Log.d("VideoPlayerViewModel", "  - Playback state: ${playerState.playbackState}")
+            android.util.Log.d("VideoPlayerViewModel", "  - Has video: ${playerState.hasVideo}")
+            android.util.Log.d("VideoPlayerViewModel", "  - Is playing: ${playerState.isPlaying}")
+            android.util.Log.d("VideoPlayerViewModel", "  - Media URL: ${playerState.mediaUrl}")
+            android.util.Log.d("VideoPlayerViewModel", "  - Error: ${playerState.error}")
+
+            // Check for errors first
+            if (playerState.error != null) {
+                android.util.Log.w("VideoPlayerViewModel", "ExoPlayer has error: ${playerState.error}")
+                updateState {
+                    copy(
+                        isLoading = false,
+                        hasVideo = false,
+                        hasError = true,
+                        errorMessage = playerState.error,
+                        exoPlayerManager = exoPlayerManager,
+                        subtitleManager = subtitleManager,
+                        title = title,
+                    )
+                }
+                android.util.Log.d("VideoPlayerViewModel", "connectToExistingPlayback state updated with error")
+                return
+            }
+
+            // Only show video if we have confirmed video content and no errors
+            val hasVideoContent =
+                playerState.hasVideo &&
+                    (
+                        playerState.playbackState == PlaybackState.READY ||
+                            playerState.playbackState == PlaybackState.BUFFERING
+                    )
+
+            android.util.Log.d("VideoPlayerViewModel", "Video content ready: $hasVideoContent")
+
             updateState {
                 copy(
-                    isLoading = false,
-                    hasVideo = true,
+                    isLoading = !hasVideoContent,
+                    hasVideo = hasVideoContent,
                     hasError = false,
+                    errorMessage = null,
                     exoPlayerManager = exoPlayerManager,
                     subtitleManager = subtitleManager,
                     title = title,
                 )
             }
-            android.util.Log.d("VideoPlayerViewModel", "connectToExistingPlayback state updated with singleton ExoPlayer")
+            android.util.Log.d("VideoPlayerViewModel", "connectToExistingPlayback state updated - hasVideo: $hasVideoContent, isLoading: ${!hasVideoContent}")
         }
 
         fun retry(

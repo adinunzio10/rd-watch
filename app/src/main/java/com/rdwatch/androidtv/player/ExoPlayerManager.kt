@@ -71,8 +71,25 @@ class ExoPlayerManager
 
                 override fun onPlayerError(error: androidx.media3.common.PlaybackException) {
                     super.onPlayerError(error)
-                    val playerError = errorHandler.handleError(error)
-                    updatePlayerState { copy(error = playerError.message) }
+                    android.util.Log.e("ExoPlayerManager", "Playback error occurred", error)
+
+                    // Check if this is a codec compatibility error
+                    val isCodecError =
+                        error.message?.contains("Decoder failed") == true ||
+                            error.message?.contains("exceeds selected codec's capabilities") == true ||
+                            error.message?.contains("MediaCodecVideoDecoderException") == true ||
+                            error.message?.contains("NO_EXCEEDS_CAPABILITIES") == true
+
+                    val errorMessage =
+                        if (isCodecError) {
+                            android.util.Log.w("ExoPlayerManager", "Codec compatibility error detected")
+                            "This video format is not supported on this device. The video codec (HEVC/H.265 or Dolby Vision) exceeds the device's capabilities. Please try a different video source with H.264 codec."
+                        } else {
+                            val playerError = errorHandler.handleError(error)
+                            playerError.message
+                        }
+
+                    updatePlayerState { copy(error = errorMessage, hasVideo = false) }
                 }
 
                 override fun onPositionDiscontinuity(
@@ -97,11 +114,24 @@ class ExoPlayerManager
 
                 override fun onPlaybackStateChanged(playbackState: Int) {
                     super.onPlaybackStateChanged(playbackState)
+                    val stateString =
+                        when (playbackState) {
+                            Player.STATE_IDLE -> "IDLE"
+                            Player.STATE_BUFFERING -> "BUFFERING"
+                            Player.STATE_READY -> "READY"
+                            Player.STATE_ENDED -> "ENDED"
+                            else -> "UNKNOWN($playbackState)"
+                        }
+                    android.util.Log.d("ExoPlayerManager", "Playback state changed to: $stateString")
+
                     val state =
                         when (playbackState) {
                             Player.STATE_IDLE -> PlaybackState.IDLE
                             Player.STATE_BUFFERING -> PlaybackState.BUFFERING
-                            Player.STATE_READY -> PlaybackState.READY
+                            Player.STATE_READY -> {
+                                logVideoFormat()
+                                PlaybackState.READY
+                            }
                             Player.STATE_ENDED -> {
                                 handlePlaybackEnded()
                                 PlaybackState.ENDED
@@ -125,6 +155,45 @@ class ExoPlayerManager
                     // Initialize subtitle manager with the player
                     subtitleManager.initialize(player)
                 }
+        }
+
+        private fun logVideoFormat() {
+            try {
+                val player = _exoPlayer
+                if (player != null) {
+                    val videoFormat = player.videoFormat
+                    if (videoFormat != null) {
+                        android.util.Log.d("ExoPlayerManager", "Video format detected:")
+                        android.util.Log.d("ExoPlayerManager", "  - MIME type: ${videoFormat.sampleMimeType}")
+                        android.util.Log.d("ExoPlayerManager", "  - Codecs: ${videoFormat.codecs}")
+                        android.util.Log.d("ExoPlayerManager", "  - Resolution: ${videoFormat.width}x${videoFormat.height}")
+                        android.util.Log.d("ExoPlayerManager", "  - Frame rate: ${videoFormat.frameRate}")
+                        android.util.Log.d("ExoPlayerManager", "  - Bitrate: ${videoFormat.bitrate}")
+                        android.util.Log.d("ExoPlayerManager", "  - Color info: ${videoFormat.colorInfo}")
+
+                        val hasVideo = videoFormat.width > 0 && videoFormat.height > 0
+                        android.util.Log.d("ExoPlayerManager", "Video track ready: $hasVideo")
+
+                        updatePlayerState { copy(hasVideo = hasVideo) }
+                    } else {
+                        android.util.Log.w("ExoPlayerManager", "No video format detected - audio only or format not ready")
+                        updatePlayerState { copy(hasVideo = false) }
+                    }
+
+                    // Log audio format as well
+                    val audioFormat = player.audioFormat
+                    if (audioFormat != null) {
+                        android.util.Log.d("ExoPlayerManager", "Audio format detected:")
+                        android.util.Log.d("ExoPlayerManager", "  - MIME type: ${audioFormat.sampleMimeType}")
+                        android.util.Log.d("ExoPlayerManager", "  - Sample rate: ${audioFormat.sampleRate}")
+                        android.util.Log.d("ExoPlayerManager", "  - Channels: ${audioFormat.channelCount}")
+                    }
+                } else {
+                    android.util.Log.w("ExoPlayerManager", "Cannot log video format - ExoPlayer is null")
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("ExoPlayerManager", "Error logging video format", e)
+            }
         }
 
         fun prepareMedia(
@@ -451,6 +520,7 @@ data class PlayerState(
     val error: String? = null,
     val shouldShowResumeDialog: Boolean = false,
     val resumePosition: Long? = null,
+    val hasVideo: Boolean = false,
 ) {
     val progressPercentage: Float
         get() = if (duration > 0) (currentPosition.toFloat() / duration.toFloat()) else 0f

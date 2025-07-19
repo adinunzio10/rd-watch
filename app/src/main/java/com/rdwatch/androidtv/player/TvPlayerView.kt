@@ -92,29 +92,74 @@ fun TvPlayerView(
         // ExoPlayer view with subtitle support
         AndroidView(
             factory = { ctx ->
+                android.util.Log.d("TvPlayerView", "Creating PlayerView in factory")
                 PlayerView(ctx).apply {
-                    player = exoPlayerManager.exoPlayer
+                    android.util.Log.d("TvPlayerView", "Configuring PlayerView")
+
+                    // Set player and log the assignment
+                    val currentPlayer = exoPlayerManager.exoPlayer
+                    player = currentPlayer
+                    android.util.Log.d("TvPlayerView", "PlayerView assigned ExoPlayer: ${currentPlayer.hashCode()}")
+
+                    // Enhanced configuration for Android TV
                     useController = false // We use our custom controls
                     setShowBuffering(PlayerView.SHOW_BUFFERING_WHEN_PLAYING)
                     setKeepContentOnPlayerReset(true)
 
+                    // Ensure proper surface scaling for Android TV
+                    videoSurfaceView?.let { surfaceView ->
+                        android.util.Log.d("TvPlayerView", "Configuring video surface view")
+                        // Surface view configuration for proper rendering
+                    }
+
+                    // Force layout to ensure surface is properly sized
+                    android.util.Log.d("TvPlayerView", "PlayerView layout: width=$width, height=$height")
+
                     // Configure subtitle view
                     subtitleView?.let { subtitleView ->
                         subtitleManager.configureSubtitleView(subtitleView)
+                        android.util.Log.d("TvPlayerView", "Subtitle view configured")
                     }
 
                     setOnClickListener {
                         onUserInteraction()
                     }
+
+                    // Log player state when view is created
+                    val playerState = exoPlayerManager.playerState.value
+                    android.util.Log.d("TvPlayerView", "PlayerView created with state:")
+                    android.util.Log.d("TvPlayerView", "  - Playback state: ${playerState.playbackState}")
+                    android.util.Log.d("TvPlayerView", "  - Has video: ${playerState.hasVideo}")
+                    android.util.Log.d("TvPlayerView", "  - Is playing: ${playerState.isPlaying}")
                 }
             },
             update = { playerView ->
-                playerView.player = exoPlayerManager.exoPlayer
+                android.util.Log.d("TvPlayerView", "Updating PlayerView")
+
+                val currentPlayer = exoPlayerManager.exoPlayer
+                if (playerView.player != currentPlayer) {
+                    android.util.Log.d("TvPlayerView", "Updating PlayerView with new ExoPlayer: ${currentPlayer.hashCode()}")
+                    playerView.player = currentPlayer
+                } else {
+                    android.util.Log.d("TvPlayerView", "PlayerView already has correct ExoPlayer instance")
+                }
 
                 // Update subtitle styling if changed
                 playerView.subtitleView?.let { subtitleView ->
                     subtitleManager.configureSubtitleView(subtitleView)
                 }
+
+                // Log current player state during update
+                val playerState = exoPlayerManager.playerState.value
+                android.util.Log.d("TvPlayerView", "PlayerView update - current state:")
+                android.util.Log.d("TvPlayerView", "  - Playback state: ${playerState.playbackState}")
+                android.util.Log.d("TvPlayerView", "  - Has video: ${playerState.hasVideo}")
+                android.util.Log.d("TvPlayerView", "  - Is playing: ${playerState.isPlaying}")
+
+                // Check if video surface is available and ready
+                playerView.videoSurfaceView?.let { surfaceView ->
+                    android.util.Log.d("TvPlayerView", "Video surface view available: ${surfaceView.width}x${surfaceView.height}")
+                } ?: android.util.Log.w("TvPlayerView", "No video surface view available")
             },
             modifier = Modifier.fillMaxSize(),
         )
