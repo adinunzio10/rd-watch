@@ -153,16 +153,66 @@ class ScraperQueryBuilder
 
         /**
          * Extract Torrentio configuration from manifest
+         * Config is embedded in the baseUrl like: https://torrentio.strem.fun/realdebrid=TOKEN|sort=qualitythensize
          */
         private fun extractTorrentioConfig(manifest: ScraperManifest): String {
-            // Default Torrentio configuration
-            // This can be extended to read from manifest.config or user preferences
-            val defaultConfig = "defaults"
+            // Try to extract config from baseUrl first
+            val baseUrl = manifest.baseUrl
+            val configFromUrl = extractConfigFromTorrentioUrl(baseUrl)
+            if (configFromUrl != null) {
+                println("DEBUG [ScraperQueryBuilder]: Extracted Torrentio config from URL: $configFromUrl")
+                return configFromUrl
+            }
 
-            // Check if custom config is specified in manifest
+            // Check if custom config is specified in manifest additionalParams
             val customConfig = manifest.configuration.additionalParams["torrentioConfig"]
+            if (customConfig != null) {
+                println("DEBUG [ScraperQueryBuilder]: Using Torrentio config from additionalParams: $customConfig")
+                return customConfig
+            }
 
-            return customConfig ?: defaultConfig
+            // Default Torrentio configuration (no Real-Debrid)
+            val defaultConfig = "defaults"
+            println("DEBUG [ScraperQueryBuilder]: Using default Torrentio config: $defaultConfig")
+            return defaultConfig
+        }
+
+        /**
+         * Extract config segment from Torrentio URL
+         * URL format: https://torrentio.strem.fun/[config]/manifest.json
+         * Config can be URL-encoded like: qualityfilter=scr,cam%7Cdebridoptions=nodownloadlinks,nocatalog%7Crealdebrid=TOKEN
+         */
+        private fun extractConfigFromTorrentioUrl(url: String): String? {
+            return try {
+                // Remove trailing slashes and manifest.json
+                val cleanUrl = url.trimEnd('/').removeSuffix("/manifest.json")
+
+                // Extract everything after the domain
+                val regex = """https?://[^/]+/(.+)""".toRegex()
+                val matchResult = regex.find(cleanUrl)
+                val rawConfig = matchResult?.groupValues?.get(1)
+
+                if (rawConfig.isNullOrEmpty() || rawConfig == "defaults") {
+                    return null
+                }
+
+                // URL decode the config for logging purposes
+                val decodedConfig =
+                    try {
+                        java.net.URLDecoder.decode(rawConfig, "UTF-8")
+                    } catch (e: Exception) {
+                        rawConfig // If decode fails, use raw
+                    }
+
+                println("DEBUG [ScraperQueryBuilder]: Raw config: $rawConfig")
+                println("DEBUG [ScraperQueryBuilder]: Decoded config: $decodedConfig")
+
+                // Return the original (encoded) config since Torrentio expects it URL-encoded
+                rawConfig
+            } catch (e: Exception) {
+                println("DEBUG [ScraperQueryBuilder]: Error extracting config from URL $url: ${e.message}")
+                null
+            }
         }
 
         /**
