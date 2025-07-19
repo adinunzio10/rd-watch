@@ -16,7 +16,7 @@ Best practices for effective Claude Code development sessions, based on successf
 ```bash
 git status                    # Current working state
 git log --oneline -10        # Recent changes context
-./lint-summary.sh            # Current code quality status
+./ktlint-summary.sh          # Current code style status
 ```
 
 ### Task Complexity Assessment

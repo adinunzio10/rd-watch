@@ -207,7 +207,7 @@ private fun updateTVShowWithSeasons(originalTvShow: TVShowContentDetail, seasons
 ### Essential Gradle Commands
 ```bash
 ./gradlew compileDebugKotlin    # Quick compilation check
-./lint-summary.sh               # Lint with concise output
+./ktlint-summary.sh             # KtLint format and check
 ./gradlew assembleDebug         # Full build verification
 ```
 

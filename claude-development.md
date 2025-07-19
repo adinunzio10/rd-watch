@@ -53,7 +53,7 @@ adb -s <device-id> install app/build/outputs/apk/debug/app-debug.apk
 
 #### Lint Errors
 - **Current Status**: Set to non-blocking (`abortOnError = false`)
-- **Resolution**: Use `./lint-summary.sh` for concise output
+- **Resolution**: Use `./ktlint-summary.sh` for formatting and style checking
 - **Best Practice**: Address lint warnings incrementally
 
 #### Compose Issues

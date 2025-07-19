@@ -20,7 +20,7 @@ This file provides essential guidance to Claude Code when working with this Andr
 
 # Code Quality
 ./gradlew lint                    # Full lint check
-./lint-summary.sh                 # Concise lint output
+./ktlint-summary.sh               # KtLint format & check
 ./lint-check.sh                   # Minimal lint output
 
 # Dependencies
@@ -67,7 +67,7 @@ app/src/main/java/com/rdwatch/androidtv/
 
 ## Linting Notes
 
-- Remember to lint using `lint-summary.sh`. `lint-check.sh` no longer exists
+- Remember to lint using `ktlint-summary.sh` for code formatting and style checking
 
 ---
 
