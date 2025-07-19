@@ -50,8 +50,6 @@ This project uses modular documentation for optimal context management:
    - Update `CLAUDE-architecture.md` when changing app structure or dependencies
    - Update `claude-tests.md` when adding/modifying tests
    - Update `claude-workflows.md` when changing development processes
-3. **Use planning mode** for major changes - save plans to `planning-docs/`
-4. **Reference documentation by filename:line** when discussing code locations
 
 ## Key Directories
 
