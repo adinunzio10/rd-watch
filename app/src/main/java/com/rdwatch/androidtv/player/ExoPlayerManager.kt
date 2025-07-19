@@ -105,10 +105,12 @@ class ExoPlayerManager
             }
 
         private fun createPlayer(): ExoPlayer {
+            android.util.Log.d("ExoPlayerManager", "Creating ExoPlayer")
             return ExoPlayer.Builder(context)
                 .setTrackSelector(trackSelector)
                 .build()
                 .also { player ->
+                    android.util.Log.d("ExoPlayerManager", "ExoPlayer created successfully")
                     player.addListener(playerListener)
                     _exoPlayer = player
 
@@ -124,6 +126,8 @@ class ExoPlayerManager
             metadata: MediaMetadata? = null,
             shouldResume: Boolean = true,
         ) {
+            android.util.Log.d("ExoPlayerManager", "prepareMedia called with URL: $mediaUrl")
+
             val mediaItem =
                 MediaItem.Builder()
                     .setUri(mediaUrl)
@@ -142,13 +146,20 @@ class ExoPlayerManager
                     }
                     .build()
 
+            android.util.Log.d("ExoPlayerManager", "MediaItem created with URI: ${mediaItem.localConfiguration?.uri}")
+
             // Store content ID for progress tracking
             currentContentId = contentId ?: mediaUrl
 
             // Create appropriate media source based on format
             val mediaSource = mediaSourceFactory.createMediaSource(mediaItem)
+            android.util.Log.d("ExoPlayerManager", "MediaSource created: ${mediaSource.javaClass.simpleName}")
+
             exoPlayer.setMediaSource(mediaSource)
+            android.util.Log.d("ExoPlayerManager", "MediaSource set on ExoPlayer")
+
             exoPlayer.prepare()
+            android.util.Log.d("ExoPlayerManager", "ExoPlayer.prepare() called")
 
             updatePlayerState {
                 copy(

@@ -30,19 +30,44 @@ class MediaSourceFactory
                     .setUserAgent("RD-Watch/1.0")
                     .setConnectTimeoutMs(30_000)
                     .setReadTimeoutMs(30_000)
-                    .setAllowCrossProtocolRedirects(true),
+                    .setAllowCrossProtocolRedirects(true)
+                    .setDefaultRequestProperties(mapOf("Connection" to "keep-alive"))
+                    .apply {
+                        android.util.Log.d("MediaSourceFactory", "HTTP DataSource configured with cross-protocol redirects enabled")
+                    },
             )
 
         private val extractorsFactory = DefaultExtractorsFactory()
 
         fun createMediaSource(mediaItem: MediaItem): MediaSource {
-            val uri = mediaItem.localConfiguration?.uri ?: return createProgressiveMediaSource(mediaItem)
+            val uri = mediaItem.localConfiguration?.uri
+            android.util.Log.d("MediaSourceFactory", "createMediaSource called with URI: $uri")
 
-            return when (detectMediaType(uri)) {
-                MediaType.DASH -> createDashMediaSource(mediaItem)
-                MediaType.HLS -> createHlsMediaSource(mediaItem)
-                MediaType.SMOOTH_STREAMING -> createSmoothStreamingMediaSource(mediaItem)
-                MediaType.PROGRESSIVE -> createProgressiveMediaSource(mediaItem)
+            if (uri == null) {
+                android.util.Log.w("MediaSourceFactory", "URI is null, creating progressive media source")
+                return createProgressiveMediaSource(mediaItem)
+            }
+
+            val mediaType = detectMediaType(uri)
+            android.util.Log.d("MediaSourceFactory", "Detected media type: $mediaType for URI: $uri")
+
+            return when (mediaType) {
+                MediaType.DASH -> {
+                    android.util.Log.d("MediaSourceFactory", "Creating DASH media source")
+                    createDashMediaSource(mediaItem)
+                }
+                MediaType.HLS -> {
+                    android.util.Log.d("MediaSourceFactory", "Creating HLS media source")
+                    createHlsMediaSource(mediaItem)
+                }
+                MediaType.SMOOTH_STREAMING -> {
+                    android.util.Log.d("MediaSourceFactory", "Creating Smooth Streaming media source")
+                    createSmoothStreamingMediaSource(mediaItem)
+                }
+                MediaType.PROGRESSIVE -> {
+                    android.util.Log.d("MediaSourceFactory", "Creating Progressive media source")
+                    createProgressiveMediaSource(mediaItem)
+                }
             }
         }
 
