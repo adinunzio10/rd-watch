@@ -215,7 +215,7 @@ class PlaybackViewModel
                     val movieTitle = "${movie.title} [${source.quality.resolution}]"
                     exoPlayerManager.prepareMedia(
                         mediaUrl = sourceUrl,
-                        contentId = movie.id ?: movie.title ?: "unknown",
+                        contentId = movie.id?.toString() ?: movie.title ?: "unknown",
                         title = movieTitle,
                         shouldResume = true,
                     )
