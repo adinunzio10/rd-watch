@@ -377,6 +377,9 @@ class VideoPlayerViewModel
                                 hasVideo = false,
                                 hasError = true,
                                 errorMessage = playerState.error,
+                                // IMPORTANT: Preserve the manager references even in error state!
+                                exoPlayerManager = exoPlayerManager,
+                                subtitleManager = subtitleManager,
                             )
                         }
                         return@collect
@@ -398,6 +401,9 @@ class VideoPlayerViewModel
                             hasVideo = hasVideoContent,
                             hasError = false,
                             errorMessage = null,
+                            // IMPORTANT: Preserve the manager references!
+                            exoPlayerManager = exoPlayerManager,
+                            subtitleManager = subtitleManager,
                         )
                     }
 
@@ -427,6 +433,9 @@ class VideoPlayerViewModel
                             hasVideo = false,
                             hasError = true,
                             errorMessage = "Video loading timed out. The video may be too large or the connection is slow. Please try again.",
+                            // IMPORTANT: Preserve the manager references in timeout case!
+                            exoPlayerManager = exoPlayerManager,
+                            subtitleManager = subtitleManager,
                         )
                     }
                 }
@@ -458,6 +467,9 @@ class VideoPlayerViewModel
                     isLoading = false,
                     hasError = true,
                     errorMessage = "An error occurred: ${exception.message}",
+                    // IMPORTANT: Preserve the manager references in error handling!
+                    exoPlayerManager = exoPlayerManager,
+                    subtitleManager = subtitleManager,
                 )
             }
         }
