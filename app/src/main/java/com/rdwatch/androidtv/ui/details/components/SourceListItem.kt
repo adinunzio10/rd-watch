@@ -390,62 +390,179 @@ fun QualityScoreIndicator(
 /**
  * Enhanced metadata row with smart progressive disclosure
  * Shows key information in compact format with visual indicators
+ * Prioritizes practical user decision factors
  */
 @Composable
 fun EnhancedMetadataRow(
     sourceMetadata: SourceMetadata,
     modifier: Modifier = Modifier,
     compact: Boolean = true,
+    showFileSize: Boolean = true,
 ) {
     Row(
         modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        // Provider type indicator with visual distinction
-        ProviderTypeIndicator(
-            providerType = sourceMetadata.provider.type,
-            reliability = sourceMetadata.provider.reliability,
-        )
+        // 1. PROVIDER NAME + RELIABILITY (Most important for trust)
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            Text(
+                text = sourceMetadata.provider.displayName,
+                style =
+                    MaterialTheme.typography.bodyMedium.copy(
+                        fontSize = if (compact) 12.sp else 14.sp,
+                        fontWeight = FontWeight.Medium,
+                    ),
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1,
+            )
 
-        // Codec efficiency indicator
-        CodecEfficiencyIndicator(
-            codec = sourceMetadata.codec,
-            size = if (compact) QualityBadgeSize.SMALL else QualityBadgeSize.MEDIUM,
-        )
+            // Reliability stars
+            ProviderReliabilityStars(
+                reliability = sourceMetadata.provider.reliability,
+                size = if (compact) 12.dp else 14.dp,
+            )
+        }
 
-        // Audio format indicator
-        AudioFormatIndicator(
-            audio = sourceMetadata.audio,
-            size = if (compact) QualityBadgeSize.SMALL else QualityBadgeSize.MEDIUM,
-        )
+        // 2. FILE SIZE (Critical for storage/bandwidth decisions)
+        if (showFileSize) {
+            sourceMetadata.file.sizeInBytes?.let { sizeBytes ->
+                val sizeGB = sizeBytes / (1024.0 * 1024.0 * 1024.0)
+                val (sizeText, sizeColor) =
+                    when {
+                        sizeGB < 1.0 -> String.format("%.1f MB", sizeBytes / (1024.0 * 1024.0)) to Color(0xFF10B981)
+                        sizeGB < 8.0 -> String.format("%.1f GB", sizeGB) to Color(0xFF3B82F6)
+                        sizeGB < 15.0 -> String.format("%.1f GB", sizeGB) to Color(0xFFF59E0B)
+                        else -> String.format("%.1f GB", sizeGB) to Color(0xFFEF4444)
+                    }
 
-        Spacer(modifier = Modifier.weight(1f))
-
-        // Health indicator for P2P with visual status
-        sourceMetadata.health.seeders?.let { seeders ->
-            if (seeders > 0) {
-                EnhancedHealthStatusIndicator(
-                    health = sourceMetadata.health,
-                    compact = compact,
+                Text(
+                    text = sizeText,
+                    style =
+                        MaterialTheme.typography.bodyMedium.copy(
+                            fontSize = if (compact) 12.sp else 14.sp,
+                            fontWeight = FontWeight.Bold,
+                        ),
+                    color = sizeColor,
                 )
             }
         }
 
-        // Age indicator for content freshness
-        sourceMetadata.file.addedDate?.let { date ->
-            AgeIndicator(
-                addedDate = date,
-                compact = compact,
-            )
+        Spacer(modifier = Modifier.weight(1f))
+
+        // 3. AVAILABILITY STATUS (Quick access indicator)
+        when {
+            sourceMetadata.availability.cached -> {
+                Text(
+                    text = "INSTANT",
+                    style =
+                        MaterialTheme.typography.labelSmall.copy(
+                            fontSize = if (compact) 10.sp else 12.sp,
+                            fontWeight = FontWeight.Bold,
+                        ),
+                    color = Color(0xFF059669),
+                )
+            }
+            sourceMetadata.availability.debridService != null -> {
+                Text(
+                    text = "DEBRID",
+                    style =
+                        MaterialTheme.typography.labelSmall.copy(
+                            fontSize = if (compact) 10.sp else 12.sp,
+                            fontWeight = FontWeight.Bold,
+                        ),
+                    color = Color(0xFF3B82F6),
+                )
+            }
+            sourceMetadata.provider.type == SourceProviderInfo.ProviderType.DIRECT_STREAM -> {
+                Text(
+                    text = "STREAM",
+                    style =
+                        MaterialTheme.typography.labelSmall.copy(
+                            fontSize = if (compact) 10.sp else 12.sp,
+                            fontWeight = FontWeight.Bold,
+                        ),
+                    color = Color(0xFF0EA5E9),
+                )
+            }
+            else -> {
+                // 4. HEALTH/SPEED INDICATOR for P2P
+                sourceMetadata.health.seeders?.let { seeders ->
+                    if (seeders > 0) {
+                        val (healthText, healthColor) =
+                            when {
+                                seeders > 1000 -> "FAST" to Color(0xFF059669)
+                                seeders > 100 -> "GOOD" to Color(0xFF10B981)
+                                seeders > 50 -> "OK" to Color(0xFF84CC16)
+                                seeders > 10 -> "SLOW" to Color(0xFFF59E0B)
+                                else -> "POOR" to Color(0xFFEF4444)
+                            }
+
+                        Text(
+                            text = healthText,
+                            style =
+                                MaterialTheme.typography.labelSmall.copy(
+                                    fontSize = if (compact) 10.sp else 12.sp,
+                                    fontWeight = FontWeight.Bold,
+                                ),
+                            color = healthColor,
+                        )
+                    }
+                }
+            }
         }
 
-        // Cached/availability status
-        AvailabilityStatusIndicator(
-            availability = sourceMetadata.availability,
-            compact = compact,
-        )
+        // 5. AGE INDICATOR (Only for very recent content)
+        sourceMetadata.file.addedDate?.let { date ->
+            val now = java.util.Date()
+            val ageInDays = ((now.time - date.time) / (1000 * 60 * 60 * 24)).toInt()
+
+            if (ageInDays <= 7) { // Only show for very recent content
+                Text(
+                    text = if (ageInDays < 1) "NEW" else "${ageInDays}d",
+                    style =
+                        MaterialTheme.typography.labelSmall.copy(
+                            fontSize = if (compact) 10.sp else 12.sp,
+                            fontWeight = FontWeight.Bold,
+                        ),
+                    color = if (ageInDays < 1) Color(0xFF10B981) else Color(0xFF84CC16),
+                )
+            }
+        }
     }
+}
+
+/**
+ * Provider reliability stars component
+ */
+@Composable
+fun ProviderReliabilityStars(
+    reliability: SourceProviderInfo.ProviderReliability,
+    size: androidx.compose.ui.unit.Dp = 12.dp,
+    modifier: Modifier = Modifier,
+) {
+    val (stars, color) =
+        when (reliability) {
+            SourceProviderInfo.ProviderReliability.EXCELLENT -> "★★★" to Color(0xFF059669)
+            SourceProviderInfo.ProviderReliability.GOOD -> "★★" to Color(0xFF3B82F6)
+            SourceProviderInfo.ProviderReliability.FAIR -> "★" to Color(0xFFF59E0B)
+            SourceProviderInfo.ProviderReliability.POOR -> "⚠" to Color(0xFFEF4444)
+            else -> "?" to Color(0xFF6B7280)
+        }
+
+    Text(
+        text = stars,
+        style =
+            MaterialTheme.typography.labelSmall.copy(
+                fontSize = (size.value * 0.8).sp,
+                fontWeight = FontWeight.Bold,
+            ),
+        color = color,
+        modifier = modifier,
+    )
 }
 
 /**
@@ -1325,17 +1442,44 @@ fun AvailabilityDetailsSection(
 }
 
 /**
- * Compact badge row for source list items with intelligent overflow
+ * Compact badge row for source list items with intelligent overflow and view-mode awareness
  */
 @Composable
 fun CompactBadgeRow(
     sourceMetadata: SourceMetadata,
     modifier: Modifier = Modifier,
     maxBadges: Int = 5,
+    viewMode: String = "list", // "grid", "list", or "compact"
 ) {
-    val badges = sourceMetadata.getQualityBadges()
-    val visibleBadges = badges.take(maxBadges)
-    val overflowCount = badges.size - visibleBadges.size
+    val allBadges = sourceMetadata.getQualityBadges()
+
+    // Smart badge selection based on view mode
+    val prioritizedBadges =
+        when (viewMode) {
+            "compact" -> {
+                // Only show most critical badges for compact view
+                allBadges.filter { badge ->
+                    badge.type in
+                        setOf(
+                            com.rdwatch.androidtv.ui.details.models.advanced.QualityBadge.Type.TRACKER_IDENTITY,
+                            com.rdwatch.androidtv.ui.details.models.advanced.QualityBadge.Type.FILE_SIZE,
+                            com.rdwatch.androidtv.ui.details.models.advanced.QualityBadge.Type.RESOLUTION,
+                            com.rdwatch.androidtv.ui.details.models.advanced.QualityBadge.Type.HDR,
+                        )
+                }
+            }
+            "list" -> {
+                // Balanced selection for list view
+                allBadges.filter { badge ->
+                    badge.type != com.rdwatch.androidtv.ui.details.models.advanced.QualityBadge.Type.CODEC ||
+                        badge.priority >= 65 // Only show efficient codecs
+                }
+            }
+            else -> allBadges // Show all for grid view
+        }
+
+    val visibleBadges = prioritizedBadges.take(maxBadges)
+    val overflowCount = prioritizedBadges.size - visibleBadges.size
 
     LazyRow(
         modifier = modifier,
@@ -1346,7 +1490,12 @@ fun CompactBadgeRow(
         items(visibleBadges) { badge ->
             AdvancedQualityBadgeComponent(
                 badge = badge,
-                size = QualityBadgeSize.SMALL,
+                size =
+                    when (viewMode) {
+                        "compact" -> QualityBadgeSize.SMALL
+                        "list" -> QualityBadgeSize.SMALL
+                        else -> QualityBadgeSize.MEDIUM
+                    },
             )
         }
 
@@ -1354,7 +1503,11 @@ fun CompactBadgeRow(
             item {
                 OverflowBadge(
                     count = overflowCount,
-                    size = QualityBadgeSize.SMALL,
+                    size =
+                        when (viewMode) {
+                            "compact" -> QualityBadgeSize.SMALL
+                            else -> QualityBadgeSize.SMALL
+                        },
                 )
             }
         }

@@ -1412,7 +1412,140 @@
           11
         ],
         "status": "pending",
-        "subtasks": []
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Design Library Data Models and Entities",
+            "description": "Create Room entities for library items, categories, and relationships with proper foreign key constraints",
+            "dependencies": [],
+            "details": "Define LibraryItemEntity with fields: id, contentId, contentType (Movie/TVShow), title, posterUrl, dateAdded, lastWatched, watchedStatus. Create CategoryEntity with id, name, color, sortOrder. Design LibraryItemCategoryEntity for many-to-many relationships. Add Room annotations and foreign key constraints.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Implement Library DAOs and Database Operations",
+            "description": "Create Data Access Objects for all library database operations with proper query methods",
+            "dependencies": [
+              "14.1"
+            ],
+            "details": "Build LibraryItemDao with methods: insertLibraryItem, deleteLibraryItem, getLibraryItemsByCategory, searchLibraryItems, updateWatchedStatus. Create CategoryDao for category CRUD operations. Implement complex queries for sorting (recently added, alphabetical, last watched) and filtering by watched status.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Build Library Repository Layer",
+            "description": "Create repository pattern implementation to abstract database operations and handle business logic",
+            "dependencies": [
+              "14.2"
+            ],
+            "details": "Implement LibraryRepository with methods for all CRUD operations. Add caching strategy using coroutines and Flow. Handle data transformation between entities and domain models. Implement error handling and data validation. Create repository interface for dependency injection.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Create Library Grid Layout UI Components",
+            "description": "Design and implement grid-based UI components for displaying library content with TV-optimized focus handling",
+            "dependencies": [],
+            "details": "Build LibraryGridItem composable with poster image, title, watched indicators. Create responsive grid layout using LazyVerticalGrid with TV-friendly spacing. Implement proper focus management for D-pad navigation. Add loading states and empty state UI. Include long-press gesture detection for quick actions.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Implement Category Filter System",
+            "description": "Build category filtering UI with horizontal tabs and filter logic integration",
+            "dependencies": [
+              "14.4"
+            ],
+            "details": "Create CategoryFilterRow with horizontal scrollable tabs for Movies, TV Shows, Currently Watching. Implement filter state management and UI updates. Add category creation/editing functionality. Design category indicators with color coding. Handle category switching with smooth animations.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 6,
+            "title": "Develop Library Search Functionality",
+            "description": "Implement real-time search with filtering and result highlighting capabilities",
+            "dependencies": [
+              "14.4",
+              "14.5"
+            ],
+            "details": "Create SearchBar composable with text input handling. Implement debounced search queries to avoid excessive database calls. Build search result filtering by title, category, and watched status. Add search result highlighting and empty state handling. Integrate with existing grid layout.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 7,
+            "title": "Build Library ViewModel and Business Logic",
+            "description": "Create comprehensive ViewModel managing all library operations and state management",
+            "dependencies": [
+              "14.3"
+            ],
+            "details": "Implement LibraryViewModel with StateFlow for UI state. Add methods for add/remove operations, category management, sorting, and search. Handle loading states and error handling. Implement sort algorithms for recently added, alphabetical, last watched. Manage category filtering and search state.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 8,
+            "title": "Implement Poster Caching System",
+            "description": "Create efficient image caching strategy for library poster images with offline support",
+            "dependencies": [],
+            "details": "Integrate Coil image loading library with custom cache configuration. Implement disk caching for offline viewing. Add image download retry logic and error handling. Create placeholder and error state images. Optimize cache size management for TV storage constraints.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 9,
+            "title": "Create Quick Actions Menu System",
+            "description": "Implement long-press context menu with library management actions",
+            "dependencies": [
+              "14.4",
+              "14.7"
+            ],
+            "details": "Build QuickActionsMenu composable with options: Remove from library, Mark as watched/unwatched, Play next episode. Implement long-press gesture detection with haptic feedback. Create action confirmation dialogs. Handle action execution and UI state updates. Add keyboard shortcuts for accessibility.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 10,
+            "title": "Integrate Playback Tracking System",
+            "description": "Connect library with existing playback tracking to show watched status and progress indicators",
+            "dependencies": [
+              "14.7"
+            ],
+            "details": "Integrate with existing playback completion data from other tasks. Update watched status based on playback progress. Implement progress indicators for partially watched content. Create automatic library updates when content is played. Handle edge cases for multi-episode content.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 11,
+            "title": "Build Library Export/Import System",
+            "description": "Create backup and restore functionality for library data with file handling",
+            "dependencies": [
+              "14.3"
+            ],
+            "details": "Implement JSON export functionality for library backup. Create file picker integration for import operations. Handle data validation and conflict resolution during import. Add progress indicators for large library operations. Implement error handling and rollback capabilities for failed imports.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 12,
+            "title": "Create Main Library Screen Integration",
+            "description": "Assemble all components into the main library screen with navigation and state management",
+            "dependencies": [
+              "14.5",
+              "14.6",
+              "14.7",
+              "14.9",
+              "14.10"
+            ],
+            "details": "Build LibraryScreen composable integrating all components. Implement proper navigation integration with existing app navigation. Add screen-level state management and error handling. Create smooth transitions and animations. Handle large library performance optimization (500+ items). Add accessibility features.",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
       },
       {
         "id": 15,
@@ -2622,7 +2755,7 @@
         "description": "Upgrade video player UI with comprehensive TV-optimized controls, implement hamburger menu with quality/subtitle/speed options, and improve remote navigation experience.",
         "details": "Enhance the existing ExoPlayer implementation with advanced controls and features:\n\n1. **Enhanced Player Controls UI**: Replace basic play/pause/seek controls with comprehensive TV-optimized interface. Add progress bar with time indicators, volume controls, and playback status overlay. Implement proper focus management for D-pad navigation with visual focus indicators.\n\n2. **Functional Hamburger Menu**: Create overlay menu accessible via menu button or long-press. Include: quality selection (4K/1080p/720p/480p), subtitle track selection with on/off toggle, audio track selection for multi-language content, playback speed controls (0.5x to 2x), and sleep timer functionality.\n\n3. **Quality Selection**: Integrate with Real-Debrid API to fetch available quality options for current content. Display quality badges and allow runtime switching. Handle quality changes gracefully with minimal playback interruption.\n\n4. **Subtitle Management**: Implement subtitle track detection from video files and external sources. Add subtitle styling options (size, color, background). Support SRT, VTT, and SSA formats with proper synchronization.\n\n5. **TV Remote Optimization**: Map all functions to remote buttons (menu for hamburger, info for details overlay, back for previous menu). Implement proper focus restoration when closing overlays. Add seek preview thumbnails if available from Real-Debrid.\n\n6. **Player State Management**: Create PlayerControlsViewModel to manage UI state, settings persistence, and player configuration. Store user preferences for quality, subtitle preferences, and playback speed.",
         "testStrategy": "Test all controls with Android TV remote and verify proper focus management. Test quality switching with various Real-Debrid content sources and verify seamless transitions. Test subtitle functionality with different formats and verify synchronization accuracy. Test hamburger menu accessibility and navigation flow. Verify settings persistence across app sessions. Test on different Android TV devices (Fire TV, Chromecast, Shield) to ensure compatibility. Profile performance impact of enhanced UI elements during playback.",
-        "status": "in-progress",
+        "status": "cancelled",
         "dependencies": [
           12
         ],
@@ -2780,7 +2913,7 @@
     ],
     "metadata": {
       "created": "2025-06-22T03:41:46.714Z",
-      "updated": "2025-07-20T01:02:21.773Z",
+      "updated": "2025-07-20T19:41:53.767Z",
       "description": "Tasks for master context"
     }
   }

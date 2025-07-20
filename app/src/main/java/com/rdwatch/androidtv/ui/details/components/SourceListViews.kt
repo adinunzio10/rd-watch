@@ -5,6 +5,7 @@ import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -30,7 +31,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.rdwatch.androidtv.ui.details.models.advanced.*
 import com.rdwatch.androidtv.ui.focus.TVFocusItem
-import com.rdwatch.androidtv.ui.focus.tvFocusable
 
 /**
  * Grid view for sources with cards layout
@@ -165,74 +165,68 @@ private fun ProviderGroupCard(
     ) {
         Column {
             // Group header
-            Row(
+            Surface(
                 modifier =
                     Modifier
                         .fillMaxWidth()
                         .clickable { onGroupToggle() }
-                        .tvFocusable(
-                            enabled = true,
-                            focusRequester = focusRequester,
-                            onFocusChanged = { isFocused = it.isFocused },
-                        )
-                        .then(
-                            if (isFocused) {
-                                Modifier.border(
-                                    2.dp,
-                                    MaterialTheme.colorScheme.primary,
-                                    RoundedCornerShape(12.dp),
-                                )
-                            } else {
-                                Modifier
-                            },
-                        )
-                        .padding(16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
+                        .onFocusChanged { focusState ->
+                            isFocused = focusState.isFocused
+                        },
+                border =
+                    if (isFocused) {
+                        BorderStroke(3.dp, MaterialTheme.colorScheme.outline)
+                    } else {
+                        null
+                    },
+                color =
+                    if (isFocused) {
+                        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+                    } else {
+                        androidx.compose.ui.graphics.Color.Transparent
+                    },
             ) {
                 Row(
+                    modifier = Modifier.padding(16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
-                    // Provider icon/logo placeholder
-                    Box(
-                        modifier =
-                            Modifier
-                                .size(40.dp)
-                                .background(
-                                    MaterialTheme.colorScheme.primary,
-                                    RoundedCornerShape(8.dp),
-                                ),
-                        contentAlignment = Alignment.Center,
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
-                        Text(
-                            text = provider.displayName.take(2).uppercase(),
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onPrimary,
-                            fontWeight = FontWeight.Bold,
-                        )
-                    }
+                        // Provider icon/logo placeholder
+                        Box(
+                            modifier =
+                                Modifier
+                                    .size(40.dp)
+                                    .background(
+                                        MaterialTheme.colorScheme.primary,
+                                        RoundedCornerShape(8.dp),
+                                    ),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Text(
+                                text = provider.displayName.take(2).uppercase(),
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                fontWeight = FontWeight.Bold,
+                            )
+                        }
 
-                    Column {
-                        Text(
-                            text = provider.displayName,
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                        )
-                        Text(
-                            text = "${sources.size} sources • ${provider.type.name.lowercase()}",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
+                        Column {
+                            Text(
+                                text = provider.displayName,
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                            )
+                            Text(
+                                text = "${sources.size} sources • ${provider.type.name.lowercase()}",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
                     }
-                }
-
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    // Reliability indicator
-                    ProviderReliabilityBadge(reliability = provider.reliability)
 
                     // Expand/collapse icon
                     Icon(
@@ -286,6 +280,7 @@ private fun ProviderGroupCard(
 
 /**
  * Individual source card for grid view
+ * Enhanced with provider prominence, reliability indicators, and practical decision factors
  */
 @Composable
 private fun SourceCard(
@@ -304,30 +299,27 @@ private fun SourceCard(
         modifier =
             Modifier
                 .fillMaxWidth()
+                .height(160.dp) // Increased height for more content
                 .clickable { onSourceSelected(source) }
-                .tvFocusable(
-                    enabled = true,
-                    focusRequester = focusRequester,
-                    onFocusChanged = { isFocused = it.isFocused },
+                .onFocusChanged { focusState ->
+                    isFocused = focusState.isFocused
+                },
+        border =
+            if (isFocused || isSelected) {
+                BorderStroke(
+                    3.dp,
+                    if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
                 )
-                .then(
-                    if (isFocused || isSelected) {
-                        Modifier.border(
-                            2.dp,
-                            if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary,
-                            RoundedCornerShape(12.dp),
-                        )
-                    } else {
-                        Modifier
-                    },
-                ),
+            } else {
+                null
+            },
         colors =
             CardDefaults.cardColors(
                 containerColor =
-                    if (isSelected) {
-                        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
-                    } else {
-                        MaterialTheme.colorScheme.surface
+                    when {
+                        isSelected -> MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+                        isFocused -> MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.2f)
+                        else -> MaterialTheme.colorScheme.surface
                     },
             ),
     ) {
@@ -335,37 +327,101 @@ private fun SourceCard(
             modifier = Modifier.padding(12.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            // Quality and badges
-            QualityBadgeRow(
-                badges = source.getQualityBadges(),
-                maxVisible = 4,
-                badgeSize = QualityBadgeSize.SMALL,
+            // Header: Tracker name (more useful than provider name for Real-Debrid)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                // Show tracker name instead of redundant "Torrentio RD"
+                val trackerName = source.release.group ?: source.provider.displayName
+                Text(
+                    text = trackerName,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color =
+                        when (trackerName.uppercase()) {
+                            "YTS", "YIFY" -> Color(0xFF059669) // Green for YTS (efficient)
+                            "EZTV", "ETTV" -> Color(0xFF3B82F6) // Blue for EZTV (TV specialist)
+                            "RARBG" -> Color(0xFF7C3AED) // Purple for RARBG (premium)
+                            "1337X", "LEET" -> Color(0xFF0891B2) // Cyan for 1337x (variety)
+                            else -> MaterialTheme.colorScheme.onSurface // Default for unknown trackers
+                        },
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f),
+                )
+
+                // Show tracker tier instead of reliability stars
+                source.release.group?.let { trackerName ->
+                    val tierText =
+                        when (trackerName.uppercase()) {
+                            "YTS", "YIFY" -> "COMPACT"
+                            "EZTV", "ETTV" -> "TV"
+                            "RARBG" -> "PREMIUM"
+                            "1337X", "LEET", "THEPIRATEBAY", "TPB" -> "VARIETY"
+                            else -> "SCENE"
+                        }
+                    Text(
+                        text = tierText,
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+
+            // Prominent file size display
+            source.file.sizeInBytes?.let { sizeBytes ->
+                val sizeGB = sizeBytes / (1024.0 * 1024.0 * 1024.0)
+                val (sizeText, sizeColor) =
+                    when {
+                        sizeGB < 1.0 -> String.format("%.0f MB", sizeBytes / (1024.0 * 1024.0)) to Color(0xFF10B981)
+                        sizeGB < 8.0 -> String.format("%.1f GB", sizeGB) to Color(0xFF3B82F6)
+                        sizeGB < 15.0 -> String.format("%.1f GB", sizeGB) to Color(0xFFF59E0B)
+                        else -> String.format("%.1f GB", sizeGB) to Color(0xFFEF4444)
+                    }
+
+                Text(
+                    text = sizeText,
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = sizeColor,
+                )
+            }
+
+            // Quality badges - prioritized for grid view
+            CompactBadgeRow(
+                sourceMetadata = source,
+                maxBadges = 4,
+                viewMode = "grid",
             )
 
-            // File info
-            source.file.getFormattedSize()?.let { size ->
+            // Release quality indicator (more useful than availability status)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                // Release type (REMUX, WEB-DL, etc.)
                 Text(
-                    text = size,
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Medium,
-                )
-            }
-
-            // Health info for P2P
-            source.health.seeders?.let { seeders ->
-                Text(
-                    text = "${seeders}S/${source.health.leechers ?: 0}L",
-                    style = MaterialTheme.typography.bodySmall,
+                    text = source.release.type.shortName,
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Bold,
                     color =
-                        when {
-                            seeders > 100 -> Color(0xFF10B981)
-                            seeders > 50 -> Color(0xFFF59E0B)
-                            else -> Color(0xFFEF4444)
+                        when (source.release.type.qualityBonus) {
+                            in 90..Int.MAX_VALUE -> Color(0xFF7C3AED) // Purple for premium (REMUX)
+                            in 70..89 -> Color(0xFF2563EB) // Blue for high quality (BluRay, WEB-DL)
+                            in 50..69 -> Color(0xFF059669) // Green for good quality
+                            else -> Color(0xFF6B7280) // Gray for lower quality
                         },
                 )
+
+                // Additional space for future enhancement
+                Spacer(modifier = Modifier.width(8.dp))
             }
 
-            // Quick actions
+            // Quick actions on focus
             if (isFocused) {
                 SourceQuickActions(
                     source = source,
@@ -391,6 +447,7 @@ private fun SourceCard(
 
 /**
  * Individual source list item for list view
+ * Enhanced with improved horizontal layout and better information hierarchy
  */
 @Composable
 private fun SourceListItem(
@@ -410,110 +467,153 @@ private fun SourceListItem(
         modifier =
             Modifier
                 .fillMaxWidth()
+                .height(100.dp) // Fixed height for consistency
                 .clickable { onSourceSelected(source) }
-                .tvFocusable(
-                    enabled = true,
-                    focusRequester = focusRequester,
-                    onFocusChanged = { isFocused = it.isFocused },
+                .onFocusChanged { focusState ->
+                    isFocused = focusState.isFocused
+                },
+        border =
+            if (isFocused || isSelected) {
+                BorderStroke(
+                    3.dp,
+                    if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
                 )
-                .then(
-                    if (isFocused || isSelected) {
-                        Modifier.border(
-                            2.dp,
-                            if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary,
-                            RoundedCornerShape(8.dp),
-                        )
-                    } else {
-                        Modifier
-                    },
-                ),
+            } else {
+                null
+            },
         colors =
             CardDefaults.cardColors(
                 containerColor =
-                    if (isSelected) {
-                        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
-                    } else {
-                        MaterialTheme.colorScheme.surface
+                    when {
+                        isSelected -> MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+                        isFocused -> MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.2f)
+                        else -> MaterialTheme.colorScheme.surface
                     },
             ),
     ) {
         Row(
             modifier =
                 Modifier
-                    .fillMaxWidth()
+                    .fillMaxSize()
                     .padding(16.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            // Left side - source info
+            // Left side - tracker info (more useful than provider reliability)
             Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.width(140.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
-                // Provider and quality
+                // Show tracker name instead of redundant "Torrentio RD"
+                val trackerName = source.release.group ?: source.provider.displayName
+                Text(
+                    text = trackerName,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color =
+                        when (trackerName.uppercase()) {
+                            "YTS", "YIFY" -> Color(0xFF059669) // Green for YTS (efficient)
+                            "EZTV", "ETTV" -> Color(0xFF3B82F6) // Blue for EZTV (TV specialist)
+                            "RARBG" -> Color(0xFF7C3AED) // Purple for RARBG (premium)
+                            "1337X", "LEET" -> Color(0xFF0891B2) // Cyan for 1337x (variety)
+                            else -> MaterialTheme.colorScheme.onSurface // Default for unknown trackers
+                        },
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+
+                // Show tracker characteristic instead of reliability stars
+                source.release.group?.let { trackerName ->
+                    val characteristic =
+                        when (trackerName.uppercase()) {
+                            "YTS", "YIFY" -> "Small files"
+                            "EZTV", "ETTV" -> "TV specialist"
+                            "RARBG" -> "High quality"
+                            "1337X", "LEET", "THEPIRATEBAY", "TPB" -> "General"
+                            else -> "Scene"
+                        }
+                    Text(
+                        text = characteristic,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+
+            // Center - enhanced metadata
+            Column(
+                modifier = Modifier.weight(1f).padding(horizontal = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                // Top row: File size (resolution now shown in badges)
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Text(
-                        text = source.provider.displayName,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                    )
-                    ProviderReliabilityBadge(reliability = source.provider.reliability)
+                    source.file.sizeInBytes?.let { sizeBytes ->
+                        val sizeGB = sizeBytes / (1024.0 * 1024.0 * 1024.0)
+                        val (sizeText, sizeColor) =
+                            when {
+                                sizeGB < 1.0 -> String.format("%.0f MB", sizeBytes / (1024.0 * 1024.0)) to Color(0xFF10B981)
+                                sizeGB < 8.0 -> String.format("%.1f GB", sizeGB) to Color(0xFF3B82F6)
+                                sizeGB < 15.0 -> String.format("%.1f GB", sizeGB) to Color(0xFFF59E0B)
+                                else -> String.format("%.1f GB", sizeGB) to Color(0xFFEF4444)
+                            }
+
+                        Text(
+                            text = sizeText,
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = sizeColor,
+                        )
+                    }
                 }
 
-                // Quality badges
-                QualityBadgeRow(
-                    badges = source.getQualityBadges(),
-                    maxVisible = 6,
-                    badgeSize = QualityBadgeSize.SMALL,
+                // Bottom row: Priority badges
+                CompactBadgeRow(
+                    sourceMetadata = source,
+                    maxBadges = 5,
+                    viewMode = "list",
                 )
-
-                // File and health info
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    source.file.getFormattedSize()?.let { size ->
-                        Text(
-                            text = "Size: $size",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-
-                    source.health.seeders?.let { seeders ->
-                        Text(
-                            text = "Health: ${seeders}S/${source.health.leechers ?: 0}L",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color =
-                                when {
-                                    seeders > 100 -> Color(0xFF10B981)
-                                    seeders > 50 -> Color(0xFFF59E0B)
-                                    else -> Color(0xFFEF4444)
-                                },
-                        )
-                    }
-                }
             }
 
-            // Right side - actions
-            if (isFocused) {
-                SourceQuickActions(
-                    source = source,
-                    onPlay = onPlaySource,
-                    onDownload = onDownloadSource,
-                    onAddToPlaylist = onAddToPlaylist,
-                    focusGroup = focusGroup,
-                    compact = false,
+            // Right side - status and actions
+            Column(
+                horizontalAlignment = Alignment.End,
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                // Release type indicator (more useful than availability status)
+                Text(
+                    text = source.release.type.shortName,
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.Bold,
+                    color =
+                        when (source.release.type.qualityBonus) {
+                            in 90..Int.MAX_VALUE -> Color(0xFF7C3AED) // Purple for premium (REMUX)
+                            in 70..89 -> Color(0xFF2563EB) // Blue for high quality (BluRay, WEB-DL)
+                            in 50..69 -> Color(0xFF059669) // Green for good quality
+                            else -> Color(0xFF6B7280) // Gray for lower quality
+                        },
                 )
-            } else {
-                Icon(
-                    Icons.Default.PlayArrow,
-                    contentDescription = "Play",
-                    tint = MaterialTheme.colorScheme.primary,
-                )
+
+                // Actions
+                if (isFocused) {
+                    SourceQuickActions(
+                        source = source,
+                        onPlay = onPlaySource,
+                        onDownload = onDownloadSource,
+                        onAddToPlaylist = onAddToPlaylist,
+                        focusGroup = focusGroup,
+                        compact = true,
+                    )
+                } else {
+                    Icon(
+                        Icons.Default.PlayArrow,
+                        contentDescription = "Play",
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(24.dp),
+                    )
+                }
             }
         }
     }
@@ -530,6 +630,7 @@ private fun SourceListItem(
 
 /**
  * Compact source item for compact view
+ * Enhanced with essential decision-making information in minimal space
  */
 @Composable
 private fun SourceCompactItem(
@@ -547,69 +648,97 @@ private fun SourceCompactItem(
         modifier =
             Modifier
                 .fillMaxWidth()
+                .height(56.dp) // Fixed height for consistency
                 .clickable { onSourceSelected(source) }
-                .tvFocusable(
-                    enabled = true,
-                    focusRequester = focusRequester,
-                    onFocusChanged = { isFocused = it.isFocused },
+                .onFocusChanged { focusState ->
+                    isFocused = focusState.isFocused
+                },
+        border =
+            if (isFocused || isSelected) {
+                BorderStroke(
+                    3.dp,
+                    if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
                 )
-                .then(
-                    if (isFocused || isSelected) {
-                        Modifier.border(
-                            1.dp,
-                            if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary,
-                            RoundedCornerShape(4.dp),
-                        )
-                    } else {
-                        Modifier
-                    },
-                ),
-        color =
-            if (isSelected) {
-                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.2f)
             } else {
-                Color.Transparent
+                null
+            },
+        color =
+            when {
+                isSelected -> MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+                isFocused -> MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.2f)
+                else -> Color.Transparent
             },
     ) {
         Row(
             modifier =
                 Modifier
-                    .fillMaxWidth()
+                    .fillMaxSize()
                     .padding(horizontal = 12.dp, vertical = 8.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            // Left side - minimal info
+            // Left: Tracker name (more useful than provider + reliability)
             Row(
-                modifier = Modifier.weight(1f),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.width(100.dp),
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
+                // Show tracker name instead of redundant "Torrentio RD"
+                val trackerName = source.release.group ?: source.provider.displayName
                 Text(
-                    text = source.provider.displayName,
+                    text = trackerName,
                     style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Medium,
+                    fontWeight = FontWeight.Bold,
+                    color =
+                        when (trackerName.uppercase()) {
+                            "YTS", "YIFY" -> Color(0xFF059669) // Green for YTS (efficient)
+                            "EZTV", "ETTV" -> Color(0xFF3B82F6) // Blue for EZTV (TV specialist)
+                            "RARBG" -> Color(0xFF7C3AED) // Purple for RARBG (premium)
+                            "1337X", "LEET" -> Color(0xFF0891B2) // Cyan for 1337x (variety)
+                            else -> MaterialTheme.colorScheme.onSurface // Default for unknown trackers
+                        },
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f),
                 )
+            }
 
-                Text(
-                    text = source.quality.resolution.shortName,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.Bold,
-                )
+            // Center: Essential info
+            Row(
+                modifier = Modifier.weight(1f),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                // File size with color coding (resolution now shown in badges)
+                source.file.sizeInBytes?.let { sizeBytes ->
+                    val sizeGB = sizeBytes / (1024.0 * 1024.0 * 1024.0)
+                    val (sizeText, sizeColor) =
+                        when {
+                            sizeGB < 1.0 -> String.format("%.0fM", sizeBytes / (1024.0 * 1024.0)) to Color(0xFF10B981)
+                            sizeGB < 8.0 -> String.format("%.1fG", sizeGB) to Color(0xFF3B82F6)
+                            sizeGB < 15.0 -> String.format("%.1fG", sizeGB) to Color(0xFFF59E0B)
+                            else -> String.format("%.1fG", sizeGB) to Color(0xFFEF4444)
+                        }
 
-                source.file.getFormattedSize()?.let { size ->
                     Text(
-                        text = size,
+                        text = sizeText,
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontWeight = FontWeight.Medium,
+                        color = sizeColor,
+                    )
+                }
+
+                // Most critical badge only
+                val priorityBadges = source.getQualityBadges().take(1)
+                if (priorityBadges.isNotEmpty()) {
+                    AdvancedQualityBadgeComponent(
+                        badge = priorityBadges.first(),
+                        size = QualityBadgeSize.SMALL,
                     )
                 }
             }
 
-            // Right side - play button
+            // Right: Play action only
             IconButton(
                 onClick = { onPlaySource(source) },
                 modifier = Modifier.size(32.dp),
@@ -617,7 +746,8 @@ private fun SourceCompactItem(
                 Icon(
                     Icons.Default.PlayArrow,
                     contentDescription = "Play",
-                    modifier = Modifier.size(20.dp),
+                    modifier = Modifier.size(18.dp),
+                    tint = MaterialTheme.colorScheme.primary,
                 )
             }
         }
@@ -661,10 +791,9 @@ private fun SourceQuickActions(
             modifier =
                 Modifier
                     .size(buttonSize)
-                    .tvFocusable(
-                        enabled = true,
-                        focusRequester = playFocusRequester,
-                    ),
+                    .onFocusChanged { focusState ->
+                        // Handle focus state if needed
+                    },
         ) {
             Icon(
                 Icons.Default.PlayArrow,
@@ -680,10 +809,9 @@ private fun SourceQuickActions(
             modifier =
                 Modifier
                     .size(buttonSize)
-                    .tvFocusable(
-                        enabled = true,
-                        focusRequester = downloadFocusRequester,
-                    ),
+                    .onFocusChanged { focusState ->
+                        // Handle focus state if needed
+                    },
         ) {
             Icon(
                 Icons.Default.Download,
@@ -699,10 +827,9 @@ private fun SourceQuickActions(
             modifier =
                 Modifier
                     .size(buttonSize)
-                    .tvFocusable(
-                        enabled = true,
-                        focusRequester = playlistFocusRequester,
-                    ),
+                    .onFocusChanged { focusState ->
+                        // Handle focus state if needed
+                    },
         ) {
             Icon(
                 Icons.Default.PlaylistAdd,
