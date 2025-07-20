@@ -1,5 +1,6 @@
 package com.rdwatch.androidtv.ui.details.components
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -13,6 +14,7 @@ import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -24,8 +26,6 @@ import com.rdwatch.androidtv.ui.components.ImagePriority
 import com.rdwatch.androidtv.ui.components.SmartTVImageLoader
 import com.rdwatch.androidtv.ui.details.models.*
 import com.rdwatch.androidtv.ui.details.models.MetadataChip
-import com.rdwatch.androidtv.ui.focus.TVFocusIndicator
-import com.rdwatch.androidtv.ui.focus.tvFocusable
 
 /**
  * Hero section component for content detail screens
@@ -138,27 +138,34 @@ private fun HeroBackButton(
 ) {
     var backButtonFocused by remember { mutableStateOf(false) }
 
-    TVFocusIndicator(isFocused = backButtonFocused) {
-        IconButton(
-            onClick = onBackPressed,
-            modifier =
-                modifier
-                    .focusRequester(firstFocusRequester)
-                    .tvFocusable(
-                        onFocusChanged = { backButtonFocused = it.isFocused },
-                    ),
-        ) {
-            Icon(
-                imageVector = Icons.Default.ArrowBack,
-                contentDescription = "Back",
-                tint =
+    IconButton(
+        onClick = onBackPressed,
+        modifier =
+            modifier
+                .focusRequester(firstFocusRequester)
+                .onFocusChanged { focusState ->
+                    backButtonFocused = focusState.isFocused
+                },
+        colors =
+            IconButtonDefaults.iconButtonColors(
+                containerColor =
                     if (backButtonFocused) {
-                        MaterialTheme.colorScheme.primary
+                        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
                     } else {
-                        Color.White
+                        Color.Transparent
                     },
-            )
-        }
+            ),
+    ) {
+        Icon(
+            imageVector = Icons.Default.ArrowBack,
+            contentDescription = "Back",
+            tint =
+                if (backButtonFocused) {
+                    MaterialTheme.colorScheme.primary
+                } else {
+                    Color.White
+                },
+        )
     }
 }
 
@@ -434,48 +441,52 @@ private fun HeroActionButton(
 ) {
     var isFocused by remember { mutableStateOf(false) }
 
-    TVFocusIndicator(isFocused = isFocused) {
-        Button(
-            onClick = onClick,
-            modifier =
-                Modifier
-                    .tvFocusable(
-                        onFocusChanged = { isFocused = it.isFocused },
-                    )
-                    .height(52.dp),
-            colors =
-                ButtonDefaults.buttonColors(
-                    containerColor =
-                        if (isFocused) {
-                            MaterialTheme.colorScheme.primary
-                        } else {
-                            MaterialTheme.colorScheme.primary.copy(alpha = 0.95f)
-                        },
-                ),
-            shape = RoundedCornerShape(26.dp),
-            contentPadding = PaddingValues(horizontal = 28.dp, vertical = 14.dp),
-            elevation =
-                ButtonDefaults.buttonElevation(
-                    defaultElevation = if (isFocused) 8.dp else 4.dp,
-                ),
+    Button(
+        onClick = onClick,
+        modifier =
+            Modifier
+                .onFocusChanged { focusState ->
+                    isFocused = focusState.isFocused
+                }
+                .height(52.dp),
+        colors =
+            ButtonDefaults.buttonColors(
+                containerColor =
+                    if (isFocused) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        MaterialTheme.colorScheme.primary.copy(alpha = 0.95f)
+                    },
+            ),
+        border =
+            if (isFocused) {
+                BorderStroke(3.dp, MaterialTheme.colorScheme.outline)
+            } else {
+                null
+            },
+        shape = RoundedCornerShape(26.dp),
+        contentPadding = PaddingValues(horizontal = 28.dp, vertical = 14.dp),
+        elevation =
+            ButtonDefaults.buttonElevation(
+                defaultElevation = if (isFocused) 8.dp else 4.dp,
+            ),
+    ) {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Icon(
-                    imageVector = Icons.Default.PlayArrow,
-                    contentDescription = null,
-                    modifier = Modifier.size(26.dp),
-                )
-                Text(
-                    text = if (isResume) "Resume Playing" else action.title,
-                    style =
-                        MaterialTheme.typography.titleMedium.copy(
-                            fontWeight = FontWeight.Bold,
-                        ),
-                )
-            }
+            Icon(
+                imageVector = Icons.Default.PlayArrow,
+                contentDescription = null,
+                modifier = Modifier.size(26.dp),
+            )
+            Text(
+                text = if (isResume) "Resume Playing" else action.title,
+                style =
+                    MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.Bold,
+                    ),
+            )
         }
     }
 }

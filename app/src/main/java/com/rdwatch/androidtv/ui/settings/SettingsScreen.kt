@@ -2,7 +2,9 @@ package com.rdwatch.androidtv.ui.settings
 
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -24,8 +26,6 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.rdwatch.androidtv.presentation.navigation.Screen
-import com.rdwatch.androidtv.ui.focus.TVFocusIndicator
-import com.rdwatch.androidtv.ui.focus.tvFocusable
 
 /**
  * Settings Screen for Android TV with categorized settings Follows TV accessibility guidelines and
@@ -256,26 +256,36 @@ private fun SettingsHeader(
         // Back button
         var backButtonFocused by remember { mutableStateOf(false) }
 
-        TVFocusIndicator(isFocused = backButtonFocused) {
-            IconButton(
-                onClick = onBackPressed,
-                modifier =
-                    Modifier.focusRequester(firstFocusRequester)
-                        .tvFocusable(
-                            onFocusChanged = { backButtonFocused = it.isFocused },
-                        ),
-            ) {
-                Icon(
-                    imageVector = Icons.Default.ArrowBack,
-                    contentDescription = "Back",
-                    tint =
+        IconButton(
+            onClick = onBackPressed,
+            modifier =
+                Modifier.focusRequester(firstFocusRequester)
+                    .onFocusChanged { focusState ->
+                        backButtonFocused = focusState.isFocused
+                    }
+                    .focusable()
+                    .then(
                         if (backButtonFocused) {
-                            MaterialTheme.colorScheme.primary
+                            Modifier
+                                .background(
+                                    MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f),
+                                    shape = MaterialTheme.shapes.small,
+                                )
                         } else {
-                            MaterialTheme.colorScheme.onBackground
+                            Modifier
                         },
-                )
-            }
+                    ),
+        ) {
+            Icon(
+                imageVector = Icons.Default.ArrowBack,
+                contentDescription = "Back",
+                tint =
+                    if (backButtonFocused) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        MaterialTheme.colorScheme.onBackground
+                    },
+            )
         }
 
         // Title
@@ -321,74 +331,79 @@ private fun SwitchSetting(
 ) {
     var isFocused by remember { mutableStateOf(false) }
 
-    TVFocusIndicator(isFocused = isFocused) {
-        Card(
-            onClick = { onCheckedChange(!checked) },
-            modifier =
-                Modifier.fillMaxWidth()
-                    .tvFocusable(onFocusChanged = { isFocused = it.isFocused }),
-            colors =
-                CardDefaults.cardColors(
-                    containerColor =
-                        if (isFocused) {
-                            MaterialTheme.colorScheme.primaryContainer.copy(
-                                alpha = 0.3f,
-                            )
-                        } else {
-                            MaterialTheme.colorScheme.surface
-                        },
-                ),
+    Card(
+        modifier =
+            Modifier.fillMaxWidth()
+                .onFocusChanged { focusState ->
+                    isFocused = focusState.isFocused
+                },
+        colors =
+            CardDefaults.cardColors(
+                containerColor =
+                    if (isFocused) {
+                        MaterialTheme.colorScheme.primaryContainer.copy(
+                            alpha = 0.3f,
+                        )
+                    } else {
+                        MaterialTheme.colorScheme.surface
+                    },
+            ),
+        border =
+            if (isFocused) {
+                BorderStroke(3.dp, MaterialTheme.colorScheme.outline)
+            } else {
+                null
+            },
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Row(
-                modifier = Modifier.fillMaxWidth().padding(16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
                 verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.weight(1f),
             ) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.weight(1f),
-                ) {
-                    Icon(
-                        imageVector = icon,
-                        contentDescription = null,
-                        tint =
-                            if (isFocused) {
-                                MaterialTheme.colorScheme.primary
-                            } else {
-                                MaterialTheme.colorScheme.onSurface
-                            },
-                    )
-
-                    Column {
-                        Text(
-                            text = title,
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            fontWeight = FontWeight.Medium,
-                        )
-                        Text(
-                            text = subtitle,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-                        )
-                    }
-                }
-
-                Switch(
-                    checked = checked,
-                    onCheckedChange = onCheckedChange,
-                    colors =
-                        SwitchDefaults.colors(
-                            checkedThumbColor = MaterialTheme.colorScheme.primary,
-                            checkedTrackColor =
-                                MaterialTheme.colorScheme.primaryContainer,
-                            uncheckedThumbColor = MaterialTheme.colorScheme.outline,
-                            uncheckedTrackColor =
-                                MaterialTheme.colorScheme.surfaceVariant,
-                        ),
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint =
+                        if (isFocused) {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            MaterialTheme.colorScheme.onSurface
+                        },
                 )
+
+                Column {
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        fontWeight = FontWeight.Medium,
+                    )
+                    Text(
+                        text = subtitle,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                    )
+                }
             }
+
+            Switch(
+                checked = checked,
+                onCheckedChange = onCheckedChange,
+                colors =
+                    SwitchDefaults.colors(
+                        checkedThumbColor = MaterialTheme.colorScheme.primary,
+                        checkedTrackColor =
+                            MaterialTheme.colorScheme.primaryContainer,
+                        uncheckedThumbColor = MaterialTheme.colorScheme.outline,
+                        uncheckedTrackColor =
+                            MaterialTheme.colorScheme.surfaceVariant,
+                    ),
+            )
         }
     }
 }
@@ -406,91 +421,97 @@ private fun DropdownSetting(
     var expanded by remember { mutableStateOf(false) }
     var isFocused by remember { mutableStateOf(false) }
 
-    TVFocusIndicator(isFocused = isFocused) {
-        Card(
-            onClick = { expanded = true },
-            modifier =
-                Modifier.fillMaxWidth()
-                    .tvFocusable(onFocusChanged = { isFocused = it.isFocused }),
-            colors =
-                CardDefaults.cardColors(
-                    containerColor =
-                        if (isFocused) {
-                            MaterialTheme.colorScheme.primaryContainer.copy(
-                                alpha = 0.3f,
-                            )
-                        } else {
-                            MaterialTheme.colorScheme.surface
-                        },
-                ),
+    Card(
+        onClick = { expanded = true },
+        modifier =
+            Modifier.fillMaxWidth()
+                .onFocusChanged { focusState ->
+                    isFocused = focusState.isFocused
+                },
+        colors =
+            CardDefaults.cardColors(
+                containerColor =
+                    if (isFocused) {
+                        MaterialTheme.colorScheme.primaryContainer.copy(
+                            alpha = 0.3f,
+                        )
+                    } else {
+                        MaterialTheme.colorScheme.surface
+                    },
+            ),
+        border =
+            if (isFocused) {
+                BorderStroke(3.dp, MaterialTheme.colorScheme.outline)
+            } else {
+                null
+            },
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Row(
-                modifier = Modifier.fillMaxWidth().padding(16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
                 verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.weight(1f),
             ) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.weight(1f),
-                ) {
-                    Icon(
-                        imageVector = icon,
-                        contentDescription = null,
-                        tint =
-                            if (isFocused) {
-                                MaterialTheme.colorScheme.primary
-                            } else {
-                                MaterialTheme.colorScheme.onSurface
-                            },
-                    )
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint =
+                        if (isFocused) {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            MaterialTheme.colorScheme.onSurface
+                        },
+                )
 
-                    Column {
-                        Text(
-                            text = title,
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            fontWeight = FontWeight.Medium,
-                        )
-                        Text(
-                            text = subtitle,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-                        )
-                    }
-                }
-
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
+                Column {
                     Text(
-                        text = currentValue,
-                        style = MaterialTheme.typography.titleSmall,
-                        color = MaterialTheme.colorScheme.primary,
+                        text = title,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
                         fontWeight = FontWeight.Medium,
                     )
-                    Icon(
-                        imageVector = Icons.Default.ExpandMore,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                    Text(
+                        text = subtitle,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                     )
                 }
             }
 
-            // Dropdown menu
-            DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-                options.forEach { option ->
-                    DropdownMenuItem(
-                        text = {
-                            Text(text = option, style = MaterialTheme.typography.bodyLarge)
-                        },
-                        onClick = {
-                            onValueSelected(option)
-                            expanded = false
-                        },
-                    )
-                }
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = currentValue,
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Medium,
+                )
+                Icon(
+                    imageVector = Icons.Default.ExpandMore,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                )
+            }
+        }
+
+        // Dropdown menu
+        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            options.forEach { option ->
+                DropdownMenuItem(
+                    text = {
+                        Text(text = option, style = MaterialTheme.typography.bodyLarge)
+                    },
+                    onClick = {
+                        onValueSelected(option)
+                        expanded = false
+                    },
+                )
             }
         }
     }
@@ -545,69 +566,75 @@ private fun ActionSetting(
     var isFocused by remember { mutableStateOf(false) }
     val hapticFeedback = LocalHapticFeedback.current
 
-    TVFocusIndicator(isFocused = isFocused) {
-        Card(
-            onClick = {
-                hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-                onClick()
+    Card(
+        onClick = {
+            hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+            onClick()
+        },
+        modifier =
+            Modifier.fillMaxWidth()
+                .onFocusChanged { focusState ->
+                    isFocused = focusState.isFocused
+                },
+        colors =
+            CardDefaults.cardColors(
+                containerColor =
+                    if (isFocused) {
+                        MaterialTheme.colorScheme.primaryContainer.copy(
+                            alpha = 0.3f,
+                        )
+                    } else {
+                        MaterialTheme.colorScheme.surface
+                    },
+            ),
+        border =
+            if (isFocused) {
+                BorderStroke(3.dp, MaterialTheme.colorScheme.outline)
+            } else {
+                null
             },
-            modifier =
-                Modifier.fillMaxWidth()
-                    .tvFocusable(onFocusChanged = { isFocused = it.isFocused }),
-            colors =
-                CardDefaults.cardColors(
-                    containerColor =
-                        if (isFocused) {
-                            MaterialTheme.colorScheme.primaryContainer.copy(
-                                alpha = 0.3f,
-                            )
-                        } else {
-                            MaterialTheme.colorScheme.surface
-                        },
-                ),
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Row(
-                modifier = Modifier.fillMaxWidth().padding(16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
                 verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.weight(1f),
             ) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.weight(1f),
-                ) {
-                    Icon(
-                        imageVector = icon,
-                        contentDescription = null,
-                        tint =
-                            if (isFocused) {
-                                MaterialTheme.colorScheme.primary
-                            } else {
-                                MaterialTheme.colorScheme.onSurface
-                            },
-                    )
-
-                    Column {
-                        Text(
-                            text = title,
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            fontWeight = FontWeight.Medium,
-                        )
-                        Text(
-                            text = subtitle,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-                        )
-                    }
-                }
-
                 Icon(
-                    imageVector = Icons.Default.ChevronRight,
+                    imageVector = icon,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                    tint =
+                        if (isFocused) {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            MaterialTheme.colorScheme.onSurface
+                        },
                 )
+
+                Column {
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        fontWeight = FontWeight.Medium,
+                    )
+                    Text(
+                        text = subtitle,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                    )
+                }
             }
+
+            Icon(
+                imageVector = Icons.Default.ChevronRight,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+            )
         }
     }
 }

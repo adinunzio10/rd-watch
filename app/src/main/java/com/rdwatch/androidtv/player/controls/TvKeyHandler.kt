@@ -38,7 +38,8 @@ class TvKeyHandler {
                         true
                     }
 
-                    // D-pad controls
+                    // D-pad controls - now handled by TvPlayerControls focus management
+                    // These are fallback behaviors when controls don't handle the event
                     Key.DirectionLeft -> {
                         onSeekBackward()
                         true
@@ -60,7 +61,7 @@ class TvKeyHandler {
                         true
                     }
 
-                    // Show controls on any navigation
+                    // Show controls on any navigation - let TvPlayerControls handle focus management
                     Key.DirectionUp, Key.DirectionDown -> {
                         onShowControls()
                         false // Don't consume the event, let focus handling work

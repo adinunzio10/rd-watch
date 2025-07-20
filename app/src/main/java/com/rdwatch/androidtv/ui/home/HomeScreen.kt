@@ -39,6 +39,7 @@ import com.rdwatch.androidtv.ui.components.ImagePriority
 import com.rdwatch.androidtv.ui.components.PreloadImagesEffect
 import com.rdwatch.androidtv.ui.components.ResumeDialogOverlay
 import com.rdwatch.androidtv.ui.details.models.ContentType
+import com.rdwatch.androidtv.ui.focus.NavigationDirection
 import com.rdwatch.androidtv.ui.focus.TVSpatialNavigation
 import com.rdwatch.androidtv.ui.focus.rememberTVKeyEventHandler
 import com.rdwatch.androidtv.ui.viewmodel.PlaybackViewModel
@@ -69,14 +70,7 @@ fun TVHomeScreen(
     // Enhanced key event handler for TV navigation
     val keyEventHandler =
         rememberTVKeyEventHandler().apply {
-            onDPadLeft = {
-                if (!isDrawerOpen) {
-                    isDrawerOpen = true
-                    true
-                } else {
-                    false
-                }
-            }
+            // Remove global D-pad left handler - now handled by content rows
             onBack = {
                 if (isDrawerOpen) {
                     isDrawerOpen = false
@@ -108,7 +102,6 @@ fun TVHomeScreen(
             Modifier
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background),
-        onNavigateLeft = { keyEventHandler.onDPadLeft?.invoke() ?: false },
         onBack = { keyEventHandler.onBack?.invoke() ?: false },
         onSelect = { keyEventHandler.onDPadCenter?.invoke() ?: false },
     ) {
@@ -243,7 +236,6 @@ fun TVNavigationDrawer(
                 Modifier
                     .fillMaxSize()
                     .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             // Drawer header
             Text(
@@ -251,23 +243,29 @@ fun TVNavigationDrawer(
                 style = MaterialTheme.typography.titleLarge,
                 color = MaterialTheme.colorScheme.onSurface,
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(bottom = 16.dp),
+                modifier = Modifier.padding(bottom = 12.dp),
             )
 
-            // Navigation items
-            navigationItems.forEachIndexed { index, item ->
-                NavigationDrawerItem(
-                    item = item,
-                    modifier =
-                        if (index == 0) {
-                            Modifier.focusRequester(focusRequester)
-                        } else {
-                            Modifier
+            // Navigation items in scrollable container
+            LazyColumn(
+                modifier = Modifier.fillMaxHeight(),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                items(navigationItems.size) { index ->
+                    val item = navigationItems[index]
+                    NavigationDrawerItem(
+                        item = item,
+                        modifier =
+                            if (index == 0) {
+                                Modifier.focusRequester(focusRequester)
+                            } else {
+                                Modifier
+                            },
+                        onClick = {
+                            onItemSelected(item.destination)
                         },
-                    onClick = {
-                        onItemSelected(item.destination)
-                    },
-                )
+                    )
+                }
             }
         }
     }
@@ -313,7 +311,7 @@ fun NavigationDrawerItem(
             modifier =
                 Modifier
                     .fillMaxWidth()
-                    .padding(16.dp),
+                    .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
@@ -360,37 +358,10 @@ fun SafeAreaContent(
         modifier =
             modifier
                 .padding(overscanMargin)
-                .fillMaxSize(),
-        verticalArrangement = Arrangement.spacedBy(24.dp),
+                .fillMaxSize()
+                .focusRequester(contentFocusRequester),
     ) {
-        // App title with menu button
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            IconButton(
-                onClick = onDrawerToggle,
-                modifier = Modifier.focusRequester(contentFocusRequester),
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Menu,
-                    contentDescription = "Open navigation menu",
-                    tint = MaterialTheme.colorScheme.onBackground,
-                )
-            }
-
-            Text(
-                text = "RD Watch",
-                style = MaterialTheme.typography.displayMedium,
-                color = MaterialTheme.colorScheme.onBackground,
-                fontWeight = FontWeight.Bold,
-            )
-
-            Spacer(modifier = Modifier.width(48.dp)) // Balance the layout
-        }
-
-        // Content rows placeholder
+        // Content rows
         TVContentGrid(
             playbackViewModel = playbackViewModel,
             homeViewModel = homeViewModel,
@@ -399,6 +370,7 @@ fun SafeAreaContent(
             onShowContinueWatching = onShowContinueWatching,
             onMovieClick = onMovieClick,
             onContentClick = onContentClick,
+            onOpenDrawer = onDrawerToggle,
         )
     }
 }
@@ -413,6 +385,7 @@ fun TVContentGrid(
     onShowContinueWatching: () -> Unit = {},
     onMovieClick: ((Movie) -> Unit)? = null,
     onContentClick: ((Movie, ContentType) -> Unit)? = null,
+    onOpenDrawer: (() -> Unit)? = null,
 ) {
     val firstRowFocusRequester = remember { FocusRequester() }
 
@@ -616,6 +589,16 @@ fun TVContentGrid(
                                     onContentClick.invoke(movie, contentType)
                                 } else {
                                     onMovieClick?.invoke(movie)
+                                }
+                            },
+                            onNavigationAttempt = { direction ->
+                                when (direction) {
+                                    NavigationDirection.LEFT -> {
+                                        // Only open drawer on left navigation from leftmost item
+                                        onOpenDrawer?.invoke()
+                                        true
+                                    }
+                                    else -> false
                                 }
                             },
                         )

@@ -1438,7 +1438,7 @@
         "dependencies": [
           11
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": []
       },
       {
@@ -2615,11 +2615,172 @@
             "testStrategy": "Write integration tests verifying database updates, test real-time UI updates when data changes, verify preferences persistence"
           }
         ]
+      },
+      {
+        "id": 32,
+        "title": "Enhance ExoPlayer Controls and Functionality",
+        "description": "Upgrade video player UI with comprehensive TV-optimized controls, implement hamburger menu with quality/subtitle/speed options, and improve remote navigation experience.",
+        "details": "Enhance the existing ExoPlayer implementation with advanced controls and features:\n\n1. **Enhanced Player Controls UI**: Replace basic play/pause/seek controls with comprehensive TV-optimized interface. Add progress bar with time indicators, volume controls, and playback status overlay. Implement proper focus management for D-pad navigation with visual focus indicators.\n\n2. **Functional Hamburger Menu**: Create overlay menu accessible via menu button or long-press. Include: quality selection (4K/1080p/720p/480p), subtitle track selection with on/off toggle, audio track selection for multi-language content, playback speed controls (0.5x to 2x), and sleep timer functionality.\n\n3. **Quality Selection**: Integrate with Real-Debrid API to fetch available quality options for current content. Display quality badges and allow runtime switching. Handle quality changes gracefully with minimal playback interruption.\n\n4. **Subtitle Management**: Implement subtitle track detection from video files and external sources. Add subtitle styling options (size, color, background). Support SRT, VTT, and SSA formats with proper synchronization.\n\n5. **TV Remote Optimization**: Map all functions to remote buttons (menu for hamburger, info for details overlay, back for previous menu). Implement proper focus restoration when closing overlays. Add seek preview thumbnails if available from Real-Debrid.\n\n6. **Player State Management**: Create PlayerControlsViewModel to manage UI state, settings persistence, and player configuration. Store user preferences for quality, subtitle preferences, and playback speed.",
+        "testStrategy": "Test all controls with Android TV remote and verify proper focus management. Test quality switching with various Real-Debrid content sources and verify seamless transitions. Test subtitle functionality with different formats and verify synchronization accuracy. Test hamburger menu accessibility and navigation flow. Verify settings persistence across app sessions. Test on different Android TV devices (Fire TV, Chromecast, Shield) to ensure compatibility. Profile performance impact of enhanced UI elements during playback.",
+        "status": "in-progress",
+        "dependencies": [
+          12
+        ],
+        "priority": "high",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Design TV-Optimized Player Controls UI Layout",
+            "description": "Create comprehensive player controls interface with progress bar, time indicators, volume controls, and playback status overlay optimized for 10-foot TV viewing experience",
+            "dependencies": [],
+            "details": "Design and implement enhanced player controls replacing basic play/pause/seek with full-featured TV interface. Include progress bar with current/total time display, volume controls, playback speed indicator, and status overlays. Ensure proper sizing and contrast for TV viewing distances.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Implement TV Remote D-pad Navigation and Focus Management",
+            "description": "Create focus management system for TV remote D-pad navigation with visual focus indicators and proper focus traversal order for all player controls",
+            "dependencies": [
+              "32.1"
+            ],
+            "details": "Implement comprehensive focus management for all player controls. Add visual focus indicators, define logical focus traversal order, handle D-pad directional navigation, and ensure all controls are accessible via remote control.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Create Hamburger Menu System Architecture",
+            "description": "Build overlay hamburger menu system accessible via menu button or long-press with proper TV navigation and visual design",
+            "dependencies": [
+              "32.2"
+            ],
+            "details": "Design and implement hamburger menu overlay system. Create menu architecture that supports quality selection, subtitle options, and playback speed controls. Ensure menu is accessible via remote menu button or long-press actions.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Implement Quality Selection with Real Debrid Integration",
+            "description": "Create quality selection interface integrated with Real Debrid API to fetch and display available video qualities with seamless switching",
+            "dependencies": [
+              "32.3"
+            ],
+            "details": "Integrate Real Debrid API to fetch available video qualities. Create quality selection UI within hamburger menu. Implement seamless quality switching during playback without interruption. Handle quality change requests and player reconfiguration.",
+            "status": "cancelled",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Build Subtitle Management System with Format Detection",
+            "description": "Implement comprehensive subtitle system with automatic format detection, manual selection, and styling options for SRT, VTT, and SSA formats",
+            "dependencies": [
+              "32.3"
+            ],
+            "details": "Create subtitle management system supporting SRT, VTT, and SSA formats. Implement automatic subtitle detection from video sources, manual subtitle file selection, and subtitle styling options (size, color, position). Ensure proper synchronization.\n<info added on 2025-07-20T01:04:22.984Z>\nSince we already created the subtitle system in task 17, this task should focus on integrating the existing subtitle functionality into the ExoPlayer video player component rather than building a new system from scratch. This involves connecting the previously developed subtitle management capabilities with the current video player implementation.\n</info added on 2025-07-20T01:04:22.984Z>",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 6,
+            "title": "Develop Subtitle Styling and Positioning Controls",
+            "description": "Create subtitle customization interface allowing users to adjust font size, color, background, and positioning for optimal TV viewing",
+            "dependencies": [
+              "32.5"
+            ],
+            "details": "Build subtitle styling controls within hamburger menu. Allow customization of font size, color, background opacity, outline, and subtitle positioning. Provide presets for different TV sizes and viewing distances. Save user preferences.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 7,
+            "title": "Implement TV Remote Button Mapping and Shortcuts",
+            "description": "Create comprehensive TV remote button mapping system with customizable shortcuts for common playback functions and menu access",
+            "dependencies": [
+              "32.2"
+            ],
+            "details": "Map TV remote buttons to player functions: play/pause, seek forward/backward, volume up/down, menu access, subtitle toggle, and quality cycle. Implement customizable shortcuts and handle different remote types. Provide visual feedback for button presses.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 8,
+            "title": "Create Seek Preview Implementation with Thumbnails",
+            "description": "Build seek preview functionality showing video thumbnails and time indicators during seek operations for enhanced navigation",
+            "dependencies": [
+              "32.1"
+            ],
+            "details": "Implement seek preview system displaying video thumbnails during seek operations. Generate or fetch thumbnails at regular intervals, show time indicators, and provide smooth seeking experience. Handle thumbnail caching and memory management.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 9,
+            "title": "Develop PlayerControlsViewModel with State Management",
+            "description": "Create dedicated ViewModel for player controls state management, handling UI state, user preferences, and player interactions",
+            "dependencies": [
+              "32.4",
+              "32.5"
+            ],
+            "details": "Build PlayerControlsViewModel to manage all player control states including playback status, quality settings, subtitle preferences, volume levels, and menu visibility. Handle user interactions and maintain state consistency across configuration changes.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 10,
+            "title": "Implement Settings Persistence Layer",
+            "description": "Create persistent storage system for user preferences including quality defaults, subtitle styling, remote mappings, and playback settings",
+            "dependencies": [
+              "32.6",
+              "32.7",
+              "32.9"
+            ],
+            "details": "Implement settings persistence using SharedPreferences or Room database. Store user preferences for default quality, subtitle styling, remote button mappings, volume levels, and other customizable settings. Ensure settings are restored on app restart.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 11,
+            "title": "Create Overlay Animations and Transitions",
+            "description": "Implement smooth animations for player control overlays, hamburger menu transitions, and UI state changes optimized for TV performance",
+            "dependencies": [
+              "32.3",
+              "32.8"
+            ],
+            "details": "Create smooth animation system for player control overlays appearing/disappearing, hamburger menu slide transitions, seek preview animations, and focus transitions. Optimize animations for TV hardware performance and ensure smooth 60fps playback.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 12,
+            "title": "Implement Cross-Device Compatibility Testing",
+            "description": "Conduct comprehensive testing across different Android TV devices, remote types, and screen sizes to ensure consistent functionality",
+            "dependencies": [
+              "32.10",
+              "32.11"
+            ],
+            "details": "Test player controls functionality across various Android TV devices (Fire TV, Chromecast with Google TV, NVIDIA Shield, etc.), different remote control types, screen sizes, and Android versions. Verify compatibility and adjust for device-specific behaviors.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 13,
+            "title": "Performance Optimization and Memory Management",
+            "description": "Optimize player controls performance, implement efficient memory management, and ensure smooth operation during extended playback sessions",
+            "dependencies": [
+              "32.9",
+              "32.12"
+            ],
+            "details": "Optimize player controls performance for smooth operation. Implement efficient memory management for thumbnails, subtitle rendering, and UI components. Profile and optimize for extended playback sessions, handle memory pressure, and prevent memory leaks.",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
       }
     ],
     "metadata": {
       "created": "2025-06-22T03:41:46.714Z",
-      "updated": "2025-07-10T02:49:23.312Z",
+      "updated": "2025-07-20T01:02:21.773Z",
       "description": "Tasks for master context"
     }
   }

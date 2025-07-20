@@ -1,5 +1,7 @@
 package com.rdwatch.androidtv.ui.settings.scrapers
 
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -13,8 +15,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.rdwatch.androidtv.scraper.models.ScraperManifest
 import com.rdwatch.androidtv.scraper.models.ValidationStatus
-import com.rdwatch.androidtv.ui.focus.TVFocusIndicator
-import com.rdwatch.androidtv.ui.focus.tvFocusable
 
 /**
  * Individual scraper item component for the scrapers list
@@ -34,126 +34,157 @@ fun ScraperListItem(
     Card(
         modifier =
             modifier
-                .fillMaxWidth()
-                .tvFocusable(onFocusChanged = {
-                    isFocused = it.isFocused
-                    if (it.isFocused) showActions = true
-                }),
-        onClick = { showActions = !showActions },
+                .fillMaxWidth(),
         colors =
             CardDefaults.cardColors(
-                containerColor =
-                    if (isFocused) {
-                        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
-                    } else {
-                        MaterialTheme.colorScheme.surface
-                    },
+                containerColor = MaterialTheme.colorScheme.surface,
             ),
     ) {
-        TVFocusIndicator(isFocused = isFocused) {
-            Column(
-                modifier =
-                    Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
+        Column(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+        ) {
+            // Main content row
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                // Main content row
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
+                // Scraper info
+                Column(
+                    modifier = Modifier.weight(1f),
                 ) {
-                    // Scraper info
-                    Column(
-                        modifier = Modifier.weight(1f),
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        ) {
-                            Text(
-                                text = scraper.displayName,
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.SemiBold,
-                                color = MaterialTheme.colorScheme.onSurface,
-                            )
-
-                            // Status indicator
-                            StatusIndicator(
-                                isEnabled = scraper.isEnabled,
-                                validationStatus = scraper.metadata.validationStatus,
-                            )
-                        }
-
-                        Text(
-                            text = "v${scraper.version}",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-                        )
-
-                        scraper.description?.let { description ->
-                            Text(
-                                text = description,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
-                                maxLines = 2,
-                                overflow = TextOverflow.Ellipsis,
-                                modifier = Modifier.padding(top = 4.dp),
-                            )
-                        }
-
-                        scraper.author?.let { author ->
-                            Text(
-                                text = "by $author",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                                modifier = Modifier.padding(top = 2.dp),
-                            )
-                        }
-                    }
-
-                    // Enable/Disable switch
-                    Switch(
-                        checked = scraper.isEnabled,
-                        onCheckedChange = onToggleEnabled,
-                        colors =
-                            SwitchDefaults.colors(
-                                checkedThumbColor = MaterialTheme.colorScheme.primary,
-                                checkedTrackColor = MaterialTheme.colorScheme.primaryContainer,
-                                uncheckedThumbColor = MaterialTheme.colorScheme.outline,
-                                uncheckedTrackColor = MaterialTheme.colorScheme.surfaceVariant,
-                            ),
-                    )
-                }
-
-                // Expandable actions
-                if (showActions) {
-                    Spacer(modifier = Modifier.height(12.dp))
-
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
-                        // Refresh button
-                        ActionButton(
-                            icon = Icons.Default.Refresh,
-                            text = "Refresh",
-                            onClick = onRefresh,
-                            modifier = Modifier.weight(1f),
+                        Text(
+                            text = scraper.displayName,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurface,
                         )
 
-                        // Remove button
-                        ActionButton(
-                            icon = Icons.Default.Delete,
-                            text = "Remove",
-                            onClick = onRemove,
-                            modifier = Modifier.weight(1f),
-                            colors =
-                                ButtonDefaults.textButtonColors(
-                                    contentColor = MaterialTheme.colorScheme.error,
-                                ),
+                        // Status indicator
+                        StatusIndicator(
+                            isEnabled = scraper.isEnabled,
+                            validationStatus = scraper.metadata.validationStatus,
                         )
                     }
+
+                    Text(
+                        text = "v${scraper.version}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                    )
+
+                    scraper.description?.let { description ->
+                        Text(
+                            text = description,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.padding(top = 4.dp),
+                        )
+                    }
+
+                    scraper.author?.let { author ->
+                        Text(
+                            text = "by $author",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                            modifier = Modifier.padding(top = 2.dp),
+                        )
+                    }
+                }
+
+                // Enable/Disable switch
+                var switchFocused by remember { mutableStateOf(false) }
+                Switch(
+                    checked = scraper.isEnabled,
+                    onCheckedChange = onToggleEnabled,
+                    modifier =
+                        Modifier
+                            .onFocusChanged { focusState ->
+                                switchFocused = focusState.isFocused
+                                if (focusState.isFocused) {
+                                    isFocused = true
+                                    showActions = true
+                                }
+                            }
+                            .focusable(),
+                    colors =
+                        SwitchDefaults.colors(
+                            checkedThumbColor =
+                                if (switchFocused) {
+                                    MaterialTheme.colorScheme.primary
+                                } else {
+                                    MaterialTheme.colorScheme.primary
+                                },
+                            checkedTrackColor =
+                                if (switchFocused) {
+                                    MaterialTheme.colorScheme.primaryContainer
+                                } else {
+                                    MaterialTheme.colorScheme.primaryContainer
+                                },
+                            uncheckedThumbColor =
+                                if (switchFocused) {
+                                    MaterialTheme.colorScheme.primary
+                                } else {
+                                    MaterialTheme.colorScheme.outline
+                                },
+                            uncheckedTrackColor =
+                                if (switchFocused) {
+                                    MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+                                } else {
+                                    MaterialTheme.colorScheme.surfaceVariant
+                                },
+                        ),
+                )
+            }
+
+            // Expandable actions
+            if (showActions) {
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    // Refresh button
+                    ActionButton(
+                        icon = Icons.Default.Refresh,
+                        text = "Refresh",
+                        onClick = onRefresh,
+                        modifier = Modifier.weight(1f),
+                        onFocusChanged = { focused ->
+                            if (focused) {
+                                isFocused = true
+                                showActions = true
+                            }
+                        },
+                    )
+
+                    // Remove button
+                    ActionButton(
+                        icon = Icons.Default.Delete,
+                        text = "Remove",
+                        onClick = onRemove,
+                        modifier = Modifier.weight(1f),
+                        colors =
+                            ButtonDefaults.textButtonColors(
+                                contentColor = MaterialTheme.colorScheme.error,
+                            ),
+                        onFocusChanged = { focused ->
+                            if (focused) {
+                                isFocused = true
+                                showActions = true
+                            }
+                        },
+                    )
                 }
             }
         }
@@ -214,27 +245,43 @@ private fun ActionButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     colors: ButtonColors = ButtonDefaults.textButtonColors(),
+    onFocusChanged: (Boolean) -> Unit = {},
 ) {
     var isFocused by remember { mutableStateOf(false) }
 
-    TVFocusIndicator(isFocused = isFocused) {
-        TextButton(
-            onClick = onClick,
-            modifier =
-                modifier
-                    .tvFocusable(onFocusChanged = { isFocused = it.isFocused }),
-            colors = colors,
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                modifier = Modifier.size(16.dp),
-            )
-            Spacer(modifier = Modifier.width(4.dp))
-            Text(
-                text = text,
-                style = MaterialTheme.typography.bodySmall,
-            )
-        }
+    TextButton(
+        onClick = onClick,
+        modifier =
+            modifier
+                .onFocusChanged { focusState ->
+                    isFocused = focusState.isFocused
+                    onFocusChanged(focusState.isFocused)
+                }.focusable(),
+        colors =
+            ButtonDefaults.textButtonColors(
+                contentColor =
+                    if (isFocused) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        colors.contentColor
+                    },
+            ),
+        border =
+            if (isFocused) {
+                BorderStroke(2.dp, MaterialTheme.colorScheme.outline)
+            } else {
+                null
+            },
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            modifier = Modifier.size(16.dp),
+        )
+        Spacer(modifier = Modifier.width(4.dp))
+        Text(
+            text = text,
+            style = MaterialTheme.typography.bodySmall,
+        )
     }
 }

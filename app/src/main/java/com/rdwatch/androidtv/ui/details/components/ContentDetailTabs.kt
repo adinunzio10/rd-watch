@@ -1,5 +1,6 @@
 package com.rdwatch.androidtv.ui.details.components
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material3.*
@@ -8,10 +9,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.rdwatch.androidtv.ui.details.models.ContentType
-import com.rdwatch.androidtv.ui.focus.tvFocusable
 
 /**
  * TV-optimized tabs for content detail screens
@@ -64,24 +65,32 @@ fun ContentDetailTabItem(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    var isFocused by remember { mutableStateOf(false) }
+
     Surface(
         modifier =
             modifier
-                .tvFocusable(
-                    onFocusChanged = { /* Focus handled by Surface styling */ },
-                ),
+                .onFocusChanged { focusState ->
+                    isFocused = focusState.isFocused
+                },
         onClick = onClick,
-        color =
-            if (selected) {
-                MaterialTheme.colorScheme.primary
+        border =
+            if (isFocused) {
+                BorderStroke(3.dp, MaterialTheme.colorScheme.outline)
             } else {
-                Color.Transparent
+                null
+            },
+        color =
+            when {
+                selected -> MaterialTheme.colorScheme.primary
+                isFocused -> MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+                else -> Color.Transparent
             },
         contentColor =
-            if (selected) {
-                MaterialTheme.colorScheme.onPrimary
-            } else {
-                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+            when {
+                selected -> MaterialTheme.colorScheme.onPrimary
+                isFocused -> MaterialTheme.colorScheme.primary
+                else -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
             },
         shape = MaterialTheme.shapes.large,
     ) {

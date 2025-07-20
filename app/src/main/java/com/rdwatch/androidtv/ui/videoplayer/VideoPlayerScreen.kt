@@ -1,11 +1,13 @@
 package com.rdwatch.androidtv.ui.videoplayer
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -14,6 +16,8 @@ import androidx.media3.common.util.UnstableApi
 import com.rdwatch.androidtv.player.ExoPlayerManager
 import com.rdwatch.androidtv.player.PlaybackState
 import com.rdwatch.androidtv.player.TvPlayerView
+import com.rdwatch.androidtv.player.controls.TvPlayerMenu
+import com.rdwatch.androidtv.player.subtitle.AvailableSubtitle
 import com.rdwatch.androidtv.player.subtitle.SubtitleManager
 import com.rdwatch.androidtv.presentation.viewmodel.BaseViewModel
 import com.rdwatch.androidtv.ui.theme.UIConstants
@@ -34,10 +38,23 @@ fun VideoPlayerScreen(
     videoPlayerViewModel: VideoPlayerViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
+    val systemUiController = com.google.accompanist.systemuicontroller.rememberSystemUiController()
     val uiState by videoPlayerViewModel.uiState.collectAsState()
     val playbackUiState by playbackViewModel.uiState.collectAsState()
     val playerState by playbackViewModel.playerState.collectAsState()
     val mediaReadyState by playbackViewModel.mediaReadyState.collectAsState()
+
+    // Enable immersive mode for fullscreen video playback
+    LaunchedEffect(Unit) {
+        systemUiController.isSystemBarsVisible = false
+    }
+
+    // Restore system bars when leaving the screen
+    DisposableEffect(Unit) {
+        onDispose {
+            systemUiController.isSystemBarsVisible = true
+        }
+    }
 
     // Note: Video should already be prepared by PlaybackViewModel before navigation
     // We don't need to initialize a new video here, just connect to the existing ExoPlayer
@@ -150,6 +167,41 @@ fun VideoPlayerScreen(
                 onRestart = playbackViewModel::restartFromBeginning,
                 onDismiss = playbackViewModel::dismissResumeDialog,
             )
+        }
+
+        // Player menu
+        if (uiState.showPlayerMenu) {
+            Row(
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .background(Color.Black.copy(alpha = 0.5f)),
+                horizontalArrangement = Arrangement.End,
+            ) {
+                TvPlayerMenu(
+                    playerState = playerState,
+                    isVisible = uiState.showPlayerMenu,
+                    // TODO: Get from SubtitleManager
+                    availableSubtitles = emptyList(),
+                    // TODO: Get current track
+                    currentSubtitleTrack = null,
+                    // TODO: Get from settings
+                    subtitlesEnabled = true,
+                    onSubtitleTrackSelected = { track: AvailableSubtitle? ->
+                        // TODO: Implement subtitle track selection
+                    },
+                    onSubtitlesToggle = { enabled: Boolean ->
+                        // TODO: Implement subtitle toggle
+                    },
+                    onPlaybackSpeedSelected = { speed: Float ->
+                        videoPlayerViewModel.exoPlayerManager.setPlaybackSpeed(speed)
+                    },
+                    onClose = {
+                        videoPlayerViewModel.togglePlayerMenu()
+                    },
+                    modifier = Modifier.fillMaxHeight(),
+                )
+            }
         }
     }
 }

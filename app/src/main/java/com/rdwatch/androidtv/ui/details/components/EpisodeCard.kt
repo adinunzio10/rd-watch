@@ -1,5 +1,6 @@
 package com.rdwatch.androidtv.ui.details.components
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -11,6 +12,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -21,11 +23,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.rdwatch.androidtv.presentation.components.tvCardFocus
 import com.rdwatch.androidtv.ui.details.models.TVEpisode
 import com.rdwatch.androidtv.ui.details.models.advanced.SourceMetadata
 import com.rdwatch.androidtv.ui.details.models.advanced.VideoResolution
-import com.rdwatch.androidtv.ui.focus.tvFocusable
 import com.rdwatch.androidtv.ui.theme.RdwatchTheme
 
 /**
@@ -59,12 +59,24 @@ fun EpisodeCard(
             modifier
                 .width(240.dp)
                 .height(140.dp) // Optimized for better screen utilization
-                .tvCardFocus(focused, onClick)
-                .tvFocusable(onFocusChanged = { focused = it.isFocused })
+                .onFocusChanged { focusState ->
+                    focused = focusState.isFocused
+                }
                 .clickable(onClick = onClick),
+        border =
+            if (focused) {
+                BorderStroke(3.dp, MaterialTheme.colorScheme.outline)
+            } else {
+                null
+            },
         colors =
             CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surface,
+                containerColor =
+                    if (focused) {
+                        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+                    } else {
+                        MaterialTheme.colorScheme.surface
+                    },
                 contentColor = MaterialTheme.colorScheme.onSurface,
             ),
         elevation =
@@ -432,12 +444,24 @@ fun CompactEpisodeCard(
             modifier
                 .width(200.dp)
                 .height(120.dp)
-                .tvCardFocus(focused, onClick)
-                .tvFocusable(onFocusChanged = { focused = it.isFocused })
+                .onFocusChanged { focusState ->
+                    focused = focusState.isFocused
+                }
                 .clickable(onClick = onClick),
+        border =
+            if (focused) {
+                BorderStroke(3.dp, MaterialTheme.colorScheme.outline)
+            } else {
+                null
+            },
         colors =
             CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surface,
+                containerColor =
+                    if (focused) {
+                        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+                    } else {
+                        MaterialTheme.colorScheme.surface
+                    },
                 contentColor = MaterialTheme.colorScheme.onSurface,
             ),
         elevation =
@@ -586,12 +610,24 @@ fun ListEpisodeCard(
             modifier
                 .fillMaxWidth()
                 .height(80.dp)
-                .tvCardFocus(focused, onClick)
-                .tvFocusable(onFocusChanged = { focused = it.isFocused })
+                .onFocusChanged { focusState ->
+                    focused = focusState.isFocused
+                }
                 .clickable(onClick = onClick),
+        border =
+            if (focused) {
+                BorderStroke(3.dp, MaterialTheme.colorScheme.outline)
+            } else {
+                null
+            },
         colors =
             CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surface,
+                containerColor =
+                    if (focused) {
+                        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+                    } else {
+                        MaterialTheme.colorScheme.surface
+                    },
                 contentColor = MaterialTheme.colorScheme.onSurface,
             ),
         elevation =

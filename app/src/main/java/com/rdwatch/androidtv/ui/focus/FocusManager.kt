@@ -1,13 +1,21 @@
 package com.rdwatch.androidtv.ui.focus
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.border
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.focus.*
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.*
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
 
 /**
@@ -225,7 +233,7 @@ fun rememberTVFocusGroup(id: String): TVFocusGroup {
 }
 
 /**
- * Enhanced focus indicator for TV interfaces
+ * Enhanced focus indicator for TV interfaces with visual styling
  */
 @Composable
 fun TVFocusIndicator(
@@ -233,13 +241,27 @@ fun TVFocusIndicator(
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit,
 ) {
+    // Animated focus properties
+    val focusScale by animateFloatAsState(
+        targetValue = if (isFocused) 1.05f else 1.0f,
+        animationSpec = tween(durationMillis = 200),
+        label = "focus_scale",
+    )
+
+    val borderWidth by animateFloatAsState(
+        targetValue = if (isFocused) 3f else 0f,
+        animationSpec = tween(durationMillis = 200),
+        label = "border_width",
+    )
+
     val focusedModifier =
-        if (isFocused) {
-            modifier
-                .focusable()
-        } else {
-            modifier.focusable()
-        }
+        modifier
+            .scale(focusScale)
+            .border(
+                width = borderWidth.dp,
+                color = if (isFocused) MaterialTheme.colorScheme.outline else Color.Transparent,
+                shape = RoundedCornerShape(8.dp),
+            )
 
     Box(modifier = focusedModifier) {
         content()
