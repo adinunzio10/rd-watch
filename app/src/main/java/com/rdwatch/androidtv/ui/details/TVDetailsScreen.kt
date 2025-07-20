@@ -37,6 +37,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -61,6 +62,7 @@ import com.rdwatch.androidtv.ui.details.models.StreamingSource
 import com.rdwatch.androidtv.ui.details.models.TVEpisode
 import com.rdwatch.androidtv.ui.details.models.TVSeason
 import com.rdwatch.androidtv.ui.details.models.TVShowContentDetail
+import com.rdwatch.androidtv.ui.theme.UIConstants
 import com.rdwatch.androidtv.ui.viewmodel.PlaybackViewModel
 
 /**
@@ -72,12 +74,15 @@ import com.rdwatch.androidtv.ui.viewmodel.PlaybackViewModel
 fun TVDetailsScreen(
     tvShowId: String,
     modifier: Modifier = Modifier,
-    onPlayClick: (TVEpisode) -> Unit = {},
+    onNavigateToVideoPlayer: (videoUrl: String, title: String) -> Unit = { _, _ -> },
     onEpisodeClick: (TVEpisode) -> Unit = {},
     onBackPressed: () -> Unit = {},
     playbackViewModel: PlaybackViewModel = hiltViewModel(),
     viewModel: TVDetailsViewModel = hiltViewModel(),
 ) {
+    val configuration = LocalConfiguration.current
+    val screenHeight = configuration.screenHeightDp.toFloat()
+    val episodeGridHeight = UIConstants.Responsive.getEpisodeGridHeight(screenHeight)
     val tvShowState by viewModel.tvShowState.collectAsState()
     val selectedSeason by viewModel.selectedSeason.collectAsState()
     val selectedEpisode by viewModel.selectedEpisode.collectAsState()
@@ -124,6 +129,7 @@ fun TVDetailsScreen(
                 episodeSourcesMap = episodeSourcesMap,
                 viewModel = viewModel,
                 playbackViewModel = playbackViewModel,
+                onNavigateToVideoPlayer = onNavigateToVideoPlayer,
                 onActionClick = { action ->
                     when (action) {
                         // TODO: Determine which episode to show advanced source selection for
@@ -158,6 +164,7 @@ fun TVDetailsScreen(
                 backButtonFocusRequester = backButtonFocusRequester,
                 tabFocusRequester = tabFocusRequester,
                 listState = listState,
+                episodeGridHeight = episodeGridHeight,
                 modifier = modifier,
             )
         }
@@ -180,6 +187,7 @@ private fun TVDetailsContent(
     episodeSourcesMap: Map<String, List<com.rdwatch.androidtv.ui.details.models.advanced.SourceMetadata>>,
     viewModel: TVDetailsViewModel,
     playbackViewModel: PlaybackViewModel,
+    onNavigateToVideoPlayer: (videoUrl: String, title: String) -> Unit,
     onActionClick: (ContentAction) -> Unit,
     onSeasonSelected: (TVSeason) -> Unit,
     onEpisodeSelected: (TVEpisode) -> Unit,
@@ -188,6 +196,7 @@ private fun TVDetailsContent(
     backButtonFocusRequester: FocusRequester,
     tabFocusRequester: FocusRequester,
     listState: LazyListState,
+    episodeGridHeight: androidx.compose.ui.unit.Dp,
     modifier: Modifier = Modifier,
 ) {
     LazyColumn(
@@ -328,7 +337,7 @@ private fun TVDetailsContent(
                                     modifier =
                                         Modifier
                                             .fillMaxWidth()
-                                            .height(600.dp),
+                                            .height(episodeGridHeight),
                                 ) {
                                     EpisodeGridSection(
                                         tvShowDetail = tvShow.getTVShowDetail(),
@@ -442,6 +451,7 @@ private fun TVDetailsContent(
                     tvShow = tvShow,
                     episode = episode,
                     source = source,
+                    onNavigateToVideoPlayer = onNavigateToVideoPlayer,
                 )
             }
         },
@@ -468,6 +478,7 @@ private fun TVDetailsContent(
                     tvShow = tvShow,
                     episode = episode,
                     source = source,
+                    onNavigateToVideoPlayer = onNavigateToVideoPlayer,
                 )
             }
         },

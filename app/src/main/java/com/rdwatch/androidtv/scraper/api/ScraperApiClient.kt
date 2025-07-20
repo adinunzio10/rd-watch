@@ -1,5 +1,6 @@
 package com.rdwatch.androidtv.scraper.api
 
+import com.rdwatch.androidtv.network.CircuitBreaker
 import com.rdwatch.androidtv.scraper.models.ScraperManifest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -8,13 +9,15 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
 import org.json.JSONObject
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * HTTP client for making API calls to scraper services
- * Handles timeouts, retries, and error handling
+ * Handles timeouts, retries, error handling, and circuit breaker pattern
  */
 @Singleton
 class ScraperApiClient
@@ -33,58 +36,124 @@ class ScraperApiClient
                 .writeTimeout(DEFAULT_TIMEOUT_SECONDS, TimeUnit.SECONDS)
                 .build()
 
+        // Circuit breakers per scraper service
+        private val circuitBreakers = ConcurrentHashMap<String, CircuitBreaker>()
+
         /**
-         * Make an API call to a scraper endpoint
+         * Make an API call to a scraper endpoint with circuit breaker protection
          */
         suspend fun makeScraperRequest(
             url: String,
             headers: Map<String, String> = emptyMap(),
         ): ScraperApiResponse =
             withContext(Dispatchers.IO) {
-                println("DEBUG [ScraperApiClient]: Making request to: $url")
+                val serviceName = extractServiceName(url)
+                val circuitBreaker = getOrCreateCircuitBreaker(serviceName)
 
-                var lastException: Exception? = null
+                println("DEBUG [ScraperApiClient]: Making request to: $url (service: $serviceName)")
 
-                repeat(MAX_RETRY_ATTEMPTS) { attempt ->
-                    try {
-                        val response =
-                            withTimeout(DEFAULT_TIMEOUT_SECONDS * 1000) {
-                                executeRequest(url, headers)
-                            }
-
-                        if (response.isSuccessful) {
-                            val body = response.body?.string() ?: ""
-                            println("DEBUG [ScraperApiClient]: Request successful, response length: ${body.length}")
-                            return@withContext ScraperApiResponse.Success(
-                                data = body,
-                                statusCode = response.code,
-                                headers = response.headers.toMultimap(),
-                            )
-                        } else {
-                            println("DEBUG [ScraperApiClient]: Request failed with status: ${response.code}")
-                            return@withContext ScraperApiResponse.Error(
-                                message = "HTTP ${response.code}: ${response.message}",
-                                statusCode = response.code,
-                                throwable = null,
-                            )
-                        }
-                    } catch (e: Exception) {
-                        lastException = e
-                        println("DEBUG [ScraperApiClient]: Request attempt ${attempt + 1} failed: ${e.message}")
-
-                        if (attempt < MAX_RETRY_ATTEMPTS - 1) {
-                            kotlinx.coroutines.delay(RETRY_DELAY_MS * (attempt + 1))
-                        }
+                when (val result = circuitBreaker.execute { performRequest(url, headers) }) {
+                    is CircuitBreaker.Result.Success -> {
+                        println("DEBUG [ScraperApiClient]: Request successful via circuit breaker")
+                        result.value
+                    }
+                    is CircuitBreaker.Result.Failure -> {
+                        println("DEBUG [ScraperApiClient]: Request failed: ${result.exception.message}")
+                        ScraperApiResponse.Error(
+                            message = "Request failed: ${result.exception.message}",
+                            statusCode = 0,
+                            throwable = result.exception,
+                        )
+                    }
+                    is CircuitBreaker.Result.CircuitOpen -> {
+                        println("DEBUG [ScraperApiClient]: Circuit breaker is OPEN for $serviceName")
+                        ScraperApiResponse.Error(
+                            message = result.message,
+                            statusCode = 503, // Service Unavailable
+                            throwable = null,
+                        )
+                    }
+                    is CircuitBreaker.Result.FallbackUsed -> {
+                        println("DEBUG [ScraperApiClient]: Using fallback response for $serviceName")
+                        result.value as ScraperApiResponse
                     }
                 }
+            }
 
-                println("DEBUG [ScraperApiClient]: All retry attempts failed")
-                ScraperApiResponse.Error(
-                    message = "Request failed after $MAX_RETRY_ATTEMPTS attempts: ${lastException?.message}",
-                    statusCode = 0,
-                    throwable = lastException,
+        /**
+         * Perform the actual HTTP request with retries
+         */
+        private suspend fun performRequest(
+            url: String,
+            headers: Map<String, String>,
+        ): ScraperApiResponse {
+            var lastException: Exception? = null
+
+            repeat(MAX_RETRY_ATTEMPTS) { attempt ->
+                try {
+                    val response =
+                        withTimeout(DEFAULT_TIMEOUT_SECONDS * 1000) {
+                            executeRequest(url, headers)
+                        }
+
+                    if (response.isSuccessful) {
+                        val body = response.body?.string() ?: ""
+                        println("DEBUG [ScraperApiClient]: Request successful, response length: ${body.length}")
+                        return ScraperApiResponse.Success(
+                            data = body,
+                            statusCode = response.code,
+                            headers = response.headers.toMultimap(),
+                        )
+                    } else {
+                        println("DEBUG [ScraperApiClient]: Request failed with status: ${response.code}")
+                        // For HTTP errors, don't retry - circuit breaker will handle
+                        throw Exception("HTTP ${response.code}: ${response.message}")
+                    }
+                } catch (e: Exception) {
+                    lastException = e
+                    println("DEBUG [ScraperApiClient]: Request attempt ${attempt + 1} failed: ${e.message}")
+
+                    if (attempt < MAX_RETRY_ATTEMPTS - 1) {
+                        kotlinx.coroutines.delay(RETRY_DELAY_MS * (attempt + 1))
+                    }
+                }
+            }
+
+            throw lastException ?: Exception("Request failed after $MAX_RETRY_ATTEMPTS attempts")
+        }
+
+        /**
+         * Extract service name from URL for circuit breaker identification
+         */
+        private fun extractServiceName(url: String): String {
+            return try {
+                val host = java.net.URL(url).host
+                host.lowercase().replace(".", "-")
+            } catch (e: Exception) {
+                "unknown-scraper"
+            }
+        }
+
+        /**
+         * Get or create a circuit breaker for a specific service
+         */
+        private fun getOrCreateCircuitBreaker(serviceName: String): CircuitBreaker {
+            return circuitBreakers.computeIfAbsent(serviceName) {
+                CircuitBreaker(
+                    serviceName = "scraper:$serviceName",
+                    failureThreshold = 5,
+                    recoveryTimeout = 60.seconds,
+                    fallbackFunction = {
+                        android.util.Log.d("CircuitBreaker", "Using fallback for scraper $serviceName")
+                        ScraperApiResponse.Success(
+                            data = "[]", // Empty JSON array as fallback
+                            statusCode = 200,
+                            headers = emptyMap(),
+                        )
+                    },
                 )
             }
+        }
 
         /**
          * Execute HTTP request
@@ -143,6 +212,27 @@ class ScraperApiClient
                 println("DEBUG [ScraperApiClient]: Failed to parse JSON response: ${e.message}")
                 null
             }
+        }
+
+        /**
+         * Get circuit breaker metrics for monitoring
+         */
+        fun getCircuitBreakerMetrics(): Map<String, CircuitBreaker.Metrics> {
+            return circuitBreakers.mapValues { (_, breaker) -> breaker.getMetrics() }
+        }
+
+        /**
+         * Reset circuit breaker for a specific service
+         */
+        suspend fun resetCircuitBreaker(serviceName: String) {
+            circuitBreakers[serviceName]?.reset()
+        }
+
+        /**
+         * Reset all circuit breakers
+         */
+        suspend fun resetAllCircuitBreakers() {
+            circuitBreakers.values.forEach { it.reset() }
         }
     }
 

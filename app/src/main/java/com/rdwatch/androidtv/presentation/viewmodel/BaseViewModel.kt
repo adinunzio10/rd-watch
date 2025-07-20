@@ -211,8 +211,7 @@ abstract class BaseViewModel<UiState> : ViewModel() {
     }
 
     protected fun isDebugMode(): Boolean {
-        // In a real app, this would check BuildConfig.DEBUG or a debug setting
-        return true // For now, always debug
+        return com.rdwatch.androidtv.BuildConfig.DEBUG
     }
 
     private fun updateDebugInfo(updater: DebugInfo.() -> DebugInfo) {

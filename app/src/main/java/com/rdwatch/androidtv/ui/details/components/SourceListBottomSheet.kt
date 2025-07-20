@@ -20,6 +20,7 @@ import com.rdwatch.androidtv.ui.details.models.advanced.*
 import com.rdwatch.androidtv.ui.focus.TVFocusItem
 import com.rdwatch.androidtv.ui.focus.rememberTVFocusGroup
 import com.rdwatch.androidtv.ui.focus.tvFocusable
+import com.rdwatch.androidtv.ui.theme.UIConstants
 
 /**
  * Comprehensive source selection bottom sheet for advanced source selection
@@ -119,7 +120,7 @@ private fun SourceListContent(
         modifier =
             Modifier
                 .fillMaxWidth()
-                .heightIn(max = 600.dp)
+                .heightIn(max = UIConstants.Dimensions.MAX_OVERLAY_HEIGHT)
                 .padding(16.dp),
     ) {
         // Header with title and controls

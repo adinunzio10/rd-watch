@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rdwatch.androidtv.ui.details.models.advanced.SourceMetadata
 import com.rdwatch.androidtv.ui.focus.tvFocusable
+import com.rdwatch.androidtv.ui.theme.UIConstants
 import kotlinx.coroutines.delay
 
 /**
@@ -238,7 +239,7 @@ private fun DetailedSourceList(
     modifier: Modifier = Modifier,
 ) {
     LazyColumn(
-        modifier = modifier.heightIn(max = 600.dp),
+        modifier = modifier.heightIn(max = UIConstants.Dimensions.MAX_OVERLAY_HEIGHT),
         state = listState,
         verticalArrangement = Arrangement.spacedBy(12.dp),
         contentPadding = PaddingValues(vertical = 4.dp),

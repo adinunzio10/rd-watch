@@ -86,7 +86,7 @@ object SourceMetadataMapper {
                     debridService = null,
                     cached = false,
                 ),
-            metadata = source.metadata,
+            metadata = source.metadata + mapOf("originalUrl" to source.url),
         )
     }
 

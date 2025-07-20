@@ -12,6 +12,7 @@ import androidx.media3.ui.PlayerView
 import com.rdwatch.androidtv.player.controls.TvKeyHandler
 import com.rdwatch.androidtv.player.controls.TvPlayerControls
 import com.rdwatch.androidtv.player.subtitle.SubtitleManager
+import com.rdwatch.androidtv.util.DebugLogger
 import kotlinx.coroutines.delay
 
 @UnstableApi
@@ -92,29 +93,74 @@ fun TvPlayerView(
         // ExoPlayer view with subtitle support
         AndroidView(
             factory = { ctx ->
+                DebugLogger.d("TvPlayerView", "Creating PlayerView in factory")
                 PlayerView(ctx).apply {
-                    player = exoPlayerManager.exoPlayer
+                    DebugLogger.d("TvPlayerView", "Configuring PlayerView")
+
+                    // Set player and log the assignment
+                    val currentPlayer = exoPlayerManager.exoPlayer
+                    player = currentPlayer
+                    DebugLogger.d("TvPlayerView", "PlayerView assigned ExoPlayer: ${currentPlayer.hashCode()}")
+
+                    // Enhanced configuration for Android TV
                     useController = false // We use our custom controls
                     setShowBuffering(PlayerView.SHOW_BUFFERING_WHEN_PLAYING)
                     setKeepContentOnPlayerReset(true)
 
+                    // Ensure proper surface scaling for Android TV
+                    videoSurfaceView?.let { surfaceView ->
+                        DebugLogger.d("TvPlayerView", "Configuring video surface view")
+                        // Surface view configuration for proper rendering
+                    }
+
+                    // Force layout to ensure surface is properly sized
+                    DebugLogger.d("TvPlayerView", "PlayerView layout: width=$width, height=$height")
+
                     // Configure subtitle view
                     subtitleView?.let { subtitleView ->
                         subtitleManager.configureSubtitleView(subtitleView)
+                        DebugLogger.d("TvPlayerView", "Subtitle view configured")
                     }
 
                     setOnClickListener {
                         onUserInteraction()
                     }
+
+                    // Log player state when view is created
+                    val playerState = exoPlayerManager.playerState.value
+                    DebugLogger.d("TvPlayerView", "PlayerView created with state:")
+                    DebugLogger.d("TvPlayerView", "  - Playback state: ${playerState.playbackState}")
+                    DebugLogger.d("TvPlayerView", "  - Has video: ${playerState.hasVideo}")
+                    DebugLogger.d("TvPlayerView", "  - Is playing: ${playerState.isPlaying}")
                 }
             },
             update = { playerView ->
-                playerView.player = exoPlayerManager.exoPlayer
+                DebugLogger.d("TvPlayerView", "Updating PlayerView")
+
+                val currentPlayer = exoPlayerManager.exoPlayer
+                if (playerView.player != currentPlayer) {
+                    DebugLogger.d("TvPlayerView", "Updating PlayerView with new ExoPlayer: ${currentPlayer.hashCode()}")
+                    playerView.player = currentPlayer
+                } else {
+                    DebugLogger.d("TvPlayerView", "PlayerView already has correct ExoPlayer instance")
+                }
 
                 // Update subtitle styling if changed
                 playerView.subtitleView?.let { subtitleView ->
                     subtitleManager.configureSubtitleView(subtitleView)
                 }
+
+                // Log current player state during update
+                val playerState = exoPlayerManager.playerState.value
+                DebugLogger.d("TvPlayerView", "PlayerView update - current state:")
+                DebugLogger.d("TvPlayerView", "  - Playback state: ${playerState.playbackState}")
+                DebugLogger.d("TvPlayerView", "  - Has video: ${playerState.hasVideo}")
+                DebugLogger.d("TvPlayerView", "  - Is playing: ${playerState.isPlaying}")
+
+                // Check if video surface is available and ready
+                playerView.videoSurfaceView?.let { surfaceView ->
+                    DebugLogger.d("TvPlayerView", "Video surface view available: ${surfaceView.width}x${surfaceView.height}")
+                } ?: DebugLogger.w("TvPlayerView", "No video surface view available")
             },
             modifier = Modifier.fillMaxSize(),
         )

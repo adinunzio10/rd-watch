@@ -20,7 +20,7 @@ This file provides essential guidance to Claude Code when working with this Andr
 
 # Code Quality
 ./gradlew lint                    # Full lint check
-./lint-summary.sh                 # Concise lint output
+./ktlint-summary.sh               # KtLint format & check
 ./lint-check.sh                   # Minimal lint output
 
 # Dependencies
@@ -36,7 +36,6 @@ This project uses modular documentation for optimal context management:
 - **[claude-workflows.md](claude-workflows.md)**: Git/GitHub workflows, branching strategy, commit conventions
 - **[claude-taskmaster.md](claude-taskmaster.md)**: Task-Master CLI integration, commands, and workflow patterns
 - **[claude-tests.md](claude-tests.md)**: Testing strategy, test commands, and test maintenance
-- **[claude-development.md](claude-development.md)**: Debugging tips, common tasks, troubleshooting
 - **[claude-debugging-methodology.md](claude-debugging-methodology.md)**: Systematic problem-solving approaches
 - **[claude-android-patterns.md](claude-android-patterns.md)**: Android TV app specific debugging patterns
 - **[claude-session-management.md](claude-session-management.md)**: Best practices for effective development sessions
@@ -51,8 +50,6 @@ This project uses modular documentation for optimal context management:
    - Update `CLAUDE-architecture.md` when changing app structure or dependencies
    - Update `claude-tests.md` when adding/modifying tests
    - Update `claude-workflows.md` when changing development processes
-3. **Use planning mode** for major changes - save plans to `planning-docs/`
-4. **Reference documentation by filename:line** when discussing code locations
 
 ## Key Directories
 
@@ -67,7 +64,7 @@ app/src/main/java/com/rdwatch/androidtv/
 
 ## Linting Notes
 
-- Remember to lint using `lint-summary.sh`. `lint-check.sh` no longer exists
+- Remember to lint using `ktlint-summary.sh` for code formatting and style checking
 
 ---
 

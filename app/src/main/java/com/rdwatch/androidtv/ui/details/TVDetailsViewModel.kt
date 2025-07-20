@@ -10,6 +10,7 @@ import com.rdwatch.androidtv.ui.details.managers.ScraperSourceManager
 import com.rdwatch.androidtv.ui.details.models.*
 import com.rdwatch.androidtv.ui.details.models.advanced.*
 import com.rdwatch.androidtv.ui.details.viewmodels.SourceListViewModel
+import com.rdwatch.androidtv.util.DebugLogger
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Job
@@ -93,22 +94,22 @@ class TVDetailsViewModel
 
                 try {
                     // Debug logging for ID tracking
-                    android.util.Log.d("TVDetailsViewModel", "=== TV Show ID Debug ===")
-                    android.util.Log.d("TVDetailsViewModel", "Raw tvShowId received: '$tvShowId'")
-                    android.util.Log.d("TVDetailsViewModel", "tvShowId length: ${tvShowId.length}")
-                    android.util.Log.d("TVDetailsViewModel", "tvShowId bytes: ${tvShowId.toByteArray().contentToString()}")
+                    DebugLogger.d("TVDetailsViewModel", "=== TV Show ID Debug ===")
+                    DebugLogger.d("TVDetailsViewModel", "Raw tvShowId received: '$tvShowId'")
+                    DebugLogger.d("TVDetailsViewModel", "tvShowId length: ${tvShowId.length}")
+                    DebugLogger.d("TVDetailsViewModel", "tvShowId bytes: ${tvShowId.toByteArray().contentToString()}")
 
                     // Sanitize input - trim whitespace and validate format
                     val sanitizedId = tvShowId.trim()
-                    android.util.Log.d("TVDetailsViewModel", "Sanitized tvShowId: '$sanitizedId'")
+                    DebugLogger.d("TVDetailsViewModel", "Sanitized tvShowId: '$sanitizedId'")
 
                     // Convert tvShowId to Int for TMDb API
                     val tmdbId = sanitizedId.toIntOrNull()
-                    android.util.Log.d("TVDetailsViewModel", "toIntOrNull() result: $tmdbId")
+                    DebugLogger.d("TVDetailsViewModel", "toIntOrNull() result: $tmdbId")
 
                     if (tmdbId == null) {
                         val errorMessage = "Invalid TMDb TV show ID: '$sanitizedId' (original: '$tvShowId')"
-                        android.util.Log.e("TVDetailsViewModel", errorMessage)
+                        DebugLogger.e("TVDetailsViewModel", errorMessage)
                         updateState {
                             copy(
                                 isLoading = false,
@@ -118,7 +119,7 @@ class TVDetailsViewModel
                         return@launch
                     }
 
-                    android.util.Log.d("TVDetailsViewModel", "Successfully converted to TMDb ID: $tmdbId")
+                    DebugLogger.d("TVDetailsViewModel", "Successfully converted to TMDb ID: $tmdbId")
 
                     // Load TV show details from TMDb
                     tmdbTVRepository.getTVContentDetail(tmdbId).collect { result ->
@@ -253,7 +254,7 @@ class TVDetailsViewModel
                                 _tvShowState.value = tvShowDetail
 
                                 // External IDs will be fetched on-demand at episode level when needed for source scraping
-                                android.util.Log.d("TVDetailsViewModel", "TV show loaded without external IDs for faster loading")
+                                DebugLogger.d("TVDetailsViewModel", "TV show loaded without external IDs for faster loading")
 
                                 // Select first season by default
                                 val firstSeason = tvShowDetail.getSeasons().firstOrNull()
@@ -308,27 +309,27 @@ class TVDetailsViewModel
          * Uses single source of truth pattern - always gets fresh data from tvShowState
          */
         fun selectSeason(season: TVSeason) {
-            android.util.Log.d("TVDetailsViewModel", "=== Season Selection Debug ===")
-            android.util.Log.d("TVDetailsViewModel", "Request to select season ${season.seasonNumber}: ${season.name}")
+            DebugLogger.d("TVDetailsViewModel", "=== Season Selection Debug ===")
+            DebugLogger.d("TVDetailsViewModel", "Request to select season ${season.seasonNumber}: ${season.name}")
 
             // CRITICAL: Always get the current season data from the single source of truth
             val currentTvShow = _tvShowState.value
             if (currentTvShow == null) {
-                android.util.Log.w("TVDetailsViewModel", "Cannot select season: no TV show loaded")
+                DebugLogger.w("TVDetailsViewModel", "Cannot select season: no TV show loaded")
                 return
             }
 
             // Find the current version of this season from the authoritative source
             val authoritativeSeason = currentTvShow.getSeasons().find { it.seasonNumber == season.seasonNumber }
             if (authoritativeSeason == null) {
-                android.util.Log.w("TVDetailsViewModel", "Season ${season.seasonNumber} not found in current TV show data")
+                DebugLogger.w("TVDetailsViewModel", "Season ${season.seasonNumber} not found in current TV show data")
                 return
             }
 
-            android.util.Log.d("TVDetailsViewModel", "Using authoritative season data:")
-            android.util.Log.d("TVDetailsViewModel", "  - Episodes loaded: ${authoritativeSeason.episodes.size}")
-            android.util.Log.d("TVDetailsViewModel", "  - Episode count claimed: ${authoritativeSeason.episodeCount}")
-            android.util.Log.d(
+            DebugLogger.d("TVDetailsViewModel", "Using authoritative season data:")
+            DebugLogger.d("TVDetailsViewModel", "  - Episodes loaded: ${authoritativeSeason.episodes.size}")
+            DebugLogger.d("TVDetailsViewModel", "  - Episode count claimed: ${authoritativeSeason.episodeCount}")
+            DebugLogger.d(
                 "TVDetailsViewModel",
                 "  - Episodes have valid data: ${authoritativeSeason.episodes.any { it.id != "0" && it.title.isNotBlank() }}",
             )
@@ -340,19 +341,19 @@ class TVDetailsViewModel
             val shouldLoadOnDemand = shouldLoadSeasonOnDemand(authoritativeSeason)
 
             if (shouldLoadOnDemand) {
-                android.util.Log.d("TVDetailsViewModel", "Season ${authoritativeSeason.seasonNumber} needs on-demand loading")
+                DebugLogger.d("TVDetailsViewModel", "Season ${authoritativeSeason.seasonNumber} needs on-demand loading")
                 loadSeasonOnDemand(authoritativeSeason.seasonNumber)
 
                 // Don't set selected episode yet since we're loading data
                 selectEpisodeInternal(null)
             } else {
-                android.util.Log.d("TVDetailsViewModel", "Season ${authoritativeSeason.seasonNumber} using existing episode data")
+                DebugLogger.d("TVDetailsViewModel", "Season ${authoritativeSeason.seasonNumber} using existing episode data")
 
                 // Select appropriate episode from authoritative data
                 val selectedEpisode = selectAppropriateEpisode(authoritativeSeason)
                 selectEpisodeInternal(selectedEpisode)
 
-                android.util.Log.d(
+                DebugLogger.d(
                     "TVDetailsViewModel",
                     "Selected episode: ${selectedEpisode?.title ?: "None"} (S${authoritativeSeason.seasonNumber}E${selectedEpisode?.episodeNumber ?: 0})",
                 )
@@ -408,8 +409,8 @@ class TVDetailsViewModel
          * Select an episode and load sources (called by user interaction)
          */
         fun selectEpisode(episode: TVEpisode) {
-            android.util.Log.d("TVDetailsViewModel", "=== Episode Selection (User) ===")
-            android.util.Log.d(
+            DebugLogger.d("TVDetailsViewModel", "=== Episode Selection (User) ===")
+            DebugLogger.d(
                 "TVDetailsViewModel",
                 "User selected episode: S${episode.seasonNumber}E${episode.episodeNumber} - ${episode.title}",
             )
@@ -419,7 +420,7 @@ class TVDetailsViewModel
 
             // Load sources for the selected episode (only on explicit user selection)
             _tvShowState.value?.let { tvShow ->
-                android.util.Log.d("TVDetailsViewModel", "Loading advanced sources for user-selected episode")
+                DebugLogger.d("TVDetailsViewModel", "Loading advanced sources for user-selected episode")
                 // Use only advanced sources system - legacy loadSourcesForEpisode() removed
                 loadAdvancedSourcesForEpisode(tvShow, episode)
             }
@@ -429,8 +430,8 @@ class TVDetailsViewModel
          * Internal method to select episode without loading sources (for system updates)
          */
         private fun selectEpisodeInternal(episode: TVEpisode?) {
-            android.util.Log.d("TVDetailsViewModel", "=== Episode Selection (Internal) ===")
-            android.util.Log.d(
+            DebugLogger.d("TVDetailsViewModel", "=== Episode Selection (Internal) ===")
+            DebugLogger.d(
                 "TVDetailsViewModel",
                 "System selected episode: ${episode?.let { "S${it.seasonNumber}E${it.episodeNumber} - ${it.title}" } ?: "None"}",
             )
@@ -439,7 +440,7 @@ class TVDetailsViewModel
             updateState { copy(currentEpisode = episode) }
 
             // Do NOT load sources - this is for internal state management only
-            android.util.Log.d("TVDetailsViewModel", "NOT loading sources for system-selected episode")
+            DebugLogger.d("TVDetailsViewModel", "NOT loading sources for system-selected episode")
         }
 
         /**
@@ -618,16 +619,16 @@ class TVDetailsViewModel
                     val numberOfSeasons = tvShowDetails.numberOfSeasons
                     val existingSeasons = tvShowDetails.seasons
 
-                    android.util.Log.d("TVDetailsViewModel", "=== Season Loading Debug ===")
-                    android.util.Log.d("TVDetailsViewModel", "TV Show: ${tvShowDetails.title} (ID: $tmdbId)")
-                    android.util.Log.d("TVDetailsViewModel", "Number of seasons from initial data: $numberOfSeasons")
-                    android.util.Log.d("TVDetailsViewModel", "Existing seasons count: ${existingSeasons.size}")
+                    DebugLogger.d("TVDetailsViewModel", "=== Season Loading Debug ===")
+                    DebugLogger.d("TVDetailsViewModel", "TV Show: ${tvShowDetails.title} (ID: $tmdbId)")
+                    DebugLogger.d("TVDetailsViewModel", "Number of seasons from initial data: $numberOfSeasons")
+                    DebugLogger.d("TVDetailsViewModel", "Existing seasons count: ${existingSeasons.size}")
 
                     try {
                         // Check if we already have episodes from the initial API response
                         val hasEpisodesInInitialData = existingSeasons.any { it.episodes.isNotEmpty() }
                         if (hasEpisodesInInitialData) {
-                            android.util.Log.d("TVDetailsViewModel", "Initial data already contains episodes, using existing data")
+                            DebugLogger.d("TVDetailsViewModel", "Initial data already contains episodes, using existing data")
                             updateTVShowWithSeasons(tvShowDetail, existingSeasons)
                             return@launch
                         }
@@ -635,12 +636,12 @@ class TVDetailsViewModel
                         // Determine which season to load initially
                         val initialSeasonToLoad = determineInitialSeasonToLoad(existingSeasons)
 
-                        android.util.Log.d("TVDetailsViewModel", "Loading only season $initialSeasonToLoad initially")
+                        DebugLogger.d("TVDetailsViewModel", "Loading only season $initialSeasonToLoad initially")
 
                         // Load the initial season with proper error handling
                         loadInitialSeason(tmdbId, initialSeasonToLoad, tvShowDetail, existingSeasons, numberOfSeasons)
                     } catch (e: Exception) {
-                        android.util.Log.e("TVDetailsViewModel", "Critical error in season loading: ${e.message}")
+                        DebugLogger.e("TVDetailsViewModel", "Critical error in season loading: ${e.message}")
                         handleSeasonLoadingError(tvShowDetail, existingSeasons, SeasonLoadingError.CriticalError(e))
                     }
                 }
@@ -668,7 +669,7 @@ class TVDetailsViewModel
         ) {
             // Check for duplicate requests
             if (activeSeasonRequests.contains(seasonNumber)) {
-                android.util.Log.d("TVDetailsViewModel", "Season $seasonNumber already being loaded, skipping duplicate request")
+                DebugLogger.d("TVDetailsViewModel", "Season $seasonNumber already being loaded, skipping duplicate request")
                 return
             }
 
@@ -692,16 +693,16 @@ class TVDetailsViewModel
                         handleSeasonLoadSuccess(result.data, seasonNumber, tvShowDetail, existingSeasons, totalSeasons)
                     }
                     is com.rdwatch.androidtv.repository.base.Result.Error -> {
-                        android.util.Log.e("TVDetailsViewModel", "API error loading season $seasonNumber: ${result.exception.message}")
+                        DebugLogger.e("TVDetailsViewModel", "API error loading season $seasonNumber: ${result.exception.message}")
                         handleSeasonLoadingError(tvShowDetail, existingSeasons, SeasonLoadingError.ApiError(result.exception))
                     }
                     is com.rdwatch.androidtv.repository.base.Result.Loading -> {
                         // This shouldn't happen with first{}, but handle it anyway
-                        android.util.Log.w("TVDetailsViewModel", "Unexpected loading state received for season $seasonNumber")
+                        DebugLogger.w("TVDetailsViewModel", "Unexpected loading state received for season $seasonNumber")
                         handleSeasonLoadingError(tvShowDetail, existingSeasons, SeasonLoadingError.UnexpectedState)
                     }
                     null -> {
-                        android.util.Log.w("TVDetailsViewModel", "Season $seasonNumber loading timed out after 30 seconds")
+                        DebugLogger.w("TVDetailsViewModel", "Season $seasonNumber loading timed out after 30 seconds")
                         handleSeasonLoadingError(tvShowDetail, existingSeasons, SeasonLoadingError.Timeout)
                     }
                 }
@@ -720,14 +721,14 @@ class TVDetailsViewModel
             existingSeasons: List<TVSeason>,
             totalSeasons: Int,
         ) {
-            android.util.Log.d(
+            DebugLogger.d(
                 "TVDetailsViewModel",
                 "Season $seasonNumber response: id=${seasonResponse.id}, episodes=${seasonResponse.episodes.size}",
             )
 
             if (seasonResponse.id != 0 && (seasonResponse.episodes.isNotEmpty() || seasonResponse.episodeCount > 0)) {
                 val tvSeason = mapTMDbSeasonResponseToTVSeason(seasonResponse)
-                android.util.Log.d(
+                DebugLogger.d(
                     "TVDetailsViewModel",
                     "Mapped season $seasonNumber: ${tvSeason.name} with ${tvSeason.episodes.size} episodes",
                 )
@@ -736,13 +737,13 @@ class TVDetailsViewModel
                 val allSeasons = buildSeasonsList(tvSeason, existingSeasons, totalSeasons)
                 val sortedSeasons = allSeasons.sortedBy { it.seasonNumber }
 
-                android.util.Log.d(
+                DebugLogger.d(
                     "TVDetailsViewModel",
                     "Updating UI with season $seasonNumber loaded and ${sortedSeasons.size} total seasons",
                 )
                 updateTVShowWithSeasons(tvShowDetail, sortedSeasons)
             } else {
-                android.util.Log.w(
+                DebugLogger.w(
                     "TVDetailsViewModel",
                     "Season $seasonNumber response was invalid (id=${seasonResponse.id}, episodes=${seasonResponse.episodes.size})",
                 )
@@ -806,7 +807,7 @@ class TVDetailsViewModel
             existingSeasons: List<TVSeason>,
             error: SeasonLoadingError,
         ) {
-            android.util.Log.e("TVDetailsViewModel", "Season loading error: ${error.getMessage()}")
+            DebugLogger.e("TVDetailsViewModel", "Season loading error: ${error.getMessage()}")
 
             // Update UI state to reflect error
             updateState {
@@ -865,10 +866,10 @@ class TVDetailsViewModel
             existingSeasons: List<TVSeason>,
         ) {
             if (existingSeasons.isNotEmpty()) {
-                android.util.Log.d("TVDetailsViewModel", "Using existing seasons from initial data")
+                DebugLogger.d("TVDetailsViewModel", "Using existing seasons from initial data")
                 updateTVShowWithSeasons(tvShowDetail, existingSeasons)
             } else {
-                android.util.Log.w("TVDetailsViewModel", "Using default seasons as fallback")
+                DebugLogger.w("TVDetailsViewModel", "Using default seasons as fallback")
                 val defaultSeasons = getDefaultSeasons()
                 updateTVShowWithSeasons(tvShowDetail, defaultSeasons)
             }
@@ -878,13 +879,13 @@ class TVDetailsViewModel
          * Load additional seasons on demand (when user navigates to them)
          */
         fun loadSeasonOnDemand(seasonNumber: Int) {
-            android.util.Log.d("TVDetailsViewModel", "=== Load Season On Demand Debug ===")
-            android.util.Log.d("TVDetailsViewModel", "Requested season: $seasonNumber")
+            DebugLogger.d("TVDetailsViewModel", "=== Load Season On Demand Debug ===")
+            DebugLogger.d("TVDetailsViewModel", "Requested season: $seasonNumber")
 
             // Validate preconditions
             val validationResult = validateOnDemandLoadingPreconditions(seasonNumber)
             if (!validationResult.isValid) {
-                android.util.Log.w("TVDetailsViewModel", "Validation failed: ${validationResult.reason}")
+                DebugLogger.w("TVDetailsViewModel", "Validation failed: ${validationResult.reason}")
                 return
             }
 
@@ -934,10 +935,10 @@ class TVDetailsViewModel
                 return OnDemandValidationResult(false, "Season $seasonNumber already has ${currentSeason?.episodes?.size} valid episodes")
             }
 
-            android.util.Log.d("TVDetailsViewModel", "Season $seasonNumber validation passed:")
-            android.util.Log.d("TVDetailsViewModel", "  - Current episodes: ${currentSeason?.episodes?.size ?: 0}")
-            android.util.Log.d("TVDetailsViewModel", "  - Has valid episodes: $hasValidEpisodes")
-            android.util.Log.d("TVDetailsViewModel", "  - Episode count claimed: ${currentSeason?.episodeCount ?: 0}")
+            DebugLogger.d("TVDetailsViewModel", "Season $seasonNumber validation passed:")
+            DebugLogger.d("TVDetailsViewModel", "  - Current episodes: ${currentSeason?.episodes?.size ?: 0}")
+            DebugLogger.d("TVDetailsViewModel", "  - Has valid episodes: $hasValidEpisodes")
+            DebugLogger.d("TVDetailsViewModel", "  - Episode count claimed: ${currentSeason?.episodeCount ?: 0}")
 
             return OnDemandValidationResult(true, tmdbId = tmdbId, tvShow = currentTvShow)
         }
@@ -952,11 +953,11 @@ class TVDetailsViewModel
         ) {
             // Cancel any existing job for this season to prevent duplicates
             onDemandSeasonJobs[seasonNumber]?.cancel()
-            android.util.Log.d("TVDetailsViewModel", "Cancelled any existing job for season $seasonNumber")
+            DebugLogger.d("TVDetailsViewModel", "Cancelled any existing job for season $seasonNumber")
 
             onDemandSeasonJobs[seasonNumber] =
                 viewModelScope.launch {
-                    android.util.Log.d("TVDetailsViewModel", "Loading season $seasonNumber on demand for TV $tmdbId")
+                    DebugLogger.d("TVDetailsViewModel", "Loading season $seasonNumber on demand for TV $tmdbId")
 
                     activeSeasonRequests.add(seasonNumber)
 
@@ -977,21 +978,21 @@ class TVDetailsViewModel
                                 handleOnDemandSeasonLoadSuccess(result.data, seasonNumber)
                             }
                             is com.rdwatch.androidtv.repository.base.Result.Error -> {
-                                android.util.Log.e("TVDetailsViewModel", "API error loading season $seasonNumber on demand: ${result.exception.message}")
+                                DebugLogger.e("TVDetailsViewModel", "API error loading season $seasonNumber on demand: ${result.exception.message}")
                                 handleOnDemandSeasonLoadError(seasonNumber, OnDemandSeasonLoadingError.ApiError(result.exception))
                             }
                             is com.rdwatch.androidtv.repository.base.Result.Loading -> {
                                 // This shouldn't happen with first{}, but handle it anyway
-                                android.util.Log.w("TVDetailsViewModel", "Unexpected loading state received for season $seasonNumber")
+                                DebugLogger.w("TVDetailsViewModel", "Unexpected loading state received for season $seasonNumber")
                                 handleOnDemandSeasonLoadError(seasonNumber, OnDemandSeasonLoadingError.UnexpectedState)
                             }
                             null -> {
-                                android.util.Log.w("TVDetailsViewModel", "Season $seasonNumber loading timed out after 30 seconds")
+                                DebugLogger.w("TVDetailsViewModel", "Season $seasonNumber loading timed out after 30 seconds")
                                 handleOnDemandSeasonLoadError(seasonNumber, OnDemandSeasonLoadingError.Timeout)
                             }
                         }
                     } catch (e: Exception) {
-                        android.util.Log.e("TVDetailsViewModel", "Critical error loading season $seasonNumber on demand: ${e.message}")
+                        DebugLogger.e("TVDetailsViewModel", "Critical error loading season $seasonNumber on demand: ${e.message}")
                         handleOnDemandSeasonLoadError(seasonNumber, OnDemandSeasonLoadingError.CriticalError(e))
                     } finally {
                         activeSeasonRequests.remove(seasonNumber)
@@ -1033,25 +1034,25 @@ class TVDetailsViewModel
                     // CRITICAL: Update the selected season state if it matches the loaded season
                     val currentSelectedSeason = _selectedSeason.value
                     if (currentSelectedSeason?.seasonNumber == seasonNumber) {
-                        android.util.Log.d("TVDetailsViewModel", "Updating selected season state with loaded data")
+                        DebugLogger.d("TVDetailsViewModel", "Updating selected season state with loaded data")
                         _selectedSeason.value = tvSeason
 
                         // Note: Removed automatic preloading to prevent rapid API calls
                         // Sources will be loaded when user explicitly selects episodes
-                        android.util.Log.d("TVDetailsViewModel", "Season $seasonNumber loaded - sources will be loaded on demand")
+                        DebugLogger.d("TVDetailsViewModel", "Season $seasonNumber loaded - sources will be loaded on demand")
                     }
 
-                    android.util.Log.d(
+                    DebugLogger.d(
                         "TVDetailsViewModel",
                         "Season $seasonNumber loaded on demand with ${tvSeason.episodes.size} episodes",
                     )
-                    android.util.Log.d("TVDetailsViewModel", "Updated season episodeCount: ${tvSeason.episodeCount}")
+                    DebugLogger.d("TVDetailsViewModel", "Updated season episodeCount: ${tvSeason.episodeCount}")
                 } else {
-                    android.util.Log.w("TVDetailsViewModel", "TV show state became null during season loading")
+                    DebugLogger.w("TVDetailsViewModel", "TV show state became null during season loading")
                     handleOnDemandSeasonLoadError(seasonNumber, OnDemandSeasonLoadingError.StateCorrupted)
                 }
             } else {
-                android.util.Log.w(
+                DebugLogger.w(
                     "TVDetailsViewModel",
                     "Season $seasonNumber response was invalid (id=${seasonResponse.id}, episodes=${seasonResponse.episodes.size})",
                 )
@@ -1066,7 +1067,7 @@ class TVDetailsViewModel
             seasonNumber: Int,
             error: OnDemandSeasonLoadingError,
         ) {
-            android.util.Log.e("TVDetailsViewModel", "On-demand season loading error for season $seasonNumber: ${error.getMessage()}")
+            DebugLogger.e("TVDetailsViewModel", "On-demand season loading error for season $seasonNumber: ${error.getMessage()}")
 
             // For on-demand loading errors, we don't want to clear the whole UI state
             // Instead, we might want to show a toast or update a specific error state
@@ -1111,9 +1112,9 @@ class TVDetailsViewModel
             originalTvShow: TVShowContentDetail,
             seasons: List<TVSeason>,
         ) {
-            android.util.Log.d("TVDetailsViewModel", "=== Updating TV Show with Seasons ===")
+            DebugLogger.d("TVDetailsViewModel", "=== Updating TV Show with Seasons ===")
             seasons.forEach { season ->
-                android.util.Log.d(
+                DebugLogger.d(
                     "TVDetailsViewModel",
                     "Season ${season.seasonNumber}: ${season.name} - ${season.episodes.size} episodes loaded (claimed: ${season.episodeCount})",
                 )
@@ -1127,7 +1128,7 @@ class TVDetailsViewModel
             // Step 2: Synchronize selected season with updated data
             synchronizeSeasonSelection(seasons)
 
-            android.util.Log.d("TVDetailsViewModel", "Updated TV show with ${seasons.size} seasons")
+            DebugLogger.d("TVDetailsViewModel", "Updated TV show with ${seasons.size} seasons")
         }
 
         /**
@@ -1138,8 +1139,8 @@ class TVDetailsViewModel
             val currentSelectedSeason = _selectedSeason.value
             val currentSelectedEpisode = _selectedEpisode.value
 
-            android.util.Log.d("TVDetailsViewModel", "=== Season Selection Sync ===")
-            android.util.Log.d(
+            DebugLogger.d("TVDetailsViewModel", "=== Season Selection Sync ===")
+            DebugLogger.d(
                 "TVDetailsViewModel",
                 "Current: Season ${currentSelectedSeason?.seasonNumber}, Episode ${currentSelectedEpisode?.episodeNumber}",
             )
@@ -1165,12 +1166,12 @@ class TVDetailsViewModel
                     )
                 }
 
-                android.util.Log.d(
+                DebugLogger.d(
                     "TVDetailsViewModel",
                     "Synchronized to Season ${updatedSelectedSeason.seasonNumber} with ${updatedSelectedSeason.episodes.size} episodes",
                 )
             } else {
-                android.util.Log.w("TVDetailsViewModel", "No seasons available to select")
+                DebugLogger.w("TVDetailsViewModel", "No seasons available to select")
             }
         }
 
@@ -1194,7 +1195,7 @@ class TVDetailsViewModel
 
             if (episodeToSelect != null) {
                 selectEpisodeInternal(episodeToSelect)
-                android.util.Log.d(
+                DebugLogger.d(
                     "TVDetailsViewModel",
                     "Selected episode: S${updatedSeason.seasonNumber}E${episodeToSelect.episodeNumber} - ${episodeToSelect.title}",
                 )
@@ -1287,13 +1288,13 @@ class TVDetailsViewModel
             private fun validateSeasonData(seasonResponse: com.rdwatch.androidtv.network.models.tmdb.TMDbSeasonResponse) {
                 // Log warnings for potential data issues that could cause loss
                 if (seasonResponse.id == 0) {
-                    android.util.Log.w("TMDbMapper", "Season ${seasonResponse.seasonNumber} has invalid ID (0)")
+                    DebugLogger.w("TMDbMapper", "Season ${seasonResponse.seasonNumber} has invalid ID (0)")
                 }
                 if (seasonResponse.name.isBlank()) {
-                    android.util.Log.w("TMDbMapper", "Season ${seasonResponse.seasonNumber} has blank name")
+                    DebugLogger.w("TMDbMapper", "Season ${seasonResponse.seasonNumber} has blank name")
                 }
                 if (seasonResponse.episodeCount > 0 && seasonResponse.episodes.isEmpty()) {
-                    android.util.Log.w(
+                    DebugLogger.w(
                         "TMDbMapper",
                         "Season ${seasonResponse.seasonNumber} claims ${seasonResponse.episodeCount} episodes but has no episode data",
                     )
@@ -1308,7 +1309,7 @@ class TVDetailsViewModel
                 mappedEpisodes: List<TVEpisode>,
             ) {
                 if (seasonResponse.episodeCount > 0 && mappedEpisodes.size != seasonResponse.episodeCount) {
-                    android.util.Log.w(
+                    DebugLogger.w(
                         "TMDbMapper",
                         "Episode count mismatch for season ${seasonResponse.seasonNumber}: " +
                             "claimed ${seasonResponse.episodeCount}, mapped ${mappedEpisodes.size}",
@@ -1324,10 +1325,10 @@ class TVDetailsViewModel
                 seasonNumber: Int,
             ) {
                 if (tmdbEpisode.id == 0) {
-                    android.util.Log.w("TMDbMapper", "Episode S${seasonNumber}E${tmdbEpisode.episodeNumber} has invalid ID (0)")
+                    DebugLogger.w("TMDbMapper", "Episode S${seasonNumber}E${tmdbEpisode.episodeNumber} has invalid ID (0)")
                 }
                 if (tmdbEpisode.name.isBlank()) {
-                    android.util.Log.w("TMDbMapper", "Episode S${seasonNumber}E${tmdbEpisode.episodeNumber} has blank title")
+                    DebugLogger.w("TMDbMapper", "Episode S${seasonNumber}E${tmdbEpisode.episodeNumber} has blank title")
                 }
             }
 
@@ -1446,7 +1447,7 @@ class TVDetailsViewModel
                 updateState { copy(sourcesLoading = true, sourcesError = null) }
 
                 try {
-                    android.util.Log.d(
+                    DebugLogger.d(
                         "TVDetailsViewModel",
                         "Loading sources for episode: S${episode.seasonNumber}E${episode.episodeNumber} - ${episode.title}",
                     )
@@ -1455,18 +1456,18 @@ class TVDetailsViewModel
                     val currentImdbId = tvShow.getTVShowDetail().imdbId
                     val finalImdbId =
                         if (currentImdbId.isNullOrBlank()) {
-                            android.util.Log.d("TVDetailsViewModel", "No IMDb ID available, fetching on-demand for episode sources")
+                            DebugLogger.d("TVDetailsViewModel", "No IMDb ID available, fetching on-demand for episode sources")
                             fetchExternalIdsForEpisodeSources(tvShow.id)
                         } else {
-                            android.util.Log.d("TVDetailsViewModel", "Using existing IMDb ID: $currentImdbId")
+                            DebugLogger.d("TVDetailsViewModel", "Using existing IMDb ID: $currentImdbId")
                             currentImdbId
                         }
 
-                    android.util.Log.d("TVDetailsViewModel", "=== EPISODE SOURCES DEBUG ===")
-                    android.util.Log.d("TVDetailsViewModel", "TV Show ID: ${tvShow.id}")
-                    android.util.Log.d("TVDetailsViewModel", "Episode: S${episode.seasonNumber}E${episode.episodeNumber}")
-                    android.util.Log.d("TVDetailsViewModel", "Final IMDb ID: $finalImdbId")
-                    android.util.Log.d("TVDetailsViewModel", "============================")
+                    DebugLogger.d("TVDetailsViewModel", "=== EPISODE SOURCES DEBUG ===")
+                    DebugLogger.d("TVDetailsViewModel", "TV Show ID: ${tvShow.id}")
+                    DebugLogger.d("TVDetailsViewModel", "Episode: S${episode.seasonNumber}E${episode.episodeNumber}")
+                    DebugLogger.d("TVDetailsViewModel", "Final IMDb ID: $finalImdbId")
+                    DebugLogger.d("TVDetailsViewModel", "============================")
 
                     val sources =
                         scraperSourceManager.getSourcesForTVEpisode(
@@ -1477,7 +1478,7 @@ class TVDetailsViewModel
                             tmdbId = tvShow.id,
                         )
 
-                    android.util.Log.d("TVDetailsViewModel", "Loaded ${sources.size} sources for episode")
+                    DebugLogger.d("TVDetailsViewModel", "Loaded ${sources.size} sources for episode")
 
                     _sourcesState.value = UiState.Success(sources)
                     updateState { copy(availableSources = sources, sourcesLoading = false) }
@@ -1491,7 +1492,7 @@ class TVDetailsViewModel
                             else -> "Failed to load sources: ${e.message}"
                         }
 
-                    android.util.Log.e("TVDetailsViewModel", "Failed to load sources for episode: $errorMessage")
+                    DebugLogger.e("TVDetailsViewModel", "Failed to load sources for episode: $errorMessage")
 
                     _sourcesState.value =
                         UiState.Error(
@@ -1548,7 +1549,7 @@ class TVDetailsViewModel
 
             // Check if request is already in progress
             if (activeSourceRequests.contains(episodeKey)) {
-                android.util.Log.d("TVDetailsViewModel", "Source loading already in progress for episode $episodeKey")
+                DebugLogger.d("TVDetailsViewModel", "Source loading already in progress for episode $episodeKey")
                 return
             }
 
@@ -1560,7 +1561,7 @@ class TVDetailsViewModel
                     activeSourceRequests.add(episodeKey)
 
                     try {
-                        android.util.Log.d(
+                        DebugLogger.d(
                             "TVDetailsViewModel",
                             "Loading advanced sources for episode: S${episode.seasonNumber}E${episode.episodeNumber}",
                         )
@@ -1569,10 +1570,10 @@ class TVDetailsViewModel
                         val currentImdbId = tvShow.getTVShowDetail().imdbId
                         val finalImdbId =
                             if (currentImdbId.isNullOrBlank()) {
-                                android.util.Log.d("TVDetailsViewModel", "No IMDb ID available for advanced sources, fetching on-demand")
+                                DebugLogger.d("TVDetailsViewModel", "No IMDb ID available for advanced sources, fetching on-demand")
                                 fetchExternalIdsForEpisodeSources(tvShow.id)
                             } else {
-                                android.util.Log.d("TVDetailsViewModel", "Using existing IMDb ID for advanced sources: $currentImdbId")
+                                DebugLogger.d("TVDetailsViewModel", "Using existing IMDb ID for advanced sources: $currentImdbId")
                                 currentImdbId
                             }
 
@@ -1604,7 +1605,7 @@ class TVDetailsViewModel
                         currentMap[episodeKey] = loadedSources
                         _episodeSourcesMap.value = currentMap
 
-                        android.util.Log.d("TVDetailsViewModel", "Loaded ${processedSources.size} advanced sources for episode")
+                        DebugLogger.d("TVDetailsViewModel", "Loaded ${processedSources.size} advanced sources for episode")
 
                         // CRITICAL FIX: Update source selection state if this episode is currently being displayed
                         val currentSelectionState = _sourceSelectionState.value
@@ -1612,7 +1613,7 @@ class TVDetailsViewModel
                                 "${it.seasonNumber}-${it.episodeNumber}"
                             } == episodeKey
                         ) {
-                            android.util.Log.d("TVDetailsViewModel", "Updating source selection state with loaded sources for episode $episodeKey")
+                            DebugLogger.d("TVDetailsViewModel", "Updating source selection state with loaded sources for episode $episodeKey")
                             _sourceSelectionState.value =
                                 currentSelectionState.copy(
                                     sources = loadedSources,
@@ -1622,7 +1623,7 @@ class TVDetailsViewModel
                                 )
                         }
                     } catch (e: Exception) {
-                        android.util.Log.e("TVDetailsViewModel", "Failed to load advanced sources: ${e.message}")
+                        DebugLogger.e("TVDetailsViewModel", "Failed to load advanced sources: ${e.message}")
 
                         // CRITICAL FIX: Update source selection state with error if this episode is currently being displayed
                         val currentSelectionState = _sourceSelectionState.value
@@ -1630,7 +1631,7 @@ class TVDetailsViewModel
                                 "${it.seasonNumber}-${it.episodeNumber}"
                             } == episodeKey
                         ) {
-                            android.util.Log.d("TVDetailsViewModel", "Updating source selection state with error for episode $episodeKey")
+                            DebugLogger.d("TVDetailsViewModel", "Updating source selection state with error for episode $episodeKey")
                             _sourceSelectionState.value =
                                 currentSelectionState.copy(
                                     isLoading = false,
@@ -1657,32 +1658,32 @@ class TVDetailsViewModel
          * Enhanced with defensive checks and timeout handling
          */
         fun selectSourcesForEpisode(episode: TVEpisode) {
-            android.util.Log.d("TVDetailsViewModel", "=== Select Sources for Episode ===")
-            android.util.Log.d("TVDetailsViewModel", "Episode: S${episode.seasonNumber}E${episode.episodeNumber} - ${episode.title}")
+            DebugLogger.d("TVDetailsViewModel", "=== Select Sources for Episode ===")
+            DebugLogger.d("TVDetailsViewModel", "Episode: S${episode.seasonNumber}E${episode.episodeNumber} - ${episode.title}")
 
             val tvShow = _tvShowState.value
             if (tvShow == null) {
-                android.util.Log.w("TVDetailsViewModel", "Cannot select sources: no TV show loaded")
+                DebugLogger.w("TVDetailsViewModel", "Cannot select sources: no TV show loaded")
                 return
             }
 
             // Check if already showing source selection for this episode
             val currentState = _sourceSelectionState.value
             if (_showSourceSelection.value && currentState.selectedEpisode?.id == episode.id) {
-                android.util.Log.d("TVDetailsViewModel", "Source selection already showing for this episode")
+                DebugLogger.d("TVDetailsViewModel", "Source selection already showing for this episode")
                 return
             }
 
             val sources = getSourcesForEpisode(episode)
-            android.util.Log.d("TVDetailsViewModel", "Available sources: ${sources.size}")
+            DebugLogger.d("TVDetailsViewModel", "Available sources: ${sources.size}")
 
             if (sources.isEmpty()) {
-                android.util.Log.d("TVDetailsViewModel", "No sources available, loading sources first")
+                DebugLogger.d("TVDetailsViewModel", "No sources available, loading sources first")
 
                 // Check if already loading sources for this episode
                 val episodeKey = "${episode.seasonNumber}-${episode.episodeNumber}"
                 if (activeSourceRequests.contains(episodeKey)) {
-                    android.util.Log.d("TVDetailsViewModel", "Sources already loading for episode $episodeKey, showing loading state")
+                    DebugLogger.d("TVDetailsViewModel", "Sources already loading for episode $episodeKey, showing loading state")
                     // Still show the dialog with loading state
                     _sourceSelectionState.value =
                         SourceSelectionState(
@@ -1715,7 +1716,7 @@ class TVDetailsViewModel
                             _sourceSelectionState.value.selectedEpisode?.id == episode.id &&
                             _showSourceSelection.value
                     if (stillLoading) {
-                        android.util.Log.w("TVDetailsViewModel", "Source loading timeout for episode $episodeKey")
+                        DebugLogger.w("TVDetailsViewModel", "Source loading timeout for episode $episodeKey")
                         _sourceSelectionState.value =
                             _sourceSelectionState.value.copy(
                                 isLoading = false,
@@ -1724,7 +1725,7 @@ class TVDetailsViewModel
                     }
                 }
             } else {
-                android.util.Log.d("TVDetailsViewModel", "Using existing sources for episode")
+                DebugLogger.d("TVDetailsViewModel", "Using existing sources for episode")
                 // Update source selection state with available sources
                 _sourceSelectionState.value =
                     SourceSelectionState(
@@ -1738,7 +1739,7 @@ class TVDetailsViewModel
 
             // Always show the source selection UI
             _showSourceSelection.value = true
-            android.util.Log.d("TVDetailsViewModel", "Source selection UI triggered")
+            DebugLogger.d("TVDetailsViewModel", "Source selection UI triggered")
         }
 
         /**
@@ -1752,7 +1753,7 @@ class TVDetailsViewModel
          * Update source filter
          */
         fun updateSourceFilter(filter: SourceFilter) {
-            android.util.Log.d("TVDetailsViewModel", "Updating source filter: $filter")
+            DebugLogger.d("TVDetailsViewModel", "Updating source filter: $filter")
             val currentState = _sourceSelectionState.value
             val filteredSources =
                 currentState.sources.filter { source ->
@@ -1847,7 +1848,7 @@ class TVDetailsViewModel
          * Update view mode
          */
         fun updateViewMode(viewMode: SourceSelectionState.ViewMode) {
-            android.util.Log.d("TVDetailsViewModel", "Updating view mode to: $viewMode")
+            DebugLogger.d("TVDetailsViewModel", "Updating view mode to: $viewMode")
             _sourceSelectionState.value =
                 _sourceSelectionState.value.copy(
                     viewMode = viewMode,
@@ -1878,7 +1879,7 @@ class TVDetailsViewModel
          */
         fun onSourceSelected(source: SourceMetadata) {
             _selectedEpisode.value?.let { episode ->
-                android.util.Log.d(
+                DebugLogger.d(
                     "TVDetailsViewModel",
                     "Source selected for episode S${episode.seasonNumber}E${episode.episodeNumber}: ${source.provider.name}",
                 )
@@ -2003,7 +2004,7 @@ class TVDetailsViewModel
 
             // Throttle preloading to prevent rapid API calls
             if (currentTime - lastPreloadTime < preloadThrottleMs) {
-                android.util.Log.d("TVDetailsViewModel", "Preloading throttled, skipping request")
+                DebugLogger.d("TVDetailsViewModel", "Preloading throttled, skipping request")
                 return
             }
 
@@ -2016,7 +2017,7 @@ class TVDetailsViewModel
                     val currentSeason = _selectedSeason.value
 
                     if (currentTvShow != null && currentSeason != null) {
-                        android.util.Log.d("TVDetailsViewModel", "Preloading sources for season ${currentSeason.seasonNumber} episodes")
+                        DebugLogger.d("TVDetailsViewModel", "Preloading sources for season ${currentSeason.seasonNumber} episodes")
 
                         // Preload sources for the first few episodes (visible ones)
                         val episodesToPreload = currentSeason.episodes.take(3) // Reduced to 3 episodes to be less aggressive
@@ -2031,7 +2032,7 @@ class TVDetailsViewModel
                                     // Add small delay between requests to prevent overload
                                     kotlinx.coroutines.delay(1000)
                                 } catch (e: Exception) {
-                                    android.util.Log.e(
+                                    DebugLogger.e(
                                         "TVDetailsViewModel",
                                         "Failed to preload sources for episode ${episode.title}: ${e.message}",
                                     )
@@ -2053,11 +2054,11 @@ class TVDetailsViewModel
             // Only load if not already loaded or loading
             if (!_episodeSourcesMap.value.containsKey(episodeKey) && !activeSourceRequests.contains(episodeKey)) {
                 _tvShowState.value?.let { tvShow ->
-                    android.util.Log.d("TVDetailsViewModel", "Preloading sources for episode $episodeKey")
+                    DebugLogger.d("TVDetailsViewModel", "Preloading sources for episode $episodeKey")
                     loadAdvancedSourcesForEpisode(tvShow, episode)
                 }
             } else {
-                android.util.Log.d("TVDetailsViewModel", "Episode $episodeKey already loaded or loading, skipping preload")
+                DebugLogger.d("TVDetailsViewModel", "Episode $episodeKey already loaded or loading, skipping preload")
             }
         }
 
@@ -2192,29 +2193,29 @@ class TVDetailsViewModel
                     if (tmdbId != null) {
                         // Check if request is already in progress
                         if (activeExternalIdRequests.contains(tmdbId)) {
-                            android.util.Log.d(
+                            DebugLogger.d(
                                 "TVDetailsViewModel",
                                 "External ID request already in progress for TMDb ID: $tmdbId",
                             )
                             return
                         }
 
-                        android.util.Log.d(
+                        DebugLogger.d(
                             "TVDetailsViewModel",
                             "IMDb ID missing for TV show ${currentTvShow.getDisplayTitle()}, fetching...",
                         )
                         fetchAndUpdateIMDbId(tmdbId, currentTvShow)
                     } else {
-                        android.util.Log.w("TVDetailsViewModel", "Cannot fetch IMDb ID: invalid TMDb ID '${currentTvShow.id}'")
+                        DebugLogger.w("TVDetailsViewModel", "Cannot fetch IMDb ID: invalid TMDb ID '${currentTvShow.id}'")
                     }
                 } else {
-                    android.util.Log.d(
+                    DebugLogger.d(
                         "TVDetailsViewModel",
                         "IMDb ID already available for TV show ${currentTvShow.getDisplayTitle()}: ${tvShowDetail.imdbId}",
                     )
                 }
             } else {
-                android.util.Log.w("TVDetailsViewModel", "Cannot fetch IMDb ID: no TV show loaded")
+                DebugLogger.w("TVDetailsViewModel", "Cannot fetch IMDb ID: no TV show loaded")
             }
         }
 
@@ -2225,20 +2226,20 @@ class TVDetailsViewModel
         private suspend fun fetchExternalIdsForEpisodeSources(tvShowId: String): String? {
             val tmdbId = tvShowId.toIntOrNull()
             if (tmdbId == null) {
-                android.util.Log.w("TVDetailsViewModel", "Cannot fetch external IDs: invalid TMDb ID '$tvShowId'")
+                DebugLogger.w("TVDetailsViewModel", "Cannot fetch external IDs: invalid TMDb ID '$tvShowId'")
                 return null
             }
 
             // Check if request is already in progress
             if (activeExternalIdRequests.contains(tmdbId)) {
-                android.util.Log.d("TVDetailsViewModel", "External ID request already in progress for TMDb ID: $tmdbId")
+                DebugLogger.d("TVDetailsViewModel", "External ID request already in progress for TMDb ID: $tmdbId")
                 return null
             }
 
             activeExternalIdRequests.add(tmdbId)
 
             return try {
-                android.util.Log.d("TVDetailsViewModel", "Fetching external IDs on-demand for episode sources (TMDb ID: $tmdbId)")
+                DebugLogger.d("TVDetailsViewModel", "Fetching external IDs on-demand for episode sources (TMDb ID: $tmdbId)")
 
                 val result =
                     tmdbTVRepository.getTVExternalIds(tmdbId).first { result ->
@@ -2250,7 +2251,7 @@ class TVDetailsViewModel
                     is Result.Success -> {
                         val imdbId = result.data?.imdbId
                         if (!imdbId.isNullOrBlank()) {
-                            android.util.Log.d("TVDetailsViewModel", "Successfully fetched IMDb ID on-demand: $imdbId")
+                            DebugLogger.d("TVDetailsViewModel", "Successfully fetched IMDb ID on-demand: $imdbId")
 
                             // Update the TV show state with the fetched IMDb ID
                             _tvShowState.value?.let { currentTvShow ->
@@ -2262,21 +2263,21 @@ class TVDetailsViewModel
 
                             imdbId
                         } else {
-                            android.util.Log.w("TVDetailsViewModel", "External IDs response received but no IMDb ID found")
+                            DebugLogger.w("TVDetailsViewModel", "External IDs response received but no IMDb ID found")
                             null
                         }
                     }
                     is Result.Error -> {
-                        android.util.Log.w("TVDetailsViewModel", "Failed to fetch external IDs on-demand: ${result.exception?.message}")
+                        DebugLogger.w("TVDetailsViewModel", "Failed to fetch external IDs on-demand: ${result.exception?.message}")
                         null
                     }
                     is Result.Loading -> {
-                        android.util.Log.w("TVDetailsViewModel", "Unexpected loading state in external IDs fetch")
+                        DebugLogger.w("TVDetailsViewModel", "Unexpected loading state in external IDs fetch")
                         null
                     }
                 }
             } catch (e: Exception) {
-                android.util.Log.e("TVDetailsViewModel", "Exception while fetching external IDs on-demand: ${e.message}")
+                DebugLogger.e("TVDetailsViewModel", "Exception while fetching external IDs on-demand: ${e.message}")
                 null
             } finally {
                 activeExternalIdRequests.remove(tmdbId)
@@ -2290,7 +2291,7 @@ class TVDetailsViewModel
             tmdbId: Int,
             currentTvShow: TVShowContentDetail,
         ) {
-            android.util.Log.d("TVDetailsViewModel", "fetchAndUpdateIMDbId called for TMDb ID: $tmdbId")
+            DebugLogger.d("TVDetailsViewModel", "fetchAndUpdateIMDbId called for TMDb ID: $tmdbId")
 
             // Add to active requests to prevent duplicates
             activeExternalIdRequests.add(tmdbId)
@@ -2301,11 +2302,11 @@ class TVDetailsViewModel
             externalIdLoadingJob =
                 viewModelScope.launch {
                     try {
-                        android.util.Log.d("TVDetailsViewModel", "Calling tmdbTVRepository.getTVExternalIds($tmdbId)")
+                        DebugLogger.d("TVDetailsViewModel", "Calling tmdbTVRepository.getTVExternalIds($tmdbId)")
                         tmdbTVRepository.getTVExternalIds(tmdbId).collect { result ->
                             when (result) {
                                 is Result.Success -> {
-                                    android.util.Log.d("TVDetailsViewModel", "External IDs API response received: ${result.data}")
+                                    DebugLogger.d("TVDetailsViewModel", "External IDs API response received: ${result.data}")
                                     result.data?.imdbId?.let { imdbId ->
                                         // Update the TV show with the fetched IMDb ID
                                         val updatedTvShowDetail = currentTvShow.getTVShowDetail().copy(imdbId = imdbId)
@@ -2314,20 +2315,20 @@ class TVDetailsViewModel
                                         _tvShowState.value = updatedTvShow
                                         updateState { copy(tvShow = updatedTvShow) }
 
-                                        android.util.Log.d("TVDetailsViewModel", "Updated TV show ${currentTvShow.getDisplayTitle()} with IMDb ID: $imdbId")
+                                        DebugLogger.d("TVDetailsViewModel", "Updated TV show ${currentTvShow.getDisplayTitle()} with IMDb ID: $imdbId")
                                     } ?: run {
-                                        android.util.Log.w("TVDetailsViewModel", "External IDs response received but no IMDb ID found")
+                                        DebugLogger.w("TVDetailsViewModel", "External IDs response received but no IMDb ID found")
                                     }
                                 }
                                 is Result.Error -> {
-                                    android.util.Log.w(
+                                    DebugLogger.w(
                                         "TVDetailsViewModel",
                                         "Failed to fetch external IDs for TV show: ${result.exception?.message}",
                                     )
                                     // Continue without IMDb ID - sources may still work with TMDb ID for some providers
                                 }
                                 is Result.Loading -> {
-                                    android.util.Log.d("TVDetailsViewModel", "External IDs API call in progress...")
+                                    DebugLogger.d("TVDetailsViewModel", "External IDs API call in progress...")
                                 }
                             }
                         }

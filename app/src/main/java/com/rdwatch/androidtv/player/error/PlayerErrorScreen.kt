@@ -19,6 +19,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.rdwatch.androidtv.ui.theme.UIConstants
 
 @Composable
 fun PlayerErrorScreen(
@@ -39,7 +40,7 @@ fun PlayerErrorScreen(
                 Modifier
                     .align(Alignment.Center)
                     .padding(48.dp)
-                    .sizeIn(maxWidth = 600.dp),
+                    .sizeIn(maxWidth = UIConstants.Dimensions.STANDARD_CONTENT_WIDTH),
             colors =
                 CardDefaults.cardColors(
                     containerColor = Color.Black.copy(alpha = 0.9f),

@@ -18,3 +18,4 @@ node_modules
 .kotlin/errors
 build/reports/problems/problems-report.html
 .vscode/settings.json
+*log*.txt

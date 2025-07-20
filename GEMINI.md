@@ -47,7 +47,7 @@ The project has a well-defined testing structure located in `app/src/test/` and 
   ```
 - **Lint:** To run a detailed static analysis and check for issues.
   ```bash
-  ./lint-summary.sh
+  ./ktlint-summary.sh
   ```
 - **Run Unit Tests:** To execute all unit tests on the JVM.
   ```bash

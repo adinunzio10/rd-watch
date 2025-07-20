@@ -25,6 +25,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.rdwatch.androidtv.ui.focus.TVFocusIndicator
 import com.rdwatch.androidtv.ui.focus.tvFocusable
+import com.rdwatch.androidtv.ui.theme.UIConstants
 
 /**
  * Dialog for adding a new scraper from URL
@@ -57,7 +58,7 @@ fun AddScraperDialog(
             modifier =
                 modifier
                     .wrapContentSize()
-                    .widthIn(min = 400.dp, max = 600.dp)
+                    .widthIn(min = UIConstants.Dimensions.MIN_DIALOG_WIDTH, max = UIConstants.Dimensions.STANDARD_CONTENT_WIDTH)
                     .clip(RoundedCornerShape(16.dp)),
             colors =
                 CardDefaults.cardColors(
