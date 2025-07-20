@@ -1,6 +1,10 @@
 <resources>
 
-    <style name="Theme.Rdwatch" parent="@android:style/Theme.DeviceDefault" />
+    <style name="Theme.Rdwatch" parent="@android:style/Theme.DeviceDefault">
+        <!-- Hide the action bar globally for Android TV -->
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowActionBar">false</item>
+    </style>
 
     <!-- Fullscreen theme for video player -->
     <style name="Theme.Rdwatch.Fullscreen" parent="Theme.Rdwatch">
