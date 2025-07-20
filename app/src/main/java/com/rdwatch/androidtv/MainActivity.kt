@@ -52,6 +52,9 @@ class MainActivity : ComponentActivity() {
         Log.d(TAG, "onCreate() called")
         super.onCreate(savedInstanceState)
 
+        // Configure window for edge-to-edge rendering to support fullscreen video
+        setupWindowForFullscreen()
+
         Log.d(TAG, "Scheduling playback cleanup")
         // Schedule periodic cleanup of old playback data
         playbackCleanupManager.scheduleCleanup()
@@ -103,6 +106,24 @@ class MainActivity : ComponentActivity() {
             }
         }
         Log.d(TAG, "onCreate() completed")
+    }
+
+    private fun setupWindowForFullscreen() {
+        Log.d(TAG, "Configuring window for fullscreen support")
+
+        // Enable edge-to-edge rendering
+        androidx.core.view.WindowCompat.setDecorFitsSystemWindows(window, false)
+
+        // Keep screen on during media playback
+        window.addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+
+        // Configure for fullscreen applications
+        window.addFlags(android.view.WindowManager.LayoutParams.FLAG_FULLSCREEN)
+
+        // Hide system bars by default for immersive experience
+        val windowInsetsController = androidx.core.view.WindowCompat.getInsetsController(window, window.decorView)
+        windowInsetsController.systemBarsBehavior =
+            androidx.core.view.WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
     }
 
     override fun onPause() {

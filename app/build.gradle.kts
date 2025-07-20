@@ -132,6 +132,9 @@ dependencies {
     // Image loading
     implementation(libs.coil.compose)
 
+    // System UI controller for immersive mode
+    implementation(libs.accompanist.systemuicontroller)
+
     // QR Code generation
     implementation(libs.zxing.core)
     implementation(libs.zxing.android.embedded)

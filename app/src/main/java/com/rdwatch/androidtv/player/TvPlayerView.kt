@@ -102,15 +102,29 @@ fun TvPlayerView(
                     player = currentPlayer
                     DebugLogger.d("TvPlayerView", "PlayerView assigned ExoPlayer: ${currentPlayer.hashCode()}")
 
-                    // Enhanced configuration for Android TV
+                    // Enhanced configuration for Android TV fullscreen mode
                     useController = false // We use our custom controls
                     setShowBuffering(PlayerView.SHOW_BUFFERING_WHEN_PLAYING)
                     setKeepContentOnPlayerReset(true)
 
-                    // Ensure proper surface scaling for Android TV
+                    // Fullscreen configuration for edge-to-edge rendering
+                    resizeMode = androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_FIT
+                    setUseArtwork(false)
+                    defaultArtwork = null
+
+                    // Configure for immersive fullscreen experience
+                    setControllerShowTimeoutMs(5000) // Hide controls after 5 seconds
+                    setControllerHideOnTouch(true)
+
+                    // Ensure video surface fills entire screen
                     videoSurfaceView?.let { surfaceView ->
-                        DebugLogger.d("TvPlayerView", "Configuring video surface view")
-                        // Surface view configuration for proper rendering
+                        DebugLogger.d("TvPlayerView", "Configuring video surface view for fullscreen")
+                        // Configure surface view for fullscreen rendering
+                        surfaceView.layoutParams =
+                            android.view.ViewGroup.LayoutParams(
+                                android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                                android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                            )
                     }
 
                     // Force layout to ensure surface is properly sized

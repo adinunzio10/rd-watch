@@ -1,4 +1,12 @@
 <resources>
 
     <style name="Theme.Rdwatch" parent="@android:style/Theme.DeviceDefault" />
+
+    <!-- Fullscreen theme for video player -->
+    <style name="Theme.Rdwatch.Fullscreen" parent="Theme.Rdwatch">
+        <item name="android:windowFullscreen">true</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowActionBar">false</item>
+        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
+    </style>
 </resources>

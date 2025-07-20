@@ -38,10 +38,23 @@ fun VideoPlayerScreen(
     videoPlayerViewModel: VideoPlayerViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
+    val systemUiController = com.google.accompanist.systemuicontroller.rememberSystemUiController()
     val uiState by videoPlayerViewModel.uiState.collectAsState()
     val playbackUiState by playbackViewModel.uiState.collectAsState()
     val playerState by playbackViewModel.playerState.collectAsState()
     val mediaReadyState by playbackViewModel.mediaReadyState.collectAsState()
+
+    // Enable immersive mode for fullscreen video playback
+    LaunchedEffect(Unit) {
+        systemUiController.isSystemBarsVisible = false
+    }
+
+    // Restore system bars when leaving the screen
+    DisposableEffect(Unit) {
+        onDispose {
+            systemUiController.isSystemBarsVisible = true
+        }
+    }
 
     // Note: Video should already be prepared by PlaybackViewModel before navigation
     // We don't need to initialize a new video here, just connect to the existing ExoPlayer
@@ -168,9 +181,12 @@ fun VideoPlayerScreen(
                 TvPlayerMenu(
                     playerState = playerState,
                     isVisible = uiState.showPlayerMenu,
-                    availableSubtitles = emptyList(), // TODO: Get from SubtitleManager
-                    currentSubtitleTrack = null, // TODO: Get current track
-                    subtitlesEnabled = true, // TODO: Get from settings
+                    // TODO: Get from SubtitleManager
+                    availableSubtitles = emptyList(),
+                    // TODO: Get current track
+                    currentSubtitleTrack = null,
+                    // TODO: Get from settings
+                    subtitlesEnabled = true,
                     onSubtitleTrackSelected = { track: AvailableSubtitle? ->
                         // TODO: Implement subtitle track selection
                     },
