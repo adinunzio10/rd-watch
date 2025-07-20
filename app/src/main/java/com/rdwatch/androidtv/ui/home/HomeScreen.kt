@@ -39,6 +39,7 @@ import com.rdwatch.androidtv.ui.components.ImagePriority
 import com.rdwatch.androidtv.ui.components.PreloadImagesEffect
 import com.rdwatch.androidtv.ui.components.ResumeDialogOverlay
 import com.rdwatch.androidtv.ui.details.models.ContentType
+import com.rdwatch.androidtv.ui.focus.NavigationDirection
 import com.rdwatch.androidtv.ui.focus.TVSpatialNavigation
 import com.rdwatch.androidtv.ui.focus.rememberTVKeyEventHandler
 import com.rdwatch.androidtv.ui.viewmodel.PlaybackViewModel
@@ -69,14 +70,7 @@ fun TVHomeScreen(
     // Enhanced key event handler for TV navigation
     val keyEventHandler =
         rememberTVKeyEventHandler().apply {
-            onDPadLeft = {
-                if (!isDrawerOpen) {
-                    isDrawerOpen = true
-                    true
-                } else {
-                    false
-                }
-            }
+            // Remove global D-pad left handler - now handled by content rows
             onBack = {
                 if (isDrawerOpen) {
                     isDrawerOpen = false
@@ -108,7 +102,6 @@ fun TVHomeScreen(
             Modifier
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background),
-        onNavigateLeft = { keyEventHandler.onDPadLeft?.invoke() ?: false },
         onBack = { keyEventHandler.onBack?.invoke() ?: false },
         onSelect = { keyEventHandler.onDPadCenter?.invoke() ?: false },
     ) {
@@ -377,6 +370,7 @@ fun SafeAreaContent(
             onShowContinueWatching = onShowContinueWatching,
             onMovieClick = onMovieClick,
             onContentClick = onContentClick,
+            onOpenDrawer = onDrawerToggle,
         )
     }
 }
@@ -391,6 +385,7 @@ fun TVContentGrid(
     onShowContinueWatching: () -> Unit = {},
     onMovieClick: ((Movie) -> Unit)? = null,
     onContentClick: ((Movie, ContentType) -> Unit)? = null,
+    onOpenDrawer: (() -> Unit)? = null,
 ) {
     val firstRowFocusRequester = remember { FocusRequester() }
 
@@ -594,6 +589,16 @@ fun TVContentGrid(
                                     onContentClick.invoke(movie, contentType)
                                 } else {
                                     onMovieClick?.invoke(movie)
+                                }
+                            },
+                            onNavigationAttempt = { direction ->
+                                when (direction) {
+                                    NavigationDirection.LEFT -> {
+                                        // Only open drawer on left navigation from leftmost item
+                                        onOpenDrawer?.invoke()
+                                        true
+                                    }
+                                    else -> false
                                 }
                             },
                         )

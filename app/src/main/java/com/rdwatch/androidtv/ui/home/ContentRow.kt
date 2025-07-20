@@ -24,6 +24,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.key.*
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -34,6 +35,7 @@ import com.rdwatch.androidtv.Movie
 import com.rdwatch.androidtv.ui.components.ImagePriority
 import com.rdwatch.androidtv.ui.components.SmartTVImageLoader
 import com.rdwatch.androidtv.ui.components.TVBackgroundImage
+import com.rdwatch.androidtv.ui.focus.NavigationDirection
 import com.rdwatch.androidtv.ui.viewmodel.PlaybackViewModel
 
 @OptIn(UnstableApi::class)
@@ -48,6 +50,7 @@ fun TVContentRow(
     playbackViewModel: PlaybackViewModel? = null,
     showViewAll: Boolean = false,
     onViewAllClick: (() -> Unit)? = null,
+    onNavigationAttempt: ((NavigationDirection) -> Boolean)? = null,
 ) {
     Column(
         modifier = modifier,
@@ -76,6 +79,7 @@ fun TVContentRow(
 
         // Content row
         val listState = rememberLazyListState()
+        var currentFocusedIndex by remember { mutableIntStateOf(-1) }
 
         LazyRow(
             state = listState,
@@ -95,6 +99,28 @@ fun TVContentRow(
                                 } else {
                                     Modifier
                                 },
+                            onFocusChanged = { focused ->
+                                if (focused) currentFocusedIndex = index
+                            },
+                            onNavigationAttempt = { direction ->
+                                when (direction) {
+                                    NavigationDirection.LEFT -> {
+                                        if (index == 0) {
+                                            onNavigationAttempt?.invoke(direction) ?: false
+                                        } else {
+                                            false
+                                        }
+                                    }
+                                    NavigationDirection.RIGHT -> {
+                                        if (index == items.size - 1) {
+                                            onNavigationAttempt?.invoke(direction) ?: false
+                                        } else {
+                                            false
+                                        }
+                                    }
+                                    else -> onNavigationAttempt?.invoke(direction) ?: false
+                                }
+                            },
                         )
                     }
                     ContentRowType.CONTINUE_WATCHING -> {
@@ -109,6 +135,28 @@ fun TVContentRow(
                                 } else {
                                     Modifier
                                 },
+                            onFocusChanged = { focused ->
+                                if (focused) currentFocusedIndex = index
+                            },
+                            onNavigationAttempt = { direction ->
+                                when (direction) {
+                                    NavigationDirection.LEFT -> {
+                                        if (index == 0) {
+                                            onNavigationAttempt?.invoke(direction) ?: false
+                                        } else {
+                                            false
+                                        }
+                                    }
+                                    NavigationDirection.RIGHT -> {
+                                        if (index == items.size - 1) {
+                                            onNavigationAttempt?.invoke(direction) ?: false
+                                        } else {
+                                            false
+                                        }
+                                    }
+                                    else -> onNavigationAttempt?.invoke(direction) ?: false
+                                }
+                            },
                         )
                     }
                     ContentRowType.STANDARD -> {
@@ -125,6 +173,30 @@ fun TVContentRow(
                                 } else {
                                     Modifier
                                 },
+                            onFocusChanged = { focused ->
+                                if (focused) currentFocusedIndex = index
+                            },
+                            onNavigationAttempt = { direction ->
+                                when (direction) {
+                                    NavigationDirection.LEFT -> {
+                                        if (index == 0) {
+                                            // At leftmost item, delegate to parent
+                                            onNavigationAttempt?.invoke(direction) ?: false
+                                        } else {
+                                            false // Let natural focus movement handle it
+                                        }
+                                    }
+                                    NavigationDirection.RIGHT -> {
+                                        if (index == items.size - 1) {
+                                            // At rightmost item, delegate to parent
+                                            onNavigationAttempt?.invoke(direction) ?: false
+                                        } else {
+                                            false // Let natural focus movement handle it
+                                        }
+                                    }
+                                    else -> onNavigationAttempt?.invoke(direction) ?: false
+                                }
+                            },
                         )
                     }
                 }
@@ -141,6 +213,8 @@ fun StandardContentCard(
     modifier: Modifier = Modifier,
     progress: Float = 0f,
     isCompleted: Boolean = false,
+    onFocusChanged: ((Boolean) -> Unit)? = null,
+    onNavigationAttempt: ((NavigationDirection) -> Boolean)? = null,
 ) {
     var isFocused by remember { mutableStateOf(false) }
 
@@ -154,6 +228,20 @@ fun StandardContentCard(
                 )
                 .onFocusChanged { focusState ->
                     isFocused = focusState.isFocused
+                    onFocusChanged?.invoke(focusState.isFocused)
+                }
+                .onKeyEvent { keyEvent ->
+                    if (keyEvent.type == KeyEventType.KeyDown && onNavigationAttempt != null) {
+                        when (keyEvent.key) {
+                            Key.DirectionLeft -> onNavigationAttempt.invoke(NavigationDirection.LEFT)
+                            Key.DirectionRight -> onNavigationAttempt.invoke(NavigationDirection.RIGHT)
+                            Key.DirectionUp -> onNavigationAttempt.invoke(NavigationDirection.UP)
+                            Key.DirectionDown -> onNavigationAttempt.invoke(NavigationDirection.DOWN)
+                            else -> false
+                        }
+                    } else {
+                        false
+                    }
                 },
         colors =
             CardDefaults.cardColors(
@@ -250,7 +338,9 @@ fun StandardContentCard(
                     Modifier
                         .align(Alignment.BottomStart)
                         .padding(12.dp)
-                        .padding(bottom = if (progress > 0f) 6.dp else 0.dp), // Account for progress bar
+                        .padding(
+                            bottom = if (progress > 0f) 6.dp else 0.dp,
+                        ),
             )
         }
     }
@@ -262,6 +352,8 @@ fun FeaturedContentCard(
     movie: Movie,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    onFocusChanged: ((Boolean) -> Unit)? = null,
+    onNavigationAttempt: ((NavigationDirection) -> Boolean)? = null,
 ) {
     var isFocused by remember { mutableStateOf(false) }
 
@@ -275,6 +367,20 @@ fun FeaturedContentCard(
                 )
                 .onFocusChanged { focusState ->
                     isFocused = focusState.isFocused
+                    onFocusChanged?.invoke(focusState.isFocused)
+                }
+                .onKeyEvent { keyEvent ->
+                    if (keyEvent.type == KeyEventType.KeyDown && onNavigationAttempt != null) {
+                        when (keyEvent.key) {
+                            Key.DirectionLeft -> onNavigationAttempt.invoke(NavigationDirection.LEFT)
+                            Key.DirectionRight -> onNavigationAttempt.invoke(NavigationDirection.RIGHT)
+                            Key.DirectionUp -> onNavigationAttempt.invoke(NavigationDirection.UP)
+                            Key.DirectionDown -> onNavigationAttempt.invoke(NavigationDirection.DOWN)
+                            else -> false
+                        }
+                    } else {
+                        false
+                    }
                 },
         colors =
             CardDefaults.cardColors(
@@ -351,6 +457,8 @@ fun ContinueWatchingCard(
     progress: Float,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    onFocusChanged: ((Boolean) -> Unit)? = null,
+    onNavigationAttempt: ((NavigationDirection) -> Boolean)? = null,
 ) {
     var isFocused by remember { mutableStateOf(false) }
 
@@ -364,6 +472,20 @@ fun ContinueWatchingCard(
                 )
                 .onFocusChanged { focusState ->
                     isFocused = focusState.isFocused
+                    onFocusChanged?.invoke(focusState.isFocused)
+                }
+                .onKeyEvent { keyEvent ->
+                    if (keyEvent.type == KeyEventType.KeyDown && onNavigationAttempt != null) {
+                        when (keyEvent.key) {
+                            Key.DirectionLeft -> onNavigationAttempt.invoke(NavigationDirection.LEFT)
+                            Key.DirectionRight -> onNavigationAttempt.invoke(NavigationDirection.RIGHT)
+                            Key.DirectionUp -> onNavigationAttempt.invoke(NavigationDirection.UP)
+                            Key.DirectionDown -> onNavigationAttempt.invoke(NavigationDirection.DOWN)
+                            else -> false
+                        }
+                    } else {
+                        false
+                    }
                 },
         colors =
             CardDefaults.cardColors(
@@ -394,7 +516,8 @@ fun ContinueWatchingCard(
                 imageUrl = movie.cardImageUrl,
                 contentDescription = movie.title,
                 contentScale = ContentScale.Crop,
-                priority = ImagePriority.HIGH, // Higher priority for continue watching
+                // Higher priority for continue watching
+                priority = ImagePriority.HIGH,
                 modifier = Modifier.fillMaxSize(),
             )
 
