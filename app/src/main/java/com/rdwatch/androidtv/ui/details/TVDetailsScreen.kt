@@ -1,5 +1,6 @@
 package com.rdwatch.androidtv.ui.details
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -118,55 +119,62 @@ fun TVDetailsScreen(
         tvShowState != null -> {
             val tvShow = tvShowState!!
 
-            TVDetailsContent(
-                tvShow = tvShow,
-                selectedSeason = selectedSeason,
-                selectedEpisode = selectedEpisode,
-                selectedTabIndex = selectedTabIndex,
-                progress = progress,
-                creditsState = creditsState,
-                sourcesState = sourcesState,
-                episodeSourcesMap = episodeSourcesMap,
-                viewModel = viewModel,
-                playbackViewModel = playbackViewModel,
-                onNavigateToVideoPlayer = onNavigateToVideoPlayer,
-                onActionClick = { action ->
-                    when (action) {
-                        // TODO: Determine which episode to show advanced source selection for
-                        // Should consider: selected episode, next unwatched episode, or first episode
-                        // Remove ContentAction.Play - now handled by episode-specific source selection
-                        is ContentAction.AddToWatchlist -> {
-                            viewModel.toggleWatchlist(tvShow.id)
-                        }
-                        is ContentAction.Like -> {
-                            viewModel.toggleLike(tvShow.id)
-                        }
-                        is ContentAction.Share -> {
-                            viewModel.shareContent(tvShow)
-                        }
-                        is ContentAction.Download -> {
-                            selectedEpisode?.let { episode ->
-                                viewModel.downloadEpisode(episode)
+            Box(
+                modifier =
+                    modifier
+                        .fillMaxSize()
+                        .background(MaterialTheme.colorScheme.background),
+            ) {
+                TVDetailsContent(
+                    tvShow = tvShow,
+                    selectedSeason = selectedSeason,
+                    selectedEpisode = selectedEpisode,
+                    selectedTabIndex = selectedTabIndex,
+                    progress = progress,
+                    creditsState = creditsState,
+                    sourcesState = sourcesState,
+                    episodeSourcesMap = episodeSourcesMap,
+                    viewModel = viewModel,
+                    playbackViewModel = playbackViewModel,
+                    onNavigateToVideoPlayer = onNavigateToVideoPlayer,
+                    onActionClick = { action ->
+                        when (action) {
+                            // TODO: Determine which episode to show advanced source selection for
+                            // Should consider: selected episode, next unwatched episode, or first episode
+                            // Remove ContentAction.Play - now handled by episode-specific source selection
+                            is ContentAction.AddToWatchlist -> {
+                                viewModel.toggleWatchlist(tvShow.id)
+                            }
+                            is ContentAction.Like -> {
+                                viewModel.toggleLike(tvShow.id)
+                            }
+                            is ContentAction.Share -> {
+                                viewModel.shareContent(tvShow)
+                            }
+                            is ContentAction.Download -> {
+                                selectedEpisode?.let { episode ->
+                                    viewModel.downloadEpisode(episode)
+                                }
+                            }
+                            else -> {
+                                // Handle other actions
                             }
                         }
-                        else -> {
-                            // Handle other actions
-                        }
-                    }
-                },
-                onSeasonSelected = { season -> viewModel.selectSeason(season) },
-                onEpisodeSelected = { episode ->
-                    viewModel.selectEpisode(episode)
-                    onEpisodeClick(episode)
-                },
-                onTabSelected = { tabIndex -> viewModel.selectTab(tabIndex) },
-                onBackPressed = onBackPressed,
-                backButtonFocusRequester = backButtonFocusRequester,
-                tabFocusRequester = tabFocusRequester,
-                listState = listState,
-                episodeGridHeight = episodeGridHeight,
-                modifier = modifier,
-            )
+                    },
+                    onSeasonSelected = { season -> viewModel.selectSeason(season) },
+                    onEpisodeSelected = { episode ->
+                        viewModel.selectEpisode(episode)
+                        onEpisodeClick(episode)
+                    },
+                    onTabSelected = { tabIndex -> viewModel.selectTab(tabIndex) },
+                    onBackPressed = onBackPressed,
+                    backButtonFocusRequester = backButtonFocusRequester,
+                    tabFocusRequester = tabFocusRequester,
+                    listState = listState,
+                    episodeGridHeight = episodeGridHeight,
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
         }
         else -> {
             // Initial state - show loading screen while tvShowState is being loaded
@@ -201,7 +209,10 @@ private fun TVDetailsContent(
 ) {
     LazyColumn(
         state = listState,
-        modifier = modifier.fillMaxSize(),
+        modifier =
+            modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background),
         contentPadding = PaddingValues(bottom = 32.dp),
     ) {
         // Hero section with backdrop, title, and primary action
@@ -581,7 +592,13 @@ private fun TVNextEpisodeSection(
 
 @Composable
 private fun TVDetailsLoadingScreen(modifier: Modifier = Modifier) {
-    Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+    Box(
+        modifier =
+            modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background),
+        contentAlignment = Alignment.Center,
+    ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -606,7 +623,13 @@ private fun TVDetailsErrorScreen(
     onBackPressed: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+    Box(
+        modifier =
+            modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background),
+        contentAlignment = Alignment.Center,
+    ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16.dp),

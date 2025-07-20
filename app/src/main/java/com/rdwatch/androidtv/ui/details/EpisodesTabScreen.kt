@@ -1,5 +1,6 @@
 package com.rdwatch.androidtv.ui.details
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -50,7 +51,10 @@ fun EpisodesTabScreen(
     }
 
     Box(
-        modifier = modifier.fillMaxSize(),
+        modifier =
+            modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background),
     ) {
         authoritativeSelectedSeason?.let { season ->
             // Create proper UI state with current season episodes - use remember with keys
