@@ -2,7 +2,10 @@
 
 package com.rdwatch.androidtv.ui.home
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -15,6 +18,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
@@ -30,8 +34,6 @@ import com.rdwatch.androidtv.Movie
 import com.rdwatch.androidtv.ui.components.ImagePriority
 import com.rdwatch.androidtv.ui.components.SmartTVImageLoader
 import com.rdwatch.androidtv.ui.components.TVBackgroundImage
-import com.rdwatch.androidtv.ui.focus.TVFocusIndicator
-import com.rdwatch.androidtv.ui.focus.tvFocusable
 import com.rdwatch.androidtv.ui.viewmodel.PlaybackViewModel
 
 @OptIn(UnstableApi::class)
@@ -142,112 +144,115 @@ fun StandardContentCard(
 ) {
     var isFocused by remember { mutableStateOf(false) }
 
-    TVFocusIndicator(
-        isFocused = isFocused,
+    Card(
+        onClick = onClick,
+        modifier =
+            modifier
+                .size(
+                    width = if (isFocused) 220.dp else 200.dp,
+                    height = if (isFocused) 140.dp else 120.dp,
+                )
+                .onFocusChanged { focusState ->
+                    isFocused = focusState.isFocused
+                }
+                .focusable(),
+        colors =
+            CardDefaults.cardColors(
+                containerColor =
+                    if (isFocused) {
+                        MaterialTheme.colorScheme.primaryContainer
+                    } else {
+                        MaterialTheme.colorScheme.surface
+                    },
+            ),
+        elevation =
+            CardDefaults.cardElevation(
+                defaultElevation = if (isFocused) 12.dp else 4.dp,
+            ),
+        shape = RoundedCornerShape(8.dp),
+        border =
+            if (isFocused) {
+                BorderStroke(3.dp, MaterialTheme.colorScheme.outline)
+            } else {
+                null
+            },
     ) {
-        Card(
-            onClick = onClick,
-            modifier =
-                modifier
-                    .size(
-                        width = if (isFocused) 220.dp else 200.dp,
-                        height = if (isFocused) 140.dp else 120.dp,
-                    )
-                    .tvFocusable(
-                        onFocusChanged = { isFocused = it.isFocused },
-                    ),
-            colors =
-                CardDefaults.cardColors(
-                    containerColor =
-                        if (isFocused) {
-                            MaterialTheme.colorScheme.primaryContainer
-                        } else {
-                            MaterialTheme.colorScheme.surface
-                        },
-                ),
-            elevation =
-                CardDefaults.cardElevation(
-                    defaultElevation = if (isFocused) 12.dp else 4.dp,
-                ),
-            shape = RoundedCornerShape(8.dp),
+        Box(
+            modifier = Modifier.fillMaxSize(),
         ) {
-            Box(
+            // Thumbnail image with smart loading
+            SmartTVImageLoader(
+                imageUrl = movie.cardImageUrl,
+                contentDescription = movie.title,
+                contentScale = ContentScale.Crop,
+                priority = ImagePriority.NORMAL,
                 modifier = Modifier.fillMaxSize(),
-            ) {
-                // Thumbnail image with smart loading
-                SmartTVImageLoader(
-                    imageUrl = movie.cardImageUrl,
-                    contentDescription = movie.title,
-                    contentScale = ContentScale.Crop,
-                    priority = ImagePriority.NORMAL,
-                    modifier = Modifier.fillMaxSize(),
-                )
+            )
 
-                // Gradient overlay for text readability
-                Box(
-                    modifier =
-                        Modifier
-                            .fillMaxSize()
-                            .background(
-                                Brush.verticalGradient(
-                                    colors =
-                                        listOf(
-                                            Color.Transparent,
-                                            Color.Black.copy(alpha = 0.7f),
-                                        ),
-                                    startY = 0.6f,
-                                ),
+            // Gradient overlay for text readability
+            Box(
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .background(
+                            Brush.verticalGradient(
+                                colors =
+                                    listOf(
+                                        Color.Transparent,
+                                        Color.Black.copy(alpha = 0.7f),
+                                    ),
+                                startY = 0.6f,
                             ),
-                )
+                        ),
+            )
 
-                // Progress indicator (if any progress)
-                if (progress > 0f) {
-                    LinearProgressIndicator(
-                        progress = { progress },
-                        modifier =
-                            Modifier
-                                .fillMaxWidth()
-                                .height(3.dp)
-                                .align(Alignment.BottomCenter),
-                        color = MaterialTheme.colorScheme.primary,
-                        trackColor = Color.White.copy(alpha = 0.3f),
-                    )
-                }
-
-                // Completion indicator
-                if (isCompleted) {
-                    Icon(
-                        imageVector = Icons.Default.CheckCircle,
-                        contentDescription = "Completed",
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier =
-                            Modifier
-                                .align(Alignment.TopEnd)
-                                .padding(8.dp)
-                                .size(20.dp),
-                    )
-                }
-
-                // Title overlay
-                Text(
-                    text = movie.title ?: "Unknown Title",
-                    style =
-                        if (isFocused) {
-                            MaterialTheme.typography.titleMedium
-                        } else {
-                            MaterialTheme.typography.titleSmall
-                        },
-                    color = Color.White,
-                    fontWeight = FontWeight.SemiBold,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
+            // Progress indicator (if any progress)
+            if (progress > 0f) {
+                LinearProgressIndicator(
+                    progress = { progress },
                     modifier =
                         Modifier
-                            .align(Alignment.BottomStart)
-                            .padding(12.dp)
-                            .padding(bottom = if (progress > 0f) 6.dp else 0.dp), // Account for progress bar
+                            .fillMaxWidth()
+                            .height(3.dp)
+                            .align(Alignment.BottomCenter),
+                    color = MaterialTheme.colorScheme.primary,
+                    trackColor = Color.White.copy(alpha = 0.3f),
                 )
             }
+
+            // Completion indicator
+            if (isCompleted) {
+                Icon(
+                    imageVector = Icons.Default.CheckCircle,
+                    contentDescription = "Completed",
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier =
+                        Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(8.dp)
+                            .size(20.dp),
+                )
+            }
+
+            // Title overlay
+            Text(
+                text = movie.title ?: "Unknown Title",
+                style =
+                    if (isFocused) {
+                        MaterialTheme.typography.titleMedium
+                    } else {
+                        MaterialTheme.typography.titleSmall
+                    },
+                color = Color.White,
+                fontWeight = FontWeight.SemiBold,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                modifier =
+                    Modifier
+                        .align(Alignment.BottomStart)
+                        .padding(12.dp)
+                        .padding(bottom = if (progress > 0f) 6.dp else 0.dp), // Account for progress bar
+            )
         }
     }
 }
@@ -261,77 +266,80 @@ fun FeaturedContentCard(
 ) {
     var isFocused by remember { mutableStateOf(false) }
 
-    TVFocusIndicator(
-        isFocused = isFocused,
+    Card(
+        onClick = onClick,
+        modifier =
+            modifier
+                .size(
+                    width = if (isFocused) 360.dp else 320.dp,
+                    height = if (isFocused) 200.dp else 180.dp,
+                )
+                .onFocusChanged { focusState ->
+                    isFocused = focusState.isFocused
+                }
+                .focusable(),
+        colors =
+            CardDefaults.cardColors(
+                containerColor =
+                    if (isFocused) {
+                        MaterialTheme.colorScheme.primaryContainer
+                    } else {
+                        MaterialTheme.colorScheme.surface
+                    },
+            ),
+        elevation =
+            CardDefaults.cardElevation(
+                defaultElevation = if (isFocused) 16.dp else 6.dp,
+            ),
+        shape = RoundedCornerShape(12.dp),
+        border =
+            if (isFocused) {
+                BorderStroke(3.dp, MaterialTheme.colorScheme.outline)
+            } else {
+                null
+            },
     ) {
-        Card(
-            onClick = onClick,
-            modifier =
-                modifier
-                    .size(
-                        width = if (isFocused) 360.dp else 320.dp,
-                        height = if (isFocused) 200.dp else 180.dp,
-                    )
-                    .tvFocusable(
-                        onFocusChanged = { isFocused = it.isFocused },
-                    ),
-            colors =
-                CardDefaults.cardColors(
-                    containerColor =
-                        if (isFocused) {
-                            MaterialTheme.colorScheme.primaryContainer
-                        } else {
-                            MaterialTheme.colorScheme.surface
-                        },
-                ),
-            elevation =
-                CardDefaults.cardElevation(
-                    defaultElevation = if (isFocused) 16.dp else 6.dp,
-                ),
-            shape = RoundedCornerShape(12.dp),
+        Box(
+            modifier = Modifier.fillMaxSize(),
         ) {
-            Box(
+            // Background image with enhanced loading
+            TVBackgroundImage(
+                imageUrl = movie.backgroundImageUrl,
+                contentDescription = movie.title,
                 modifier = Modifier.fillMaxSize(),
+                overlayAlpha = 0.8f,
+            )
+
+            // Content overlay
+            Column(
+                modifier =
+                    Modifier
+                        .align(Alignment.BottomStart)
+                        .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
-                // Background image with enhanced loading
-                TVBackgroundImage(
-                    imageUrl = movie.backgroundImageUrl,
-                    contentDescription = movie.title,
-                    modifier = Modifier.fillMaxSize(),
-                    overlayAlpha = 0.8f,
+                Text(
+                    text = movie.title ?: "Unknown Title",
+                    style =
+                        if (isFocused) {
+                            MaterialTheme.typography.headlineSmall
+                        } else {
+                            MaterialTheme.typography.titleLarge
+                        },
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
                 )
 
-                // Content overlay
-                Column(
-                    modifier =
-                        Modifier
-                            .align(Alignment.BottomStart)
-                            .padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
-                ) {
+                if (movie.studio != null) {
                     Text(
-                        text = movie.title ?: "Unknown Title",
-                        style =
-                            if (isFocused) {
-                                MaterialTheme.typography.headlineSmall
-                            } else {
-                                MaterialTheme.typography.titleLarge
-                            },
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold,
-                        maxLines = 2,
+                        text = movie.studio!!,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.White.copy(alpha = 0.8f),
+                        maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
-
-                    if (movie.studio != null) {
-                        Text(
-                            text = movie.studio!!,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = Color.White.copy(alpha = 0.8f),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                    }
                 }
             }
         }
@@ -348,106 +356,109 @@ fun ContinueWatchingCard(
 ) {
     var isFocused by remember { mutableStateOf(false) }
 
-    TVFocusIndicator(
-        isFocused = isFocused,
-    ) {
-        Card(
-            onClick = onClick,
-            modifier =
-                modifier
-                    .size(
-                        width = if (isFocused) 280.dp else 260.dp,
-                        height = if (isFocused) 160.dp else 140.dp,
-                    )
-                    .tvFocusable(
-                        onFocusChanged = { isFocused = it.isFocused },
-                    ),
-            colors =
-                CardDefaults.cardColors(
-                    containerColor =
-                        if (isFocused) {
-                            MaterialTheme.colorScheme.primaryContainer
-                        } else {
-                            MaterialTheme.colorScheme.surface
-                        },
-                ),
-            elevation =
-                CardDefaults.cardElevation(
-                    defaultElevation = if (isFocused) 14.dp else 5.dp,
-                ),
-            shape = RoundedCornerShape(10.dp),
-        ) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-            ) {
-                // Thumbnail image with smart loading
-                SmartTVImageLoader(
-                    imageUrl = movie.cardImageUrl,
-                    contentDescription = movie.title,
-                    contentScale = ContentScale.Crop,
-                    priority = ImagePriority.HIGH, // Higher priority for continue watching
-                    modifier = Modifier.fillMaxSize(),
+    Card(
+        onClick = onClick,
+        modifier =
+            modifier
+                .size(
+                    width = if (isFocused) 280.dp else 260.dp,
+                    height = if (isFocused) 160.dp else 140.dp,
                 )
-
-                // Gradient overlay
-                Box(
-                    modifier =
-                        Modifier
-                            .fillMaxSize()
-                            .background(
-                                Brush.verticalGradient(
-                                    colors =
-                                        listOf(
-                                            Color.Transparent,
-                                            Color.Black.copy(alpha = 0.75f),
-                                        ),
-                                    startY = 0.5f,
-                                ),
-                            ),
-                )
-
-                // Progress indicator
-                LinearProgressIndicator(
-                    progress = { progress },
-                    modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .height(4.dp)
-                            .align(Alignment.BottomCenter),
-                    color = MaterialTheme.colorScheme.primary,
-                    trackColor = Color.White.copy(alpha = 0.3f),
-                )
-
-                // Content overlay
-                Column(
-                    modifier =
-                        Modifier
-                            .align(Alignment.BottomStart)
-                            .padding(12.dp)
-                            .padding(bottom = 8.dp),
-                    // Account for progress bar
-                    verticalArrangement = Arrangement.spacedBy(2.dp),
-                ) {
-                    Text(
-                        text = movie.title ?: "Unknown Title",
-                        style =
-                            if (isFocused) {
-                                MaterialTheme.typography.titleLarge
-                            } else {
-                                MaterialTheme.typography.titleMedium
-                            },
-                        color = Color.White,
-                        fontWeight = FontWeight.SemiBold,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-
-                    Text(
-                        text = "${(progress * 100).toInt()}% watched",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = Color.White.copy(alpha = 0.9f),
-                    )
+                .onFocusChanged { focusState ->
+                    isFocused = focusState.isFocused
                 }
+                .focusable(),
+        colors =
+            CardDefaults.cardColors(
+                containerColor =
+                    if (isFocused) {
+                        MaterialTheme.colorScheme.primaryContainer
+                    } else {
+                        MaterialTheme.colorScheme.surface
+                    },
+            ),
+        elevation =
+            CardDefaults.cardElevation(
+                defaultElevation = if (isFocused) 14.dp else 5.dp,
+            ),
+        shape = RoundedCornerShape(10.dp),
+        border =
+            if (isFocused) {
+                BorderStroke(3.dp, MaterialTheme.colorScheme.outline)
+            } else {
+                null
+            },
+    ) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+        ) {
+            // Thumbnail image with smart loading
+            SmartTVImageLoader(
+                imageUrl = movie.cardImageUrl,
+                contentDescription = movie.title,
+                contentScale = ContentScale.Crop,
+                priority = ImagePriority.HIGH, // Higher priority for continue watching
+                modifier = Modifier.fillMaxSize(),
+            )
+
+            // Gradient overlay
+            Box(
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .background(
+                            Brush.verticalGradient(
+                                colors =
+                                    listOf(
+                                        Color.Transparent,
+                                        Color.Black.copy(alpha = 0.75f),
+                                    ),
+                                startY = 0.5f,
+                            ),
+                        ),
+            )
+
+            // Progress indicator
+            LinearProgressIndicator(
+                progress = { progress },
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .height(4.dp)
+                        .align(Alignment.BottomCenter),
+                color = MaterialTheme.colorScheme.primary,
+                trackColor = Color.White.copy(alpha = 0.3f),
+            )
+
+            // Content overlay
+            Column(
+                modifier =
+                    Modifier
+                        .align(Alignment.BottomStart)
+                        .padding(12.dp)
+                        .padding(bottom = 8.dp),
+                // Account for progress bar
+                verticalArrangement = Arrangement.spacedBy(2.dp),
+            ) {
+                Text(
+                    text = movie.title ?: "Unknown Title",
+                    style =
+                        if (isFocused) {
+                            MaterialTheme.typography.titleLarge
+                        } else {
+                            MaterialTheme.typography.titleMedium
+                        },
+                    color = Color.White,
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+
+                Text(
+                    text = "${(progress * 100).toInt()}% watched",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.White.copy(alpha = 0.9f),
+                )
             }
         }
     }
@@ -460,36 +471,47 @@ private fun ViewAllButton(
 ) {
     var isFocused by remember { mutableStateOf(false) }
 
-    TVFocusIndicator(
-        isFocused = isFocused,
-    ) {
-        TextButton(
-            onClick = onClick,
-            modifier =
-                modifier
-                    .tvFocusable(
-                        onFocusChanged = { isFocused = it.isFocused },
-                    ),
-            colors =
-                ButtonDefaults.textButtonColors(
-                    contentColor = MaterialTheme.colorScheme.primary,
+    TextButton(
+        onClick = onClick,
+        modifier =
+            modifier
+                .onFocusChanged { focusState ->
+                    isFocused = focusState.isFocused
+                }
+                .focusable()
+                .then(
+                    if (isFocused) {
+                        Modifier
+                            .border(3.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(8.dp))
+                            .scale(1.05f)
+                    } else {
+                        Modifier
+                    },
                 ),
+        colors =
+            ButtonDefaults.textButtonColors(
+                contentColor =
+                    if (isFocused) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        MaterialTheme.colorScheme.onSurface
+                    },
+            ),
+    ) {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = "View All",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
-                )
-                Icon(
-                    imageVector = Icons.Default.ArrowForward,
-                    contentDescription = null,
-                    modifier = Modifier.size(18.dp),
-                )
-            }
+            Text(
+                text = "View All",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+            )
+            Icon(
+                imageVector = Icons.Default.ArrowForward,
+                contentDescription = null,
+                modifier = Modifier.size(18.dp),
+            )
         }
     }
 }
