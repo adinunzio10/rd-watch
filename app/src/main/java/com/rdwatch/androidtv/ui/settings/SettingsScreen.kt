@@ -336,8 +336,7 @@ private fun SwitchSetting(
             Modifier.fillMaxWidth()
                 .onFocusChanged { focusState ->
                     isFocused = focusState.isFocused
-                }
-                .focusable(),
+                },
         colors =
             CardDefaults.cardColors(
                 containerColor =
@@ -428,8 +427,7 @@ private fun DropdownSetting(
             Modifier.fillMaxWidth()
                 .onFocusChanged { focusState ->
                     isFocused = focusState.isFocused
-                }
-                .focusable(),
+                },
         colors =
             CardDefaults.cardColors(
                 containerColor =
@@ -577,8 +575,7 @@ private fun ActionSetting(
             Modifier.fillMaxWidth()
                 .onFocusChanged { focusState ->
                     isFocused = focusState.isFocused
-                }
-                .focusable(),
+                },
         colors =
             CardDefaults.cardColors(
                 containerColor =

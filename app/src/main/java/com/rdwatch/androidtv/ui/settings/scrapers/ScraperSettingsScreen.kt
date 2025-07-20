@@ -181,8 +181,7 @@ private fun ScraperSettingsHeader(
                     Modifier
                         .onFocusChanged { focusState ->
                             refreshFocused = focusState.isFocused
-                        }
-                        .focusable(),
+                        },
                 enabled = !isRefreshing,
                 colors =
                     ButtonDefaults.buttonColors(
@@ -225,8 +224,7 @@ private fun ScraperSettingsHeader(
                     Modifier
                         .onFocusChanged { focusState ->
                             addFocused = focusState.isFocused
-                        }
-                        .focusable(),
+                        },
                 colors =
                     ButtonDefaults.buttonColors(
                         containerColor =
@@ -414,8 +412,7 @@ private fun EmptyState(onAddScraper: () -> Unit) {
                     Modifier
                         .onFocusChanged { focusState ->
                             addButtonFocused = focusState.isFocused
-                        }
-                        .focusable(),
+                        },
                 colors =
                     ButtonDefaults.buttonColors(
                         containerColor =
