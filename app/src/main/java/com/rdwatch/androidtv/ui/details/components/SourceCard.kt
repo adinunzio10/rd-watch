@@ -1,5 +1,6 @@
 package com.rdwatch.androidtv.ui.details.components
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -11,6 +12,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -23,8 +25,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rdwatch.androidtv.ui.details.models.SourceProvider
 import com.rdwatch.androidtv.ui.details.models.StreamingSource
-import com.rdwatch.androidtv.ui.focus.TVFocusIndicator
-import com.rdwatch.androidtv.ui.focus.tvFocusable
 
 /**
  * Source card component for displaying streaming provider information
@@ -46,77 +46,67 @@ fun SourceCard(
 
     val isEnabled = source.isCurrentlyAvailable()
 
-    TVFocusIndicator(isFocused = isFocused) {
-        OutlinedCard(
-            onClick = {
-                if (isEnabled) {
-                    hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onClick(source)
-                }
-            },
-            enabled = isEnabled,
-            modifier =
-                modifier
-                    .width(
-                        when (variant) {
-                            SourceCardVariant.COMPACT -> 120.dp
-                            SourceCardVariant.DEFAULT -> 160.dp
-                            SourceCardVariant.DETAILED -> 200.dp
-                        },
-                    )
-                    .tvFocusable(
-                        enabled = isEnabled,
-                        onFocusChanged = { isFocused = it.isFocused },
-                    ),
-            colors =
-                CardDefaults.outlinedCardColors(
-                    containerColor =
-                        when {
-                            !isEnabled -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-                            isSelected -> MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
-                            isFocused -> MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.3f)
-                            else -> MaterialTheme.colorScheme.surface
-                        },
-                ),
-            border =
-                when {
-                    isSelected ->
-                        CardDefaults.outlinedCardBorder().copy(
-                            brush =
-                                Brush.linearGradient(
-                                    colors =
-                                        listOf(
-                                            MaterialTheme.colorScheme.primary,
-                                            MaterialTheme.colorScheme.primary,
-                                        ),
-                                ),
-                            width = 2.dp,
-                        )
-                    isFocused ->
-                        CardDefaults.outlinedCardBorder().copy(
-                            brush =
-                                Brush.linearGradient(
-                                    colors =
-                                        listOf(
-                                            MaterialTheme.colorScheme.secondary,
-                                            MaterialTheme.colorScheme.secondary,
-                                        ),
-                                ),
-                            width = 2.dp,
-                        )
-                    else -> CardDefaults.outlinedCardBorder()
+    OutlinedCard(
+        onClick = {
+            if (isEnabled) {
+                hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                onClick(source)
+            }
+        },
+        enabled = isEnabled,
+        modifier =
+            modifier
+                .width(
+                    when (variant) {
+                        SourceCardVariant.COMPACT -> 120.dp
+                        SourceCardVariant.DEFAULT -> 160.dp
+                        SourceCardVariant.DETAILED -> 200.dp
+                    },
+                )
+                .onFocusChanged { focusState ->
+                    isFocused = focusState.isFocused
                 },
-        ) {
-            SourceCardContent(
-                source = source,
-                isFocused = isFocused,
-                isSelected = isSelected,
-                isEnabled = isEnabled,
-                showSourceInfo = showSourceInfo,
-                showQualityBadges = showQualityBadges,
-                variant = variant,
-            )
-        }
+        border =
+            when {
+                isSelected ->
+                    BorderStroke(
+                        width = 3.dp,
+                        brush =
+                            Brush.linearGradient(
+                                colors =
+                                    listOf(
+                                        MaterialTheme.colorScheme.primary,
+                                        MaterialTheme.colorScheme.primary,
+                                    ),
+                            ),
+                    )
+                isFocused ->
+                    BorderStroke(
+                        width = 3.dp,
+                        color = MaterialTheme.colorScheme.outline,
+                    )
+                else -> CardDefaults.outlinedCardBorder()
+            },
+        colors =
+            CardDefaults.outlinedCardColors(
+                containerColor =
+                    when {
+                        !isEnabled -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                        isSelected -> MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+                        isFocused -> MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.3f)
+                        else -> MaterialTheme.colorScheme.surface
+                    },
+            ),
+    ) {
+        SourceCardContent(
+            source = source,
+            isFocused = isFocused,
+            isSelected = isSelected,
+            isEnabled = isEnabled,
+            showSourceInfo = showSourceInfo,
+            showQualityBadges = showQualityBadges,
+            variant = variant,
+        )
     }
 }
 
