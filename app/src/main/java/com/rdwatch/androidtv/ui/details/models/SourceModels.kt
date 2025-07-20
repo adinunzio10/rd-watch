@@ -286,6 +286,7 @@ data class StreamingSource(
 
     /**
      * Get all quality badges for this source
+     * Optimized for Real-Debrid usage - removes redundant P2P/Magnet indicators
      */
     fun getQualityBadges(): List<String> {
         val badges = mutableListOf<String>()
@@ -293,20 +294,12 @@ data class StreamingSource(
         // Main quality badge
         badges.add(quality.shortName)
 
-        // Additional quality features
+        // Additional quality features (these are valuable for Real-Debrid users)
         if (features.supportsDolbyVision) badges.add("Dolby Vision")
         if (features.supportsDolbyAtmos) badges.add("Dolby Atmos")
 
-        // P2P indicators
-        if (features.supportsP2P) {
-            badges.add("P2P")
-            features.seeders?.let { seeders ->
-                if (seeders > 0) badges.add("${seeders}S")
-            }
-        }
-
-        // Source type
-        badges.add(sourceType.getDisplayType())
+        // Skip P2P indicators, seeder counts, and source types (Magnet/Torrent)
+        // as they're not relevant for Real-Debrid where everything is cached
 
         return badges
     }

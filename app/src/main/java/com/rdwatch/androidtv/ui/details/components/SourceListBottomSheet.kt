@@ -1,5 +1,6 @@
 package com.rdwatch.androidtv.ui.details.components
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
@@ -19,7 +20,6 @@ import com.rdwatch.androidtv.ui.details.models.SourceSortOption
 import com.rdwatch.androidtv.ui.details.models.advanced.*
 import com.rdwatch.androidtv.ui.focus.TVFocusItem
 import com.rdwatch.androidtv.ui.focus.rememberTVFocusGroup
-import com.rdwatch.androidtv.ui.focus.tvFocusable
 import com.rdwatch.androidtv.ui.theme.UIConstants
 
 /**
@@ -266,22 +266,18 @@ private fun SourceListHeader(
                 onClick = onRefresh,
                 modifier =
                     Modifier
-                        .tvFocusable(
-                            enabled = true,
-                            focusRequester = refreshFocusRequester,
-                            onFocusChanged = { refreshFocused = it.isFocused },
-                        )
-                        .then(
+                        .onFocusChanged { focusState ->
+                            refreshFocused = focusState.isFocused
+                        },
+                colors =
+                    IconButtonDefaults.iconButtonColors(
+                        containerColor =
                             if (refreshFocused) {
-                                Modifier.border(
-                                    2.dp,
-                                    MaterialTheme.colorScheme.primary,
-                                    RoundedCornerShape(8.dp),
-                                )
+                                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
                             } else {
-                                Modifier
+                                androidx.compose.ui.graphics.Color.Transparent
                             },
-                        ),
+                    ),
                 enabled = !isLoading,
             ) {
                 if (isLoading) {
@@ -439,22 +435,24 @@ private fun QuickFilterChip(
         },
         modifier =
             Modifier
-                .tvFocusable(
-                    enabled = true,
-                    focusRequester = focusRequester,
-                    onFocusChanged = { isFocused = it.isFocused },
-                )
-                .then(
+                .onFocusChanged { focusState ->
+                    isFocused = focusState.isFocused
+                },
+        border =
+            if (isFocused) {
+                BorderStroke(3.dp, MaterialTheme.colorScheme.outline)
+            } else {
+                null
+            },
+        colors =
+            FilterChipDefaults.filterChipColors(
+                containerColor =
                     if (isFocused) {
-                        Modifier.border(
-                            2.dp,
-                            MaterialTheme.colorScheme.primary,
-                            RoundedCornerShape(16.dp),
-                        )
+                        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
                     } else {
-                        Modifier
+                        MaterialTheme.colorScheme.surface
                     },
-                ),
+            ),
     )
 
     LaunchedEffect(Unit) {
@@ -557,22 +555,18 @@ private fun ViewModeSelector(
             onClick = { expanded = true },
             modifier =
                 Modifier
-                    .tvFocusable(
-                        enabled = true,
-                        focusRequester = focusRequester,
-                        onFocusChanged = { isFocused = it.isFocused },
-                    )
-                    .then(
+                    .onFocusChanged { focusState ->
+                        isFocused = focusState.isFocused
+                    },
+            colors =
+                IconButtonDefaults.iconButtonColors(
+                    containerColor =
                         if (isFocused) {
-                            Modifier.border(
-                                2.dp,
-                                MaterialTheme.colorScheme.primary,
-                                RoundedCornerShape(8.dp),
-                            )
+                            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
                         } else {
-                            Modifier
+                            androidx.compose.ui.graphics.Color.Transparent
                         },
-                    ),
+                ),
         ) {
             Icon(
                 when (currentMode) {
@@ -638,22 +632,18 @@ private fun SortSelector(
             onClick = { expanded = true },
             modifier =
                 Modifier
-                    .tvFocusable(
-                        enabled = true,
-                        focusRequester = focusRequester,
-                        onFocusChanged = { isFocused = it.isFocused },
-                    )
-                    .then(
+                    .onFocusChanged { focusState ->
+                        isFocused = focusState.isFocused
+                    },
+            colors =
+                IconButtonDefaults.iconButtonColors(
+                    containerColor =
                         if (isFocused) {
-                            Modifier.border(
-                                2.dp,
-                                MaterialTheme.colorScheme.primary,
-                                RoundedCornerShape(8.dp),
-                            )
+                            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
                         } else {
-                            Modifier
+                            androidx.compose.ui.graphics.Color.Transparent
                         },
-                    ),
+                ),
         ) {
             Icon(
                 Icons.Default.Sort,

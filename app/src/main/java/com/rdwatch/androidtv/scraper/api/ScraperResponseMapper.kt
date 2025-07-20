@@ -101,6 +101,11 @@ class ScraperResponseMapper
             // Extract size from title or behavior hints
             val size = torrentInfo.size ?: extractSizeFromTitle(title)
 
+            // Extract filename from behavior hints or title
+            val filename =
+                stream.behaviorHints?.filename
+                    ?: extractFilenameFromTitle(title)
+
             // Create the streaming source
             val source =
                 scraperSourceAdapter.createStreamingSource(
@@ -111,6 +116,8 @@ class ScraperResponseMapper
                     size = size,
                     seeders = torrentInfo.seeders,
                     leechers = torrentInfo.leechers,
+                    tracker = torrentInfo.tracker,
+                    filename = filename,
                 )
 
             println("DEBUG [ScraperResponseMapper]: Created source - ${source.title} [${quality.displayName}] from ${manifest.name}")
@@ -191,6 +198,63 @@ class ScraperResponseMapper
         private fun extractSizeFromTitle(title: String): String? {
             val sizeRegex = Regex("(\\d+\\.?\\d*)\\s?(GB|MB|TB)", RegexOption.IGNORE_CASE)
             return sizeRegex.find(title)?.value
+        }
+
+        /**
+         * Extract filename from torrent title
+         * Tries to find the actual movie/show filename for verification
+         */
+        private fun extractFilenameFromTitle(title: String): String? {
+            // Pattern 1: Extract main title before quality/codec info
+            // Example: "Movie.Name.2024.1080p.BluRay.x264-RARBG" -> "Movie.Name.2024"
+            val mainTitlePattern = Regex("^([^\\[\\(]+?)(?:\\.|\\s)(?:(?:19|20)\\d{2}|(?:S\\d+E\\d+)|(?:720p|1080p|2160p|4K))", RegexOption.IGNORE_CASE)
+            mainTitlePattern.find(title)?.let { match ->
+                val mainTitle =
+                    match.groupValues[1]
+                        .replace(".", " ")
+                        .replace("_", " ")
+                        .trim()
+                if (mainTitle.length >= 3) {
+                    return mainTitle
+                }
+            }
+
+            // Pattern 2: Extract content between brackets or before dash
+            // Example: "[Movie Name 2024] 1080p" -> "Movie Name 2024"
+            val bracketPattern = Regex("\\[([^\\]]+)\\]")
+            bracketPattern.find(title)?.let { match ->
+                val content = match.groupValues[1].trim()
+                if (content.length >= 3 && !content.matches(Regex("\\d+p|\\d+\\.\\d+GB|x26[45]", RegexOption.IGNORE_CASE))) {
+                    return content
+                }
+            }
+
+            // Pattern 3: For TV shows - extract show name and episode info
+            // Example: "Show.Name.S01E01.720p.HDTV.x264-GROUP" -> "Show Name S01E01"
+            val tvPattern = Regex("^([^\\[\\(]+?)(?:\\.|\\s)(S\\d+E\\d+)", RegexOption.IGNORE_CASE)
+            tvPattern.find(title)?.let { match ->
+                val showName =
+                    match.groupValues[1]
+                        .replace(".", " ")
+                        .replace("_", " ")
+                        .trim()
+                val episode = match.groupValues[2]
+                if (showName.length >= 3) {
+                    return "$showName $episode"
+                }
+            }
+
+            // Fallback: Clean up the first 50 characters of the title
+            val cleanTitle =
+                title
+                    .replace(Regex("[\\[\\(].*?[\\]\\)]"), "") // Remove bracketed content
+                    .replace(Regex("-[A-Z]+$"), "") // Remove release group at end
+                    .replace(".", " ")
+                    .replace("_", " ")
+                    .replace(Regex("\\s+"), " ")
+                    .trim()
+
+            return if (cleanTitle.length > 3) cleanTitle.take(50) else null
         }
 
         /**
