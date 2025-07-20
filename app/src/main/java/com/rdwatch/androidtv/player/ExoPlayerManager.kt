@@ -10,6 +10,7 @@ import com.rdwatch.androidtv.player.error.PlayerErrorHandler
 import com.rdwatch.androidtv.player.state.PlaybackSession
 import com.rdwatch.androidtv.player.state.PlaybackStateRepository
 import com.rdwatch.androidtv.player.subtitle.SubtitleManager
+import com.rdwatch.androidtv.util.DebugLogger
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -37,10 +38,10 @@ class ExoPlayerManager
         val exoPlayer: ExoPlayer
             get() {
                 if (_exoPlayer == null) {
-                    android.util.Log.d("ExoPlayerManager", "ExoPlayer instance is null, creating new instance")
+                    DebugLogger.d("ExoPlayerManager", "ExoPlayer instance is null, creating new instance")
                     _exoPlayer = createPlayer()
                 } else {
-                    android.util.Log.d("ExoPlayerManager", "Returning existing ExoPlayer instance")
+                    DebugLogger.d("ExoPlayerManager", "Returning existing ExoPlayer instance")
                 }
                 return _exoPlayer!!
             }
@@ -71,7 +72,7 @@ class ExoPlayerManager
 
                 override fun onPlayerError(error: androidx.media3.common.PlaybackException) {
                     super.onPlayerError(error)
-                    android.util.Log.e("ExoPlayerManager", "Playback error occurred", error)
+                    DebugLogger.e("ExoPlayerManager", "Playback error occurred", error)
 
                     // Check if this is a codec compatibility error
                     val isCodecError =
@@ -82,7 +83,7 @@ class ExoPlayerManager
 
                     val errorMessage =
                         if (isCodecError) {
-                            android.util.Log.w("ExoPlayerManager", "Codec compatibility error detected")
+                            DebugLogger.w("ExoPlayerManager", "Codec compatibility error detected")
                             "This video format is not supported on this device. The video codec (HEVC/H.265 or Dolby Vision) exceeds the device's capabilities. Please try a different video source with H.264 codec."
                         } else {
                             val playerError = errorHandler.handleError(error)
@@ -122,7 +123,7 @@ class ExoPlayerManager
                             Player.STATE_ENDED -> "ENDED"
                             else -> "UNKNOWN($playbackState)"
                         }
-                    android.util.Log.d("ExoPlayerManager", "Playback state changed to: $stateString")
+                    DebugLogger.d("ExoPlayerManager", "Playback state changed to: $stateString")
 
                     val state =
                         when (playbackState) {
@@ -144,12 +145,12 @@ class ExoPlayerManager
             }
 
         private fun createPlayer(): ExoPlayer {
-            android.util.Log.d("ExoPlayerManager", "Creating ExoPlayer")
+            DebugLogger.d("ExoPlayerManager", "Creating ExoPlayer")
             return ExoPlayer.Builder(context)
                 .setTrackSelector(trackSelector)
                 .build()
                 .also { player ->
-                    android.util.Log.d("ExoPlayerManager", "ExoPlayer created successfully")
+                    DebugLogger.d("ExoPlayerManager", "ExoPlayer created successfully")
                     player.addListener(playerListener)
 
                     // Initialize subtitle manager with the player
@@ -163,36 +164,36 @@ class ExoPlayerManager
                 if (player != null) {
                     val videoFormat = player.videoFormat
                     if (videoFormat != null) {
-                        android.util.Log.d("ExoPlayerManager", "Video format detected:")
-                        android.util.Log.d("ExoPlayerManager", "  - MIME type: ${videoFormat.sampleMimeType}")
-                        android.util.Log.d("ExoPlayerManager", "  - Codecs: ${videoFormat.codecs}")
-                        android.util.Log.d("ExoPlayerManager", "  - Resolution: ${videoFormat.width}x${videoFormat.height}")
-                        android.util.Log.d("ExoPlayerManager", "  - Frame rate: ${videoFormat.frameRate}")
-                        android.util.Log.d("ExoPlayerManager", "  - Bitrate: ${videoFormat.bitrate}")
-                        android.util.Log.d("ExoPlayerManager", "  - Color info: ${videoFormat.colorInfo}")
+                        DebugLogger.d("ExoPlayerManager", "Video format detected:")
+                        DebugLogger.d("ExoPlayerManager", "  - MIME type: ${videoFormat.sampleMimeType}")
+                        DebugLogger.d("ExoPlayerManager", "  - Codecs: ${videoFormat.codecs}")
+                        DebugLogger.d("ExoPlayerManager", "  - Resolution: ${videoFormat.width}x${videoFormat.height}")
+                        DebugLogger.d("ExoPlayerManager", "  - Frame rate: ${videoFormat.frameRate}")
+                        DebugLogger.d("ExoPlayerManager", "  - Bitrate: ${videoFormat.bitrate}")
+                        DebugLogger.d("ExoPlayerManager", "  - Color info: ${videoFormat.colorInfo}")
 
                         val hasVideo = videoFormat.width > 0 && videoFormat.height > 0
-                        android.util.Log.d("ExoPlayerManager", "Video track ready: $hasVideo")
+                        DebugLogger.d("ExoPlayerManager", "Video track ready: $hasVideo")
 
                         updatePlayerState { copy(hasVideo = hasVideo) }
                     } else {
-                        android.util.Log.w("ExoPlayerManager", "No video format detected - audio only or format not ready")
+                        DebugLogger.w("ExoPlayerManager", "No video format detected - audio only or format not ready")
                         updatePlayerState { copy(hasVideo = false) }
                     }
 
                     // Log audio format as well
                     val audioFormat = player.audioFormat
                     if (audioFormat != null) {
-                        android.util.Log.d("ExoPlayerManager", "Audio format detected:")
-                        android.util.Log.d("ExoPlayerManager", "  - MIME type: ${audioFormat.sampleMimeType}")
-                        android.util.Log.d("ExoPlayerManager", "  - Sample rate: ${audioFormat.sampleRate}")
-                        android.util.Log.d("ExoPlayerManager", "  - Channels: ${audioFormat.channelCount}")
+                        DebugLogger.d("ExoPlayerManager", "Audio format detected:")
+                        DebugLogger.d("ExoPlayerManager", "  - MIME type: ${audioFormat.sampleMimeType}")
+                        DebugLogger.d("ExoPlayerManager", "  - Sample rate: ${audioFormat.sampleRate}")
+                        DebugLogger.d("ExoPlayerManager", "  - Channels: ${audioFormat.channelCount}")
                     }
                 } else {
-                    android.util.Log.w("ExoPlayerManager", "Cannot log video format - ExoPlayer is null")
+                    DebugLogger.w("ExoPlayerManager", "Cannot log video format - ExoPlayer is null")
                 }
             } catch (e: Exception) {
-                android.util.Log.e("ExoPlayerManager", "Error logging video format", e)
+                DebugLogger.e("ExoPlayerManager", "Error logging video format", e)
             }
         }
 
@@ -203,7 +204,7 @@ class ExoPlayerManager
             metadata: MediaMetadata? = null,
             shouldResume: Boolean = true,
         ) {
-            android.util.Log.d("ExoPlayerManager", "prepareMedia called with URL: $mediaUrl")
+            DebugLogger.d("ExoPlayerManager", "prepareMedia called with URL: $mediaUrl")
 
             val mediaItem =
                 MediaItem.Builder()
@@ -223,20 +224,20 @@ class ExoPlayerManager
                     }
                     .build()
 
-            android.util.Log.d("ExoPlayerManager", "MediaItem created with URI: ${mediaItem.localConfiguration?.uri}")
+            DebugLogger.d("ExoPlayerManager", "MediaItem created with URI: ${mediaItem.localConfiguration?.uri}")
 
             // Store content ID for progress tracking
             currentContentId = contentId ?: mediaUrl
 
             // Create appropriate media source based on format
             val mediaSource = mediaSourceFactory.createMediaSource(mediaItem)
-            android.util.Log.d("ExoPlayerManager", "MediaSource created: ${mediaSource.javaClass.simpleName}")
+            DebugLogger.d("ExoPlayerManager", "MediaSource created: ${mediaSource.javaClass.simpleName}")
 
             exoPlayer.setMediaSource(mediaSource)
-            android.util.Log.d("ExoPlayerManager", "MediaSource set on ExoPlayer")
+            DebugLogger.d("ExoPlayerManager", "MediaSource set on ExoPlayer")
 
             exoPlayer.prepare()
-            android.util.Log.d("ExoPlayerManager", "ExoPlayer.prepare() called")
+            DebugLogger.d("ExoPlayerManager", "ExoPlayer.prepare() called")
 
             updatePlayerState {
                 copy(

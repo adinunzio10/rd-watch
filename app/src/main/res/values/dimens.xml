@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Android TV specific dimensions -->
+    
+    <!-- Content dimensions -->
+    <dimen name="standard_content_width">600dp</dimen>
+    <dimen name="min_dialog_width">400dp</dimen>
+    <dimen name="max_dialog_width">800dp</dimen>
+    <dimen name="episode_grid_height">480dp</dimen>
+    <dimen name="max_overlay_height">600dp</dimen>
+    
+    <!-- Card dimensions -->
+    <dimen name="standard_card_width">200dp</dimen>
+    <dimen name="standard_card_height">300dp</dimen>
+    <dimen name="card_corner_radius">8dp</dimen>
+    
+    <!-- TV-specific spacing -->
+    <dimen name="tv_safe_padding">48dp</dimen>
+    <dimen name="grid_spacing">16dp</dimen>
+    <dimen name="focus_border_width">3dp</dimen>
+    
+    <!-- Common spacing -->
+    <dimen name="spacing_xs">4dp</dimen>
+    <dimen name="spacing_sm">8dp</dimen>
+    <dimen name="spacing_md">16dp</dimen>
+    <dimen name="spacing_lg">24dp</dimen>
+    <dimen name="spacing_xl">32dp</dimen>
+    <dimen name="spacing_xxl">48dp</dimen>
+    
+    <!-- Text sizes optimized for TV -->
+    <dimen name="text_size_small">14sp</dimen>
+    <dimen name="text_size_medium">16sp</dimen>
+    <dimen name="text_size_large">20sp</dimen>
+    <dimen name="text_size_xlarge">24sp</dimen>
+    <dimen name="text_size_title">28sp</dimen>
+    
+    <!-- Button dimensions for TV remote navigation -->
+    <dimen name="button_height_small">40dp</dimen>
+    <dimen name="button_height_medium">48dp</dimen>
+    <dimen name="button_height_large">56dp</dimen>
+    <dimen name="button_min_width">120dp</dimen>
+    
+    <!-- Icon sizes -->
+    <dimen name="icon_size_small">16dp</dimen>
+    <dimen name="icon_size_medium">24dp</dimen>
+    <dimen name="icon_size_large">32dp</dimen>
+    <dimen name="icon_size_xlarge">48dp</dimen>
+</resources>

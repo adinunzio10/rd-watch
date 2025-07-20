@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
 import com.rdwatch.androidtv.ui.details.models.advanced.SourceMetadata
+import com.rdwatch.androidtv.ui.theme.UIConstants
 import java.util.Date
 
 /**
@@ -52,7 +53,7 @@ fun MetadataTooltip(
             Card(
                 modifier =
                     modifier
-                        .widthIn(min = 400.dp, max = 600.dp)
+                        .widthIn(min = UIConstants.Dimensions.MIN_DIALOG_WIDTH, max = UIConstants.Dimensions.STANDARD_CONTENT_WIDTH)
                         .heightIn(max = 500.dp)
                         .shadow(
                             elevation = 16.dp,

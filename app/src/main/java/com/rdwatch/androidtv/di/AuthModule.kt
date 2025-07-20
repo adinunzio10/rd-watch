@@ -9,6 +9,9 @@ import dagger.hilt.components.SingletonComponent
 
 /**
  * Hilt module for authentication-related dependencies
+ *
+ * Note: UserSessionManager is automatically provided by Hilt since it's
+ * annotated with @Singleton and @Inject constructor
  */
 @Module
 @InstallIn(SingletonComponent::class)

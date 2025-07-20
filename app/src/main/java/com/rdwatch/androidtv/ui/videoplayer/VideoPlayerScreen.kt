@@ -16,8 +16,10 @@ import com.rdwatch.androidtv.player.PlaybackState
 import com.rdwatch.androidtv.player.TvPlayerView
 import com.rdwatch.androidtv.player.subtitle.SubtitleManager
 import com.rdwatch.androidtv.presentation.viewmodel.BaseViewModel
+import com.rdwatch.androidtv.ui.theme.UIConstants
 import com.rdwatch.androidtv.ui.viewmodel.MediaReadyState
 import com.rdwatch.androidtv.ui.viewmodel.PlaybackViewModel
+import com.rdwatch.androidtv.util.DebugLogger
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 
@@ -40,23 +42,23 @@ fun VideoPlayerScreen(
     // Note: Video should already be prepared by PlaybackViewModel before navigation
     // We don't need to initialize a new video here, just connect to the existing ExoPlayer
     LaunchedEffect(videoUrl, title) {
-        android.util.Log.d("VideoPlayerScreen", "LaunchedEffect called with videoUrl: $videoUrl, title: $title")
+        DebugLogger.d("VideoPlayerScreen", "LaunchedEffect called with videoUrl: $videoUrl, title: $title")
         videoPlayerViewModel.connectToExistingPlayback(title)
-        android.util.Log.d("VideoPlayerScreen", "connectToExistingPlayback call completed")
+        DebugLogger.d("VideoPlayerScreen", "connectToExistingPlayback call completed")
     }
 
     // Monitor media ready state and handle errors
     LaunchedEffect(mediaReadyState) {
-        when (mediaReadyState) {
+        when (val state = mediaReadyState) {
             is MediaReadyState.Error -> {
-                android.util.Log.e("VideoPlayerScreen", "Media preparation error: ${mediaReadyState.message}")
+                DebugLogger.e("VideoPlayerScreen", "Media preparation error: ${state.message}")
                 // The error will be shown via the UI state
             }
             is MediaReadyState.Ready -> {
-                android.util.Log.d("VideoPlayerScreen", "Media is ready for playback")
+                DebugLogger.d("VideoPlayerScreen", "Media is ready for playback")
             }
             else -> {
-                android.util.Log.d("VideoPlayerScreen", "Media state: $mediaReadyState")
+                DebugLogger.d("VideoPlayerScreen", "Media state: $state")
             }
         }
     }
@@ -71,7 +73,7 @@ fun VideoPlayerScreen(
     }
 
     // Debug UI State
-    android.util.Log.d("VideoPlayerScreen", "UI State Debug: hasVideo=${uiState.hasVideo}, isLoading=${uiState.isLoading}, hasError=${uiState.hasError}")
+    DebugLogger.d("VideoPlayerScreen", "UI State Debug: hasVideo=${uiState.hasVideo}, isLoading=${uiState.isLoading}, hasError=${uiState.hasError}")
     // Managers are now accessed directly from ViewModel, not from UI state
 
     Box(modifier = modifier.fillMaxSize()) {
@@ -85,10 +87,9 @@ fun VideoPlayerScreen(
 
             uiState.hasError || mediaReadyState is MediaReadyState.Error -> {
                 val errorMessage =
-                    when {
-                        mediaReadyState is MediaReadyState.Error -> mediaReadyState.message
-                        uiState.hasError -> uiState.errorMessage ?: "Unknown error occurred"
-                        else -> "Unknown error occurred"
+                    when (val state = mediaReadyState) {
+                        is MediaReadyState.Error -> state.message
+                        else -> if (uiState.hasError) uiState.errorMessage ?: "Unknown error occurred" else "Unknown error occurred"
                     }
                 ErrorScreen(
                     title = title,
@@ -104,7 +105,7 @@ fun VideoPlayerScreen(
             }
 
             uiState.hasVideo && mediaReadyState is MediaReadyState.Ready -> {
-                android.util.Log.d("VideoPlayerScreen", "hasVideo condition met and media is ready - creating TvPlayerView")
+                DebugLogger.d("VideoPlayerScreen", "hasVideo condition met and media is ready - creating TvPlayerView")
                 TvPlayerView(
                     exoPlayerManager = videoPlayerViewModel.exoPlayerManager,
                     subtitleManager = videoPlayerViewModel.subtitleManager,
@@ -116,7 +117,7 @@ fun VideoPlayerScreen(
             }
 
             else -> {
-                android.util.Log.w(
+                DebugLogger.w(
                     "VideoPlayerScreen",
                     "NO CONDITION MET - Gray screen shown! isLoading=${uiState.isLoading}, hasError=${uiState.hasError}, hasVideo=${uiState.hasVideo}, mediaReadyState=$mediaReadyState",
                 )
@@ -290,9 +291,9 @@ class VideoPlayerViewModel
         val subtitleManager: SubtitleManager,
     ) : BaseViewModel<VideoPlayerUiState>() {
         init {
-            android.util.Log.d("VideoPlayerViewModel", "VideoPlayerViewModel created")
-            android.util.Log.d("VideoPlayerViewModel", "Injected exoPlayerManager: $exoPlayerManager (hashCode: ${exoPlayerManager.hashCode()})")
-            android.util.Log.d("VideoPlayerViewModel", "Injected subtitleManager: $subtitleManager (hashCode: ${subtitleManager.hashCode()})")
+            DebugLogger.d("VideoPlayerViewModel", "VideoPlayerViewModel created")
+            DebugLogger.d("VideoPlayerViewModel", "Injected exoPlayerManager: $exoPlayerManager (hashCode: ${exoPlayerManager.hashCode()})")
+            DebugLogger.d("VideoPlayerViewModel", "Injected subtitleManager: $subtitleManager (hashCode: ${subtitleManager.hashCode()})")
         }
 
         override fun createInitialState(): VideoPlayerUiState {
@@ -342,15 +343,15 @@ class VideoPlayerViewModel
         }
 
         fun connectToExistingPlayback(title: String) {
-            android.util.Log.d("VideoPlayerViewModel", "connectToExistingPlayback called with title: $title")
+            DebugLogger.d("VideoPlayerViewModel", "connectToExistingPlayback called with title: $title")
 
             // Log the injected manager instances
-            android.util.Log.d("VideoPlayerViewModel", "Injected exoPlayerManager: $exoPlayerManager (hashCode: ${exoPlayerManager.hashCode()})")
-            android.util.Log.d("VideoPlayerViewModel", "Injected subtitleManager: $subtitleManager (hashCode: ${subtitleManager.hashCode()})")
+            DebugLogger.d("VideoPlayerViewModel", "Injected exoPlayerManager: $exoPlayerManager (hashCode: ${exoPlayerManager.hashCode()})")
+            DebugLogger.d("VideoPlayerViewModel", "Injected subtitleManager: $subtitleManager (hashCode: ${subtitleManager.hashCode()})")
 
             // Since ExoPlayerManager is a singleton, this should be the same instance used by PlaybackViewModel
             // that already has media prepared and playing
-            android.util.Log.d("VideoPlayerViewModel", "Using singleton ExoPlayerManager instance")
+            DebugLogger.d("VideoPlayerViewModel", "Using singleton ExoPlayerManager instance")
 
             // Set initial state with loading, then start observing ExoPlayer state changes
             updateState {
@@ -362,21 +363,21 @@ class VideoPlayerViewModel
                     title = title,
                 )
             }
-            android.util.Log.d("VideoPlayerViewModel", "Initial state set to loading, starting ExoPlayer state observation")
+            DebugLogger.d("VideoPlayerViewModel", "Initial state set to loading, starting ExoPlayer state observation")
 
             // Start observing ExoPlayer state changes reactively
             startExoPlayerStateObservation()
         }
 
         private fun startExoPlayerStateObservation() {
-            android.util.Log.d("VideoPlayerViewModel", "Starting ExoPlayer state observation with timeout")
+            DebugLogger.d("VideoPlayerViewModel", "Starting ExoPlayer state observation with timeout")
 
             // Start timeout protection
             startVideoLoadingTimeout()
 
             launchSafely(
                 onError = { exception ->
-                    android.util.Log.e("VideoPlayerViewModel", "Error in ExoPlayer state observation", exception)
+                    DebugLogger.e("VideoPlayerViewModel", "Error in ExoPlayer state observation", exception)
                     updateState {
                         copy(
                             isLoading = false,
@@ -388,15 +389,15 @@ class VideoPlayerViewModel
                 },
             ) {
                 exoPlayerManager.playerState.collect { playerState ->
-                    android.util.Log.d("VideoPlayerViewModel", "ExoPlayer state changed:")
-                    android.util.Log.d("VideoPlayerViewModel", "  - Playback state: ${playerState.playbackState}")
-                    android.util.Log.d("VideoPlayerViewModel", "  - Has video: ${playerState.hasVideo}")
-                    android.util.Log.d("VideoPlayerViewModel", "  - Is playing: ${playerState.isPlaying}")
-                    android.util.Log.d("VideoPlayerViewModel", "  - Error: ${playerState.error}")
+                    DebugLogger.d("VideoPlayerViewModel", "ExoPlayer state changed:")
+                    DebugLogger.d("VideoPlayerViewModel", "  - Playback state: ${playerState.playbackState}")
+                    DebugLogger.d("VideoPlayerViewModel", "  - Has video: ${playerState.hasVideo}")
+                    DebugLogger.d("VideoPlayerViewModel", "  - Is playing: ${playerState.isPlaying}")
+                    DebugLogger.d("VideoPlayerViewModel", "  - Error: ${playerState.error}")
 
                     // Check for errors first
                     if (playerState.error != null) {
-                        android.util.Log.w("VideoPlayerViewModel", "ExoPlayer has error: ${playerState.error}")
+                        DebugLogger.w("VideoPlayerViewModel", "ExoPlayer has error: ${playerState.error}")
                         updateState {
                             copy(
                                 isLoading = false,
@@ -416,7 +417,7 @@ class VideoPlayerViewModel
                                     playerState.playbackState == PlaybackState.BUFFERING
                             )
 
-                    android.util.Log.d("VideoPlayerViewModel", "Video content ready: $hasVideoContent")
+                    DebugLogger.d("VideoPlayerViewModel", "Video content ready: $hasVideoContent")
 
                     updateState {
                         copy(
@@ -428,25 +429,25 @@ class VideoPlayerViewModel
                     }
 
                     if (hasVideoContent) {
-                        android.util.Log.d("VideoPlayerViewModel", "Video is ready - transitioning to video display")
+                        DebugLogger.d("VideoPlayerViewModel", "Video is ready - transitioning to video display")
                     }
                 }
             }
         }
 
         private fun startVideoLoadingTimeout() {
-            android.util.Log.d("VideoPlayerViewModel", "Starting 15-second video loading timeout")
+            DebugLogger.d("VideoPlayerViewModel", "Starting 15-second video loading timeout")
 
             launchSafely(
                 onError = { exception ->
-                    android.util.Log.e("VideoPlayerViewModel", "Error in timeout mechanism", exception)
+                    DebugLogger.e("VideoPlayerViewModel", "Error in timeout mechanism", exception)
                 },
             ) {
-                kotlinx.coroutines.delay(15000L) // 15 second timeout
+                kotlinx.coroutines.delay(UIConstants.Timeouts.VIDEO_LOADING_TIMEOUT_MS) // Video loading timeout
 
                 val currentState = uiState.value
                 if (currentState.isLoading && !currentState.hasVideo && !currentState.hasError) {
-                    android.util.Log.w("VideoPlayerViewModel", "Video loading timeout reached - showing timeout error")
+                    DebugLogger.w("VideoPlayerViewModel", "Video loading timeout reached - showing timeout error")
                     updateState {
                         copy(
                             isLoading = false,
@@ -479,7 +480,7 @@ class VideoPlayerViewModel
         }
 
         override fun handleError(exception: Throwable) {
-            android.util.Log.e("VideoPlayerViewModel", "handleError called", exception)
+            DebugLogger.e("VideoPlayerViewModel", "handleError called", exception)
             updateState {
                 copy(
                     isLoading = false,
