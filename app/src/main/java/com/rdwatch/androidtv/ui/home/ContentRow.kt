@@ -154,8 +154,7 @@ fun StandardContentCard(
                 )
                 .onFocusChanged { focusState ->
                     isFocused = focusState.isFocused
-                }
-                .focusable(),
+                },
         colors =
             CardDefaults.cardColors(
                 containerColor =
@@ -276,8 +275,7 @@ fun FeaturedContentCard(
                 )
                 .onFocusChanged { focusState ->
                     isFocused = focusState.isFocused
-                }
-                .focusable(),
+                },
         colors =
             CardDefaults.cardColors(
                 containerColor =
@@ -366,8 +364,7 @@ fun ContinueWatchingCard(
                 )
                 .onFocusChanged { focusState ->
                     isFocused = focusState.isFocused
-                }
-                .focusable(),
+                },
         colors =
             CardDefaults.cardColors(
                 containerColor =
