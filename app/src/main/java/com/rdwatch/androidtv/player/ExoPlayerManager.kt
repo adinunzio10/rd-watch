@@ -148,6 +148,7 @@ class ExoPlayerManager
             DebugLogger.d("ExoPlayerManager", "Creating ExoPlayer")
             return ExoPlayer.Builder(context)
                 .setTrackSelector(trackSelector)
+                .setVideoScalingMode(androidx.media3.common.C.VIDEO_SCALING_MODE_SCALE_TO_FIT_WITH_CROPPING)
                 .build()
                 .also { player ->
                     DebugLogger.d("ExoPlayerManager", "ExoPlayer created successfully")
@@ -155,6 +156,9 @@ class ExoPlayerManager
 
                     // Initialize subtitle manager with the player
                     subtitleManager.initialize(player)
+
+                    // Configure video change listener to optimize surface handling
+                    player.setVideoChangeFrameRateStrategy(androidx.media3.common.C.VIDEO_CHANGE_FRAME_RATE_STRATEGY_OFF)
                 }
         }
 
