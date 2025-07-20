@@ -1,6 +1,8 @@
 package com.rdwatch.androidtv.ui.settings.scrapers
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -13,12 +15,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.rdwatch.androidtv.ui.focus.TVFocusIndicator
-import com.rdwatch.androidtv.ui.focus.tvFocusable
 
 /**
  * Scraper Settings Screen for managing scraper manifests
@@ -127,25 +128,37 @@ private fun ScraperSettingsHeader(
         ) {
             var backButtonFocused by remember { mutableStateOf(false) }
 
-            TVFocusIndicator(isFocused = backButtonFocused) {
-                IconButton(
-                    onClick = onBackPressed,
-                    modifier =
-                        Modifier
-                            .focusRequester(firstFocusRequester)
-                            .tvFocusable(onFocusChanged = { backButtonFocused = it.isFocused }),
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.ArrowBack,
-                        contentDescription = "Back",
-                        tint =
+            IconButton(
+                onClick = onBackPressed,
+                modifier =
+                    Modifier
+                        .focusRequester(firstFocusRequester)
+                        .onFocusChanged { focusState ->
+                            backButtonFocused = focusState.isFocused
+                        }
+                        .focusable()
+                        .then(
                             if (backButtonFocused) {
-                                MaterialTheme.colorScheme.primary
+                                Modifier
+                                    .background(
+                                        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f),
+                                        shape = MaterialTheme.shapes.small,
+                                    )
                             } else {
-                                MaterialTheme.colorScheme.onBackground
+                                Modifier
                             },
-                    )
-                }
+                        ),
+            ) {
+                Icon(
+                    imageVector = Icons.Default.ArrowBack,
+                    contentDescription = "Back",
+                    tint =
+                        if (backButtonFocused) {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            MaterialTheme.colorScheme.onBackground
+                        },
+                )
             }
 
             Text(
@@ -162,51 +175,81 @@ private fun ScraperSettingsHeader(
         ) {
             // Refresh all button
             var refreshFocused by remember { mutableStateOf(false) }
-            TVFocusIndicator(isFocused = refreshFocused) {
-                Button(
-                    onClick = onRefreshAll,
-                    modifier =
-                        Modifier.tvFocusable(
-                            onFocusChanged = { refreshFocused = it.isFocused },
-                        ),
-                    enabled = !isRefreshing,
-                ) {
-                    if (isRefreshing) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(16.dp),
-                            strokeWidth = 2.dp,
-                            color = MaterialTheme.colorScheme.onPrimary,
-                        )
+            Button(
+                onClick = onRefreshAll,
+                modifier =
+                    Modifier
+                        .onFocusChanged { focusState ->
+                            refreshFocused = focusState.isFocused
+                        }
+                        .focusable(),
+                enabled = !isRefreshing,
+                colors =
+                    ButtonDefaults.buttonColors(
+                        containerColor =
+                            if (refreshFocused) {
+                                MaterialTheme.colorScheme.primary
+                            } else {
+                                MaterialTheme.colorScheme.primaryContainer
+                            },
+                    ),
+                border =
+                    if (refreshFocused) {
+                        BorderStroke(3.dp, MaterialTheme.colorScheme.outline)
                     } else {
-                        Icon(
-                            imageVector = Icons.Default.Refresh,
-                            contentDescription = null,
-                            modifier = Modifier.size(16.dp),
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("Refresh All")
+                        null
+                    },
+            ) {
+                if (isRefreshing) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(16.dp),
+                        strokeWidth = 2.dp,
+                        color = MaterialTheme.colorScheme.onPrimary,
+                    )
+                } else {
+                    Icon(
+                        imageVector = Icons.Default.Refresh,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp),
+                    )
                 }
+                Spacer(modifier = Modifier.width(4.dp))
+                Text("Refresh All")
             }
 
             // Add scraper button
             var addFocused by remember { mutableStateOf(false) }
-            TVFocusIndicator(isFocused = addFocused) {
-                Button(
-                    onClick = onAddScraper,
-                    modifier =
-                        Modifier.tvFocusable(
-                            onFocusChanged = { addFocused = it.isFocused },
-                        ),
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = null,
-                        modifier = Modifier.size(16.dp),
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("Add Scraper")
-                }
+            Button(
+                onClick = onAddScraper,
+                modifier =
+                    Modifier
+                        .onFocusChanged { focusState ->
+                            addFocused = focusState.isFocused
+                        }
+                        .focusable(),
+                colors =
+                    ButtonDefaults.buttonColors(
+                        containerColor =
+                            if (addFocused) {
+                                MaterialTheme.colorScheme.primary
+                            } else {
+                                MaterialTheme.colorScheme.primaryContainer
+                            },
+                    ),
+                border =
+                    if (addFocused) {
+                        BorderStroke(3.dp, MaterialTheme.colorScheme.outline)
+                    } else {
+                        null
+                    },
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = null,
+                    modifier = Modifier.size(16.dp),
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+                Text("Add Scraper")
             }
         }
     }
@@ -365,22 +408,37 @@ private fun EmptyState(onAddScraper: () -> Unit) {
             )
 
             var addButtonFocused by remember { mutableStateOf(false) }
-            TVFocusIndicator(isFocused = addButtonFocused) {
-                Button(
-                    onClick = onAddScraper,
-                    modifier =
-                        Modifier.tvFocusable(
-                            onFocusChanged = { addButtonFocused = it.isFocused },
-                        ),
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = null,
-                        modifier = Modifier.size(20.dp),
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Add Your First Scraper")
-                }
+            Button(
+                onClick = onAddScraper,
+                modifier =
+                    Modifier
+                        .onFocusChanged { focusState ->
+                            addButtonFocused = focusState.isFocused
+                        }
+                        .focusable(),
+                colors =
+                    ButtonDefaults.buttonColors(
+                        containerColor =
+                            if (addButtonFocused) {
+                                MaterialTheme.colorScheme.primary
+                            } else {
+                                MaterialTheme.colorScheme.primaryContainer
+                            },
+                    ),
+                border =
+                    if (addButtonFocused) {
+                        BorderStroke(3.dp, MaterialTheme.colorScheme.outline)
+                    } else {
+                        null
+                    },
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp),
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Add Your First Scraper")
             }
         }
     }
