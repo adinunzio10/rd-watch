@@ -262,7 +262,6 @@ fun TVFocusIndicator(
                 color = if (isFocused) MaterialTheme.colorScheme.outline else Color.Transparent,
                 shape = RoundedCornerShape(8.dp),
             )
-            .focusable()
 
     Box(modifier = focusedModifier) {
         content()
