@@ -23,6 +23,11 @@ private val DarkColorScheme =
         onTertiary = Color.White,
         onBackground = Color.White,
         onSurface = Color.White,
+        // TV Focus colors for dark theme
+        surfaceVariant = Color(0xFF2A2A2A), // Focus background
+        onSurfaceVariant = Color(0xFF64B5F6), // Focus border/accent
+        outline = Color(0xFF1976D2), // Focus border primary
+        outlineVariant = Color(0xFF0D47A1), // Focus border secondary
     )
 
 private val LightColorScheme =
@@ -37,6 +42,11 @@ private val LightColorScheme =
         onTertiary = Color.White,
         onBackground = Color(0xFF1C1B1F),
         onSurface = Color(0xFF1C1B1F),
+        // TV Focus colors for light theme
+        surfaceVariant = Color(0xFFF5F5F5), // Focus background
+        onSurfaceVariant = Color(0xFF1976D2), // Focus border/accent
+        outline = Color(0xFF2196F3), // Focus border primary
+        outlineVariant = Color(0xFF64B5F6), // Focus border secondary
     )
 
 /**

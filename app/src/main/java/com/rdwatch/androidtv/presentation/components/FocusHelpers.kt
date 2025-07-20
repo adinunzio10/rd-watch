@@ -1,5 +1,7 @@
 package com.rdwatch.androidtv.presentation.components
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.border
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.padding
@@ -7,6 +9,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -56,7 +59,7 @@ fun Modifier.tvFocusRequester(
 @Composable
 fun Modifier.tvFocusBorder(
     isFocused: Boolean,
-    focusedColor: Color = MaterialTheme.colorScheme.primary,
+    focusedColor: Color = MaterialTheme.colorScheme.outline,
     unfocusedColor: Color = Color.Transparent,
 ): Modifier =
     this.border(
@@ -96,3 +99,45 @@ fun Modifier.tvCardFocus(
         .tvFocusScale(isFocused)
         .tvCardPadding(isFocused)
         .tvSafeFocusable()
+
+/**
+ * Enhanced TV focus border with animation
+ */
+@Composable
+fun Modifier.tvAnimatedFocusBorder(
+    isFocused: Boolean,
+    focusedColor: Color = MaterialTheme.colorScheme.outline,
+    unfocusedColor: Color = Color.Transparent,
+): Modifier {
+    val borderWidth by animateFloatAsState(
+        targetValue = if (isFocused) 3f else 0f,
+        animationSpec = tween(durationMillis = 200),
+        label = "tv_border_width",
+    )
+
+    return this.border(
+        width = borderWidth.dp,
+        color = if (isFocused) focusedColor else unfocusedColor,
+        shape = RoundedCornerShape(8.dp),
+    )
+}
+
+/**
+ * Complete TV focus styling with animation
+ */
+@Composable
+fun Modifier.tvEnhancedFocus(
+    isFocused: Boolean,
+    onFocusChanged: ((Boolean) -> Unit)? = null,
+): Modifier {
+    val scale by animateFloatAsState(
+        targetValue = if (isFocused) 1.05f else 1.0f,
+        animationSpec = tween(durationMillis = 200),
+        label = "tv_focus_scale",
+    )
+
+    return this
+        .scale(scale)
+        .tvAnimatedFocusBorder(isFocused)
+        .tvFocusable(onFocusChanged)
+}
