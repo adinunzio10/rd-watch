@@ -175,10 +175,16 @@ class ExoPlayerManager
                         val hasVideo = videoFormat.width > 0 && videoFormat.height > 0
                         DebugLogger.d("ExoPlayerManager", "Video track ready: $hasVideo")
 
-                        updatePlayerState { copy(hasVideo = hasVideo) }
+                        // Only update hasVideo if it changed
+                        if (_playerState.value.hasVideo != hasVideo) {
+                            updatePlayerState { copy(hasVideo = hasVideo) }
+                        }
                     } else {
                         DebugLogger.w("ExoPlayerManager", "No video format detected - audio only or format not ready")
-                        updatePlayerState { copy(hasVideo = false) }
+                        // Only update hasVideo if it changed
+                        if (_playerState.value.hasVideo) {
+                            updatePlayerState { copy(hasVideo = false) }
+                        }
                     }
 
                     // Log audio format as well
@@ -390,7 +396,13 @@ class ExoPlayerManager
         }
 
         private fun updatePlayerState(update: PlayerState.() -> PlayerState) {
-            _playerState.value = _playerState.value.update()
+            val oldState = _playerState.value
+            val newState = oldState.update()
+
+            // Only emit if state actually changed
+            if (oldState != newState) {
+                _playerState.value = newState
+            }
         }
 
         private var lastSavedPosition = 0L
