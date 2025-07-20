@@ -32,29 +32,13 @@ fun ScraperListItem(
     var showActions by remember { mutableStateOf(false) }
 
     Card(
-        onClick = { showActions = !showActions },
         modifier =
             modifier
-                .fillMaxWidth()
-                .onFocusChanged { focusState ->
-                    isFocused = focusState.isFocused
-                    if (focusState.isFocused) showActions = true
-                }.focusable(),
+                .fillMaxWidth(),
         colors =
             CardDefaults.cardColors(
-                containerColor =
-                    if (isFocused) {
-                        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
-                    } else {
-                        MaterialTheme.colorScheme.surface
-                    },
+                containerColor = MaterialTheme.colorScheme.surface,
             ),
-        border =
-            if (isFocused) {
-                BorderStroke(3.dp, MaterialTheme.colorScheme.outline)
-            } else {
-                null
-            },
     ) {
         Column(
             modifier =
@@ -118,15 +102,46 @@ fun ScraperListItem(
                 }
 
                 // Enable/Disable switch
+                var switchFocused by remember { mutableStateOf(false) }
                 Switch(
                     checked = scraper.isEnabled,
                     onCheckedChange = onToggleEnabled,
+                    modifier =
+                        Modifier
+                            .onFocusChanged { focusState ->
+                                switchFocused = focusState.isFocused
+                                if (focusState.isFocused) {
+                                    isFocused = true
+                                    showActions = true
+                                }
+                            }
+                            .focusable(),
                     colors =
                         SwitchDefaults.colors(
-                            checkedThumbColor = MaterialTheme.colorScheme.primary,
-                            checkedTrackColor = MaterialTheme.colorScheme.primaryContainer,
-                            uncheckedThumbColor = MaterialTheme.colorScheme.outline,
-                            uncheckedTrackColor = MaterialTheme.colorScheme.surfaceVariant,
+                            checkedThumbColor =
+                                if (switchFocused) {
+                                    MaterialTheme.colorScheme.primary
+                                } else {
+                                    MaterialTheme.colorScheme.primary
+                                },
+                            checkedTrackColor =
+                                if (switchFocused) {
+                                    MaterialTheme.colorScheme.primaryContainer
+                                } else {
+                                    MaterialTheme.colorScheme.primaryContainer
+                                },
+                            uncheckedThumbColor =
+                                if (switchFocused) {
+                                    MaterialTheme.colorScheme.primary
+                                } else {
+                                    MaterialTheme.colorScheme.outline
+                                },
+                            uncheckedTrackColor =
+                                if (switchFocused) {
+                                    MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+                                } else {
+                                    MaterialTheme.colorScheme.surfaceVariant
+                                },
                         ),
                 )
             }
@@ -145,6 +160,12 @@ fun ScraperListItem(
                         text = "Refresh",
                         onClick = onRefresh,
                         modifier = Modifier.weight(1f),
+                        onFocusChanged = { focused ->
+                            if (focused) {
+                                isFocused = true
+                                showActions = true
+                            }
+                        },
                     )
 
                     // Remove button
@@ -157,6 +178,12 @@ fun ScraperListItem(
                             ButtonDefaults.textButtonColors(
                                 contentColor = MaterialTheme.colorScheme.error,
                             ),
+                        onFocusChanged = { focused ->
+                            if (focused) {
+                                isFocused = true
+                                showActions = true
+                            }
+                        },
                     )
                 }
             }
@@ -218,6 +245,7 @@ private fun ActionButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     colors: ButtonColors = ButtonDefaults.textButtonColors(),
+    onFocusChanged: (Boolean) -> Unit = {},
 ) {
     var isFocused by remember { mutableStateOf(false) }
 
@@ -227,6 +255,7 @@ private fun ActionButton(
             modifier
                 .onFocusChanged { focusState ->
                     isFocused = focusState.isFocused
+                    onFocusChanged(focusState.isFocused)
                 }.focusable(),
         colors =
             ButtonDefaults.textButtonColors(
