@@ -116,15 +116,10 @@ fun TvPlayerView(
                     setControllerShowTimeoutMs(5000) // Hide controls after 5 seconds
                     setControllerHideOnTouch(true)
 
-                    // Ensure video surface fills entire screen
+                    // Video surface scaling is handled by ExoPlayer's AspectRatioFrameLayout
+                    // and our resizeMode setting - no manual layout params needed
                     videoSurfaceView?.let { surfaceView ->
-                        DebugLogger.d("TvPlayerView", "Configuring video surface view for fullscreen")
-                        // Configure surface view for fullscreen rendering
-                        surfaceView.layoutParams =
-                            android.view.ViewGroup.LayoutParams(
-                                android.view.ViewGroup.LayoutParams.MATCH_PARENT,
-                                android.view.ViewGroup.LayoutParams.MATCH_PARENT,
-                            )
+                        DebugLogger.d("TvPlayerView", "Video surface view configured for fullscreen via resize mode")
                     }
 
                     // Force layout to ensure surface is properly sized
