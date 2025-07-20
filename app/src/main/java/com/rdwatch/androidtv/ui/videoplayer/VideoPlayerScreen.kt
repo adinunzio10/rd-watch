@@ -104,8 +104,8 @@ fun VideoPlayerScreen(
                 )
             }
 
-            uiState.hasVideo && mediaReadyState is MediaReadyState.Ready -> {
-                DebugLogger.d("VideoPlayerScreen", "hasVideo condition met and media is ready - creating TvPlayerView")
+            uiState.hasVideo -> {
+                DebugLogger.d("VideoPlayerScreen", "hasVideo condition met - creating TvPlayerView")
                 TvPlayerView(
                     exoPlayerManager = videoPlayerViewModel.exoPlayerManager,
                     subtitleManager = videoPlayerViewModel.subtitleManager,
