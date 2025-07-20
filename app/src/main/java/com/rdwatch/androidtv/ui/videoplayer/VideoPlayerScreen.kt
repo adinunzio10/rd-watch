@@ -21,7 +21,6 @@ import com.rdwatch.androidtv.ui.viewmodel.MediaReadyState
 import com.rdwatch.androidtv.ui.viewmodel.PlaybackViewModel
 import com.rdwatch.androidtv.util.DebugLogger
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.distinctUntilChanged
 import javax.inject.Inject
 
 @UnstableApi
@@ -389,74 +388,66 @@ class VideoPlayerViewModel
                     }
                 },
             ) {
-                exoPlayerManager.playerState
-                    .distinctUntilChanged { old, new ->
-                        // Only emit if relevant fields have changed for video UI
-                        old.playbackState == new.playbackState &&
-                            old.hasVideo == new.hasVideo &&
-                            old.isPlaying == new.isPlaying &&
-                            old.error == new.error
-                    }
-                    .collect { playerState ->
-                        DebugLogger.d("VideoPlayerViewModel", "ExoPlayer state changed:")
-                        DebugLogger.d("VideoPlayerViewModel", "  - Playback state: ${playerState.playbackState}")
-                        DebugLogger.d("VideoPlayerViewModel", "  - Has video: ${playerState.hasVideo}")
-                        DebugLogger.d("VideoPlayerViewModel", "  - Is playing: ${playerState.isPlaying}")
-                        DebugLogger.d("VideoPlayerViewModel", "  - Error: ${playerState.error}")
+                exoPlayerManager.playerState.collect { playerState ->
+                    DebugLogger.d("VideoPlayerViewModel", "ExoPlayer state changed:")
+                    DebugLogger.d("VideoPlayerViewModel", "  - Playback state: ${playerState.playbackState}")
+                    DebugLogger.d("VideoPlayerViewModel", "  - Has video: ${playerState.hasVideo}")
+                    DebugLogger.d("VideoPlayerViewModel", "  - Is playing: ${playerState.isPlaying}")
+                    DebugLogger.d("VideoPlayerViewModel", "  - Error: ${playerState.error}")
 
-                        // Check for errors first
-                        if (playerState.error != null) {
-                            DebugLogger.w("VideoPlayerViewModel", "ExoPlayer has error: ${playerState.error}")
+                    // Check for errors first
+                    if (playerState.error != null) {
+                        DebugLogger.w("VideoPlayerViewModel", "ExoPlayer has error: ${playerState.error}")
 
-                            // Only update state if error state has changed
-                            val currentState = uiState.value
-                            if (!currentState.hasError || currentState.errorMessage != playerState.error) {
-                                updateState {
-                                    copy(
-                                        isLoading = false,
-                                        hasVideo = false,
-                                        hasError = true,
-                                        errorMessage = playerState.error,
-                                    )
-                                }
-                            }
-                            return@collect
-                        }
-
-                        // Check if video content is ready
-                        val hasVideoContent =
-                            playerState.hasVideo &&
-                                (
-                                    playerState.playbackState == PlaybackState.READY ||
-                                        playerState.playbackState == PlaybackState.BUFFERING
-                                )
-
-                        DebugLogger.d("VideoPlayerViewModel", "Video content ready: $hasVideoContent")
-
-                        // Only update state if the computed values would actually change the UI
+                        // Only update state if error state has changed
                         val currentState = uiState.value
-                        val newLoading = !hasVideoContent
-                        val newHasVideo = hasVideoContent
-
-                        if (currentState.isLoading != newLoading ||
-                            currentState.hasVideo != newHasVideo ||
-                            currentState.hasError ||
-                            currentState.errorMessage != null
-                        ) {
+                        if (!currentState.hasError || currentState.errorMessage != playerState.error) {
                             updateState {
                                 copy(
-                                    isLoading = newLoading,
-                                    hasVideo = newHasVideo,
-                                    hasError = false,
-                                    errorMessage = null,
+                                    isLoading = false,
+                                    hasVideo = false,
+                                    hasError = true,
+                                    errorMessage = playerState.error,
                                 )
                             }
                         }
+                        return@collect
+                    }
 
-                        if (hasVideoContent) {
-                            DebugLogger.d("VideoPlayerViewModel", "Video is ready - transitioning to video display")
+                    // Check if video content is ready
+                    val hasVideoContent =
+                        playerState.hasVideo &&
+                            (
+                                playerState.playbackState == PlaybackState.READY ||
+                                    playerState.playbackState == PlaybackState.BUFFERING
+                            )
+
+                    DebugLogger.d("VideoPlayerViewModel", "Video content ready: $hasVideoContent")
+
+                    // Only update state if the computed values would actually change the UI
+                    val currentState = uiState.value
+                    val newLoading = !hasVideoContent
+                    val newHasVideo = hasVideoContent
+
+                    if (currentState.isLoading != newLoading ||
+                        currentState.hasVideo != newHasVideo ||
+                        currentState.hasError ||
+                        currentState.errorMessage != null
+                    ) {
+                        updateState {
+                            copy(
+                                isLoading = newLoading,
+                                hasVideo = newHasVideo,
+                                hasError = false,
+                                errorMessage = null,
+                            )
                         }
                     }
+
+                    if (hasVideoContent) {
+                        DebugLogger.d("VideoPlayerViewModel", "Video is ready - transitioning to video display")
+                    }
+                }
             }
         }
 
