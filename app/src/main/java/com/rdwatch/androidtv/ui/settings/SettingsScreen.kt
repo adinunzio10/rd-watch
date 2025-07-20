@@ -332,7 +332,6 @@ private fun SwitchSetting(
     var isFocused by remember { mutableStateOf(false) }
 
     Card(
-        onClick = { onCheckedChange(!checked) },
         modifier =
             Modifier.fillMaxWidth()
                 .onFocusChanged { focusState ->
