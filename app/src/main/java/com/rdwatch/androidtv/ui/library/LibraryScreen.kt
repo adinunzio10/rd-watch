@@ -154,7 +154,7 @@ private fun LibraryContentGrid(
                             onClick = { onItemClick(item) },
                             onToggleFavorite = { onToggleFavorite(item.contentId) },
                             onRemoveFromLibrary = { onRemoveFromLibrary(item.contentId) },
-                            modifier = Modifier.animateItemPlacement(),
+                            modifier = Modifier.animateItem(),
                         )
                     }
                 }

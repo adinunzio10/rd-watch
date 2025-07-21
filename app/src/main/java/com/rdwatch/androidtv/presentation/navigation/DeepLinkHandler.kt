@@ -303,6 +303,7 @@ class DeepLinkHandler {
                 "$SCHEME://$HOST/player/$encodedUrl$titleParam"
             }
             is Screen.Search -> "$SCHEME://$HOST/search"
+            is Screen.Library -> "$SCHEME://$HOST/library"
             is Screen.Settings -> "$SCHEME://$HOST/settings"
             is Screen.ScraperSettings -> "$SCHEME://$HOST/scrapers"
             is Screen.Profile -> "$SCHEME://$HOST/profile"

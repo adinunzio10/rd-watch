@@ -104,7 +104,7 @@ fun LibraryItemCard(
                         contentDescription = item.title,
                         modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Crop,
-                        placeholderRes = null, // Use default placeholder
+                        // Uses default placeholder from SmartTVImageLoader
                     )
 
                     // Content type badge
@@ -165,17 +165,13 @@ fun LibraryItemCard(
                 }
             }
 
-            // Quick actions overlay
-            AnimatedVisibility(
-                visible = showQuickActions && isFocused,
-                enter = fadeIn(animationSpec = tween(300)) + slideInVertically(),
-                exit = fadeOut(animationSpec = tween(200)) + slideOutVertically(),
-                modifier = Modifier.align(Alignment.BottomCenter),
-            ) {
+            // Quick actions overlay (simplified for now)
+            if (showQuickActions && isFocused) {
                 QuickActionsOverlay(
                     isFavorite = item.isFavorite,
                     onToggleFavorite = onToggleFavorite,
                     onRemoveFromLibrary = onRemoveFromLibrary,
+                    modifier = Modifier.align(Alignment.BottomCenter),
                 )
             }
         }
