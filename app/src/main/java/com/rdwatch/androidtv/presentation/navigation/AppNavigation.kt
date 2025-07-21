@@ -22,6 +22,7 @@ import com.rdwatch.androidtv.ui.details.TVDetailsViewModel
 import com.rdwatch.androidtv.ui.details.models.ContentType
 import com.rdwatch.androidtv.ui.filebrowser.AccountFileBrowserScreen
 import com.rdwatch.androidtv.ui.home.TVHomeScreen
+import com.rdwatch.androidtv.ui.library.LibraryScreen
 import com.rdwatch.androidtv.ui.navigation.ContentTypeDetector
 import com.rdwatch.androidtv.ui.profile.ProfileScreen
 import com.rdwatch.androidtv.ui.search.SearchScreen
@@ -387,6 +388,54 @@ fun AppNavigation(
                         },
                         onNavigateToScreen = { screen ->
                             navController.navigate(screen)
+                        },
+                        onBackPressed = {
+                            navController.popBackStack()
+                        },
+                    )
+                },
+            )
+        }
+
+        composable<Screen.Library>(
+            enterTransition = {
+                slideIntoContainer(
+                    AnimatedContentTransitionScope.SlideDirection.Left,
+                    animationSpec = tween(300),
+                )
+            },
+            popExitTransition = {
+                slideOutOfContainer(
+                    AnimatedContentTransitionScope.SlideDirection.Right,
+                    animationSpec = tween(300),
+                )
+            },
+        ) {
+            AuthGuard(
+                onAuthenticationRequired = {
+                    navController.navigate(Screen.Authentication) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                },
+                content = {
+                    LibraryScreen(
+                        onItemClick = { libraryItem ->
+                            // Navigate to content details based on content type
+                            val contentType =
+                                try {
+                                    ContentType.valueOf(libraryItem.contentType)
+                                } catch (e: Exception) {
+                                    ContentType.MOVIE // Default fallback
+                                }
+
+                            when (contentType) {
+                                ContentType.TV_SHOW -> {
+                                    navController.navigate(Screen.TVDetails(libraryItem.contentId))
+                                }
+                                else -> {
+                                    navController.navigate(Screen.MovieDetails(libraryItem.contentId))
+                                }
+                            }
                         },
                         onBackPressed = {
                             navController.popBackStack()

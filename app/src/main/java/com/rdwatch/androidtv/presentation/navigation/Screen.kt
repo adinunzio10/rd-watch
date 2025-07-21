@@ -32,6 +32,9 @@ sealed class Screen {
     data object Profile : Screen()
 
     @Serializable
+    data object Library : Screen()
+
+    @Serializable
     data object Authentication : Screen()
 
     @Serializable
@@ -51,6 +54,7 @@ object Routes {
     const val SETTINGS = "settings"
     const val SCRAPER_SETTINGS = "scraper_settings"
     const val PROFILE = "profile"
+    const val LIBRARY = "library"
     const val AUTHENTICATION = "authentication"
     const val ERROR = "error/{message}/{canRetry}"
     const val ACCOUNT_FILE_BROWSER = "account_file_browser/{accountType}"
