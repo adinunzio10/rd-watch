@@ -1411,7 +1411,7 @@
           6,
           11
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -1419,7 +1419,7 @@
             "description": "Create Room entities for library items, categories, and relationships with proper foreign key constraints",
             "dependencies": [],
             "details": "Define LibraryItemEntity with fields: id, contentId, contentType (Movie/TVShow), title, posterUrl, dateAdded, lastWatched, watchedStatus. Create CategoryEntity with id, name, color, sortOrder. Design LibraryItemCategoryEntity for many-to-many relationships. Add Room annotations and foreign key constraints.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -1430,7 +1430,7 @@
               "14.1"
             ],
             "details": "Build LibraryItemDao with methods: insertLibraryItem, deleteLibraryItem, getLibraryItemsByCategory, searchLibraryItems, updateWatchedStatus. Create CategoryDao for category CRUD operations. Implement complex queries for sorting (recently added, alphabetical, last watched) and filtering by watched status.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -1441,7 +1441,7 @@
               "14.2"
             ],
             "details": "Implement LibraryRepository with methods for all CRUD operations. Add caching strategy using coroutines and Flow. Handle data transformation between entities and domain models. Implement error handling and data validation. Create repository interface for dependency injection.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -1450,7 +1450,7 @@
             "description": "Design and implement grid-based UI components for displaying library content with TV-optimized focus handling",
             "dependencies": [],
             "details": "Build LibraryGridItem composable with poster image, title, watched indicators. Create responsive grid layout using LazyVerticalGrid with TV-friendly spacing. Implement proper focus management for D-pad navigation. Add loading states and empty state UI. Include long-press gesture detection for quick actions.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -1461,7 +1461,7 @@
               "14.4"
             ],
             "details": "Create CategoryFilterRow with horizontal scrollable tabs for Movies, TV Shows, Currently Watching. Implement filter state management and UI updates. Add category creation/editing functionality. Design category indicators with color coding. Handle category switching with smooth animations.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -1473,7 +1473,7 @@
               "14.5"
             ],
             "details": "Create SearchBar composable with text input handling. Implement debounced search queries to avoid excessive database calls. Build search result filtering by title, category, and watched status. Add search result highlighting and empty state handling. Integrate with existing grid layout.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -1484,7 +1484,7 @@
               "14.3"
             ],
             "details": "Implement LibraryViewModel with StateFlow for UI state. Add methods for add/remove operations, category management, sorting, and search. Handle loading states and error handling. Implement sort algorithms for recently added, alphabetical, last watched. Manage category filtering and search state.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -1493,7 +1493,7 @@
             "description": "Create efficient image caching strategy for library poster images with offline support",
             "dependencies": [],
             "details": "Integrate Coil image loading library with custom cache configuration. Implement disk caching for offline viewing. Add image download retry logic and error handling. Create placeholder and error state images. Optimize cache size management for TV storage constraints.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -1505,7 +1505,7 @@
               "14.7"
             ],
             "details": "Build QuickActionsMenu composable with options: Remove from library, Mark as watched/unwatched, Play next episode. Implement long-press gesture detection with haptic feedback. Create action confirmation dialogs. Handle action execution and UI state updates. Add keyboard shortcuts for accessibility.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -1516,7 +1516,7 @@
               "14.7"
             ],
             "details": "Integrate with existing playback completion data from other tasks. Update watched status based on playback progress. Implement progress indicators for partially watched content. Create automatic library updates when content is played. Handle edge cases for multi-episode content.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -1527,7 +1527,7 @@
               "14.3"
             ],
             "details": "Implement JSON export functionality for library backup. Create file picker integration for import operations. Handle data validation and conflict resolution during import. Add progress indicators for large library operations. Implement error handling and rollback capabilities for failed imports.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -1542,7 +1542,7 @@
               "14.10"
             ],
             "details": "Build LibraryScreen composable integrating all components. Implement proper navigation integration with existing app navigation. Add screen-level state management and error handling. Create smooth transitions and animations. Handle large library performance optimization (500+ items). Add accessibility features.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           }
         ]
@@ -1558,8 +1558,119 @@
           13,
           14
         ],
-        "status": "pending",
-        "subtasks": []
+        "status": "in-progress",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Design core episode progression algorithm",
+            "description": "Create the core logic for calculating next episode including season boundary handling and special episode detection",
+            "dependencies": [],
+            "details": "Design NextEpisodeCalculator class with methods for: determining next sequential episode (S01E05 → S01E06), handling season boundaries (S01E10 → S02E01), detecting and skipping special episodes (S00), validating episode availability, and handling irregular numbering patterns. Include logic for detecting end of series.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Create episode tracking data models",
+            "description": "Define Room entities and DAOs for persisting episode watch progress and show tracking state",
+            "dependencies": [],
+            "details": "Create EpisodeProgressEntity(showId, seasonNumber, episodeNumber, watchedAt, completionPercentage), ShowProgressEntity(showId, currentSeason, currentEpisode, lastWatchedAt), and SpecialEpisodeEntity for S00 episodes. Design WatchProgressDao with queries for finding next unwatched episode and updating progress.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Build NextEpisodeRepository",
+            "description": "Implement repository layer that combines episode data with watch progress to determine next episodes",
+            "dependencies": [
+              "15.1",
+              "15.2"
+            ],
+            "details": "Create NextEpisodeRepository that queries both episode metadata and watch progress. Implement getNextEpisode(showId) that considers completion threshold (>90%), handles missing episodes, and respects user skip preferences. Add batch operations for 'Continue Watching' queries.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Implement Continue Watching UI row",
+            "description": "Create home screen row component showing next episodes for in-progress shows",
+            "dependencies": [
+              "15.3"
+            ],
+            "details": "Build ContinueWatchingRow composable with horizontal LazyRow of show cards. Display show poster, next episode info (S01E06), progress bar, and last watched time. Implement focus handling and click navigation to player. Sort by most recently watched.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Create episode progress indicators",
+            "description": "Design visual components showing episode and season progress throughout the UI",
+            "dependencies": [
+              "15.2"
+            ],
+            "details": "Create EpisodeProgressBar composable showing watched/total episodes per season. Build SeasonProgressIndicator for overall show progress. Add mini progress badges to show cards. Implement animated transitions for progress updates.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 6,
+            "title": "Handle anthology and special episodes",
+            "description": "Implement special logic for shows with non-sequential episodes and specials",
+            "dependencies": [
+              "15.1",
+              "15.3"
+            ],
+            "details": "Create AnthologyHandler for shows like Black Mirror where episode order doesn't matter. Build SpecialEpisodeHandler to separate S00 episodes from main progression. Add show metadata flags for anthology detection. Allow manual episode selection override.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 7,
+            "title": "Build auto-play countdown UI",
+            "description": "Create binge mode interface with countdown timer and next episode preview",
+            "dependencies": [
+              "15.3"
+            ],
+            "details": "Implement AutoPlayOverlay composable with 10-second countdown timer. Show next episode thumbnail, title, and description. Add cancel button and 'Play Now' option. Create smooth fade-in animation at 90% completion. Handle user interruption gracefully.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 8,
+            "title": "Implement auto-play controller",
+            "description": "Create backend logic for binge mode including countdown management and episode queueing",
+            "dependencies": [
+              "15.7"
+            ],
+            "details": "Build AutoPlayController managing countdown state and episode transitions. Implement cancellation logic, immediate play triggers, and queue management. Add settings for auto-play toggle and countdown duration. Handle network pre-loading for seamless transitions.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 9,
+            "title": "Set up completion notification system",
+            "description": "Create notifications for episode completion and next episode availability",
+            "dependencies": [
+              "15.3"
+            ],
+            "details": "Implement EpisodeNotificationService using Android NotificationManager. Create notifications for: episode completed, next episode ready, season finished, series completed. Add notification actions for 'Play Next' and 'View Show'. Respect user notification preferences.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 10,
+            "title": "Integrate with playback completion tracking",
+            "description": "Connect episode progression to existing playback state persistence from Task 13",
+            "dependencies": [
+              "15.3",
+              "15.8",
+              "15.9"
+            ],
+            "details": "Hook into PlaybackStateRepository's completion detection (>90% watched). Trigger NextEpisodeRepository updates on episode completion. Update Continue Watching row in real-time. Sync progress with WatchedContentRepository. Handle edge cases like seeking to end.",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
       },
       {
         "id": 16,
@@ -2913,7 +3024,7 @@
     ],
     "metadata": {
       "created": "2025-06-22T03:41:46.714Z",
-      "updated": "2025-07-20T19:41:53.767Z",
+      "updated": "2025-07-21T21:06:20.745Z",
       "description": "Tasks for master context"
     }
   }

@@ -34,7 +34,7 @@ import androidx.media3.common.util.UnstableApi
 import com.rdwatch.androidtv.Movie
 import com.rdwatch.androidtv.presentation.navigation.Screen
 import com.rdwatch.androidtv.ui.common.UiState
-import com.rdwatch.androidtv.ui.components.ContinueWatchingManager
+import com.rdwatch.androidtv.ui.components.EpisodeContinueWatchingManager
 import com.rdwatch.androidtv.ui.components.ImagePriority
 import com.rdwatch.androidtv.ui.components.PreloadImagesEffect
 import com.rdwatch.androidtv.ui.components.ResumeDialogOverlay
@@ -66,6 +66,7 @@ fun TVHomeScreen(
     // Observe content from HomeViewModel
     val homeContentState by homeViewModel.contentState.collectAsState()
     val homeUiState by homeViewModel.uiState.collectAsState()
+    val continueWatchingItems by homeViewModel.continueWatchingItems.collectAsState()
 
     // Enhanced key event handler for TV navigation
     val keyEventHandler =
@@ -117,6 +118,7 @@ fun TVHomeScreen(
             onShowContinueWatching = { showContinueWatchingManager = true },
             onMovieClick = onMovieClick,
             onContentClick = onContentClick,
+            onNavigateToScreen = onNavigateToScreen,
         )
 
         // Navigation drawer
@@ -172,29 +174,26 @@ fun TVHomeScreen(
 
         // Continue Watching Manager
         if (showContinueWatchingManager) {
-            // Get movies from current content state for continue watching
-            val currentContentState = homeContentState
-            val movies =
-                when (currentContentState) {
-                    is UiState.Success -> currentContentState.data.allContentAsMovies()
-                    else -> emptyList()
-                }
-
-            ContinueWatchingManager(
-                inProgressContent = inProgressContent,
-                movies = movies,
-                onPlayClick = { movie ->
-                    // Navigate to video player screen
+            // Use the new episode-based continue watching manager
+            EpisodeContinueWatchingManager(
+                continueWatchingItems = continueWatchingItems,
+                onPlayEpisode = { item: ContinueWatchingItem ->
+                    // Navigate to TV details with episode information for direct playback
                     onNavigateToScreen?.invoke(
-                        Screen.VideoPlayer(
-                            videoUrl = movie.videoUrl ?: "",
-                            title = movie.title ?: "",
+                        Screen.TVDetails(
+                            tvShowId = item.showProgressEntity.tmdbShowId.toString(),
+                            seasonNumber = item.nextEpisodeResult.seasonNumber,
+                            episodeNumber = item.nextEpisodeResult.episodeNumber,
+                            autoPlay = true,
                         ),
                     )
                     showContinueWatchingManager = false
                 },
-                onRemoveClick = { contentId ->
-                    playbackViewModel.removeFromContinueWatching(contentId)
+                onRemoveItem = { item: ContinueWatchingItem ->
+                    homeViewModel.removeContinueWatchingItem(item)
+                },
+                onMarkCompleted = { item: ContinueWatchingItem ->
+                    homeViewModel.markEpisodeCompleted(item)
                 },
                 onCloseClick = { showContinueWatchingManager = false },
             )
@@ -352,6 +351,7 @@ fun SafeAreaContent(
     onShowContinueWatching: () -> Unit,
     onMovieClick: ((Movie) -> Unit)? = null,
     onContentClick: ((Movie, ContentType) -> Unit)? = null,
+    onNavigateToScreen: ((Any) -> Unit)? = null,
 ) {
     val overscanMargin = 32.dp // 5% for most TVs
 
@@ -372,6 +372,7 @@ fun SafeAreaContent(
             onMovieClick = onMovieClick,
             onContentClick = onContentClick,
             onOpenDrawer = onDrawerToggle,
+            onNavigateToScreen = onNavigateToScreen,
         )
     }
 }
@@ -387,12 +388,16 @@ fun TVContentGrid(
     onMovieClick: ((Movie) -> Unit)? = null,
     onContentClick: ((Movie, ContentType) -> Unit)? = null,
     onOpenDrawer: (() -> Unit)? = null,
+    onNavigateToScreen: ((Any) -> Unit)? = null,
 ) {
     val firstRowFocusRequester = remember { FocusRequester() }
 
     // Observe playback state
     val inProgressContent by playbackViewModel.inProgressContent.collectAsState()
     val watchStatistics by playbackViewModel.watchStatistics.collectAsState()
+
+    // Observe continue watching items from HomeViewModel
+    val continueWatchingItems by homeViewModel.continueWatchingItems.collectAsState()
 
     // Initialize playback state observation
     LaunchedEffect(Unit) {
@@ -401,30 +406,12 @@ fun TVContentGrid(
 
     // Create different content categories with varying layouts
     val contentRows =
-        remember(inProgressContent, homeContentState) {
+        remember(homeContentState) {
             when (homeContentState) {
                 is UiState.Success -> {
                     val homeContent = homeContentState.data
                     buildList {
-                        // Only show Continue Watching if there's content in progress
-                        if (inProgressContent.isNotEmpty()) {
-                            val continueWatchingMovies =
-                                inProgressContent.mapNotNull { progress ->
-                                    // Map content IDs back to movies - in a real app this would be more sophisticated
-                                    homeContent.allContentAsMovies().find { it.videoUrl == progress.contentId }
-                                }.take(10)
-
-                            if (continueWatchingMovies.isNotEmpty()) {
-                                add(
-                                    ContentRowData(
-                                        title = "Continue Watching",
-                                        movies = continueWatchingMovies,
-                                        type = ContentRowType.CONTINUE_WATCHING,
-                                        showViewAll = continueWatchingMovies.size > 3,
-                                    ),
-                                )
-                            }
-                        }
+                        // Continue Watching is now handled separately with ContinueWatchingRow
 
                         // Add content rows from HomeContent
                         if (homeContent.hasFeatured) {
@@ -568,6 +555,28 @@ fun TVContentGrid(
                 LazyColumn(
                     verticalArrangement = Arrangement.spacedBy(32.dp),
                 ) {
+                    // Continue Watching Row (if available)
+                    if (continueWatchingItems.isNotEmpty()) {
+                        item {
+                            ContinueWatchingRow(
+                                continueWatchingItems = continueWatchingItems,
+                                onPlayEpisode = { item ->
+                                    // Navigate to TV details with episode information for direct playback
+                                    onNavigateToScreen?.invoke(
+                                        Screen.TVDetails(
+                                            tvShowId = item.showProgressEntity.tmdbShowId.toString(),
+                                            seasonNumber = item.nextEpisodeResult.seasonNumber,
+                                            episodeNumber = item.nextEpisodeResult.episodeNumber,
+                                            autoPlay = true,
+                                        ),
+                                    )
+                                },
+                                onManageContinueWatching = onShowContinueWatching,
+                            )
+                        }
+                    }
+
+                    // Other content rows
                     items(contentRows.size) { index ->
                         val row = contentRows[index]
                         TVContentRow(

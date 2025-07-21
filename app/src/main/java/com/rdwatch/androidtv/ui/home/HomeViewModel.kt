@@ -2,8 +2,10 @@ package com.rdwatch.androidtv.ui.home
 
 import androidx.lifecycle.viewModelScope
 import com.rdwatch.androidtv.Movie
+import com.rdwatch.androidtv.data.repository.NextEpisodeRepository
 import com.rdwatch.androidtv.data.repository.PlaybackProgressRepository
 import com.rdwatch.androidtv.data.repository.TMDbSearchRepository
+import com.rdwatch.androidtv.data.repository.TMDbTVRepository
 import com.rdwatch.androidtv.presentation.viewmodel.BaseViewModel
 import com.rdwatch.androidtv.repository.base.Result
 import com.rdwatch.androidtv.ui.common.UiState
@@ -25,10 +27,15 @@ class HomeViewModel
     @Inject
     constructor(
         private val tmdbSearchRepository: TMDbSearchRepository,
+        private val tmdbTVRepository: TMDbTVRepository,
         private val playbackProgressRepository: PlaybackProgressRepository,
+        private val nextEpisodeRepository: NextEpisodeRepository,
     ) : BaseViewModel<HomeUiState>() {
         private val _contentState = MutableStateFlow<UiState<HomeContent>>(UiState.Loading)
         val contentState: StateFlow<UiState<HomeContent>> = _contentState.asStateFlow()
+
+        private val _continueWatchingItems = MutableStateFlow<List<ContinueWatchingItem>>(emptyList())
+        val continueWatchingItems: StateFlow<List<ContinueWatchingItem>> = _continueWatchingItems.asStateFlow()
 
         private val _allContent = MutableStateFlow<List<ContentDetail>>(emptyList())
 
@@ -38,6 +45,7 @@ class HomeViewModel
 
         init {
             loadContent()
+            loadContinueWatching()
         }
 
         /**
@@ -50,7 +58,7 @@ class HomeViewModel
 
                 // Load trending content from TMDb
                 tmdbSearchRepository.getTrendingAsContentDetails(
-                    mediaType = "all", // Get both movies and TV shows
+                    mediaType = "all",
                     timeWindow = "day",
                 )
                     .catch { e ->
@@ -228,7 +236,8 @@ class HomeViewModel
             // Get continue watching content from playback progress
             val continueWatchingContent =
                 try {
-                    val currentUserId = 1L // Default user ID for now
+                    // Default user ID for now
+                    val currentUserId = 1L
                     val inProgressContent = playbackProgressRepository.getInProgressContent(currentUserId).first()
 
                     // Map progress entities to content that exists in our collection
@@ -237,10 +246,11 @@ class HomeViewModel
                             contentItem.id == progressEntity.contentId ||
                                 contentItem.title == progressEntity.contentId
                         }
-                    }.take(10) // Limit to 10 continue watching items
+                    }.take(10)
                 } catch (e: Exception) {
                     android.util.Log.w("HomeViewModel", "Failed to load continue watching content", e)
-                    emptyList() // Fallback to empty list if progress data unavailable
+                    // Fallback to empty list if progress data unavailable
+                    emptyList()
                 }
 
             // Separate movies and TV shows for better organization
@@ -248,8 +258,10 @@ class HomeViewModel
             val tvShows = content.filter { it.contentType == ContentType.TV_SHOW }
 
             return HomeContent(
-                featured = content.take(5), // Top 5 trending items as featured
-                recentlyAdded = content.take(10), // Most recent trending items
+                // Top 5 trending items as featured
+                featured = content.take(5),
+                // Most recent trending items
+                recentlyAdded = content.take(10),
                 continueWatching = continueWatchingContent,
                 byGenre = organizeByContentType(movies, tvShows),
                 allContent = content,
@@ -334,7 +346,8 @@ class HomeViewModel
                 description = this.description,
                 cardImageUrl = this.cardImageUrl,
                 backgroundImageUrl = this.backgroundImageUrl,
-                videoUrl = this.videoUrl, // Will be null for TMDb content - needs scraper integration
+                // Will be null for TMDb content - needs scraper integration
+                videoUrl = this.videoUrl,
                 studio = this.metadata.studio ?: "TMDb",
             )
         }
@@ -358,6 +371,129 @@ class HomeViewModel
                     isRefreshing = false,
                     error = "An error occurred: ${exception.message}",
                 )
+            }
+        }
+
+        /**
+         * Load continue watching shows and episodes
+         */
+        private fun loadContinueWatching() {
+            viewModelScope.launch {
+                try {
+                    val currentUserId = 1L // Default user ID for now
+
+                    // Get shows with next episodes available
+                    nextEpisodeRepository.getShowsWithNextEpisodes(currentUserId)
+                        .collect { showsWithNextEpisodes ->
+                            val continueWatchingItems =
+                                showsWithNextEpisodes.mapNotNull { showProgress ->
+                                    try {
+                                        val nextEpisode =
+                                            nextEpisodeRepository.getNextEpisode(
+                                                currentUserId,
+                                                showProgress.tmdbShowId,
+                                            )
+
+                                        if (nextEpisode != null) {
+                                            // Get TMDb data for images
+                                            val tmdbResult = tmdbTVRepository.getTVDetails(showProgress.tmdbShowId).first()
+                                            val posterUrl =
+                                                when (tmdbResult) {
+                                                    is Result.Success ->
+                                                        tmdbResult.data.posterPath?.let {
+                                                            "https://image.tmdb.org/t/p/w500$it"
+                                                        }
+                                                    else -> null
+                                                }
+                                            val backdropUrl =
+                                                when (tmdbResult) {
+                                                    is Result.Success ->
+                                                        tmdbResult.data.backdropPath?.let {
+                                                            "https://image.tmdb.org/t/p/w1280$it"
+                                                        }
+                                                    else -> null
+                                                }
+
+                                            ContinueWatchingItem.from(
+                                                showProgress = showProgress,
+                                                nextEpisode = nextEpisode,
+                                                posterUrl = posterUrl,
+                                                backdropUrl = backdropUrl,
+                                            )
+                                        } else {
+                                            null
+                                        }
+                                    } catch (e: Exception) {
+                                        android.util.Log.w("HomeViewModel", "Failed to load next episode for show ${showProgress.tmdbShowId}", e)
+                                        null
+                                    }
+                                }.take(10) // Limit to 10 continue watching items
+
+                            _continueWatchingItems.value = continueWatchingItems
+                        }
+                } catch (e: Exception) {
+                    android.util.Log.e("HomeViewModel", "Failed to load continue watching", e)
+                }
+            }
+        }
+
+        /**
+         * Play next episode for a continue watching item
+         */
+        fun playNextEpisode(item: ContinueWatchingItem) {
+            viewModelScope.launch {
+                // TODO: Navigate to video player with episode details
+                // This will be implemented in Phase 4 integration
+                android.util.Log.d("HomeViewModel", "Playing next episode: ${item.nextEpisodeText} of ${item.showTitle}")
+            }
+        }
+
+        /**
+         * Refresh continue watching data
+         */
+        fun refreshContinueWatching() {
+            loadContinueWatching()
+        }
+
+        /**
+         * Remove a show from continue watching
+         */
+        fun removeContinueWatchingItem(item: ContinueWatchingItem) {
+            viewModelScope.launch {
+                try {
+                    val currentUserId = 1L // Default user ID for now
+                    nextEpisodeRepository.removeEpisodeProgress(
+                        currentUserId,
+                        item.showProgressEntity.tmdbShowId,
+                        item.nextEpisodeResult.seasonNumber,
+                        item.nextEpisodeResult.episodeNumber,
+                    )
+                    // Refresh the list
+                    refreshContinueWatching()
+                } catch (e: Exception) {
+                    android.util.Log.e("HomeViewModel", "Failed to remove continue watching item", e)
+                }
+            }
+        }
+
+        /**
+         * Mark episode as completed and advance to next
+         */
+        fun markEpisodeCompleted(item: ContinueWatchingItem) {
+            viewModelScope.launch {
+                try {
+                    val currentUserId = 1L // Default user ID for now
+                    nextEpisodeRepository.markEpisodeCompleted(
+                        currentUserId,
+                        item.showProgressEntity.tmdbShowId,
+                        item.nextEpisodeResult.seasonNumber,
+                        item.nextEpisodeResult.episodeNumber,
+                    )
+                    // Refresh the list to show next episode
+                    refreshContinueWatching()
+                } catch (e: Exception) {
+                    android.util.Log.e("HomeViewModel", "Failed to mark episode completed", e)
+                }
             }
         }
     }

@@ -28,6 +28,7 @@ import com.rdwatch.androidtv.Movie
 import com.rdwatch.androidtv.data.entities.WatchProgressEntity
 import com.rdwatch.androidtv.ui.focus.TVFocusIndicator
 import com.rdwatch.androidtv.ui.focus.tvFocusable
+import com.rdwatch.androidtv.ui.home.ContinueWatchingItem
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -328,6 +329,285 @@ private fun ContinueWatchingActionButton(
                     text = text,
                     style = MaterialTheme.typography.labelLarge,
                 )
+            }
+        }
+    }
+}
+
+/**
+ * Episode-based Continue Watching Manager for the new system
+ * Supports smart episode progression and show management
+ */
+@Composable
+fun EpisodeContinueWatchingManager(
+    continueWatchingItems: List<ContinueWatchingItem>,
+    onPlayEpisode: (ContinueWatchingItem) -> Unit,
+    onRemoveItem: (ContinueWatchingItem) -> Unit,
+    onMarkCompleted: (ContinueWatchingItem) -> Unit,
+    onCloseClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val firstItemFocusRequester = remember { FocusRequester() }
+
+    Dialog(
+        onDismissRequest = onCloseClick,
+        properties =
+            DialogProperties(
+                dismissOnBackPress = true,
+                dismissOnClickOutside = false,
+                usePlatformDefaultWidth = false,
+            ),
+    ) {
+        Surface(
+            modifier =
+                modifier
+                    .fillMaxSize(0.9f)
+                    .clip(RoundedCornerShape(16.dp)),
+            color = MaterialTheme.colorScheme.surface,
+            shadowElevation = 24.dp,
+        ) {
+            Column(
+                modifier = Modifier.padding(32.dp),
+            ) {
+                // Header
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = "Continue Watching",
+                        style = MaterialTheme.typography.headlineLarge,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        fontWeight = FontWeight.Bold,
+                    )
+
+                    IconButton(
+                        onClick = onCloseClick,
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = "Close",
+                            tint = MaterialTheme.colorScheme.onSurface,
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                if (continueWatchingItems.isEmpty()) {
+                    // Empty state
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(16.dp),
+                        ) {
+                            Text(
+                                text = "No shows to continue watching",
+                                style = MaterialTheme.typography.titleLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                            Text(
+                                text = "Start watching a TV show to see it here",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
+                } else {
+                    // Content list
+                    LazyColumn(
+                        verticalArrangement = Arrangement.spacedBy(16.dp),
+                    ) {
+                        items(continueWatchingItems) { item ->
+                            EpisodeBasedContinueWatchingItem(
+                                item = item,
+                                onPlayClick = { onPlayEpisode(item) },
+                                onRemoveClick = { onRemoveItem(item) },
+                                onMarkCompletedClick = { onMarkCompleted(item) },
+                                modifier =
+                                    if (item == continueWatchingItems.first()) {
+                                        Modifier.focusRequester(firstItemFocusRequester)
+                                    } else {
+                                        Modifier
+                                    },
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Auto-focus first item
+    LaunchedEffect(Unit) {
+        if (continueWatchingItems.isNotEmpty()) {
+            firstItemFocusRequester.requestFocus()
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun EpisodeBasedContinueWatchingItem(
+    item: ContinueWatchingItem,
+    onPlayClick: () -> Unit,
+    onRemoveClick: () -> Unit,
+    onMarkCompletedClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    var isFocused by remember { mutableStateOf(false) }
+
+    TVFocusIndicator(
+        isFocused = isFocused,
+    ) {
+        Card(
+            modifier =
+                modifier
+                    .fillMaxWidth()
+                    .height(140.dp)
+                    .tvFocusable(
+                        onFocusChanged = { isFocused = it.isFocused },
+                    ),
+            colors =
+                CardDefaults.cardColors(
+                    containerColor =
+                        if (isFocused) {
+                            MaterialTheme.colorScheme.primaryContainer
+                        } else {
+                            MaterialTheme.colorScheme.surfaceVariant
+                        },
+                ),
+            elevation =
+                CardDefaults.cardElevation(
+                    defaultElevation = if (isFocused) 8.dp else 2.dp,
+                ),
+            shape = RoundedCornerShape(12.dp),
+        ) {
+            Row(
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .padding(16.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+            ) {
+                // Thumbnail
+                Box(
+                    modifier =
+                        Modifier
+                            .width(200.dp)
+                            .fillMaxHeight()
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(MaterialTheme.colorScheme.outline.copy(alpha = 0.1f)),
+                ) {
+                    SmartTVImageLoader(
+                        imageUrl = item.backdropUrl ?: item.posterUrl,
+                        contentDescription = item.showTitle,
+                        contentScale = ContentScale.Crop,
+                        priority = ImagePriority.NORMAL,
+                        modifier = Modifier.fillMaxSize(),
+                    )
+
+                    // Progress overlay
+                    if (item.progressPercentage > 0f) {
+                        LinearProgressIndicator(
+                            progress = { item.progressPercentage },
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .height(4.dp)
+                                    .align(Alignment.BottomCenter),
+                            color = MaterialTheme.colorScheme.primary,
+                            trackColor = Color.White.copy(alpha = 0.3f),
+                        )
+                    }
+
+                    // New season indicator
+                    if (item.isNewSeason) {
+                        Surface(
+                            color = MaterialTheme.colorScheme.primary,
+                            shape = RoundedCornerShape(4.dp),
+                            modifier =
+                                Modifier
+                                    .align(Alignment.TopEnd)
+                                    .padding(8.dp),
+                        ) {
+                            Text(
+                                text = "New Season",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                            )
+                        }
+                    }
+                }
+
+                // Content info
+                Column(
+                    modifier =
+                        Modifier
+                            .weight(1f)
+                            .fillMaxHeight(),
+                    verticalArrangement = Arrangement.SpaceBetween,
+                ) {
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        Text(
+                            text = item.showTitle,
+                            style = MaterialTheme.typography.titleLarge,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontWeight = FontWeight.SemiBold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+
+                        Text(
+                            text = item.nextEpisodeText,
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.primary,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+
+                        if (item.progressPercentage > 0f) {
+                            Text(
+                                text = "${(item.progressPercentage * 100).toInt()}% show progress",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
+
+                    // Action buttons
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        ContinueWatchingActionButton(
+                            text = "Play",
+                            icon = Icons.Default.PlayArrow,
+                            onClick = onPlayClick,
+                            isPrimary = true,
+                        )
+
+                        ContinueWatchingActionButton(
+                            text = "Mark Done",
+                            icon = Icons.Default.Delete, // You might want to use a checkmark icon instead
+                            onClick = onMarkCompletedClick,
+                            isPrimary = false,
+                        )
+
+                        ContinueWatchingActionButton(
+                            text = "Remove",
+                            icon = Icons.Default.Delete,
+                            onClick = onRemoveClick,
+                            isPrimary = false,
+                        )
+                    }
+                }
             }
         }
     }

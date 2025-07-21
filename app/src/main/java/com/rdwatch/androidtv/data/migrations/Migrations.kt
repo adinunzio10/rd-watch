@@ -611,6 +611,132 @@ object Migrations {
             }
         }
 
+    val MIGRATION_7_8 =
+        object : Migration(7, 8) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                // Add TMDb episode external IDs table for better scraper integration
+                database.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS `tmdb_episode_external_ids` (
+                        `id` TEXT PRIMARY KEY NOT NULL,
+                        `tvId` INTEGER NOT NULL,
+                        `seasonNumber` INTEGER NOT NULL,
+                        `episodeNumber` INTEGER NOT NULL,
+                        `imdbId` TEXT,
+                        `tvdbId` TEXT,
+                        `facebookId` TEXT,
+                        `instagramId` TEXT,
+                        `twitterId` TEXT,
+                        `lastUpdated` INTEGER NOT NULL
+                    )
+                    """.trimIndent(),
+                )
+
+                // Create indices for tmdb_episode_external_ids
+                database.execSQL("CREATE INDEX IF NOT EXISTS `index_tmdb_episode_external_ids_tvId` ON `tmdb_episode_external_ids` (`tvId`)")
+                database.execSQL(
+                    "CREATE INDEX IF NOT EXISTS `index_tmdb_episode_external_ids_season_episode` ON `tmdb_episode_external_ids` (`seasonNumber`, `episodeNumber`)",
+                )
+                database.execSQL("CREATE INDEX IF NOT EXISTS `index_tmdb_episode_external_ids_lastUpdated` ON `tmdb_episode_external_ids` (`lastUpdated`)")
+            }
+        }
+
+    val MIGRATION_8_9 =
+        object : Migration(8, 9) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                // Create episode_progress table for tracking TV show episode watch progress
+                database.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS `episode_progress` (
+                        `progress_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        `user_id` INTEGER NOT NULL,
+                        `tmdb_show_id` INTEGER NOT NULL,
+                        `season_number` INTEGER NOT NULL,
+                        `episode_number` INTEGER NOT NULL,
+                        `episode_title` TEXT,
+                        `progress_seconds` INTEGER NOT NULL,
+                        `duration_seconds` INTEGER NOT NULL,
+                        `watch_percentage` REAL NOT NULL,
+                        `is_completed` INTEGER NOT NULL DEFAULT 0,
+                        `created_at` INTEGER NOT NULL,
+                        `updated_at` INTEGER NOT NULL,
+                        `device_info` TEXT,
+                        `video_source_url` TEXT,
+                        FOREIGN KEY(`user_id`) REFERENCES `users`(`user_id`) ON UPDATE NO ACTION ON DELETE CASCADE
+                    )
+                    """.trimIndent(),
+                )
+
+                // Create indices for episode_progress
+                database.execSQL("CREATE INDEX IF NOT EXISTS `index_episode_progress_user_id` ON `episode_progress` (`user_id`)")
+                database.execSQL("CREATE INDEX IF NOT EXISTS `index_episode_progress_tmdb_show_id` ON `episode_progress` (`tmdb_show_id`)")
+                database.execSQL("CREATE INDEX IF NOT EXISTS `index_episode_progress_season_number` ON `episode_progress` (`season_number`)")
+                database.execSQL("CREATE INDEX IF NOT EXISTS `index_episode_progress_episode_number` ON `episode_progress` (`episode_number`)")
+                database.execSQL("CREATE INDEX IF NOT EXISTS `index_episode_progress_updated_at` ON `episode_progress` (`updated_at`)")
+                database.execSQL(
+                    "CREATE UNIQUE INDEX IF NOT EXISTS `index_episode_progress_user_show_season_episode` ON `episode_progress` (`user_id`, `tmdb_show_id`, `season_number`, `episode_number`)",
+                )
+
+                // Create show_progress table for tracking overall show progression
+                database.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS `show_progress` (
+                        `progress_id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        `user_id` INTEGER NOT NULL,
+                        `tmdb_show_id` INTEGER NOT NULL,
+                        `show_title` TEXT NOT NULL,
+                        `next_season_number` INTEGER,
+                        `next_episode_number` INTEGER,
+                        `next_episode_title` TEXT,
+                        `next_episode_air_date` INTEGER,
+                        `last_watched_season` INTEGER,
+                        `last_watched_episode` INTEGER,
+                        `total_episodes_watched` INTEGER NOT NULL DEFAULT 0,
+                        `total_runtime_seconds` INTEGER NOT NULL DEFAULT 0,
+                        `show_completion_percentage` REAL NOT NULL DEFAULT 0,
+                        `is_show_completed` INTEGER NOT NULL DEFAULT 0,
+                        `watch_order_preference` TEXT NOT NULL DEFAULT 'CHRONOLOGICAL',
+                        `skip_special_episodes` INTEGER NOT NULL DEFAULT 0,
+                        `auto_play_enabled` INTEGER NOT NULL DEFAULT 1,
+                        `created_at` INTEGER NOT NULL,
+                        `updated_at` INTEGER NOT NULL,
+                        FOREIGN KEY(`user_id`) REFERENCES `users`(`user_id`) ON UPDATE NO ACTION ON DELETE CASCADE
+                    )
+                    """.trimIndent(),
+                )
+
+                // Create indices for show_progress
+                database.execSQL("CREATE INDEX IF NOT EXISTS `index_show_progress_user_id` ON `show_progress` (`user_id`)")
+                database.execSQL("CREATE INDEX IF NOT EXISTS `index_show_progress_tmdb_show_id` ON `show_progress` (`tmdb_show_id`)")
+                database.execSQL("CREATE INDEX IF NOT EXISTS `index_show_progress_updated_at` ON `show_progress` (`updated_at`)")
+                database.execSQL("CREATE INDEX IF NOT EXISTS `index_show_progress_next_episode_air_date` ON `show_progress` (`next_episode_air_date`)")
+                database.execSQL(
+                    "CREATE UNIQUE INDEX IF NOT EXISTS `index_show_progress_user_id_tmdb_show_id` ON `show_progress` (`user_id`, `tmdb_show_id`)",
+                )
+
+                // Create auto_play_settings table for user auto-play preferences
+                database.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS `auto_play_settings` (
+                        `user_id` INTEGER PRIMARY KEY NOT NULL,
+                        `enabled` INTEGER NOT NULL DEFAULT 1,
+                        `countdown_seconds` INTEGER NOT NULL DEFAULT 10,
+                        `skip_intro_enabled` INTEGER NOT NULL DEFAULT 0,
+                        `skip_outro_enabled` INTEGER NOT NULL DEFAULT 0,
+                        `binge_mode_enabled` INTEGER NOT NULL DEFAULT 0,
+                        `notification_enabled` INTEGER NOT NULL DEFAULT 1,
+                        `auto_mark_watched_threshold` REAL NOT NULL DEFAULT 0.9,
+                        `updated_at` INTEGER NOT NULL,
+                        FOREIGN KEY(`user_id`) REFERENCES `users`(`user_id`) ON UPDATE NO ACTION ON DELETE CASCADE
+                    )
+                    """.trimIndent(),
+                )
+
+                // Create indices for auto_play_settings
+                database.execSQL("CREATE INDEX IF NOT EXISTS `index_auto_play_settings_enabled` ON `auto_play_settings` (`enabled`)")
+            }
+        }
+
     // All migrations for this database
     val ALL_MIGRATIONS =
         arrayOf(
@@ -620,5 +746,7 @@ object Migrations {
             MIGRATION_4_5,
             MIGRATION_5_6,
             MIGRATION_6_7,
+            MIGRATION_7_8,
+            MIGRATION_8_9,
         )
 }

@@ -75,6 +75,9 @@ import com.rdwatch.androidtv.ui.viewmodel.PlaybackViewModel
 fun TVDetailsScreen(
     tvShowId: String,
     modifier: Modifier = Modifier,
+    initialSeasonNumber: Int? = null,
+    initialEpisodeNumber: Int? = null,
+    autoPlay: Boolean = false,
     onNavigateToVideoPlayer: (videoUrl: String, title: String) -> Unit = { _, _ -> },
     onEpisodeClick: (TVEpisode) -> Unit = {},
     onBackPressed: () -> Unit = {},
@@ -101,6 +104,22 @@ fun TVDetailsScreen(
 
     // Initialize with TV show ID
     LaunchedEffect(tvShowId) { viewModel.loadTVShow(tvShowId) }
+
+    // Handle initial episode selection and auto-play
+    LaunchedEffect(tvShowState, selectedSeason, initialSeasonNumber, initialEpisodeNumber, autoPlay) {
+        val tvShow = tvShowState
+        if (tvShow != null && initialSeasonNumber != null && initialEpisodeNumber != null) {
+            // For now, just select the episode without auto-play
+            // Auto-play would require proper source resolution which is complex
+            val targetSeason = selectedSeason
+            val targetEpisode = targetSeason?.episodes?.find { it.episodeNumber == initialEpisodeNumber }
+
+            if (targetSeason?.seasonNumber == initialSeasonNumber && targetEpisode != null) {
+                // Select the episode
+                viewModel.selectEpisode(targetEpisode)
+            }
+        }
+    }
 
     // External IDs will be fetched on-demand at episode level when needed for source scraping
 
