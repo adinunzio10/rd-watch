@@ -336,9 +336,26 @@ class ScraperSourceManager
 
             val episodeContentId = "$tvShowId:$seasonNumber:$episodeNumber"
 
-            qualities.forEach { quality ->
+            // Sample trackers for demo purposes
+            val sampleTrackers = listOf("EZTV", "RARBG", "1337x", "TPB", "YTS")
+
+            qualities.forEachIndexed { index, quality ->
                 val url = generateSampleTVEpisodeUrl(manifest, tvShowId, seasonNumber, episodeNumber, quality)
                 println("DEBUG [ScraperSourceManager]: Creating TV episode source for quality: ${quality.displayName}, URL: $url")
+
+                // Generate sample metadata for better UI demonstration
+                val tracker = sampleTrackers[index % sampleTrackers.size]
+                val sizeInGB =
+                    when (quality) {
+                        SourceQuality.QUALITY_4K -> "${(3..6).random()}.${(0..9).random()}GB"
+                        SourceQuality.QUALITY_1080P -> "${(1..3).random()}.${(0..9).random()}GB"
+                        SourceQuality.QUALITY_720P -> "${(500..999).random()}MB"
+                        else -> "${(200..500).random()}MB"
+                    }
+                val filename = "Sample.Show.S${String.format(
+                    "%02d",
+                    seasonNumber,
+                )}E${String.format("%02d", episodeNumber)}.${quality.shortName}.WEB-DL.x264-$tracker"
 
                 val source =
                     scraperSourceAdapter.createStreamingSource(
@@ -346,6 +363,7 @@ class ScraperSourceManager
                         url = url,
                         quality = quality,
                         title = "${manifest.displayName} S${seasonNumber}E$episodeNumber ${quality.shortName}",
+                        size = sizeInGB,
                         seeders =
                             if (manifest.metadata.capabilities.contains(ManifestCapability.P2P)) {
                                 (30..150).random() // Generally fewer seeders for TV episodes
@@ -358,9 +376,11 @@ class ScraperSourceManager
                             } else {
                                 null
                             },
+                        tracker = tracker,
+                        filename = filename,
                     )
                 sources.add(source)
-                println("DEBUG [ScraperSourceManager]: Added TV episode source: ${source.id}")
+                println("DEBUG [ScraperSourceManager]: Added TV episode source: ${source.id} with tracker: $tracker, size: $sizeInGB")
             }
 
             println("DEBUG [ScraperSourceManager]: Created ${sources.size} sources for TV episode: ${manifest.name}")
@@ -386,9 +406,23 @@ class ScraperSourceManager
                     SourceQuality.QUALITY_720P,
                 )
 
-            qualities.forEach { quality ->
+            // Sample trackers for demo purposes
+            val sampleTrackers = listOf("YTS", "RARBG", "EZTV", "1337x", "TPB")
+
+            qualities.forEachIndexed { index, quality ->
                 val url = generateSampleUrl(manifest, contentId, quality)
                 println("DEBUG [ScraperSourceManager]: Creating source for quality: ${quality.displayName}, URL: $url")
+
+                // Generate sample metadata for better UI demonstration
+                val tracker = sampleTrackers[index % sampleTrackers.size]
+                val sizeInGB =
+                    when (quality) {
+                        SourceQuality.QUALITY_4K -> "${(12..25).random()}.${(0..9).random()}GB"
+                        SourceQuality.QUALITY_1080P -> "${(4..8).random()}.${(0..9).random()}GB"
+                        SourceQuality.QUALITY_720P -> "${(1..3).random()}.${(0..9).random()}GB"
+                        else -> "${(0..2).random()}.${(0..9).random()}GB"
+                    }
+                val filename = "Sample.Movie.2024.${quality.shortName}.BluRay.x264-$tracker"
 
                 val source =
                     scraperSourceAdapter.createStreamingSource(
@@ -396,6 +430,7 @@ class ScraperSourceManager
                         url = url,
                         quality = quality,
                         title = "${manifest.displayName} ${quality.shortName}",
+                        size = sizeInGB,
                         seeders =
                             if (manifest.metadata.capabilities.contains(ManifestCapability.P2P)) {
                                 (50..200).random()
@@ -408,9 +443,11 @@ class ScraperSourceManager
                             } else {
                                 null
                             },
+                        tracker = tracker,
+                        filename = filename,
                     )
                 sources.add(source)
-                println("DEBUG [ScraperSourceManager]: Added source: ${source.id}")
+                println("DEBUG [ScraperSourceManager]: Added source: ${source.id} with tracker: $tracker, size: $sizeInGB")
             }
 
             println("DEBUG [ScraperSourceManager]: Created ${sources.size} sources for manifest: ${manifest.name}")
