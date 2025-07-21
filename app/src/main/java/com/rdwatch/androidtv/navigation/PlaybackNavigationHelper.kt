@@ -2,6 +2,7 @@ package com.rdwatch.androidtv.navigation
 
 import androidx.media3.common.util.UnstableApi
 import com.rdwatch.androidtv.Movie
+import com.rdwatch.androidtv.data.repository.NextEpisodeResult
 import com.rdwatch.androidtv.player.ExoPlayerManager
 import com.rdwatch.androidtv.player.MediaMetadata
 import com.rdwatch.androidtv.player.state.PlaybackStateRepository
@@ -157,6 +158,69 @@ class PlaybackNavigationHelper
             return exoPlayerManager.playerState.value.mediaUrl
         }
 
+        /**
+         * Navigate to the next episode for auto-play functionality
+         * This method is called from the AutoPlayController when countdown completes
+         */
+        fun navigateToNextEpisode(
+            nextEpisode: NextEpisodeResult,
+            showTitle: String,
+        ) {
+            // Create a content ID for the next episode
+            val episodeContentId = "${nextEpisode.tmdbShowId}:${nextEpisode.seasonNumber}:${nextEpisode.episodeNumber}"
+            val episodeTitle = "${showTitle} - ${nextEpisode.getFormattedEpisodeId()}"
+            val fullTitle = if (nextEpisode.episodeTitle != null) {
+                "$episodeTitle: ${nextEpisode.episodeTitle}"
+            } else {
+                episodeTitle
+            }
+
+            // Save current progress before switching episodes
+            saveCurrentProgress()
+
+            // In a complete implementation, this would:
+            // 1. Fetch episode details from TMDb API
+            // 2. Get available sources for the episode  
+            // 3. Select the best source based on user preferences
+            // 4. Resolve the playable URL
+            // 5. Prepare the media with ExoPlayer
+            
+            // For now, we'll create placeholder metadata and trigger navigation
+            val episodeMetadata = MediaMetadata(
+                title = fullTitle,
+                description = "Auto-playing next episode",
+                thumbnailUrl = null, // Would come from TMDb episode data
+            )
+
+            // TODO: In actual implementation, replace with real episode URL resolution
+            // exoPlayerManager.prepareMedia(
+            //     mediaUrl = resolvedEpisodeUrl,
+            //     contentId = episodeContentId,
+            //     title = fullTitle,
+            //     metadata = episodeMetadata,
+            //     shouldResume = false, // Always start new episodes from beginning
+            // )
+
+            // For now, we'll just log the auto-play navigation
+            android.util.Log.i(
+                "PlaybackNavigationHelper", 
+                "Auto-play navigation to: $fullTitle (${nextEpisode.tmdbShowId})"
+            )
+
+            // TODO: Trigger actual navigation to the episode
+            // This would typically involve:
+            // 1. Updating the current VideoPlayerScreen with new episode parameters
+            // 2. Or navigating to a new instance with the episode details
+        }
+
+        /**
+         * Check if auto-play navigation is supported for the current content
+         */
+        fun isAutoPlayNavigationSupported(): Boolean {
+            // Check if we have the necessary navigation infrastructure in place
+            return true // For now, always return true
+        }
+
         private fun createMediaMetadata(movie: Movie): MediaMetadata {
             return MediaMetadata(
                 title = movie.title,
@@ -177,6 +241,12 @@ sealed class PlaybackNavigationEvent {
     data class ShowResumeDialog(val movie: Movie) : PlaybackNavigationEvent()
 
     data class ShowError(val message: String) : PlaybackNavigationEvent()
+
+    data class AutoPlayNextEpisode(val nextEpisode: NextEpisodeResult, val showTitle: String) : PlaybackNavigationEvent()
+
+    data class ShowAutoPlayCountdown(val nextEpisode: NextEpisodeResult, val showTitle: String) : PlaybackNavigationEvent()
+
+    object CancelAutoPlay : PlaybackNavigationEvent()
 }
 
 /**

@@ -21,6 +21,8 @@ import com.rdwatch.androidtv.player.subtitle.AvailableSubtitle
 import com.rdwatch.androidtv.player.subtitle.SubtitleManager
 import com.rdwatch.androidtv.presentation.viewmodel.BaseViewModel
 import com.rdwatch.androidtv.ui.theme.UIConstants
+import com.rdwatch.androidtv.ui.components.AutoPlayCountdown
+import com.rdwatch.androidtv.ui.viewmodel.AutoPlayController
 import com.rdwatch.androidtv.ui.viewmodel.MediaReadyState
 import com.rdwatch.androidtv.ui.viewmodel.PlaybackViewModel
 import com.rdwatch.androidtv.util.DebugLogger
@@ -34,8 +36,14 @@ fun VideoPlayerScreen(
     title: String,
     onBackPressed: () -> Unit,
     modifier: Modifier = Modifier,
+    tmdbShowId: Int? = null,
+    seasonNumber: Int? = null,
+    episodeNumber: Int? = null,
+    posterUrl: String? = null,
+    onNavigateToEpisode: ((tmdbShowId: Int, seasonNumber: Int, episodeNumber: Int) -> Unit)? = null,
     playbackViewModel: PlaybackViewModel = hiltViewModel(),
     videoPlayerViewModel: VideoPlayerViewModel = hiltViewModel(),
+    autoPlayController: AutoPlayController = hiltViewModel(),
 ) {
     val context = LocalContext.current
     val systemUiController = com.google.accompanist.systemuicontroller.rememberSystemUiController()
@@ -43,6 +51,7 @@ fun VideoPlayerScreen(
     val playbackUiState by playbackViewModel.uiState.collectAsState()
     val playerState by playbackViewModel.playerState.collectAsState()
     val mediaReadyState by playbackViewModel.mediaReadyState.collectAsState()
+    val autoPlayState by autoPlayController.autoPlayState.collectAsState()
 
     // Enable immersive mode for fullscreen video playback
     LaunchedEffect(Unit) {
@@ -200,6 +209,60 @@ fun VideoPlayerScreen(
                         videoPlayerViewModel.togglePlayerMenu()
                     },
                     modifier = Modifier.fillMaxHeight(),
+                )
+            }
+        }
+
+        // Auto-play countdown overlay
+        if (autoPlayState.showCountdown) {
+            autoPlayState.nextEpisode?.let { nextEpisode ->
+                AutoPlayCountdown(
+                    nextEpisode = nextEpisode,
+                showTitle = autoPlayState.showTitle,
+                posterUrl = autoPlayState.posterUrl,
+                countdownSeconds = autoPlayState.countdownSeconds,
+                onPlayNow = {
+                    autoPlayController.playNextEpisode { nextEpisode ->
+                        onNavigateToEpisode?.invoke(
+                            nextEpisode.tmdbShowId,
+                            nextEpisode.seasonNumber,
+                            nextEpisode.episodeNumber
+                        )
+                    }
+                },
+                onCancel = {
+                    autoPlayController.cancelAutoPlay()
+                },
+                modifier = Modifier.fillMaxSize(),
+            )
+            }
+        }
+    }
+
+    // Monitor episode completion for TV shows
+    LaunchedEffect(
+        playerState.currentPosition, 
+        playerState.duration, 
+        tmdbShowId, 
+        seasonNumber, 
+        episodeNumber
+    ) {
+        // Only monitor progress for TV show episodes (not movies)
+        if (tmdbShowId != null && seasonNumber != null && episodeNumber != null) {
+            val position = playerState.currentPosition
+            val duration = playerState.duration
+            
+            if (position > 0 && duration > 0) {
+                // Update episode progress and check for completion
+                autoPlayController.updateEpisodeProgress(
+                    tmdbShowId = tmdbShowId,
+                    seasonNumber = seasonNumber,
+                    episodeNumber = episodeNumber,
+                    progressSeconds = position / 1000, // Convert to seconds
+                    durationSeconds = duration / 1000, // Convert to seconds
+                    showTitle = title,
+                    posterUrl = posterUrl,
+                    deviceInfo = "AndroidTV"
                 )
             }
         }
