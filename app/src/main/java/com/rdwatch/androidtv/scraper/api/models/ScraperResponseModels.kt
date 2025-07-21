@@ -122,6 +122,7 @@ data class TorrentInfo(
     val seeders: Int? = null,
     val leechers: Int? = null,
     val source: String? = null,
+    val tracker: String? = null, // Release group/tracker name (YTS, EZTV, RARBG, etc.)
     val hdr: Boolean = false,
     val is3D: Boolean = false,
 ) {
@@ -193,6 +194,9 @@ data class TorrentInfo(
                     else -> null
                 }
 
+            // Extract tracker/release group (YTS, EZTV, RARBG, etc.)
+            val tracker = extractTracker(title)
+
             return TorrentInfo(
                 quality = quality,
                 codec = codec,
@@ -201,9 +205,76 @@ data class TorrentInfo(
                 seeders = seeders,
                 leechers = leechers,
                 source = source,
+                tracker = tracker,
                 hdr = hdr,
                 is3D = is3D,
             )
+        }
+
+        /**
+         * Extract tracker/release group name from torrent title
+         * Common patterns:
+         * - Movie.Name.2024.1080p.BluRay.x264-RARBG
+         * - Show.S01E01.720p.HDTV.x264-KILLERS
+         * - Movie.Name.2024.4K.WEB-DL.x265-YTS
+         */
+        private fun extractTracker(title: String): String? {
+            // Pattern 1: Tracker after dash (most common)
+            // Example: Movie.Name.2024.1080p.BluRay.x264-RARBG
+            val dashPattern = Regex("-(\\w+)(?:\\[|\\.|$)", RegexOption.IGNORE_CASE)
+            dashPattern.find(title)?.let { match ->
+                val tracker = match.groupValues[1].uppercase()
+                return normalizeTracker(tracker)
+            }
+
+            // Pattern 2: Known trackers in brackets or at end
+            // Example: Movie.Name.2024.1080p[YTS.MX] or Movie.Name.YTS
+            val knownTrackers =
+                listOf(
+                    "YTS", "YIFY", "YTS.MX", "YTS.LT", "YTS.AM",
+                    "EZTV", "ETTV", "EZTV.AG", "EZTV.RE",
+                    "RARBG", "RARBG.TO", "RARBG.CC",
+                    "1337X", "LEET", "1337X.TO",
+                    "THEPIRATEBAY", "TPB",
+                    "TORRENTGALAXY", "TGX",
+                    "KICKASS", "KAT",
+                )
+
+            val upperTitle = title.uppercase()
+            for (tracker in knownTrackers) {
+                if (upperTitle.contains(tracker)) {
+                    return normalizeTracker(tracker)
+                }
+            }
+
+            // Pattern 3: Scene groups (usually all caps at end)
+            val scenePattern = Regex("\\b([A-Z]{2,10})(?:\\[|\\.|$)")
+            scenePattern.findAll(title).lastOrNull()?.let { match ->
+                val group = match.groupValues[1]
+                // Filter out common false positives
+                val commonWords = setOf("PROPER", "REPACK", "INTERNAL", "LIMITED", "UNRATED", "EXTENDED")
+                if (group !in commonWords && group.length >= 3) {
+                    return group
+                }
+            }
+
+            return null
+        }
+
+        /**
+         * Normalize tracker names to consistent format
+         */
+        private fun normalizeTracker(tracker: String): String {
+            return when (tracker.uppercase()) {
+                "YIFY", "YTS.MX", "YTS.LT", "YTS.AM" -> "YTS"
+                "ETTV", "EZTV.AG", "EZTV.RE" -> "EZTV"
+                "RARBG.TO", "RARBG.CC" -> "RARBG"
+                "1337X.TO", "LEET" -> "1337x"
+                "THEPIRATEBAY" -> "TPB"
+                "TORRENTGALAXY" -> "TGX"
+                "KICKASS" -> "KAT"
+                else -> tracker.uppercase()
+            }
         }
     }
 }

@@ -49,7 +49,7 @@ object SourceMetadataMapper {
             release =
                 ReleaseInfo(
                     type = torrentInfo?.source?.let { ReleaseType.fromString(it) } ?: ReleaseType.UNKNOWN,
-                    group = null, // Not available in current model
+                    group = source.metadata["tracker"] ?: torrentInfo?.tracker, // Extract tracker from metadata or torrent info
                     edition = null,
                     year = null,
                 ),
@@ -139,7 +139,7 @@ object SourceMetadataMapper {
             release =
                 ReleaseInfo(
                     type = torrentInfo?.source?.let { ReleaseType.fromString(it) } ?: ReleaseType.UNKNOWN,
-                    group = extractReleaseGroup(displayTitle),
+                    group = torrentInfo?.tracker ?: extractReleaseGroup(displayTitle),
                     edition = null,
                     year = null,
                 ),
@@ -226,7 +226,7 @@ object SourceMetadataMapper {
             release =
                 ReleaseInfo(
                     type = scraperTorrentInfo.source?.let { ReleaseType.fromString(it) } ?: ReleaseType.UNKNOWN,
-                    group = extractReleaseGroup(torrent.filename),
+                    group = scraperTorrentInfo.tracker ?: extractReleaseGroup(torrent.filename),
                     edition = null,
                     year = null,
                 ),
@@ -317,7 +317,7 @@ object SourceMetadataMapper {
             release =
                 ReleaseInfo(
                     type = scraperTorrentInfo.source?.let { ReleaseType.fromString(it) } ?: ReleaseType.UNKNOWN,
-                    group = extractReleaseGroup(link.filename),
+                    group = scraperTorrentInfo.tracker ?: extractReleaseGroup(link.filename),
                     edition = null,
                     year = null,
                 ),

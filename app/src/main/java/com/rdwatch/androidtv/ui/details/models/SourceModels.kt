@@ -286,6 +286,7 @@ data class StreamingSource(
 
     /**
      * Get all quality badges for this source
+     * Optimized for Real-Debrid usage - removes redundant P2P/Magnet indicators
      */
     fun getQualityBadges(): List<String> {
         val badges = mutableListOf<String>()
@@ -293,20 +294,12 @@ data class StreamingSource(
         // Main quality badge
         badges.add(quality.shortName)
 
-        // Additional quality features
+        // Additional quality features (these are valuable for Real-Debrid users)
         if (features.supportsDolbyVision) badges.add("Dolby Vision")
         if (features.supportsDolbyAtmos) badges.add("Dolby Atmos")
 
-        // P2P indicators
-        if (features.supportsP2P) {
-            badges.add("P2P")
-            features.seeders?.let { seeders ->
-                if (seeders > 0) badges.add("${seeders}S")
-            }
-        }
-
-        // Source type
-        badges.add(sourceType.getDisplayType())
+        // Skip P2P indicators, seeder counts, and source types (Magnet/Torrent)
+        // as they're not relevant for Real-Debrid where everything is cached
 
         return badges
     }
@@ -319,13 +312,27 @@ data class StreamingSource(
             provider: SourceProvider = SourceProvider.TORRENTIO,
             quality: SourceQuality = SourceQuality.QUALITY_4K,
             sourceType: SourceType = SourceType(SourceType.ScraperSourceType.TORRENT, SourceType.SourceReliability.HIGH),
+            sampleTracker: String? = null,
+            sampleSize: String? = null,
+            sampleFilename: String? = null,
         ): StreamingSource {
+            // Create metadata with tracker info for demo purposes
+            val metadata = mutableMapOf<String, String>()
+            if (sampleTracker != null) {
+                metadata["tracker"] = sampleTracker
+            }
+            if (sampleFilename != null) {
+                metadata["filename"] = sampleFilename
+            }
+
             return StreamingSource(
                 id = "${provider.id}_${quality.name}",
                 provider = provider,
                 quality = quality,
                 url = "magnet:?xt=urn:btih:example",
                 sourceType = sourceType,
+                size = sampleSize,
+                metadata = metadata,
                 features =
                     SourceFeatures(
                         supportsDolbyVision = quality.isHighQuality,
@@ -352,26 +359,41 @@ data class StreamingSource(
                     SourceProvider.TORRENTIO,
                     SourceQuality.QUALITY_4K_HDR,
                     SourceType(SourceType.ScraperSourceType.TORRENT, SourceType.SourceReliability.HIGH),
+                    sampleTracker = "YTS",
+                    sampleSize = "2.1GB",
+                    sampleFilename = "Avengers Endgame 2019",
                 ),
                 createSample(
-                    SourceProvider.KNIGHTCRAWLER,
+                    SourceProvider.TORRENTIO,
                     SourceQuality.QUALITY_4K,
                     SourceType(SourceType.ScraperSourceType.TORRENT, SourceType.SourceReliability.HIGH),
+                    sampleTracker = "RARBG",
+                    sampleSize = "15.8GB",
+                    sampleFilename = "Avengers Endgame 2019 4K BluRay",
                 ),
                 createSample(
                     SourceProvider.TORRENTIO,
                     SourceQuality.QUALITY_1080P_HDR,
                     SourceType(SourceType.ScraperSourceType.DIRECT_LINK, SourceType.SourceReliability.MEDIUM),
+                    sampleTracker = "EZTV",
+                    sampleSize = "5.4GB",
+                    sampleFilename = "Avengers Endgame 2019 1080p",
                 ),
                 createSample(
-                    SourceProvider.CINEMETA,
+                    SourceProvider.TORRENTIO,
                     SourceQuality.QUALITY_1080P,
                     SourceType(SourceType.ScraperSourceType.METADATA, SourceType.SourceReliability.HIGH),
+                    sampleTracker = "1337x",
+                    sampleSize = "7.2GB",
+                    sampleFilename = "Avengers Endgame 2019 BluRay",
                 ),
                 createSample(
-                    SourceProvider.OPENSUBTITLES,
-                    SourceQuality.QUALITY_1080P,
+                    SourceProvider.TORRENTIO,
+                    SourceQuality.QUALITY_720P,
                     SourceType(SourceType.ScraperSourceType.SUBTITLES, SourceType.SourceReliability.HIGH),
+                    sampleTracker = "TPB",
+                    sampleSize = "1.8GB",
+                    sampleFilename = "Avengers Endgame 2019 720p",
                 ),
             )
         }

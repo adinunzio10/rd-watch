@@ -252,8 +252,6 @@ private fun SourceSummaryInfo(
     selectedSourceId: String?,
 ) {
     val selectedSource = sources.find { it.id == selectedSourceId }
-    val reliableSourcesCount = sources.count { it.isReliable() }
-    val p2pSourcesCount = sources.count { it.isP2P() }
 
     Column(
         verticalArrangement = Arrangement.spacedBy(4.dp),
@@ -269,36 +267,31 @@ private fun SourceSummaryInfo(
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
                 )
+                // Show tracker name instead of provider for Real-Debrid users
+                val displayName = source.metadata["tracker"] ?: source.provider.displayName
                 Text(
-                    text = "${source.provider.displayName} - ${source.quality.displayName}",
+                    text = "$displayName - ${source.quality.displayName}",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onBackground,
                     fontWeight = FontWeight.Medium,
                 )
-                SourceTypeBadge(
-                    sourceType = source.sourceType.getDisplayType(),
-                    reliability = source.sourceType.getReliabilityText(),
-                    isP2P = source.isP2P(),
-                    seeders = source.features.seeders,
-                    size = QualityBadgeSize.SMALL,
-                )
+                // Skip SourceTypeBadge as it shows redundant info for Real-Debrid
             }
         }
 
-        // Source type summary
+        // Simplified source summary (removed P2P/reliability info for Real-Debrid)
         if (sources.size > 1) {
+            val qualityBreakdown = sources.groupBy { it.quality }.mapValues { it.value.size }
             val summaryText =
                 buildString {
-                    if (reliableSourcesCount > 0) {
-                        append("$reliableSourcesCount reliable")
-                    }
-                    if (p2pSourcesCount > 0) {
-                        if (reliableSourcesCount > 0) append(" • ")
-                        append("$p2pSourcesCount P2P")
-                    }
-                    val directSourcesCount = sources.size - p2pSourcesCount
-                    if (directSourcesCount > 0 && p2pSourcesCount > 0) {
-                        append(" • $directSourcesCount direct")
+                    val topQualities =
+                        qualityBreakdown.entries
+                            .sortedByDescending { it.key.priority }
+                            .take(3)
+
+                    topQualities.forEachIndexed { index, (quality, count) ->
+                        if (index > 0) append(" • ")
+                        append("$count ${quality.shortName}")
                     }
                 }
 

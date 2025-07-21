@@ -593,7 +593,7 @@ data class HealthData(
 
         return QualityBadge(
             text = healthText,
-            type = QualityBadge.Type.HEALTH,
+            type = QualityBadge.Type.FEATURE,
             priority = 45,
         )
     }

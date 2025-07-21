@@ -1899,101 +1899,22 @@ class TVDetailsViewModel
             streamingSource: StreamingSource,
             tvShow: TVShowContentDetail,
             episode: TVEpisode,
-        ): SourceMetadata =
-            SourceMetadata(
-                id = streamingSource.id,
-                provider =
-                    SourceProviderInfo(
-                        id =
-                            streamingSource.provider.name
-                                .lowercase()
-                                .replace(" ", "-"),
-                        name = streamingSource.provider.name,
-                        displayName = streamingSource.provider.displayName,
-                        logoUrl = null,
-                        type = if (streamingSource.features.supportsP2P || streamingSource.sourceType.type == SourceType.ScraperSourceType.TORRENT) SourceProviderInfo.ProviderType.TORRENT else SourceProviderInfo.ProviderType.DIRECT_STREAM,
-                        reliability = SourceProviderInfo.ProviderReliability.GOOD,
-                    ),
-                quality =
-                    QualityInfo(
-                        resolution = mapStreamingQualityToVideoResolution(streamingSource.quality),
-                        bitrate = null,
-                        // Not available in StreamingSource features
-                        hdr10 = false,
-                        dolbyVision = streamingSource.features.supportsDolbyVision,
-                        // Not available in StreamingSource features
-                        hdr10Plus = false,
-                    ),
-                codec =
-                    CodecInfo(
-                        // Default, would need better detection
-                        type = VideoCodec.H264,
-                        profile = null,
-                        level = null,
-                    ),
-                audio =
-                    AudioInfo(
-                        // Default, would need better detection
-                        format = AudioFormat.AAC,
-                        channels = null,
-                        bitrate = null,
-                        language = null,
-                        dolbyAtmos = streamingSource.features.supportsDolbyAtmos,
-                        // Not available in StreamingSource features
-                        dtsX = false,
-                    ),
-                release =
-                    ReleaseInfo(
-                        // Default, would need better detection
-                        type = ReleaseType.WEB_DL,
-                        group = null,
-                        edition = null,
-                        year = null,
-                    ),
-                file =
-                    FileInfo(
-                        name = null,
-                        sizeInBytes = null,
-                        // Default
-                        extension = "mkv",
-                        hash = null,
-                    ),
-                health =
-                    HealthInfo(
-                        seeders = streamingSource.features.seeders,
-                        leechers = streamingSource.features.leechers,
-                        downloadSpeed = null,
-                        uploadSpeed = null,
-                        availability = null,
-                        lastChecked = null,
-                    ),
-                features =
-                    FeatureInfo(
-                        subtitles = emptyList(),
-                        has3D = false,
-                        hasChapters = false,
-                        hasMultipleAudioTracks = false,
-                        isDirectPlay = false,
-                        requiresTranscoding = false,
-                    ),
-                availability =
-                    AvailabilityInfo(
-                        isAvailable = true,
-                        region = null,
-                        expiryDate = null,
-                        debridService = null,
-                        // Not available in StreamingSource
-                        cached = false,
-                    ),
+        ): SourceMetadata {
+            // Use the SourceMetadataMapper which properly extracts tracker and file size
+            val sourceMetadata = SourceMetadataMapper.fromStreamingSource(streamingSource)
+
+            // Add TV show specific metadata
+            return sourceMetadata.copy(
                 metadata =
-                    mapOf(
-                        "tvShowId" to tvShow.id,
-                        "seasonNumber" to episode.seasonNumber.toString(),
-                        "episodeNumber" to episode.episodeNumber.toString(),
-                        "episodeTitle" to episode.title,
-                        "originalUrl" to (streamingSource.url ?: ""),
-                    ),
+                    sourceMetadata.metadata +
+                        mapOf(
+                            "tvShowId" to tvShow.id,
+                            "seasonNumber" to episode.seasonNumber.toString(),
+                            "episodeNumber" to episode.episodeNumber.toString(),
+                            "episodeTitle" to episode.title,
+                        ),
             )
+        }
 
         /**
          * Preload sources for visible episodes in current season
@@ -2061,27 +1982,6 @@ class TVDetailsViewModel
                 DebugLogger.d("TVDetailsViewModel", "Episode $episodeKey already loaded or loading, skipping preload")
             }
         }
-
-        /**
-         * Map StreamingSource quality to VideoResolution
-         */
-        private fun mapStreamingQualityToVideoResolution(quality: SourceQuality): VideoResolution =
-            when (quality) {
-                SourceQuality.QUALITY_8K -> VideoResolution.RESOLUTION_8K
-                SourceQuality.QUALITY_4K,
-                SourceQuality.QUALITY_4K_HDR,
-                -> VideoResolution.RESOLUTION_4K
-                SourceQuality.QUALITY_1080P,
-                SourceQuality.QUALITY_1080P_HDR,
-                -> VideoResolution.RESOLUTION_1080P
-                SourceQuality.QUALITY_720P,
-                SourceQuality.QUALITY_720P_HDR,
-                -> VideoResolution.RESOLUTION_720P
-                SourceQuality.QUALITY_480P -> VideoResolution.RESOLUTION_480P
-                SourceQuality.QUALITY_360P -> VideoResolution.RESOLUTION_360P
-                SourceQuality.QUALITY_240P -> VideoResolution.RESOLUTION_240P
-                else -> VideoResolution.UNKNOWN
-            }
 
         /**
          * Clear all data

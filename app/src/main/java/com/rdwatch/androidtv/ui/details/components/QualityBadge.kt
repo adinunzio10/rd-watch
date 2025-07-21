@@ -590,17 +590,13 @@ private fun getStandardQualityColor(quality: SourceQuality): Color {
  */
 private fun getAdvancedBadgeColor(type: AdvancedQualityBadge.Type): Color {
     return when (type) {
-        AdvancedQualityBadge.Type.RESOLUTION ->
-            when {
-                // Different colors for different resolutions for quick recognition
-                true -> Color(0xFF8B5CF6) // Purple for resolution
-                else -> Color(0xFF8B5CF6)
-            }
+        AdvancedQualityBadge.Type.TRACKER_IDENTITY -> Color(0xFF059669) // Green for tracker identity
+        AdvancedQualityBadge.Type.FILE_SIZE -> Color(0xFF6366F1) // Indigo for file size
+        AdvancedQualityBadge.Type.RESOLUTION -> Color(0xFF8B5CF6) // Purple for resolution
         AdvancedQualityBadge.Type.HDR -> Color(0xFF4A90E2) // Blue for HDR
         AdvancedQualityBadge.Type.CODEC -> Color(0xFF10B981) // Green for codec
         AdvancedQualityBadge.Type.AUDIO -> Color(0xFFF59E0B) // Orange for audio
         AdvancedQualityBadge.Type.RELEASE -> Color(0xFF6366F1) // Indigo for release type
-        AdvancedQualityBadge.Type.HEALTH -> Color(0xFFEF4444) // Red for health (P2P)
         AdvancedQualityBadge.Type.FEATURE -> Color(0xFF06B6D4) // Cyan for features
         AdvancedQualityBadge.Type.PROVIDER -> Color(0xFF84CC16) // Lime for provider
     }
@@ -612,6 +608,15 @@ private fun getAdvancedBadgeColor(type: AdvancedQualityBadge.Type): Color {
  */
 private fun getEnhancedBadgeColor(badge: AdvancedQualityBadge): Color {
     return when (badge.type) {
+        AdvancedQualityBadge.Type.TRACKER_IDENTITY ->
+            when (badge.text) {
+                "YTS" -> Color(0xFF059669) // Green for YTS (efficient)
+                "EZTV" -> Color(0xFF3B82F6) // Blue for EZTV (TV specialist)
+                "RARBG" -> Color(0xFF7C3AED) // Purple for RARBG (premium quality)
+                "1337x" -> Color(0xFF0891B2) // Cyan for 1337x (variety)
+                "TPB" -> Color(0xFF6B7280) // Gray for TPB (general)
+                else -> Color(0xFF8B5CF6) // Purple for scene groups
+            }
         AdvancedQualityBadge.Type.RESOLUTION ->
             when (badge.text) {
                 "8K" -> Color(0xFFDC2626) // Red for 8K
@@ -650,13 +655,6 @@ private fun getEnhancedBadgeColor(badge: AdvancedQualityBadge): Color {
                 "WEB-DL" -> Color(0xFF0891B2) // Cyan for WEB-DL
                 "WebRip" -> Color(0xFF0EA5E9) // Light blue for WebRip
                 else -> Color(0xFF6B7280) // Gray for others
-            }
-        AdvancedQualityBadge.Type.HEALTH ->
-            when {
-                badge.text.contains("1000") -> Color(0xFF059669) // Green for excellent health
-                badge.text.contains("500") -> Color(0xFF10B981) // Light green for good health
-                badge.text.contains("100") -> Color(0xFFF59E0B) // Orange for fair health
-                else -> Color(0xFFEF4444) // Red for poor health
             }
         AdvancedQualityBadge.Type.FEATURE ->
             when {
@@ -733,7 +731,7 @@ object QualityBadgePreview {
                         AdvancedQualityBadge("H.265", AdvancedQualityBadge.Type.CODEC, 80),
                         AdvancedQualityBadge("Atmos", AdvancedQualityBadge.Type.AUDIO, 70),
                         AdvancedQualityBadge("REMUX", AdvancedQualityBadge.Type.RELEASE, 60),
-                        AdvancedQualityBadge("150S", AdvancedQualityBadge.Type.HEALTH, 50),
+                        AdvancedQualityBadge("YTS", AdvancedQualityBadge.Type.TRACKER_IDENTITY, 50),
                     ),
             )
 

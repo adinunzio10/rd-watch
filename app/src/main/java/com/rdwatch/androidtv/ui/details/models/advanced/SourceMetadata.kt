@@ -116,12 +116,46 @@ data class SourceMetadata(
     ): List<QualityBadge> {
         val badges = mutableListOf<QualityBadge>()
 
-        // Resolution badge
+        // 1. TRACKER IDENTITY (Highest priority - tells users about expected quality/characteristics)
+        release.group?.let { trackerName ->
+            val trackerInfo = getTrackerInfo(trackerName)
+            if (trackerInfo != null) {
+                badges.add(
+                    QualityBadge(
+                        text = trackerInfo.displayName,
+                        type = QualityBadge.Type.TRACKER_IDENTITY,
+                        priority = 100,
+                    ),
+                )
+            }
+        }
+
+        // 2. FILE SIZE CATEGORY (Critical for storage decisions)
+        file.sizeInBytes?.let { sizeBytes ->
+            val sizeGB = sizeBytes / (1024.0 * 1024.0 * 1024.0)
+            val sizeBadge =
+                when {
+                    sizeGB < 1.0 -> "XS" to 95
+                    sizeGB < 3.0 -> "S" to 93
+                    sizeGB < 8.0 -> "M" to 91
+                    sizeGB < 15.0 -> "L" to 89
+                    else -> "XL" to 87
+                }
+            badges.add(
+                QualityBadge(
+                    text = sizeBadge.first,
+                    type = QualityBadge.Type.FILE_SIZE,
+                    priority = sizeBadge.second,
+                ),
+            )
+        }
+
+        // 3. QUALITY + HDR (Core viewing specs)
         badges.add(
             QualityBadge(
-                text = quality.resolution.displayName,
+                text = quality.resolution.shortName,
                 type = QualityBadge.Type.RESOLUTION,
-                priority = 100,
+                priority = 85,
             ),
         )
 
@@ -131,7 +165,7 @@ data class SourceMetadata(
                 QualityBadge(
                     text = "DV",
                     type = QualityBadge.Type.HDR,
-                    priority = 95,
+                    priority = 83,
                 ),
             )
         } else if (quality.hdr10Plus) {
@@ -139,7 +173,7 @@ data class SourceMetadata(
                 QualityBadge(
                     text = "HDR10+",
                     type = QualityBadge.Type.HDR,
-                    priority = 94,
+                    priority = 81,
                 ),
             )
         } else if (quality.hdr10) {
@@ -147,27 +181,39 @@ data class SourceMetadata(
                 QualityBadge(
                     text = "HDR10",
                     type = QualityBadge.Type.HDR,
-                    priority = 93,
+                    priority = 79,
                 ),
             )
         }
 
-        // Codec badge
+        // 4. RELEASE QUALITY (REMUX vs WEB-DL vs CAM - important quality indicator)
         badges.add(
             QualityBadge(
-                text = codec.type.displayName,
-                type = QualityBadge.Type.CODEC,
-                priority = 80,
+                text = release.type.shortName,
+                type = QualityBadge.Type.RELEASE,
+                priority = 75,
             ),
         )
 
-        // Audio badges
+        // 5. TECHNICAL SPECS (Codec and audio - lower priority but still useful)
+        // Codec badge (only for efficient codecs)
+        if (codec.type.efficiencyBonus >= 35) {
+            badges.add(
+                QualityBadge(
+                    text = codec.type.shortName,
+                    type = QualityBadge.Type.CODEC,
+                    priority = 70,
+                ),
+            )
+        }
+
+        // Audio badges (only for premium audio)
         if (audio.dolbyAtmos) {
             badges.add(
                 QualityBadge(
                     text = "Atmos",
                     type = QualityBadge.Type.AUDIO,
-                    priority = 70,
+                    priority = 65,
                 ),
             )
         } else if (audio.dtsX) {
@@ -175,77 +221,9 @@ data class SourceMetadata(
                 QualityBadge(
                     text = "DTS:X",
                     type = QualityBadge.Type.AUDIO,
-                    priority = 69,
+                    priority = 63,
                 ),
             )
-        } else {
-            badges.add(
-                QualityBadge(
-                    text = audio.format.displayName,
-                    type = QualityBadge.Type.AUDIO,
-                    priority = 68,
-                ),
-            )
-        }
-
-        // Release type badge
-        badges.add(
-            QualityBadge(
-                text = release.type.displayName,
-                type = QualityBadge.Type.RELEASE,
-                priority = 60,
-            ),
-        )
-
-        // Advanced health indicator
-        healthData?.let { health ->
-            badges.add(health.getHealthBadge())
-
-            // Risk indicator for high-risk sources
-            if (health.riskLevel == RiskLevel.HIGH) {
-                badges.add(
-                    QualityBadge(
-                        text = "High Risk",
-                        type = QualityBadge.Type.HEALTH,
-                        priority = 35,
-                    ),
-                )
-            }
-
-            // Predicted reliability for very reliable sources
-            if (health.predictedReliability >= 95) {
-                badges.add(
-                    QualityBadge(
-                        text = "Ultra Reliable",
-                        type = QualityBadge.Type.HEALTH,
-                        priority = 52,
-                    ),
-                )
-            } else if (health.predictedReliability >= 85) {
-                badges.add(
-                    QualityBadge(
-                        text = "Very Reliable",
-                        type = QualityBadge.Type.HEALTH,
-                        priority = 51,
-                    ),
-                )
-            }
-        } ?: run {
-            // Fallback to basic health indicator for P2P
-            if (health.seeders != null && health.seeders > 0) {
-                val healthText =
-                    when {
-                        health.seeders > 100 -> "${health.seeders}S"
-                        else -> "${health.seeders}S/${health.leechers ?: 0}L"
-                    }
-                badges.add(
-                    QualityBadge(
-                        text = healthText,
-                        type = QualityBadge.Type.HEALTH,
-                        priority = 50,
-                    ),
-                )
-            }
         }
 
         // Season pack indicator
@@ -309,6 +287,69 @@ data class SourceMetadata(
 
         return true
     }
+
+    /**
+     * Get tracker information for known trackers
+     */
+    private fun getTrackerInfo(trackerName: String): TrackerInfo? {
+        return when (trackerName.uppercase()) {
+            "YTS", "YIFY" ->
+                TrackerInfo(
+                    displayName = "YTS",
+                    characteristic = "Small files, good compression",
+                    qualityTier = TrackerQualityTier.EFFICIENT,
+                )
+            "EZTV", "ETTV" ->
+                TrackerInfo(
+                    displayName = "EZTV",
+                    characteristic = "TV show specialist",
+                    qualityTier = TrackerQualityTier.STANDARD,
+                )
+            "RARBG" ->
+                TrackerInfo(
+                    displayName = "RARBG",
+                    characteristic = "High quality, larger files",
+                    qualityTier = TrackerQualityTier.PREMIUM,
+                )
+            "1337X", "LEET" ->
+                TrackerInfo(
+                    displayName = "1337x",
+                    characteristic = "Variety tracker",
+                    qualityTier = TrackerQualityTier.STANDARD,
+                )
+            "THEPIRATEBAY", "TPB" ->
+                TrackerInfo(
+                    displayName = "TPB",
+                    characteristic = "General purpose",
+                    qualityTier = TrackerQualityTier.STANDARD,
+                )
+            "SPARKS", "GECKOS", "ROVERS", "TOMMY" ->
+                TrackerInfo(
+                    displayName = trackerName,
+                    characteristic = "Scene release",
+                    qualityTier = TrackerQualityTier.PREMIUM,
+                )
+            else -> null
+        }
+    }
+}
+
+/**
+ * Tracker information for known release groups/trackers
+ */
+data class TrackerInfo(
+    val displayName: String,
+    val characteristic: String,
+    val qualityTier: TrackerQualityTier,
+)
+
+/**
+ * Quality tier for different trackers
+ */
+enum class TrackerQualityTier {
+    PREMIUM, // High quality, larger files (RARBG, Scene groups)
+    STANDARD, // Balanced quality/size (EZTV, 1337x, TPB)
+    EFFICIENT, // Smaller files, good compression (YTS)
 }
 
 /**
@@ -649,12 +690,13 @@ data class QualityBadge(
     val priority: Int = 0,
 ) {
     enum class Type {
+        TRACKER_IDENTITY, // Tracker name (YTS, EZTV, RARBG) - most important for Real-Debrid users
+        FILE_SIZE, // File size categories - critical for storage decisions
         RESOLUTION,
         HDR,
         CODEC,
         AUDIO,
         RELEASE,
-        HEALTH,
         FEATURE,
         PROVIDER,
     }

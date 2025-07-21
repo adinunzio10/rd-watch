@@ -175,9 +175,10 @@ private fun SourceCardContent(
             }
         }
 
-        // Provider name
+        // Tracker name (more useful than provider name for Real-Debrid users)
+        val trackerName = source.metadata["tracker"] ?: source.provider.displayName
         Text(
-            text = source.provider.displayName,
+            text = trackerName,
             style =
                 MaterialTheme.typography.titleSmall.copy(
                     fontSize =
@@ -188,16 +189,56 @@ private fun SourceCardContent(
                         },
                     fontWeight = FontWeight.SemiBold,
                 ),
-            color = contentColor,
+            color = getTrackerColor(trackerName, contentColor),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
+
+        // File size display (critical for Real-Debrid storage decisions)
+        source.size?.let { sizeStr ->
+            val (formattedSize, sizeColor) = formatFileSize(sizeStr)
+            Text(
+                text = formattedSize,
+                style =
+                    MaterialTheme.typography.bodyMedium.copy(
+                        fontSize =
+                            when (variant) {
+                                SourceCardVariant.COMPACT -> 11.sp
+                                SourceCardVariant.DEFAULT -> 13.sp
+                                SourceCardVariant.DETAILED -> 15.sp
+                            },
+                        fontWeight = FontWeight.Bold,
+                    ),
+                color = sizeColor,
+                maxLines = 1,
+            )
+        }
+
+        // Filename display for verification (helps users confirm correct content)
+        source.metadata["filename"]?.let { filename ->
+            Text(
+                text = filename,
+                style =
+                    MaterialTheme.typography.bodySmall.copy(
+                        fontSize =
+                            when (variant) {
+                                SourceCardVariant.COMPACT -> 10.sp
+                                SourceCardVariant.DEFAULT -> 11.sp
+                                SourceCardVariant.DETAILED -> 12.sp
+                            },
+                    ),
+                color = contentColor.copy(alpha = 0.8f),
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
 
         // Quality badges
         if (showQualityBadges) {
             QualityFeatureBadgeRow(
                 quality = source.quality,
-                features = source.getQualityBadges().drop(1), // Skip main quality since it's already shown
+                // Skip main quality since it's already shown
+                features = source.getQualityBadges().drop(1),
                 maxFeatures =
                     when (variant) {
                         SourceCardVariant.COMPACT -> 1
@@ -270,6 +311,47 @@ private fun SourceCardContent(
             }
         }
     }
+}
+
+/**
+ * Format file size string and return color-coded size with appropriate color
+ * Colors help users quickly assess storage impact
+ */
+private fun formatFileSize(sizeStr: String): Pair<String, Color> {
+    // Parse size from various formats (5.2GB, 1.3 GB, 800MB, etc.)
+    val sizeRegex = Regex("([0-9]+\\.?[0-9]*)\\s*(GB|MB|TB)", RegexOption.IGNORE_CASE)
+    val match = sizeRegex.find(sizeStr)
+
+    if (match != null) {
+        val value = match.groupValues[1].toDoubleOrNull() ?: 0.0
+        val unit = match.groupValues[2].uppercase()
+
+        // Convert to GB for consistent comparison
+        val sizeInGB =
+            when (unit) {
+                "TB" -> value * 1024
+                "GB" -> value
+                "MB" -> value / 1024
+                else -> value
+            }
+
+        // Format and color code based on size
+        val (displayText, color) =
+            when {
+                sizeInGB < 0.5 -> "${(sizeInGB * 1024).toInt()}MB" to Color(0xFF10B981) // Green for tiny files
+                sizeInGB < 1.0 -> "${String.format("%.0f", sizeInGB * 1024)}MB" to Color(0xFF10B981) // Green for small files
+                sizeInGB < 3.0 -> "${String.format("%.1f", sizeInGB)}GB" to Color(0xFF059669) // Green for small files
+                sizeInGB < 8.0 -> "${String.format("%.1f", sizeInGB)}GB" to Color(0xFF3B82F6) // Blue for medium files
+                sizeInGB < 15.0 -> "${String.format("%.1f", sizeInGB)}GB" to Color(0xFFF59E0B) // Orange for large files
+                sizeInGB < 30.0 -> "${String.format("%.1f", sizeInGB)}GB" to Color(0xFFEF4444) // Red for very large files
+                else -> "${String.format("%.1f", sizeInGB)}GB" to Color(0xFFDC2626) // Dark red for massive files
+            }
+
+        return displayText to color
+    }
+
+    // Fallback for unparseable sizes
+    return sizeStr to Color(0xFF6B7280) // Gray for unknown
 }
 
 /**
@@ -488,6 +570,30 @@ object SourceCardPreview {
                         onClick = { },
                     )
                 }
+            }
+        }
+    }
+}
+
+/**
+ * Get color for tracker names to help users distinguish between different trackers
+ */
+private fun getTrackerColor(
+    trackerName: String,
+    fallback: Color,
+): Color {
+    return when (trackerName.uppercase()) {
+        "YTS", "YIFY" -> Color(0xFF059669) // Green for YTS (efficient, small files)
+        "EZTV", "ETTV" -> Color(0xFF3B82F6) // Blue for EZTV (TV specialist)
+        "RARBG" -> Color(0xFF7C3AED) // Purple for RARBG (premium quality)
+        "1337X", "LEET" -> Color(0xFF0891B2) // Cyan for 1337x (variety)
+        "TPB", "THEPIRATEBAY" -> Color(0xFF6B7280) // Gray for TPB (general)
+        "TGX", "TORRENTGALAXY" -> Color(0xFFEC4899) // Pink for TGX
+        else -> {
+            // Scene groups and unknown trackers get distinctive colors
+            when {
+                trackerName.length <= 4 -> Color(0xFF8B5CF6) // Purple for scene groups
+                else -> fallback // Use default color for unknown trackers
             }
         }
     }

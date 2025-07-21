@@ -62,6 +62,8 @@ class ScraperSourceAdapter
             size: String? = null,
             seeders: Int? = null,
             leechers: Int? = null,
+            tracker: String? = null,
+            filename: String? = null,
         ): StreamingSource {
             val provider = manifestToProvider(manifest)
             val sourceId = "${manifest.id}_${quality.name}_${url.hashCode()}"
@@ -82,7 +84,7 @@ class ScraperSourceAdapter
                     sourceType = determineSourceType(manifest, url),
                     title = title,
                     size = size,
-                    metadata = createSourceMetadata(manifest),
+                    metadata = createSourceMetadata(manifest, tracker, filename),
                 )
 
             println(
@@ -146,17 +148,34 @@ class ScraperSourceAdapter
         /**
          * Create source metadata from ScraperManifest
          */
-        private fun createSourceMetadata(manifest: ScraperManifest): Map<String, String> {
-            return mapOf(
-                "scraper_id" to manifest.id,
-                "scraper_name" to manifest.name,
-                "scraper_version" to manifest.version,
-                "scraper_author" to (manifest.author ?: "unknown"),
-                "validation_status" to manifest.metadata.validationStatus.name,
-                "capabilities" to manifest.metadata.capabilities.joinToString(",") { it.name },
-                "base_url" to manifest.baseUrl,
-                "source_url" to manifest.sourceUrl,
-            )
+        private fun createSourceMetadata(
+            manifest: ScraperManifest,
+            tracker: String? = null,
+            filename: String? = null,
+        ): Map<String, String> {
+            val baseMetadata =
+                mapOf(
+                    "scraper_id" to manifest.id,
+                    "scraper_name" to manifest.name,
+                    "scraper_version" to manifest.version,
+                    "scraper_author" to (manifest.author ?: "unknown"),
+                    "validation_status" to manifest.metadata.validationStatus.name,
+                    "capabilities" to manifest.metadata.capabilities.joinToString(",") { it.name },
+                    "base_url" to manifest.baseUrl,
+                    "source_url" to manifest.sourceUrl,
+                )
+
+            val extendedMetadata = baseMetadata.toMutableMap()
+
+            if (tracker != null) {
+                extendedMetadata["tracker"] = tracker
+            }
+
+            if (filename != null) {
+                extendedMetadata["filename"] = filename
+            }
+
+            return extendedMetadata
         }
 
         /**

@@ -13,7 +13,6 @@ import com.rdwatch.androidtv.ui.details.models.CastMember
 import com.rdwatch.androidtv.ui.details.models.CrewMember
 import com.rdwatch.androidtv.ui.details.models.ExtendedContentMetadata
 import com.rdwatch.androidtv.ui.details.models.SourceSortOption
-import com.rdwatch.androidtv.ui.details.models.SourceType
 import com.rdwatch.androidtv.ui.details.models.StreamingSource
 import com.rdwatch.androidtv.ui.details.models.advanced.*
 import com.rdwatch.androidtv.ui.details.viewmodels.SourceListViewModel
@@ -887,108 +886,13 @@ class MovieDetailsViewModel
             streamingSource: StreamingSource,
             movieId: String,
         ): SourceMetadata {
-            return SourceMetadata(
-                id = streamingSource.id,
-                provider =
-                    SourceProviderInfo(
-                        id = streamingSource.provider.name.lowercase().replace(" ", "-"),
-                        name = streamingSource.provider.name,
-                        displayName = streamingSource.provider.displayName,
-                        logoUrl = null,
-                        type = if (streamingSource.features.supportsP2P || streamingSource.sourceType.type == SourceType.ScraperSourceType.TORRENT) SourceProviderInfo.ProviderType.TORRENT else SourceProviderInfo.ProviderType.DIRECT_STREAM,
-                        reliability = SourceProviderInfo.ProviderReliability.GOOD,
-                    ),
-                quality =
-                    QualityInfo(
-                        resolution = mapStreamingQualityToVideoResolution(streamingSource.quality),
-                        bitrate = null,
-                        hdr10 = false, // Not available in StreamingSource features
-                        dolbyVision = streamingSource.features.supportsDolbyVision,
-                        hdr10Plus = false, // Not available in StreamingSource features
-                    ),
-                codec =
-                    CodecInfo(
-                        type = VideoCodec.H264, // Default, would need better detection
-                        profile = null,
-                        level = null,
-                    ),
-                audio =
-                    AudioInfo(
-                        format = AudioFormat.AAC, // Default, would need better detection
-                        channels = null,
-                        bitrate = null,
-                        language = null,
-                        dolbyAtmos = streamingSource.features.supportsDolbyAtmos,
-                        dtsX = false, // Not available in StreamingSource features
-                    ),
-                release =
-                    ReleaseInfo(
-                        type = ReleaseType.WEB_DL, // Default, would need better detection
-                        group = null,
-                        edition = null,
-                        year = null,
-                    ),
-                file =
-                    FileInfo(
-                        name = null,
-                        sizeInBytes = null,
-                        extension = "mkv", // Default
-                        hash = null,
-                    ),
-                health =
-                    HealthInfo(
-                        seeders = streamingSource.features.seeders,
-                        leechers = streamingSource.features.leechers,
-                        downloadSpeed = null,
-                        uploadSpeed = null,
-                        availability = null,
-                        lastChecked = null,
-                    ),
-                features =
-                    FeatureInfo(
-                        subtitles = emptyList(),
-                        has3D = false,
-                        hasChapters = false,
-                        hasMultipleAudioTracks = false,
-                        isDirectPlay = false,
-                        requiresTranscoding = false,
-                    ),
-                availability =
-                    AvailabilityInfo(
-                        isAvailable = true,
-                        region = null,
-                        expiryDate = null,
-                        debridService = null,
-                        cached = false, // Not available in StreamingSource
-                    ),
-                metadata =
-                    mapOf(
-                        "movieId" to movieId,
-                        "originalUrl" to (streamingSource.url ?: ""),
-                    ),
-            )
-        }
+            // Use the SourceMetadataMapper which properly extracts tracker and file size
+            val sourceMetadata = SourceMetadataMapper.fromStreamingSource(streamingSource)
 
-        /**
-         * Map StreamingSource quality to VideoResolution
-         */
-        private fun mapStreamingQualityToVideoResolution(quality: com.rdwatch.androidtv.ui.details.models.SourceQuality): VideoResolution {
-            return when (quality) {
-                com.rdwatch.androidtv.ui.details.models.SourceQuality.QUALITY_8K -> VideoResolution.RESOLUTION_8K
-                com.rdwatch.androidtv.ui.details.models.SourceQuality.QUALITY_4K,
-                com.rdwatch.androidtv.ui.details.models.SourceQuality.QUALITY_4K_HDR,
-                -> VideoResolution.RESOLUTION_4K
-                com.rdwatch.androidtv.ui.details.models.SourceQuality.QUALITY_1080P,
-                com.rdwatch.androidtv.ui.details.models.SourceQuality.QUALITY_1080P_HDR,
-                -> VideoResolution.RESOLUTION_1080P
-                com.rdwatch.androidtv.ui.details.models.SourceQuality.QUALITY_720P,
-                com.rdwatch.androidtv.ui.details.models.SourceQuality.QUALITY_720P_HDR,
-                -> VideoResolution.RESOLUTION_720P
-                com.rdwatch.androidtv.ui.details.models.SourceQuality.QUALITY_480P -> VideoResolution.RESOLUTION_480P
-                com.rdwatch.androidtv.ui.details.models.SourceQuality.QUALITY_360P -> VideoResolution.RESOLUTION_360P
-                com.rdwatch.androidtv.ui.details.models.SourceQuality.QUALITY_240P -> VideoResolution.RESOLUTION_240P
-                else -> VideoResolution.UNKNOWN
-            }
+            // Add movieId to the metadata
+            return sourceMetadata.copy(
+                metadata = sourceMetadata.metadata + mapOf("movieId" to movieId),
+            )
         }
     }
 
