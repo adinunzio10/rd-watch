@@ -23,6 +23,8 @@ import androidx.compose.ui.unit.dp
 import com.rdwatch.androidtv.data.entities.ShowProgressEntity
 import com.rdwatch.androidtv.data.repository.NextEpisodeResult
 import com.rdwatch.androidtv.ui.components.ImagePriority
+import com.rdwatch.androidtv.ui.components.SeasonProgressIndicator
+import com.rdwatch.androidtv.ui.components.SeasonProgress
 import com.rdwatch.androidtv.ui.components.SmartTVImageLoader
 import com.rdwatch.androidtv.ui.focus.TVFocusIndicator
 import com.rdwatch.androidtv.ui.focus.tvFocusable
@@ -236,25 +238,30 @@ private fun ContinueWatchingCard(
                             overflow = TextOverflow.Ellipsis,
                         )
 
-                        // Progress indicator
+                        // Enhanced progress indicator
                         if (item.progressPercentage > 0f) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            Column(
+                                verticalArrangement = Arrangement.spacedBy(4.dp),
                             ) {
-                                LinearProgressIndicator(
-                                    progress = { item.progressPercentage },
-                                    modifier =
-                                        Modifier
-                                            .weight(1f)
-                                            .height(3.dp),
-                                    color = MaterialTheme.colorScheme.primary,
-                                    trackColor = Color.White.copy(alpha = 0.3f),
+                                SeasonProgressIndicator(
+                                    seasonProgresses = listOf(
+                                        SeasonProgress(
+                                            seasonNumber = item.showProgressEntity.nextSeasonNumber ?: 1,
+                                            watchedEpisodes = item.showProgressEntity.totalEpisodesWatched,
+                                            totalEpisodes = (item.showProgressEntity.totalEpisodesWatched / item.progressPercentage).toInt().coerceAtLeast(1),
+                                            progress = item.progressPercentage,
+                                        )
+                                    ),
+                                    modifier = Modifier.fillMaxWidth(),
+                                    height = 4.dp,
+                                    showDetails = false,
                                 )
+                                
                                 Text(
-                                    text = "${(item.progressPercentage * 100).toInt()}%",
+                                    text = "${(item.progressPercentage * 100).toInt()}% complete",
                                     style = MaterialTheme.typography.labelSmall,
                                     color = Color.White.copy(alpha = 0.8f),
+                                    fontWeight = FontWeight.Medium,
                                 )
                             }
                         }

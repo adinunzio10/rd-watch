@@ -23,6 +23,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.rdwatch.androidtv.ui.components.MiniProgressBadge
+import com.rdwatch.androidtv.ui.components.ProgressBadgeStyle
 import com.rdwatch.androidtv.ui.details.models.TVEpisode
 import com.rdwatch.androidtv.ui.details.models.advanced.SourceMetadata
 import com.rdwatch.androidtv.ui.details.models.advanced.VideoResolution
@@ -174,14 +176,23 @@ fun EpisodeCard(
                             }
                         }
 
-                        // Source availability indicators
+                        // Progress badge in top-left corner
+                        MiniProgressBadge(
+                            progress = episode.watchProgress,
+                            style = ProgressBadgeStyle.Rounded,
+                            modifier = Modifier
+                                .align(Alignment.TopStart)
+                                .padding(6.dp),
+                        )
+
+                        // Source availability indicators (moved to top-right)
                         if (showSourceIndicators) {
                             SourceAvailabilityIndicators(
                                 sources = availableSources,
                                 isLoading = isLoadingSources,
                                 modifier =
                                     Modifier
-                                        .align(Alignment.TopStart)
+                                        .align(Alignment.TopEnd)
                                         .padding(6.dp),
                             )
                         }
@@ -493,14 +504,23 @@ fun CompactEpisodeCard(
                     error = null,
                 )
 
-                // Source availability indicators
+                // Progress badge in top-left corner
+                MiniProgressBadge(
+                    progress = episode.watchProgress,
+                    style = ProgressBadgeStyle.Circular,
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .padding(4.dp),
+                )
+
+                // Source availability indicators (moved to top-right)
                 if (showSourceIndicators) {
                     SourceAvailabilityIndicators(
                         sources = availableSources,
                         isLoading = isLoadingSources,
                         modifier =
                             Modifier
-                                .align(Alignment.TopStart)
+                                .align(Alignment.TopEnd)
                                 .padding(4.dp),
                     )
                 }
