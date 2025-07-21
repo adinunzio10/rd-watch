@@ -96,6 +96,14 @@ app/src/main/java/com/rdwatch/androidtv/
 │   │   │   └── FileBrowserMappers.kt
 │   │   └── navigation/         # Navigation helpers
 │   │       └── FileBrowserNavigationHelper.kt
+│   ├── library/                # Library Management System
+│   │   ├── LibraryScreen.kt    # Main library screen with grid layout
+│   │   ├── LibraryViewModel.kt # State management with filtering/search
+│   │   └── components/         # Library UI components
+│   │       ├── LibraryHeader.kt        # Header with stats and navigation
+│   │       ├── LibraryFilterBar.kt     # Category/content type filters
+│   │       ├── LibrarySearchBar.kt     # Search functionality
+│   │       └── LibraryItemCard.kt      # Individual library item cards
 │   ├── common/                 # Shared UI components
 │   │   └── UiState.kt          # Common UI state definitions
 │   └── focus/                  # TV focus management
@@ -748,6 +756,231 @@ fun `when API call succeeds, should cache and return results`() = runTest {
     verify { mockCacheManager.cacheContent("root", any()) }
 }
 ```
+
+## Library Management System Architecture
+
+### Overview
+
+The Library Management System provides users with a comprehensive solution for saving, organizing, and managing their favorite content. Built with TV-optimized UI patterns and robust data persistence, it features filtering, search, categorization, and export/import capabilities.
+
+### Core Components
+
+#### 1. LibraryViewModel (`LibraryViewModel.kt`)
+- **Purpose**: Central state management for library operations
+- **Key Features**:
+  - User-scoped library content management
+  - Real-time filtering by content type, favorites, and downloads
+  - Search functionality with live results
+  - Sorting options (recently added, alphabetical, last updated)
+  - CRUD operations for library items
+  - Export/import functionality for backup/restore
+  - Statistics tracking (total items, favorites, download sizes)
+  - Error handling with user-friendly messages
+
+#### 2. LibraryRepository (`data/repository/LibraryRepository.kt`)
+- **Purpose**: Data access layer for library operations
+- **Key Features**:
+  - Reactive Flow-based data streams
+  - Result wrapper for error handling
+  - Full CRUD operations with LibraryDao
+  - User-scoped queries and operations
+  - Download status management
+  - Cleanup operations for orphaned downloads
+
+#### 3. LibraryScreen (`LibraryScreen.kt`)
+- **Purpose**: Main library UI with TV-optimized layout
+- **Key Features**:
+  - Grid layout optimized for TV viewing (4 columns)
+  - Loading states with skeleton placeholders
+  - Empty state handling with helpful messages
+  - Error state display with retry options
+  - Focus management for D-pad navigation
+  - Real-time content updates
+
+#### 4. Library Components (`components/`)
+
+##### LibraryHeader (`LibraryHeader.kt`)
+- Back button with TV focus handling
+- Library statistics display (total items, favorites, downloads)
+- Responsive layout with overscan safety
+
+##### LibraryFilterBar (`LibraryFilterBar.kt`)
+- Content type filters (Movies, TV Shows, Episodes, etc.)
+- Toggle filters for favorites and downloads
+- Sort options with clear visual feedback
+- Clear filters functionality
+- TV-optimized chip navigation
+
+##### LibrarySearchBar (`LibrarySearchBar.kt`)
+- Real-time search with debouncing
+- Clear search functionality
+- TV keyboard integration
+- Focus management for remote control input
+
+##### LibraryItemCard (`LibraryItemCard.kt`)
+- TV-optimized card design with focus states
+- Content poster with fallback handling
+- Quick actions overlay (favorite, remove)
+- Status indicators (favorite, downloaded)
+- Content type badges
+- Animation and scaling effects for focus
+
+### Data Architecture
+
+#### LibraryEntity Structure
+```kotlin
+@Entity(tableName = "library")
+data class LibraryEntity(
+    @PrimaryKey(autoGenerate = true) val libraryId: Long = 0,
+    val userId: Long,                    // User scope
+    val contentId: String,               // Unique content identifier
+    val contentType: String,             // MOVIE, TV_SHOW, TV_EPISODE, etc.
+    val title: String,                   // Content title
+    val description: String? = null,     // Content description
+    val thumbnailUrl: String? = null,    // Poster/thumbnail URL
+    val isFavorite: Boolean = false,     // Favorite status
+    val isDownloaded: Boolean = false,   // Download status
+    val filePath: String? = null,        // Local file path
+    val fileSizeBytes: Long? = null,     // File size for downloads
+    val addedAt: Date,                   // When added to library
+    val updatedAt: Date                  // Last modification time
+)
+```
+
+#### Key Database Features
+- **User Scoping**: All library items are scoped to specific users
+- **Indexing**: Optimized indices for user_id, content_type, added_at, is_favorite
+- **Foreign Keys**: Cascade delete for user management
+- **Unique Constraints**: Prevents duplicate entries per user
+
+### UI State Management
+
+#### LibraryUiState
+```kotlin
+data class LibraryUiState(
+    val isLoading: Boolean = false,
+    val error: String? = null,
+    val userId: Long,
+    val selectedContentType: ContentType? = null,
+    val showFavoritesOnly: Boolean = false,
+    val showDownloadsOnly: Boolean = false,
+    val searchQuery: String = "",
+    val sortBy: LibrarySortBy = LibrarySortBy.RECENTLY_ADDED,
+    val itemCount: Int = 0,
+    val stats: LibraryStats? = null
+)
+```
+
+#### LibraryStats
+```kotlin
+data class LibraryStats(
+    val totalItems: Int = 0,
+    val favoriteItems: Int = 0,
+    val downloadedSizeBytes: Long = 0,
+    val availableContentTypes: List<ContentType> = emptyList()
+)
+```
+
+### Navigation Integration
+
+#### Screen Registration
+- Added `Screen.Library` to navigation system
+- Integrated with `TVNavigationDrawer` as "My Library"
+- Proper navigation transitions and focus management
+- Deep linking support for library content
+
+#### Content Detail Integration
+- Library items navigate to appropriate detail screens
+- Content type detection for proper routing
+- Support for Movies, TV Shows, and Episodes
+
+### Export/Import System
+
+#### Export Features
+- JSON format export of library data
+- User-scoped export with metadata
+- Includes all library items with full metadata
+- Version tracking for compatibility
+
+#### Import Features
+- JSON parsing with error handling
+- Duplicate detection and handling
+- Progress tracking during import
+- Error recovery for malformed data
+
+### TV Optimization Features
+
+#### Focus Management
+- Proper D-pad navigation throughout the interface
+- Focus indicators for all interactive elements
+- Spatial navigation for grid layouts
+- Back button handling
+
+#### Performance Optimizations
+- Lazy loading for large libraries
+- Image caching and preloading
+- Efficient filtering and sorting
+- Memory-conscious grid rendering
+
+#### Visual Design
+- Material3 theming with TV adaptations
+- Overscan safety margins
+- Large touch targets for remote control
+- Clear visual hierarchy and contrast
+
+### Testing Coverage
+
+#### Repository Tests (`LibraryRepositoryTest.kt`)
+- All CRUD operations tested
+- Error handling verification
+- Flow behavior validation
+- Database exception handling
+
+#### ViewModel Tests (`LibraryViewModelTest.kt`)
+- State management verification
+- Filtering and search functionality
+- Export/import operations
+- Error state handling
+- Statistics loading
+
+### Integration Points
+
+#### User Management
+- Integrates with `UserRepository` for user context
+- Supports default Android TV user (ID: 1)
+- User-scoped operations throughout
+
+#### Content Detail System
+- Seamless navigation to content details
+- Library status indicators in detail screens
+- Add/remove from library functionality
+
+#### Download Management
+- File path and size tracking
+- Download status indicators
+- Cleanup operations for orphaned files
+
+### Future Enhancement Opportunities
+
+1. **Advanced Filtering**
+   - Genre-based filtering
+   - Year/decade filters
+   - Rating-based sorting
+
+2. **Smart Collections**
+   - Auto-generated collections
+   - Recently watched integration
+   - Recommendation-based grouping
+
+3. **Sync Capabilities**
+   - Cloud backup/restore
+   - Multi-device synchronization
+   - Cross-platform compatibility
+
+4. **Enhanced Analytics**
+   - Viewing pattern analysis
+   - Content recommendation insights
+   - Usage statistics
 
 ## TMDb Integration Architecture
 

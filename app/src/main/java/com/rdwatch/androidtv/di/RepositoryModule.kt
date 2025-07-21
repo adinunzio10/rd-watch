@@ -2,6 +2,8 @@ package com.rdwatch.androidtv.di
 
 import com.rdwatch.androidtv.core.error.ErrorHandler
 import com.rdwatch.androidtv.core.reactive.DispatcherProvider
+import com.rdwatch.androidtv.data.repository.LibraryRepository
+import com.rdwatch.androidtv.data.repository.LibraryRepositoryImpl
 import com.rdwatch.androidtv.data.repository.TMDbMovieRepository
 import com.rdwatch.androidtv.data.repository.TMDbMovieRepositoryImpl
 import com.rdwatch.androidtv.data.repository.TMDbSearchRepository
@@ -41,6 +43,10 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindTMDbSearchRepository(tmdbSearchRepositoryImpl: TMDbSearchRepositoryImpl): TMDbSearchRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindLibraryRepository(libraryRepositoryImpl: LibraryRepositoryImpl): LibraryRepository
 
     companion object {
         @Provides
