@@ -8,6 +8,8 @@ import com.rdwatch.androidtv.data.entities.AutoPlaySettingsEntity
 import com.rdwatch.androidtv.data.entities.EpisodeProgressEntity
 import com.rdwatch.androidtv.data.entities.ShowProgressEntity
 import com.rdwatch.androidtv.data.entities.WatchOrderType
+import com.rdwatch.androidtv.notification.EpisodeNotificationService
+import com.rdwatch.androidtv.util.DebugLogger
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import java.util.Date
@@ -27,6 +29,7 @@ class NextEpisodeRepository
         private val showProgressDao: ShowProgressDao,
         private val autoPlaySettingsDao: AutoPlaySettingsDao,
         private val tmdbTVDao: TMDbTVDao,
+        private val notificationService: EpisodeNotificationService,
     ) {
         /**
          * Get the next episode to watch for a specific show
@@ -326,6 +329,7 @@ class NextEpisodeRepository
             val autoPlaySettings = autoPlaySettingsDao.getAutoPlaySettings(userId)
             val threshold = autoPlaySettings?.autoMarkWatchedThreshold ?: 0.9f
             val isCompleted = watchPercentage >= threshold
+            val wasAlreadyCompleted = episodeProgressDao.getEpisodeProgress(userId, tmdbShowId, seasonNumber, episodeNumber)?.isCompleted ?: false
 
             val now = Date()
 
@@ -362,8 +366,26 @@ class NextEpisodeRepository
                 episodeProgressDao.insertEpisodeProgress(newProgress)
             }
 
-            // Recalculate show progress if episode was completed
-            if (isCompleted) {
+            // Handle episode completion notifications and show progress recalculation
+            if (isCompleted && !wasAlreadyCompleted) {
+                // Show episode completed notification if notifications are enabled
+                val notificationsEnabled = autoPlaySettings?.notificationEnabled ?: true
+                if (notificationsEnabled) {
+                    try {
+                        val showEntity = tmdbTVDao.getTVShowByIdSuspend(tmdbShowId)
+                        val showTitle = showEntity?.name ?: "Unknown Show"
+                        notificationService.notifyEpisodeCompleted(
+                            showTitle = showTitle,
+                            seasonNumber = seasonNumber,
+                            episodeNumber = episodeNumber,
+                            episodeTitle = episodeTitle,
+                        )
+                        DebugLogger.d("NextEpisodeRepository", "Episode completion notification sent for $showTitle S${seasonNumber}E$episodeNumber")
+                    } catch (e: Exception) {
+                        DebugLogger.e("NextEpisodeRepository", "Failed to send episode completion notification", e)
+                    }
+                }
+
                 recalculateShowProgress(userId, tmdbShowId)
             }
         }
@@ -441,6 +463,16 @@ class NextEpisodeRepository
                 }
 
             showProgressDao.insertShowProgress(showProgressEntity)
+
+            // Handle notifications for show progress updates
+            handleShowProgressNotifications(
+                userId = userId,
+                tmdbShowId = tmdbShowId,
+                latestCompleted = latestCompleted,
+                nextResult = nextResult,
+                existingShowProgress = existingShowProgress,
+                newShowProgress = showProgressEntity,
+            )
         }
 
         /**
@@ -486,6 +518,86 @@ class NextEpisodeRepository
          */
         suspend fun getShowsEligibleForAutoPlay(userId: Long): List<ShowProgressEntity> {
             return showProgressDao.getShowsEligibleForAutoPlay(userId)
+        }
+
+        /**
+         * Handle notifications for show progress updates
+         */
+        private suspend fun handleShowProgressNotifications(
+            userId: Long,
+            tmdbShowId: Int,
+            latestCompleted: EpisodeProgressEntity,
+            nextResult: NextEpisodeResult?,
+            existingShowProgress: ShowProgressEntity?,
+            newShowProgress: ShowProgressEntity,
+        ) {
+            try {
+                // Check if notifications are enabled
+                val autoPlaySettings = autoPlaySettingsDao.getAutoPlaySettings(userId)
+                val notificationsEnabled = autoPlaySettings?.notificationEnabled ?: true
+
+                if (!notificationsEnabled) {
+                    DebugLogger.d("NextEpisodeRepository", "Notifications disabled for user $userId")
+                    return
+                }
+
+                val showTitle = newShowProgress.showTitle
+
+                // Detect season completion
+                val previousLastSeason = existingShowProgress?.lastWatchedSeason
+                val currentLastSeason = latestCompleted.seasonNumber
+                val isSeasonJustCompleted =
+                    previousLastSeason != null &&
+                        previousLastSeason < currentLastSeason &&
+                        currentLastSeason > 0 // Don't notify for special episodes (season 0)
+
+                // Detect series completion
+                val wasShowCompleted = existingShowProgress?.isShowCompleted ?: false
+                val isShowNowCompleted = newShowProgress.isShowCompleted && !wasShowCompleted
+
+                // Notify about next episode if available
+                if (nextResult != null && !isShowNowCompleted) {
+                    notificationService.notifyNextEpisodeReady(
+                        showTitle = showTitle,
+                        tmdbShowId = tmdbShowId,
+                        nextEpisode = nextResult,
+                    )
+                    DebugLogger.d("NextEpisodeRepository", "Next episode notification sent for $showTitle: ${nextResult.getDisplayText()}")
+                }
+
+                // Notify about season completion (only if moving to a new season)
+                if (isSeasonJustCompleted && !isShowNowCompleted) {
+                    notificationService.notifySeasonFinished(
+                        showTitle = showTitle,
+                        tmdbShowId = tmdbShowId,
+                        seasonNumber = previousLastSeason!!,
+                        nextEpisode = if (nextResult?.isNewSeason == true) nextResult else null,
+                    )
+                    DebugLogger.d("NextEpisodeRepository", "Season completion notification sent for $showTitle Season $previousLastSeason")
+                }
+
+                // Notify about series completion
+                if (isShowNowCompleted) {
+                    // Calculate total seasons watched (excluding season 0)
+                    val episodeProgress = episodeProgressDao.getEpisodeProgressByShow(userId, tmdbShowId).first()
+                    val seasonsWatched =
+                        episodeProgress
+                            .filter { it.isCompleted && it.seasonNumber > 0 }
+                            .map { it.seasonNumber }
+                            .distinct()
+                            .size
+
+                    notificationService.notifySeriesCompleted(
+                        showTitle = showTitle,
+                        tmdbShowId = tmdbShowId,
+                        totalSeasonsWatched = seasonsWatched,
+                        totalEpisodesWatched = newShowProgress.totalEpisodesWatched,
+                    )
+                    DebugLogger.d("NextEpisodeRepository", "Series completion notification sent for $showTitle")
+                }
+            } catch (e: Exception) {
+                DebugLogger.e("NextEpisodeRepository", "Failed to handle show progress notifications", e)
+            }
         }
 
         /**
