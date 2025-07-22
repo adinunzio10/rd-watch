@@ -25,8 +25,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.rdwatch.androidtv.data.repository.NextEpisodeResult
-import com.rdwatch.androidtv.ui.components.SmartTVImageLoader
-import com.rdwatch.androidtv.ui.components.ImagePriority
 import com.rdwatch.androidtv.ui.focus.TVFocusIndicator
 import com.rdwatch.androidtv.ui.focus.tvFocusable
 import kotlinx.coroutines.delay
@@ -63,17 +61,19 @@ fun AutoPlayCountdown(
 
     Dialog(
         onDismissRequest = onCancel,
-        properties = DialogProperties(
-            dismissOnBackPress = true,
-            dismissOnClickOutside = false,
-            usePlatformDefaultWidth = false,
-        ),
+        properties =
+            DialogProperties(
+                dismissOnBackPress = true,
+                dismissOnClickOutside = false,
+                usePlatformDefaultWidth = false,
+            ),
     ) {
         Surface(
-            modifier = modifier
-                .fillMaxWidth(0.6f)
-                .wrapContentHeight()
-                .clip(RoundedCornerShape(24.dp)),
+            modifier =
+                modifier
+                    .fillMaxWidth(0.6f)
+                    .wrapContentHeight()
+                    .clip(RoundedCornerShape(24.dp)),
             color = MaterialTheme.colorScheme.surface,
             shadowElevation = 32.dp,
         ) {
@@ -99,10 +99,11 @@ fun AutoPlayCountdown(
                 ) {
                     // Thumbnail placeholder or poster
                     Box(
-                        modifier = Modifier
-                            .size(80.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(MaterialTheme.colorScheme.outline.copy(alpha = 0.1f)),
+                        modifier =
+                            Modifier
+                                .size(80.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(MaterialTheme.colorScheme.outline.copy(alpha = 0.1f)),
                         contentAlignment = Alignment.Center,
                     ) {
                         if (posterUrl != null) {
@@ -177,13 +178,14 @@ fun AutoPlayCountdown(
                 ) {
                     // Circular progress background
                     Box(
-                        modifier = Modifier
-                            .size(120.dp)
-                            .border(
-                                width = 6.dp,
-                                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f),
-                                shape = CircleShape,
-                            ),
+                        modifier =
+                            Modifier
+                                .size(120.dp)
+                                .border(
+                                    width = 6.dp,
+                                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f),
+                                    shape = CircleShape,
+                                ),
                     )
 
                     // Countdown progress
@@ -231,9 +233,10 @@ fun AutoPlayCountdown(
                         icon = Icons.Default.PlayArrow,
                         onClick = onPlayNow,
                         isPrimary = true,
-                        modifier = Modifier
-                            .weight(1f)
-                            .focusRequester(playNowFocusRequester),
+                        modifier =
+                            Modifier
+                                .weight(1f)
+                                .focusRequester(playNowFocusRequester),
                     )
                 }
             }
@@ -261,26 +264,31 @@ private fun AutoPlayCountdownButton(
     ) {
         Button(
             onClick = onClick,
-            modifier = modifier
-                .height(48.dp)
-                .tvFocusable(
-                    onFocusChanged = { isFocused = it.isFocused },
+            modifier =
+                modifier
+                    .height(48.dp)
+                    .tvFocusable(
+                        onFocusChanged = { isFocused = it.isFocused },
+                    ),
+            colors =
+                ButtonDefaults.buttonColors(
+                    containerColor =
+                        if (isPrimary) {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            MaterialTheme.colorScheme.surfaceVariant
+                        },
+                    contentColor =
+                        if (isPrimary) {
+                            MaterialTheme.colorScheme.onPrimary
+                        } else {
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        },
                 ),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = if (isPrimary) {
-                    MaterialTheme.colorScheme.primary
-                } else {
-                    MaterialTheme.colorScheme.surfaceVariant
-                },
-                contentColor = if (isPrimary) {
-                    MaterialTheme.colorScheme.onPrimary
-                } else {
-                    MaterialTheme.colorScheme.onSurfaceVariant
-                },
-            ),
-            elevation = ButtonDefaults.buttonElevation(
-                defaultElevation = if (isFocused) 8.dp else 2.dp,
-            ),
+            elevation =
+                ButtonDefaults.buttonElevation(
+                    defaultElevation = if (isFocused) 8.dp else 2.dp,
+                ),
             shape = RoundedCornerShape(12.dp),
         ) {
             Row(

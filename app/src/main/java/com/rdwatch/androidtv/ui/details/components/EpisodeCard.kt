@@ -180,9 +180,10 @@ fun EpisodeCard(
                         MiniProgressBadge(
                             progress = episode.watchProgress,
                             style = ProgressBadgeStyle.Rounded,
-                            modifier = Modifier
-                                .align(Alignment.TopStart)
-                                .padding(6.dp),
+                            modifier =
+                                Modifier
+                                    .align(Alignment.TopStart)
+                                    .padding(6.dp),
                         )
 
                         // Source availability indicators (moved to top-right)
@@ -508,9 +509,10 @@ fun CompactEpisodeCard(
                 MiniProgressBadge(
                     progress = episode.watchProgress,
                     style = ProgressBadgeStyle.Circular,
-                    modifier = Modifier
-                        .align(Alignment.TopStart)
-                        .padding(4.dp),
+                    modifier =
+                        Modifier
+                            .align(Alignment.TopStart)
+                            .padding(4.dp),
                 )
 
                 // Source availability indicators (moved to top-right)

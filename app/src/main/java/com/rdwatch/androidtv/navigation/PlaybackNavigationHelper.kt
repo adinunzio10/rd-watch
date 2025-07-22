@@ -168,29 +168,31 @@ class PlaybackNavigationHelper
         ) {
             // Create a content ID for the next episode
             val episodeContentId = "${nextEpisode.tmdbShowId}:${nextEpisode.seasonNumber}:${nextEpisode.episodeNumber}"
-            val episodeTitle = "${showTitle} - ${nextEpisode.getFormattedEpisodeId()}"
-            val fullTitle = if (nextEpisode.episodeTitle != null) {
-                "$episodeTitle: ${nextEpisode.episodeTitle}"
-            } else {
-                episodeTitle
-            }
+            val episodeTitle = "$showTitle - ${nextEpisode.getFormattedEpisodeId()}"
+            val fullTitle =
+                if (nextEpisode.episodeTitle != null) {
+                    "$episodeTitle: ${nextEpisode.episodeTitle}"
+                } else {
+                    episodeTitle
+                }
 
             // Save current progress before switching episodes
             saveCurrentProgress()
 
             // In a complete implementation, this would:
             // 1. Fetch episode details from TMDb API
-            // 2. Get available sources for the episode  
+            // 2. Get available sources for the episode
             // 3. Select the best source based on user preferences
             // 4. Resolve the playable URL
             // 5. Prepare the media with ExoPlayer
-            
+
             // For now, we'll create placeholder metadata and trigger navigation
-            val episodeMetadata = MediaMetadata(
-                title = fullTitle,
-                description = "Auto-playing next episode",
-                thumbnailUrl = null, // Would come from TMDb episode data
-            )
+            val episodeMetadata =
+                MediaMetadata(
+                    title = fullTitle,
+                    description = "Auto-playing next episode",
+                    thumbnailUrl = null, // Would come from TMDb episode data
+                )
 
             // TODO: In actual implementation, replace with real episode URL resolution
             // exoPlayerManager.prepareMedia(
@@ -203,8 +205,8 @@ class PlaybackNavigationHelper
 
             // For now, we'll just log the auto-play navigation
             android.util.Log.i(
-                "PlaybackNavigationHelper", 
-                "Auto-play navigation to: $fullTitle (${nextEpisode.tmdbShowId})"
+                "PlaybackNavigationHelper",
+                "Auto-play navigation to: $fullTitle (${nextEpisode.tmdbShowId})",
             )
 
             // TODO: Trigger actual navigation to the episode

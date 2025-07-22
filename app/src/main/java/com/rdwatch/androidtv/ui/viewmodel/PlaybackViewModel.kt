@@ -457,24 +457,23 @@ class PlaybackViewModel
         ) {
             try {
                 _mediaReadyState.value = MediaReadyState.Preparing
-                
-                // For now, we'll create a placeholder URL structure that the actual 
+
+                // For now, we'll create a placeholder URL structure that the actual
                 // navigation system will handle. In a complete implementation, this
                 // would integrate with the TMDb API to get episode details and sources.
-                val episodeContentId = "${tmdbShowId}:${seasonNumber}:${episodeNumber}"
-                val episodeTitle = "${showTitle} - S${seasonNumber.toString().padStart(2, '0')}E${episodeNumber.toString().padStart(2, '0')}"
-                
+                val episodeContentId = "$tmdbShowId:$seasonNumber:$episodeNumber"
+                val episodeTitle = "$showTitle - S${seasonNumber.toString().padStart(2, '0')}E${episodeNumber.toString().padStart(2, '0')}"
+
                 // This is a placeholder - in actual implementation, you would:
                 // 1. Fetch episode details from TMDb
-                // 2. Get available sources 
+                // 2. Get available sources
                 // 3. Select best source
                 // 4. Resolve the playable URL
                 // For now, we'll just set the state to ready and let navigation handle it
-                
+
                 _mediaReadyState.value = MediaReadyState.Ready
-                
+
                 android.util.Log.i("PlaybackViewModel", "Prepared next episode for auto-play: $episodeTitle")
-                
             } catch (e: Exception) {
                 android.util.Log.e("PlaybackViewModel", "Error preparing next episode playback", e)
                 _mediaReadyState.value = MediaReadyState.Error("Failed to prepare next episode: ${e.message}")

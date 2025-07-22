@@ -90,9 +90,10 @@ fun EpisodeGridSection(
                     watchedEpisodes = watchedCount,
                     totalEpisodes = season.episodes.size,
                     size = EpisodeProgressSize.Standard,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 8.dp),
                     showText = true,
                 )
             }
