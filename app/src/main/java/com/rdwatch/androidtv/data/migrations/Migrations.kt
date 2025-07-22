@@ -719,13 +719,13 @@ object Migrations {
                     """
                     CREATE TABLE IF NOT EXISTS `auto_play_settings` (
                         `user_id` INTEGER PRIMARY KEY NOT NULL,
-                        `enabled` INTEGER NOT NULL DEFAULT 1,
-                        `countdown_seconds` INTEGER NOT NULL DEFAULT 10,
-                        `skip_intro_enabled` INTEGER NOT NULL DEFAULT 0,
-                        `skip_outro_enabled` INTEGER NOT NULL DEFAULT 0,
-                        `binge_mode_enabled` INTEGER NOT NULL DEFAULT 0,
-                        `notification_enabled` INTEGER NOT NULL DEFAULT 1,
-                        `auto_mark_watched_threshold` REAL NOT NULL DEFAULT 0.9,
+                        `enabled` INTEGER NOT NULL,
+                        `countdown_seconds` INTEGER NOT NULL,
+                        `skip_intro_enabled` INTEGER NOT NULL,
+                        `skip_outro_enabled` INTEGER NOT NULL,
+                        `binge_mode_enabled` INTEGER NOT NULL,
+                        `notification_enabled` INTEGER NOT NULL,
+                        `auto_mark_watched_threshold` REAL NOT NULL,
                         `updated_at` INTEGER NOT NULL,
                         FOREIGN KEY(`user_id`) REFERENCES `users`(`user_id`) ON UPDATE NO ACTION ON DELETE CASCADE
                     )
@@ -733,7 +733,7 @@ object Migrations {
                 )
 
                 // Create indices for auto_play_settings
-                database.execSQL("CREATE INDEX IF NOT EXISTS `index_auto_play_settings_enabled` ON `auto_play_settings` (`enabled`)")
+                database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_auto_play_settings_user_id` ON `auto_play_settings` (`user_id`)")
             }
         }
 
