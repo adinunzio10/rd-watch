@@ -17,6 +17,7 @@ import com.rdwatch.androidtv.player.ExoPlayerManager
 import com.rdwatch.androidtv.player.PlaybackState
 import com.rdwatch.androidtv.player.TvPlayerView
 import com.rdwatch.androidtv.player.controls.TvPlayerMenu
+import com.rdwatch.androidtv.player.state.EpisodeMetadata
 import com.rdwatch.androidtv.player.subtitle.AvailableSubtitle
 import com.rdwatch.androidtv.player.subtitle.SubtitleManager
 import com.rdwatch.androidtv.presentation.viewmodel.BaseViewModel
@@ -86,6 +87,32 @@ fun VideoPlayerScreen(
             else -> {
                 DebugLogger.d("VideoPlayerScreen", "Media state: $state")
             }
+        }
+    }
+
+    // Set up episode progress callback to connect PlaybackStateRepository with AutoPlayController
+    LaunchedEffect(tmdbShowId, seasonNumber, episodeNumber) {
+        if (tmdbShowId != null && seasonNumber != null && episodeNumber != null) {
+            // Set up callback to forward episode progress updates to AutoPlayController
+            val callback: (EpisodeMetadata, Long, Long, String?) -> Unit = { episodeMetadata, progressSeconds, durationSeconds, deviceInfo ->
+                autoPlayController.updateEpisodeProgress(
+                    tmdbShowId = episodeMetadata.tmdbShowId,
+                    seasonNumber = episodeMetadata.seasonNumber,
+                    episodeNumber = episodeMetadata.episodeNumber,
+                    progressSeconds = progressSeconds,
+                    durationSeconds = durationSeconds,
+                    showTitle = episodeMetadata.showTitle ?: title,
+                    posterUrl = posterUrl,
+                    episodeTitle = episodeMetadata.episodeTitle,
+                    deviceInfo = deviceInfo,
+                )
+            }
+            playbackViewModel.setupEpisodeProgressCallback(callback)
+            DebugLogger.d("VideoPlayerScreen", "Episode progress callback set up for $tmdbShowId S${seasonNumber}E$episodeNumber")
+        } else {
+            // Clear callback for non-episode content
+            playbackViewModel.setupEpisodeProgressCallback(null)
+            DebugLogger.d("VideoPlayerScreen", "Episode progress callback cleared for non-episode content")
         }
     }
 

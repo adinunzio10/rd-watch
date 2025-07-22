@@ -446,6 +446,13 @@ class PlaybackViewModel
         }
 
         /**
+         * Set up episode progress callback to connect PlaybackStateRepository with AutoPlayController
+         */
+        fun setupEpisodeProgressCallback(callback: ((com.rdwatch.androidtv.player.state.EpisodeMetadata, Long, Long, String?) -> Unit)?) {
+            playbackStateRepository.setEpisodeProgressCallback(callback)
+        }
+
+        /**
          * Prepare and start playback for the next episode in auto-play sequence
          * This method is called by the AutoPlayController when countdown completes
          */

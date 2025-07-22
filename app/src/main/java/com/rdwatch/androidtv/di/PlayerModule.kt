@@ -9,6 +9,7 @@ import com.rdwatch.androidtv.data.repository.PlaybackProgressRepository
 import com.rdwatch.androidtv.player.ExoPlayerManager
 import com.rdwatch.androidtv.player.MediaSourceFactory
 import com.rdwatch.androidtv.player.error.PlayerErrorHandler
+import com.rdwatch.androidtv.player.state.EpisodeDetectionService
 import com.rdwatch.androidtv.player.state.PlaybackStateRepository
 import com.rdwatch.androidtv.player.subtitle.SubtitleErrorHandler
 import com.rdwatch.androidtv.player.subtitle.SubtitleManager
@@ -47,14 +48,21 @@ object PlayerModule {
     fun providePlaybackStateRepository(
         @ApplicationContext context: Context,
         playbackProgressRepository: PlaybackProgressRepository,
+        episodeDetectionService: EpisodeDetectionService,
     ): PlaybackStateRepository {
-        return PlaybackStateRepository(context, playbackProgressRepository)
+        return PlaybackStateRepository(context, playbackProgressRepository, episodeDetectionService)
     }
 
     @Provides
     @Singleton
     fun providePlayerErrorHandler(): PlayerErrorHandler {
         return PlayerErrorHandler()
+    }
+
+    @Provides
+    @Singleton
+    fun provideEpisodeDetectionService(): EpisodeDetectionService {
+        return EpisodeDetectionService()
     }
 
     @Provides
