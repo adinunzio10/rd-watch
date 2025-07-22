@@ -14,14 +14,12 @@ This file provides essential guidance to Claude Code when working with this Andr
 
 ```bash
 # Build & Run
-./gradlew build                    # Build project
+./gradlew assembleDebug           # Build project
 ./gradlew installDebug            # Install to Android TV device/emulator
 ./gradlew clean                   # Clean build
 
 # Code Quality
-./gradlew lint                    # Full lint check
 ./ktlint-summary.sh               # KtLint format & check
-./lint-check.sh                   # Minimal lint output
 
 # Dependencies
 ./gradlew dependencyUpdates       # Check for updates
