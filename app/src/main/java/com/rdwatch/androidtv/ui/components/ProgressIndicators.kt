@@ -39,18 +39,20 @@ fun EpisodeProgressBar(
     size: EpisodeProgressSize = EpisodeProgressSize.Standard,
     showText: Boolean = true,
     animationEnabled: Boolean = true,
-    maxDisplayedEpisodes: Int = 20, // Limit for TV readability
+    // Limit for TV readability
+    maxDisplayedEpisodes: Int = 20,
 ) {
     val displayEpisodes = min(totalEpisodes, maxDisplayedEpisodes)
     val progress = if (totalEpisodes > 0) watchedEpisodes.toFloat() / totalEpisodes else 0f
-    
+
     // Animate progress
     val animatedProgress by animateFloatAsState(
         targetValue = progress,
-        animationSpec = tween(
-            durationMillis = if (animationEnabled) UIConstants.Animations.STANDARD_DURATION_MS else 0
-        ),
-        label = "episode_progress"
+        animationSpec =
+            tween(
+                durationMillis = if (animationEnabled) UIConstants.Animations.STANDARD_DURATION_MS else 0,
+            ),
+        label = "episode_progress",
     )
 
     Column(
@@ -88,11 +90,12 @@ fun EpisodeProgressBar(
         if (showText && size != EpisodeProgressSize.Mini) {
             Text(
                 text = "$watchedEpisodes/$totalEpisodes episodes",
-                style = when (size) {
-                    EpisodeProgressSize.Large -> MaterialTheme.typography.bodyMedium
-                    EpisodeProgressSize.Standard -> MaterialTheme.typography.bodySmall
-                    EpisodeProgressSize.Compact, EpisodeProgressSize.Mini -> MaterialTheme.typography.labelSmall
-                },
+                style =
+                    when (size) {
+                        EpisodeProgressSize.Large -> MaterialTheme.typography.bodyMedium
+                        EpisodeProgressSize.Standard -> MaterialTheme.typography.bodySmall
+                        EpisodeProgressSize.Compact, EpisodeProgressSize.Mini -> MaterialTheme.typography.labelSmall
+                    },
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
                 fontWeight = FontWeight.Medium,
             )
@@ -111,24 +114,27 @@ private fun EpisodeMarker(
     modifier: Modifier = Modifier,
 ) {
     val color by animateColorAsState(
-        targetValue = if (isWatched) {
-            MaterialTheme.colorScheme.primary
-        } else {
-            MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
-        },
-        animationSpec = tween(
-            durationMillis = if (animationEnabled) UIConstants.Animations.FAST_DURATION_MS else 0
-        ),
-        label = "marker_color"
+        targetValue =
+            if (isWatched) {
+                MaterialTheme.colorScheme.primary
+            } else {
+                MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+            },
+        animationSpec =
+            tween(
+                durationMillis = if (animationEnabled) UIConstants.Animations.FAST_DURATION_MS else 0,
+            ),
+        label = "marker_color",
     )
 
     Box(
-        modifier = modifier
-            .size(size)
-            .background(
-                color = color,
-                shape = CircleShape,
-            )
+        modifier =
+            modifier
+                .size(size)
+                .background(
+                    color = color,
+                    shape = CircleShape,
+                ),
     )
 }
 
@@ -155,15 +161,16 @@ fun SeasonProgressIndicator(
     ) {
         // Multi-segment progress bar
         Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(height)
-                .clip(RoundedCornerShape(height / 2))
-                .background(MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .height(height)
+                    .clip(RoundedCornerShape(height / 2))
+                    .background(MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)),
         ) {
             // Draw season segments
             Canvas(
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier.fillMaxSize(),
             ) {
                 val segmentWidth = size.width / totalSeasons
                 seasonProgresses.forEachIndexed { index, seasonProgress ->
@@ -214,48 +221,53 @@ fun MiniProgressBadge(
     showPercentage: Boolean = false,
 ) {
     val backgroundColor by animateColorAsState(
-        targetValue = when {
-            progress >= 1f -> MaterialTheme.colorScheme.primary
-            progress > 0f -> MaterialTheme.colorScheme.secondary
-            else -> MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
-        },
+        targetValue =
+            when {
+                progress >= 1f -> MaterialTheme.colorScheme.primary
+                progress > 0f -> MaterialTheme.colorScheme.secondary
+                else -> MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+            },
         animationSpec = tween(UIConstants.Animations.FAST_DURATION_MS),
-        label = "badge_background"
+        label = "badge_background",
     )
 
     val contentColor by animateColorAsState(
-        targetValue = when {
-            progress >= 1f -> MaterialTheme.colorScheme.onPrimary
-            progress > 0f -> MaterialTheme.colorScheme.onSecondary
-            else -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-        },
+        targetValue =
+            when {
+                progress >= 1f -> MaterialTheme.colorScheme.onPrimary
+                progress > 0f -> MaterialTheme.colorScheme.onSecondary
+                else -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+            },
         animationSpec = tween(UIConstants.Animations.FAST_DURATION_MS),
-        label = "badge_content"
+        label = "badge_content",
     )
 
-    val shape = when (style) {
-        ProgressBadgeStyle.Circular -> CircleShape
-        ProgressBadgeStyle.Rounded -> RoundedCornerShape(4.dp)
-        ProgressBadgeStyle.Square -> RoundedCornerShape(2.dp)
-    }
+    val shape =
+        when (style) {
+            ProgressBadgeStyle.Circular -> CircleShape
+            ProgressBadgeStyle.Rounded -> RoundedCornerShape(4.dp)
+            ProgressBadgeStyle.Square -> RoundedCornerShape(2.dp)
+        }
 
     Box(
-        modifier = modifier
-            .size(
-                width = if (style == ProgressBadgeStyle.Circular) 24.dp else 32.dp,
-                height = 24.dp
-            )
-            .background(backgroundColor, shape)
-            .padding(2.dp),
+        modifier =
+            modifier
+                .size(
+                    width = if (style == ProgressBadgeStyle.Circular) 24.dp else 32.dp,
+                    height = 24.dp,
+                )
+                .background(backgroundColor, shape)
+                .padding(2.dp),
         contentAlignment = Alignment.Center,
     ) {
-        val displayText = when {
-            showPercentage -> "${(progress * 100).toInt()}%"
-            totalEpisodes > 0 -> "$watchedEpisodes/$totalEpisodes"
-            progress >= 1f -> "✓"
-            progress > 0f -> "●"
-            else -> "○"
-        }
+        val displayText =
+            when {
+                showPercentage -> "${(progress * 100).toInt()}%"
+                totalEpisodes > 0 -> "$watchedEpisodes/$totalEpisodes"
+                progress >= 1f -> "✓"
+                progress > 0f -> "●"
+                else -> "○"
+            }
 
         Text(
             text = displayText,
@@ -281,13 +293,14 @@ private fun DrawScope.drawSeasonSegment(
 ) {
     val startX = segmentIndex * segmentWidth
     val progressWidth = segmentWidth * seasonProgress.progress
-    
+
     // Season segment color based on progress
-    val segmentColor = when {
-        seasonProgress.progress >= 1f -> Color(0xFF4CAF50) // Green for completed
-        seasonProgress.progress > 0f -> Color(0xFF2196F3) // Blue for in progress
-        else -> Color(0xFFBDBDBD) // Gray for not started
-    }
+    val segmentColor =
+        when {
+            seasonProgress.progress >= 1f -> Color(0xFF4CAF50) // Green for completed
+            seasonProgress.progress > 0f -> Color(0xFF2196F3) // Blue for in progress
+            else -> Color(0xFFBDBDBD) // Gray for not started
+        }
 
     // Draw progress fill
     if (progressWidth > 0) {
@@ -342,13 +355,13 @@ fun EpisodeProgressBarPreview() {
                 totalEpisodes = 12,
                 size = EpisodeProgressSize.Standard,
             )
-            
+
             EpisodeProgressBar(
                 watchedEpisodes = 12,
                 totalEpisodes = 12,
                 size = EpisodeProgressSize.Compact,
             )
-            
+
             EpisodeProgressBar(
                 watchedEpisodes = 0,
                 totalEpisodes = 8,
@@ -367,11 +380,12 @@ fun SeasonProgressIndicatorPreview() {
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             SeasonProgressIndicator(
-                seasonProgresses = listOf(
-                    SeasonProgress(1, 10, 10),
-                    SeasonProgress(2, 8, 12),
-                    SeasonProgress(3, 0, 10),
-                ),
+                seasonProgresses =
+                    listOf(
+                        SeasonProgress(1, 10, 10),
+                        SeasonProgress(2, 8, 12),
+                        SeasonProgress(3, 0, 10),
+                    ),
                 showDetails = true,
             )
         }

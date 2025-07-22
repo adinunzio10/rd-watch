@@ -1621,7 +1621,7 @@
               "15.3"
             ],
             "details": "Create AnthologyHandler for shows like Black Mirror where episode order doesn't matter. Build SpecialEpisodeHandler to separate S00 episodes from main progression. Add show metadata flags for anthology detection. Allow manual episode selection override.",
-            "status": "pending",
+            "status": "deferred",
             "testStrategy": ""
           },
           {
@@ -1632,7 +1632,7 @@
               "15.3"
             ],
             "details": "Implement AutoPlayOverlay composable with 10-second countdown timer. Show next episode thumbnail, title, and description. Add cancel button and 'Play Now' option. Create smooth fade-in animation at 90% completion. Handle user interruption gracefully.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -1643,7 +1643,7 @@
               "15.7"
             ],
             "details": "Build AutoPlayController managing countdown state and episode transitions. Implement cancellation logic, immediate play triggers, and queue management. Add settings for auto-play toggle and countdown duration. Handle network pre-loading for seamless transitions.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": ""
           },
           {
@@ -3024,7 +3024,7 @@
     ],
     "metadata": {
       "created": "2025-06-22T03:41:46.714Z",
-      "updated": "2025-07-21T21:47:15.980Z",
+      "updated": "2025-07-22T01:35:16.413Z",
       "description": "Tasks for master context"
     }
   }

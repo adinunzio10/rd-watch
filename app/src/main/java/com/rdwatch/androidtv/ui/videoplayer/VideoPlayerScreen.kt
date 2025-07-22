@@ -20,8 +20,8 @@ import com.rdwatch.androidtv.player.controls.TvPlayerMenu
 import com.rdwatch.androidtv.player.subtitle.AvailableSubtitle
 import com.rdwatch.androidtv.player.subtitle.SubtitleManager
 import com.rdwatch.androidtv.presentation.viewmodel.BaseViewModel
-import com.rdwatch.androidtv.ui.theme.UIConstants
 import com.rdwatch.androidtv.ui.components.AutoPlayCountdown
+import com.rdwatch.androidtv.ui.theme.UIConstants
 import com.rdwatch.androidtv.ui.viewmodel.AutoPlayController
 import com.rdwatch.androidtv.ui.viewmodel.MediaReadyState
 import com.rdwatch.androidtv.ui.viewmodel.PlaybackViewModel
@@ -218,51 +218,53 @@ fun VideoPlayerScreen(
             autoPlayState.nextEpisode?.let { nextEpisode ->
                 AutoPlayCountdown(
                     nextEpisode = nextEpisode,
-                showTitle = autoPlayState.showTitle,
-                posterUrl = autoPlayState.posterUrl,
-                countdownSeconds = autoPlayState.countdownSeconds,
-                onPlayNow = {
-                    autoPlayController.playNextEpisode { nextEpisode ->
-                        onNavigateToEpisode?.invoke(
-                            nextEpisode.tmdbShowId,
-                            nextEpisode.seasonNumber,
-                            nextEpisode.episodeNumber
-                        )
-                    }
-                },
-                onCancel = {
-                    autoPlayController.cancelAutoPlay()
-                },
-                modifier = Modifier.fillMaxSize(),
-            )
+                    showTitle = autoPlayState.showTitle,
+                    posterUrl = autoPlayState.posterUrl,
+                    countdownSeconds = autoPlayState.countdownSeconds,
+                    onPlayNow = {
+                        autoPlayController.playNextEpisode { nextEpisode ->
+                            onNavigateToEpisode?.invoke(
+                                nextEpisode.tmdbShowId,
+                                nextEpisode.seasonNumber,
+                                nextEpisode.episodeNumber,
+                            )
+                        }
+                    },
+                    onCancel = {
+                        autoPlayController.cancelAutoPlay()
+                    },
+                    modifier = Modifier.fillMaxSize(),
+                )
             }
         }
     }
 
     // Monitor episode completion for TV shows
     LaunchedEffect(
-        playerState.currentPosition, 
-        playerState.duration, 
-        tmdbShowId, 
-        seasonNumber, 
-        episodeNumber
+        playerState.currentPosition,
+        playerState.duration,
+        tmdbShowId,
+        seasonNumber,
+        episodeNumber,
     ) {
         // Only monitor progress for TV show episodes (not movies)
         if (tmdbShowId != null && seasonNumber != null && episodeNumber != null) {
             val position = playerState.currentPosition
             val duration = playerState.duration
-            
+
             if (position > 0 && duration > 0) {
                 // Update episode progress and check for completion
                 autoPlayController.updateEpisodeProgress(
                     tmdbShowId = tmdbShowId,
                     seasonNumber = seasonNumber,
                     episodeNumber = episodeNumber,
-                    progressSeconds = position / 1000, // Convert to seconds
-                    durationSeconds = duration / 1000, // Convert to seconds
+                    // Convert to seconds
+                    progressSeconds = position / 1000,
+                    // Convert to seconds
+                    durationSeconds = duration / 1000,
                     showTitle = title,
                     posterUrl = posterUrl,
-                    deviceInfo = "AndroidTV"
+                    deviceInfo = "AndroidTV",
                 )
             }
         }

@@ -275,10 +275,32 @@ class NextEpisodeRepository
             userId: Long,
             showProgress: ShowProgressEntity?,
         ): Boolean {
-            val autoPlaySettings = autoPlaySettingsDao.getAutoPlaySettings(userId)
-            val globalAutoPlay = autoPlaySettings?.isAutoPlayActive() ?: false
+            val autoPlaySettings =
+                autoPlaySettingsDao.getAutoPlaySettings(userId)
+                    ?: createDefaultAutoPlaySettings(userId)
+            val globalAutoPlay = autoPlaySettings.isAutoPlayActive()
             val showAutoPlay = showProgress?.autoPlayEnabled ?: true
             return globalAutoPlay && showAutoPlay
+        }
+
+        /**
+         * Create default auto-play settings for a user
+         */
+        private suspend fun createDefaultAutoPlaySettings(userId: Long): AutoPlaySettingsEntity {
+            val defaultSettings =
+                AutoPlaySettingsEntity(
+                    userId = userId,
+                    enabled = true,
+                    countdownSeconds = 10,
+                    skipIntroEnabled = false,
+                    skipOutroEnabled = false,
+                    bingeModeEnabled = false,
+                    notificationEnabled = true,
+                    autoMarkWatchedThreshold = 0.9f,
+                    updatedAt = Date(),
+                )
+            autoPlaySettingsDao.insertAutoPlaySettings(defaultSettings)
+            return defaultSettings
         }
 
         /**
