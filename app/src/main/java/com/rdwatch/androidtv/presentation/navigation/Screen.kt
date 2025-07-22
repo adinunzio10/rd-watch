@@ -14,7 +14,12 @@ sealed class Screen {
     data class MovieDetails(val movieId: String) : Screen()
 
     @Serializable
-    data class TVDetails(val tvShowId: String) : Screen()
+    data class TVDetails(
+        val tvShowId: String,
+        val seasonNumber: Int? = null,
+        val episodeNumber: Int? = null,
+        val autoPlay: Boolean = false,
+    ) : Screen()
 
     @Serializable
     data class VideoPlayer(val videoUrl: String, val title: String = "") : Screen()

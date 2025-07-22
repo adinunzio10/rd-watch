@@ -87,12 +87,12 @@ Implements Task [task-id]: [task title]
 
 ## Subtasks Completed
 - [x] [subtask 1]
-- [x] [subtask 2] 
+- [x] [subtask 2]
 - [x] [subtask 3]
 
 ## Testing
-- [x] Build passes: \`./gradlew build\`
-- [x] Lint passes: \`./gradlew lint\`
+- [x] Build passes: \`./gradlew assembleDebug\`
+- [x] Lint passes: \`./ktlint-summary.sh\`
 - [ ] Manual testing on Android TV emulator
 - [ ] Focus navigation tested
 
@@ -110,6 +110,7 @@ gh pr view
 ## GitHub CLI Commands
 
 ### Repository Management
+
 ```bash
 # Clone repository
 gh repo clone [owner]/[repo]
@@ -122,6 +123,7 @@ gh repo fork
 ```
 
 ### Issue Management
+
 ```bash
 # List issues
 gh issue list
@@ -139,6 +141,7 @@ gh issue close [issue-number]
 ```
 
 ### Pull Request Management
+
 ```bash
 # List PRs
 gh pr list
@@ -163,6 +166,7 @@ gh pr status
 ```
 
 ### Workflow Management
+
 ```bash
 # List workflows
 gh workflow list
@@ -192,6 +196,7 @@ Subtask: [subtask-id] (if applicable)
 ```
 
 ### Types
+
 - `feat`: New feature implementation
 - `fix`: Bug fixes
 - `refactor`: Code refactoring without behavior change
@@ -201,6 +206,7 @@ Subtask: [subtask-id] (if applicable)
 - `chore`: Build process, dependency updates
 
 ### Scopes
+
 - `task-[id]`: For task-specific work
 - `ui`: UI components and styling
 - `tv`: Android TV specific features
@@ -214,13 +220,10 @@ Before each commit, ensure:
 
 ```bash
 # Build passes
-./gradlew build
+./gradlew assembleDebug
 
-# Lint passes  
-./gradlew lint
-
-# Code is properly formatted (if using ktlint)
-./gradlew ktlintFormat
+# Lint passes
+./ktlint-summary.sh
 
 # Update Task Master with progress
 task-master update-subtask --id=[subtask-id] --prompt="[implementation notes]"
@@ -229,6 +232,7 @@ task-master update-subtask --id=[subtask-id] --prompt="[implementation notes]"
 ## Branch Management
 
 ### Keeping Branch Updated
+
 ```bash
 # Switch to main and pull latest
 git checkout main
@@ -243,6 +247,7 @@ git push --force-with-lease
 ```
 
 ### Cleaning Up After Merge
+
 ```bash
 # After PR is merged, clean up local branches
 git checkout main
@@ -265,6 +270,7 @@ Configure Android Studio for optimal Git workflow:
 ## Troubleshooting
 
 ### Common Git Issues
+
 ```bash
 # Undo last commit (keep changes)
 git reset --soft HEAD~1
@@ -284,6 +290,7 @@ git log --oneline --graph
 ```
 
 ### GitHub CLI Issues
+
 ```bash
 # Login/re-authenticate
 gh auth login
@@ -307,5 +314,5 @@ gh config list
 
 ---
 
-**Last Updated**: Auto-maintained by Claude Code  
+**Last Updated**: Auto-maintained by Claude Code
 **Related Files**: [CLAUDE.md](CLAUDE.md), [CLAUDE-architecture.md](CLAUDE-architecture.md)

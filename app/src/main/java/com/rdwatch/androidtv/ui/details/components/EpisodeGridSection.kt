@@ -11,6 +11,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.rdwatch.androidtv.ui.components.EpisodeProgressBar
+import com.rdwatch.androidtv.ui.components.EpisodeProgressSize
 import com.rdwatch.androidtv.ui.details.models.*
 import com.rdwatch.androidtv.ui.details.models.advanced.SourceMetadata
 import com.rdwatch.androidtv.ui.theme.RdwatchTheme
@@ -75,6 +77,24 @@ fun EpisodeGridSection(
                     showProgress = showProgress,
                     isLoading = uiState.isLoading,
                     modifier = Modifier.padding(bottom = 18.dp),
+                )
+            }
+        }
+
+        // Season progress bar
+        if (showProgress && uiState.currentSeasonEpisodes.isNotEmpty()) {
+            val selectedSeason = tvShowDetail.seasons.find { it.seasonNumber == selectedSeasonNumber }
+            selectedSeason?.let { season ->
+                val watchedCount = season.episodes.count { it.isWatched }
+                EpisodeProgressBar(
+                    watchedEpisodes = watchedCount,
+                    totalEpisodes = season.episodes.size,
+                    size = EpisodeProgressSize.Standard,
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 8.dp),
+                    showText = true,
                 )
             }
         }

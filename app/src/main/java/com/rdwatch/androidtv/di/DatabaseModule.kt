@@ -144,4 +144,29 @@ object DatabaseModule {
     ): TMDbSearchDao {
         return database.tmdbSearchDao()
     }
+
+    // Episode progression DAOs
+    @Provides
+    @Singleton
+    fun provideEpisodeProgressDao(
+        @MainDatabase database: AppDatabase,
+    ): EpisodeProgressDao {
+        return database.episodeProgressDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideShowProgressDao(
+        @MainDatabase database: AppDatabase,
+    ): ShowProgressDao {
+        return database.showProgressDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideAutoPlaySettingsDao(
+        @MainDatabase database: AppDatabase,
+    ): AutoPlaySettingsDao {
+        return database.autoPlaySettingsDao()
+    }
 }

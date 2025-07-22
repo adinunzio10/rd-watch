@@ -6,9 +6,13 @@ import androidx.media3.common.util.UnstableApi
 import com.rdwatch.androidtv.data.entities.WatchProgressEntity
 import com.rdwatch.androidtv.data.repository.PlaybackProgressRepository
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -20,14 +24,21 @@ class PlaybackStateRepository
     constructor(
         @ApplicationContext private val context: Context,
         private val playbackProgressRepository: PlaybackProgressRepository,
+        private val episodeDetectionService: EpisodeDetectionService,
     ) {
         private val prefs: SharedPreferences = context.getSharedPreferences("playback_state", Context.MODE_PRIVATE)
 
         private val _currentSession = MutableStateFlow<PlaybackSession?>(null)
         val currentSession: StateFlow<PlaybackSession?> = _currentSession.asStateFlow()
 
+        // Coroutine scope for episode progress updates
+        private val episodeUpdateScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+
         // Default user ID for now - in a real app this would come from user context
         private val currentUserId: Long get() = 1L
+
+        // Callback for episode progress updates - set by VideoPlayerScreen
+        private var episodeProgressCallback: ((EpisodeMetadata, Long, Long, String?) -> Unit)? = null
 
         fun savePlaybackPosition(
             mediaUrl: String,
@@ -55,6 +66,87 @@ class PlaybackStateRepository
                             .putLong("${mediaUrl}_duration", duration)
                             .putLong("${mediaUrl}_timestamp", System.currentTimeMillis())
                             .apply()
+                    }
+                }
+            }
+
+            // Check if this is episode content and trigger episode progression updates
+            handleEpisodeProgressUpdate(mediaUrl, position, duration)
+        }
+
+        /**
+         * Enhanced version that accepts additional metadata for episode detection
+         */
+        fun savePlaybackPositionWithMetadata(
+            mediaUrl: String,
+            contentId: String,
+            title: String?,
+            position: Long,
+            duration: Long,
+        ) {
+            val progress = if (duration > 0) (position.toFloat() / duration.toFloat()) else 0f
+
+            // Only save if we're past 5% and before 95% of the content
+            if (progress > 0.05f && progress < 0.95f) {
+                // Save to Room database
+                runBlocking {
+                    try {
+                        playbackProgressRepository.savePlaybackProgress(
+                            userId = currentUserId,
+                            contentId = contentId,
+                            progressSeconds = position / 1000, // Convert to seconds
+                            durationSeconds = duration / 1000, // Convert to seconds
+                            deviceInfo = getDeviceInfo(),
+                        )
+                    } catch (e: Exception) {
+                        // Fallback to SharedPreferences for backward compatibility
+                        prefs.edit()
+                            .putLong("${mediaUrl}_position", position)
+                            .putLong("${mediaUrl}_duration", duration)
+                            .putLong("${mediaUrl}_timestamp", System.currentTimeMillis())
+                            .apply()
+                    }
+                }
+            }
+
+            // Check if this is episode content and trigger episode progression updates
+            handleEpisodeProgressUpdate(contentId, position, duration, title, mediaUrl)
+        }
+
+        /**
+         * Handle episode progress updates for the Smart Episode Progression system
+         */
+        private fun handleEpisodeProgressUpdate(
+            contentId: String,
+            position: Long,
+            duration: Long,
+            title: String? = null,
+            mediaUrl: String? = null,
+        ) {
+            // Try to parse episode metadata from content ID
+            val episodeMetadata =
+                episodeDetectionService.parseEpisodeMetadata(
+                    contentId = contentId,
+                    title = title,
+                    mediaUrl = mediaUrl,
+                )
+
+            if (episodeMetadata != null) {
+                val progressSeconds = position / 1000
+                val durationSeconds = duration / 1000
+                val deviceInfo = getDeviceInfo()
+
+                // Trigger episode progress update asynchronously
+                episodeUpdateScope.launch {
+                    try {
+                        episodeProgressCallback?.invoke(
+                            episodeMetadata,
+                            progressSeconds,
+                            durationSeconds,
+                            deviceInfo,
+                        )
+                    } catch (e: Exception) {
+                        android.util.Log.e("PlaybackStateRepository", "Failed to update episode progress", e)
                     }
                 }
             }
@@ -263,6 +355,23 @@ class PlaybackStateRepository
             } catch (e: Exception) {
                 // Handle error - could log
             }
+        }
+
+        /**
+         * Set callback for episode progress updates - typically called by VideoPlayerScreen
+         */
+        fun setEpisodeProgressCallback(callback: ((EpisodeMetadata, Long, Long, String?) -> Unit)?) {
+            this.episodeProgressCallback = callback
+        }
+
+        /**
+         * Check if content appears to be an episode based on content ID or title
+         */
+        fun isEpisodeContent(
+            contentId: String,
+            title: String? = null,
+        ): Boolean {
+            return episodeDetectionService.isEpisodeContent(contentId, title)
         }
     }
 

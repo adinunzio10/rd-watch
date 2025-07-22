@@ -418,9 +418,16 @@ class ExoPlayerManager
             // Save position every 30 seconds
             if (position - lastSavedPosition > 30_000L) {
                 val currentState = _playerState.value
-                currentState.mediaUrl?.let { url ->
+                val contentId = currentContentId
+                if (contentId != null && currentState.mediaUrl != null) {
                     scope.launch {
-                        stateRepository.savePlaybackPosition(url, position, duration)
+                        stateRepository.savePlaybackPositionWithMetadata(
+                            mediaUrl = currentState.mediaUrl,
+                            contentId = contentId,
+                            title = currentState.title,
+                            position = position,
+                            duration = duration,
+                        )
                     }
                 }
                 lastSavedPosition = position
@@ -521,7 +528,14 @@ class ExoPlayerManager
             val duration = exoPlayer.duration.takeIf { it != androidx.media3.common.C.TIME_UNSET } ?: 0L
 
             if (position > 0L && duration > 0L) {
-                stateRepository.savePlaybackPosition(contentId, position, duration)
+                val currentState = _playerState.value
+                stateRepository.savePlaybackPositionWithMetadata(
+                    mediaUrl = currentState.mediaUrl ?: contentId,
+                    contentId = contentId,
+                    title = currentState.title,
+                    position = position,
+                    duration = duration,
+                )
             }
         }
     }

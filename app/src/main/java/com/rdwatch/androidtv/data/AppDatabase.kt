@@ -35,8 +35,12 @@ import com.rdwatch.androidtv.data.entities.*
         TMDbGenreEntity::class,
         TMDbConfigEntity::class,
         TMDbEpisodeExternalIdsEntity::class,
+        // Episode progression entities
+        EpisodeProgressEntity::class,
+        ShowProgressEntity::class,
+        AutoPlaySettingsEntity::class,
     ],
-    version = 8,
+    version = 9,
     exportSchema = false,
 )
 @TypeConverters(Converters::class)
@@ -71,6 +75,13 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun tmdbTVDao(): TMDbTVDao
 
     abstract fun tmdbSearchDao(): TMDbSearchDao
+
+    // Episode progression DAOs
+    abstract fun episodeProgressDao(): EpisodeProgressDao
+
+    abstract fun showProgressDao(): ShowProgressDao
+
+    abstract fun autoPlaySettingsDao(): AutoPlaySettingsDao
 
     companion object {
         const val DATABASE_NAME = "rdwatch_database"

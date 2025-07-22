@@ -210,6 +210,9 @@ fun AppNavigation(
 
             TVDetailsScreen(
                 tvShowId = tvDetails.tvShowId,
+                initialSeasonNumber = tvDetails.seasonNumber,
+                initialEpisodeNumber = tvDetails.episodeNumber,
+                autoPlay = tvDetails.autoPlay,
                 viewModel = viewModel,
                 onNavigateToVideoPlayer = { videoUrl, title ->
                     navController.navigate(
