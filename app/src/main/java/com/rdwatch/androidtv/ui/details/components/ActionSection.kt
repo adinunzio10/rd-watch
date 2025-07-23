@@ -349,7 +349,7 @@ private fun SecondaryActionButton(
 private fun getActionIcon(action: ContentAction): ImageVector =
     when (action) {
         is ContentAction.Play -> Icons.Default.PlayArrow
-        is ContentAction.AddToWatchlist -> if (action.isInWatchlist) Icons.Default.Remove else Icons.Default.Add
+        is ContentAction.AddToLibrary -> if (action.isInLibrary) Icons.Default.Remove else Icons.Default.Add
         is ContentAction.Like -> if (action.isLiked) Icons.Default.Favorite else Icons.Default.ThumbUp
         is ContentAction.Share -> Icons.Default.Share
         is ContentAction.Download -> {
@@ -415,7 +415,7 @@ object ActionSectionPreview {
             override val actions: List<ContentAction> =
                 listOf(
                     ContentAction.Play(isResume = false),
-                    ContentAction.AddToWatchlist(isInWatchlist = false),
+                    ContentAction.AddToLibrary(isInLibrary = false),
                     ContentAction.Like(isLiked = false),
                     ContentAction.Share(),
                     ContentAction.Download(isDownloaded = false, isDownloading = false),
@@ -435,7 +435,7 @@ object ActionSectionPreview {
             override val actions: List<ContentAction> =
                 listOf(
                     ContentAction.Play(isResume = true),
-                    ContentAction.AddToWatchlist(isInWatchlist = true),
+                    ContentAction.AddToLibrary(isInLibrary = true),
                     ContentAction.Like(isLiked = true),
                     ContentAction.Share(),
                     ContentAction.Download(isDownloaded = false, isDownloading = true),

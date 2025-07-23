@@ -4,13 +4,17 @@ import android.Manifest
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.*
+import androidx.compose.animation.core.animate
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.FilterList
@@ -18,16 +22,24 @@ import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.key.*
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.core.content.ContextCompat
@@ -35,6 +47,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.rdwatch.androidtv.ui.components.TVImageLoader
 import com.rdwatch.androidtv.ui.focus.TVSpatialNavigation
+import kotlinx.coroutines.launch
 
 /**
  * Main search screen with TV keyboard, voice search, and results
@@ -222,6 +235,8 @@ private fun SearchHeader(
     hasFiltersApplied: Boolean,
     modifier: Modifier = Modifier,
 ) {
+    var isBackButtonFocused by remember { mutableStateOf(false) }
+    var isFilterButtonFocused by remember { mutableStateOf(false) }
     Row(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -233,12 +248,29 @@ private fun SearchHeader(
         ) {
             IconButton(
                 onClick = onNavigateBack,
-                modifier = Modifier.focusRequester(backButtonFocusRequester),
+                modifier =
+                    Modifier
+                        .focusRequester(backButtonFocusRequester)
+                        .onFocusChanged { isBackButtonFocused = it.isFocused }
+                        .background(
+                            color =
+                                if (isBackButtonFocused) {
+                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
+                                } else {
+                                    Color.Transparent
+                                },
+                            shape = RoundedCornerShape(8.dp),
+                        ),
             ) {
                 Icon(
                     imageVector = Icons.Default.ArrowBack,
                     contentDescription = "Back",
-                    tint = MaterialTheme.colorScheme.onBackground,
+                    tint =
+                        if (isBackButtonFocused) {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            MaterialTheme.colorScheme.onBackground
+                        },
                 )
             }
 
@@ -252,19 +284,37 @@ private fun SearchHeader(
 
         IconButton(
             onClick = onToggleFilters,
+            modifier =
+                Modifier
+                    .onFocusChanged { isFilterButtonFocused = it.isFocused }
+                    .background(
+                        color =
+                            if (isFilterButtonFocused) {
+                                MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
+                            } else {
+                                Color.Transparent
+                            },
+                        shape = RoundedCornerShape(8.dp),
+                    ),
         ) {
             Icon(
                 imageVector = Icons.Default.FilterList,
                 contentDescription = "Filters",
                 tint =
-                    if (hasFiltersApplied) {
-                        MaterialTheme.colorScheme.primary
-                    } else {
-                        MaterialTheme.colorScheme.onBackground
+                    when {
+                        isFilterButtonFocused -> MaterialTheme.colorScheme.primary
+                        hasFiltersApplied -> MaterialTheme.colorScheme.primary
+                        else -> MaterialTheme.colorScheme.onBackground
                     },
             )
         }
     }
+}
+
+// Enum to track which section the user is currently in
+private enum class SearchSection {
+    KEYBOARD,
+    RECENT_SEARCHES,
 }
 
 @Composable
@@ -280,8 +330,59 @@ private fun SearchInputSection(
     isVoiceSearchEnabled: Boolean,
     modifier: Modifier = Modifier,
 ) {
+    val historyFocusRequester = remember { FocusRequester() }
+    val keyboardFocusRequester = remember { FocusRequester() }
+    val scrollState = rememberScrollState()
+    val coroutineScope = rememberCoroutineScope()
+
+    var currentSection by remember { mutableStateOf(SearchSection.KEYBOARD) }
+
+    // Custom NestedScrollConnection that blocks scrolling only in keyboard section
+    val sectionAwareScrollConnection =
+        remember(currentSection) {
+            object : NestedScrollConnection {
+                override fun onPreScroll(
+                    available: Offset,
+                    source: NestedScrollSource,
+                ): Offset {
+                    return when (currentSection) {
+                        SearchSection.KEYBOARD -> available // Consume to prevent unwanted keyboard scrolling
+                        SearchSection.RECENT_SEARCHES -> Offset.Zero // Allow LazyColumn to scroll naturally
+                    }
+                }
+
+                override suspend fun onPreFling(available: Velocity): Velocity {
+                    return when (currentSection) {
+                        SearchSection.KEYBOARD -> available // Consume all fling to prevent it
+                        SearchSection.RECENT_SEARCHES -> Velocity.Zero // Allow LazyColumn fling
+                    }
+                }
+            }
+        }
+
+    // Animate scroll position when section changes
+    LaunchedEffect(currentSection) {
+        when (currentSection) {
+            SearchSection.KEYBOARD -> {
+                coroutineScope.launch {
+                    scrollState.animateScrollTo(0)
+                }
+            }
+            SearchSection.RECENT_SEARCHES -> {
+                // 750px = Search input (60dp) + spacing (16dp) + keyboard (400dp) + spacing (24dp)
+                coroutineScope.launch {
+                    scrollState.animateScrollTo(750)
+                }
+            }
+        }
+    }
+
     Column(
-        modifier = modifier.fillMaxWidth(),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .nestedScroll(sectionAwareScrollConnection) // Section-aware scroll blocking
+                .verticalScroll(scrollState, enabled = false), // Manual scroll control only
         verticalArrangement = Arrangement.spacedBy(24.dp),
     ) {
         // TV Keyboard
@@ -292,15 +393,31 @@ private fun SearchInputSection(
             onClear = onClear,
             initialText = searchQuery,
             isVoiceSearchEnabled = isVoiceSearchEnabled,
-            modifier = Modifier.fillMaxWidth(),
+            keyboardFocusRequester = keyboardFocusRequester,
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 400.dp),
+            onExitDown = {
+                currentSection = SearchSection.RECENT_SEARCHES
+                historyFocusRequester.requestFocus()
+            },
         )
 
-        // Search History
+        // Search History section
         if (searchHistory.isNotEmpty() && searchQuery.isEmpty()) {
             SearchHistorySection(
                 searchHistory = searchHistory,
                 onHistoryItemSelected = onHistoryItemSelected,
                 onDeleteHistoryItem = onDeleteHistoryItem,
+                onNavigateBackToKeyboard = {
+                    currentSection = SearchSection.KEYBOARD
+                    keyboardFocusRequester.requestFocus()
+                },
+                onSectionFocused = {
+                    currentSection = SearchSection.RECENT_SEARCHES
+                },
+                historyFocusRequester = historyFocusRequester,
             )
         }
     }
@@ -312,6 +429,9 @@ private fun SearchHistorySection(
     onHistoryItemSelected: (String) -> Unit,
     onDeleteHistoryItem: (String) -> Unit,
     modifier: Modifier = Modifier,
+    onNavigateBackToKeyboard: () -> Unit = {},
+    onSectionFocused: () -> Unit = {},
+    historyFocusRequester: FocusRequester? = null,
 ) {
     Column(
         modifier = modifier.fillMaxWidth(),
@@ -336,13 +456,22 @@ private fun SearchHistorySection(
 
         LazyColumn(
             verticalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier.heightIn(max = 200.dp),
+            modifier = Modifier.heightIn(max = 400.dp),
         ) {
             items(searchHistory.take(10)) { query ->
+                val isFirstItem = searchHistory.indexOf(query) == 0
                 SearchHistoryItem(
                     query = query,
                     onSelected = { onHistoryItemSelected(query) },
                     onDelete = { onDeleteHistoryItem(query) },
+                    onNavigateBackToKeyboard = onNavigateBackToKeyboard,
+                    onSectionFocused =
+                        if (isFirstItem) {
+                            onSectionFocused
+                        } else {
+                            { }
+                        },
+                    focusRequester = if (isFirstItem) historyFocusRequester else null,
                 )
             }
         }
@@ -356,23 +485,77 @@ private fun SearchHistoryItem(
     onSelected: () -> Unit,
     onDelete: () -> Unit,
     modifier: Modifier = Modifier,
+    onNavigateBackToKeyboard: () -> Unit = {},
+    onSectionFocused: () -> Unit = {},
+    focusRequester: FocusRequester? = null,
 ) {
     var isFocused by remember { mutableStateOf(false) }
+
+    // Trigger section change when this item gains focus
+    LaunchedEffect(isFocused) {
+        if (isFocused) {
+            onSectionFocused()
+        }
+    }
+
+    // Animated focus properties for TV-style indicators
+    val focusScale by animateFloatAsState(
+        targetValue = if (isFocused) 1.03f else 1.0f,
+        animationSpec = tween(durationMillis = 200),
+        label = "history_focus_scale",
+    )
+
+    val borderWidth by animateFloatAsState(
+        targetValue = if (isFocused) 2f else 0f,
+        animationSpec = tween(durationMillis = 200),
+        label = "history_border_width",
+    )
 
     Card(
         onClick = onSelected,
         modifier =
             modifier
                 .fillMaxWidth()
-                .onFocusChanged { isFocused = it.isFocused },
+                .scale(focusScale)
+                .border(
+                    width = borderWidth.dp,
+                    color = if (isFocused) MaterialTheme.colorScheme.primary else Color.Transparent,
+                    shape = RoundedCornerShape(8.dp),
+                )
+                .let { mod ->
+                    if (focusRequester != null) {
+                        mod.focusRequester(focusRequester)
+                    } else {
+                        mod
+                    }
+                }
+                .onFocusChanged { isFocused = it.isFocused }
+                .onKeyEvent { keyEvent ->
+                    if (keyEvent.type == KeyEventType.KeyDown && keyEvent.key == Key.DirectionUp) {
+                        if (focusRequester != null) {
+                            // This is the first item - navigate back to keyboard
+                            onNavigateBackToKeyboard()
+                            true // Consume the event to prevent further navigation
+                        } else {
+                            // This is NOT the first item - let LazyColumn handle normal navigation
+                            false // Let system handle normal focus navigation
+                        }
+                    } else {
+                        false
+                    }
+                },
         colors =
             CardDefaults.cardColors(
                 containerColor =
                     if (isFocused) {
-                        MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+                        MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
                     } else {
                         MaterialTheme.colorScheme.surface
                     },
+            ),
+        elevation =
+            CardDefaults.cardElevation(
+                defaultElevation = if (isFocused) 8.dp else 2.dp,
             ),
     ) {
         Row(
@@ -390,13 +573,23 @@ private fun SearchHistoryItem(
                 Icon(
                     imageVector = Icons.Default.History,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    tint =
+                        if (isFocused) {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        },
                     modifier = Modifier.size(18.dp),
                 )
                 Text(
                     text = query,
                     style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurface,
+                    color =
+                        if (isFocused) {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            MaterialTheme.colorScheme.onSurface
+                        },
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f),

@@ -257,8 +257,8 @@ data class TVShowContentDetail(
             }
         }
 
-        // Add watchlist action
-        actions.add(ContentAction.AddToWatchlist())
+        // Add library action
+        actions.add(ContentAction.AddToLibrary())
 
         // Add like action
         actions.add(ContentAction.Like())

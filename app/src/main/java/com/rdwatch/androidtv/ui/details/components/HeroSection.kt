@@ -554,7 +554,7 @@ object HeroSectionPreview {
             override val actions: List<ContentAction> =
                 listOf(
                     ContentAction.Play(),
-                    ContentAction.AddToWatchlist(),
+                    ContentAction.AddToLibrary(),
                     ContentAction.Like(),
                     ContentAction.Share(),
                 )

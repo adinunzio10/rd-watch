@@ -57,7 +57,7 @@ data class TMDbMovieContentDetail(
             add(ContentAction.Play())
 
             // Add to watchlist action
-            add(ContentAction.AddToWatchlist())
+            add(ContentAction.AddToLibrary())
 
             // Like action
             add(ContentAction.Like())
@@ -190,7 +190,7 @@ data class TMDbTVContentDetail(
             add(ContentAction.Play())
 
             // Add to watchlist action
-            add(ContentAction.AddToWatchlist())
+            add(ContentAction.AddToLibrary())
 
             // Like action
             add(ContentAction.Like())
@@ -297,7 +297,7 @@ data class TMDbEpisodeContentDetail(
             add(ContentAction.Play())
 
             // Add to watchlist action
-            add(ContentAction.AddToWatchlist())
+            add(ContentAction.AddToLibrary())
 
             // Like action
             add(ContentAction.Like())

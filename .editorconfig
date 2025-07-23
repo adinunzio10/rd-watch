@@ -20,6 +20,9 @@ ktlint_standard_function-naming = disabled
 ktlint_standard_max-line-length = disabled
 ktlint_standard_no-wildcard-imports = disabled
 
+# Disable remove unused imports so Claude code hook does not remove them
+ktlint_standard_no-unused-imports = disabled
+
 [*.xml]
 indent_size = 4
 

@@ -18,7 +18,7 @@ import com.rdwatch.androidtv.ui.details.models.ContentType
 data class TMDbSearchResultContentDetail(
     private val searchResult: TMDbSearchResultResponse,
     private val progress: ContentProgress = ContentProgress(),
-    private val isInWatchlist: Boolean = false,
+    private val isInLibrary: Boolean = false,
     private val isLiked: Boolean = false,
     private val isDownloaded: Boolean = false,
     private val isDownloading: Boolean = false,
@@ -56,7 +56,7 @@ data class TMDbSearchResultContentDetail(
 
     override val actions: List<ContentAction> =
         createContentActions(
-            isInWatchlist = isInWatchlist,
+            isInLibrary = isInLibrary,
             isLiked = isLiked,
             isDownloaded = isDownloaded,
             isDownloading = isDownloading,
@@ -148,8 +148,8 @@ data class TMDbSearchResultContentDetail(
     /**
      * Create a copy with updated watchlist status
      */
-    fun withWatchlistStatus(inWatchlist: Boolean): TMDbSearchResultContentDetail {
-        return copy(isInWatchlist = inWatchlist)
+    fun withLibraryStatus(inLibrary: Boolean): TMDbSearchResultContentDetail {
+        return copy(isInLibrary = inLibrary)
     }
 
     /**
@@ -195,7 +195,7 @@ data class TMDbSearchResultContentDetail(
     }
 
     private fun createContentActions(
-        isInWatchlist: Boolean,
+        isInLibrary: Boolean,
         isLiked: Boolean,
         isDownloaded: Boolean,
         isDownloading: Boolean,
@@ -206,7 +206,7 @@ data class TMDbSearchResultContentDetail(
             add(ContentAction.Play(isResume = hasProgress))
 
             // Watchlist action
-            add(ContentAction.AddToWatchlist(isInWatchlist))
+            add(ContentAction.AddToLibrary(isInLibrary))
 
             // Like action
             add(ContentAction.Like(isLiked))
@@ -226,7 +226,7 @@ data class TMDbSearchResultContentDetail(
 data class TMDbMultiSearchResultContentDetail(
     private val multiSearchResult: TMDbMultiSearchResultResponse,
     private val progress: ContentProgress = ContentProgress(),
-    private val isInWatchlist: Boolean = false,
+    private val isInLibrary: Boolean = false,
     private val isLiked: Boolean = false,
     private val isDownloaded: Boolean = false,
     private val isDownloading: Boolean = false,
@@ -267,7 +267,7 @@ data class TMDbMultiSearchResultContentDetail(
 
     override val actions: List<ContentAction> =
         createContentActions(
-            isInWatchlist = isInWatchlist,
+            isInLibrary = isInLibrary,
             isLiked = isLiked,
             isDownloaded = isDownloaded,
             isDownloading = isDownloading,
@@ -394,8 +394,8 @@ data class TMDbMultiSearchResultContentDetail(
     /**
      * Create a copy with updated watchlist status
      */
-    fun withWatchlistStatus(inWatchlist: Boolean): TMDbMultiSearchResultContentDetail {
-        return copy(isInWatchlist = inWatchlist)
+    fun withLibraryStatus(inLibrary: Boolean): TMDbMultiSearchResultContentDetail {
+        return copy(isInLibrary = inLibrary)
     }
 
     /**
@@ -442,7 +442,7 @@ data class TMDbMultiSearchResultContentDetail(
     }
 
     private fun createContentActions(
-        isInWatchlist: Boolean,
+        isInLibrary: Boolean,
         isLiked: Boolean,
         isDownloaded: Boolean,
         isDownloading: Boolean,
@@ -455,7 +455,7 @@ data class TMDbMultiSearchResultContentDetail(
                 add(ContentAction.Play(isResume = hasProgress))
 
                 // Watchlist action
-                add(ContentAction.AddToWatchlist(isInWatchlist))
+                add(ContentAction.AddToLibrary(isInLibrary))
 
                 // Like action
                 add(ContentAction.Like(isLiked))
@@ -477,7 +477,7 @@ data class TMDbEpisodeContentDetail(
     private val tmdbEpisode: TMDbEpisodeResponse,
     private val tmdbTV: TMDbTVResponse? = null,
     private val progress: ContentProgress = ContentProgress(),
-    private val isInWatchlist: Boolean = false,
+    private val isInLibrary: Boolean = false,
     private val isLiked: Boolean = false,
     private val isDownloaded: Boolean = false,
     private val isDownloading: Boolean = false,
@@ -524,7 +524,7 @@ data class TMDbEpisodeContentDetail(
 
     override val actions: List<ContentAction> =
         createContentActions(
-            isInWatchlist = isInWatchlist,
+            isInLibrary = isInLibrary,
             isLiked = isLiked,
             isDownloaded = isDownloaded,
             isDownloading = isDownloading,
@@ -643,8 +643,8 @@ data class TMDbEpisodeContentDetail(
     /**
      * Create a copy with updated watchlist status
      */
-    fun withWatchlistStatus(inWatchlist: Boolean): TMDbEpisodeContentDetail {
-        return copy(isInWatchlist = inWatchlist)
+    fun withLibraryStatus(inLibrary: Boolean): TMDbEpisodeContentDetail {
+        return copy(isInLibrary = inLibrary)
     }
 
     /**
@@ -690,7 +690,7 @@ data class TMDbEpisodeContentDetail(
     }
 
     private fun createContentActions(
-        isInWatchlist: Boolean,
+        isInLibrary: Boolean,
         isLiked: Boolean,
         isDownloaded: Boolean,
         isDownloading: Boolean,
@@ -701,7 +701,7 @@ data class TMDbEpisodeContentDetail(
             add(ContentAction.Play(isResume = hasProgress))
 
             // Watchlist action
-            add(ContentAction.AddToWatchlist(isInWatchlist))
+            add(ContentAction.AddToLibrary(isInLibrary))
 
             // Like action
             add(ContentAction.Like(isLiked))

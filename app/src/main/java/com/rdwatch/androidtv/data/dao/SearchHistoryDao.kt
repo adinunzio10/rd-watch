@@ -15,7 +15,19 @@ interface SearchHistoryDao {
     @Query("SELECT * FROM search_history WHERE user_id = :userId ORDER BY search_date DESC")
     fun getSearchHistoryByUser(userId: Long): Flow<List<SearchHistoryEntity>>
 
-    @Query("SELECT * FROM search_history WHERE user_id = :userId ORDER BY search_date DESC LIMIT :limit")
+    @Query(
+        """
+        SELECT * FROM search_history 
+        WHERE user_id = :userId AND search_id IN (
+            SELECT MAX(search_id) FROM search_history 
+            WHERE user_id = :userId 
+            GROUP BY search_query 
+            ORDER BY MAX(search_date) DESC 
+            LIMIT :limit
+        )
+        ORDER BY search_date DESC
+    """,
+    )
     fun getRecentSearchHistory(
         userId: Long,
         limit: Int = 50,

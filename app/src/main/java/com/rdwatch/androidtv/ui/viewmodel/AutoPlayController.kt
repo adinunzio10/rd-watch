@@ -43,7 +43,7 @@ class AutoPlayController
 
         /**
          * Check if auto-play should be triggered for the completed episode
-         * Called when an episode reaches completion threshold (90%+ watched)
+         * Called when an episode reaches completion threshold (90%+ watched) or when playback ends
          */
         fun checkAutoPlayEligibility(
             tmdbShowId: Int,
@@ -189,6 +189,25 @@ class AutoPlayController
         fun resetState() {
             DebugLogger.d("AutoPlayController", "Resetting auto-play state")
             _autoPlayState.value = AutoPlayState()
+        }
+
+        /**
+         * Handle when playback has ended (reached 100% completion)
+         * This ensures auto-play is triggered even if the threshold check was missed
+         */
+        fun onPlaybackEnded(
+            tmdbShowId: Int,
+            seasonNumber: Int,
+            episodeNumber: Int,
+            showTitle: String,
+            posterUrl: String? = null,
+        ) {
+            DebugLogger.d("AutoPlayController", "Playback ended for $showTitle S${seasonNumber}E$episodeNumber")
+
+            // If countdown is not already showing, check for auto-play eligibility
+            if (!_autoPlayState.value.showCountdown) {
+                checkAutoPlayEligibility(tmdbShowId, seasonNumber, episodeNumber, showTitle, posterUrl)
+            }
         }
 
         /**

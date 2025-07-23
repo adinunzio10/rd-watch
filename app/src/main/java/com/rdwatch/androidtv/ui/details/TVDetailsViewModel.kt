@@ -2,6 +2,8 @@ package com.rdwatch.androidtv.ui.details
 
 import android.content.Context
 import androidx.lifecycle.viewModelScope
+import com.rdwatch.androidtv.data.entities.LibraryEntity
+import com.rdwatch.androidtv.data.repository.LibraryRepository
 import com.rdwatch.androidtv.presentation.viewmodel.BaseViewModel
 import com.rdwatch.androidtv.repository.RealDebridContentRepository
 import com.rdwatch.androidtv.repository.base.Result
@@ -30,6 +32,7 @@ class TVDetailsViewModel
         private val realDebridContentRepository: RealDebridContentRepository,
         private val tmdbTVRepository: com.rdwatch.androidtv.data.repository.TMDbTVRepository,
         private val scraperSourceManager: ScraperSourceManager,
+        private val libraryRepository: LibraryRepository,
         @ApplicationContext private val context: Context,
     ) : BaseViewModel<TVDetailsUiState>() {
         // Advanced source management
@@ -280,6 +283,9 @@ class TVDetailsViewModel
                                 // Load credits
                                 loadTVCredits(tmdbId)
 
+                                // Check library status
+                                checkLibraryStatus(tmdbId.toString())
+
                                 // Load detailed season data with episodes
                                 loadSeasonsWithEpisodes(tmdbId, tvShowDetail)
                             }
@@ -444,23 +450,15 @@ class TVDetailsViewModel
         }
 
         /**
-         * Toggle watchlist status for the TV show
+         * Toggle library status for the TV show
          */
-        fun toggleWatchlist(tvShowId: String) {
-            viewModelScope.launch {
-                _tvShowState.value?.let { tvShow ->
-                    val currentActions = tvShow.actions.toMutableList()
-                    val watchlistIndex = currentActions.indexOfFirst { it is ContentAction.AddToWatchlist }
+        fun toggleLibrary(tvShowId: String) {
+            val isCurrentlyInLibrary = uiState.value.isInLibrary
 
-                    if (watchlistIndex != -1) {
-                        val currentAction = currentActions[watchlistIndex] as ContentAction.AddToWatchlist
-                        currentActions[watchlistIndex] = ContentAction.AddToWatchlist(isInWatchlist = !currentAction.isInWatchlist)
-
-                        val updatedTvShow = tvShow.withActions(currentActions)
-                        _tvShowState.value = updatedTvShow
-                        updateState { copy(tvShow = updatedTvShow) }
-                    }
-                }
+            if (isCurrentlyInLibrary) {
+                removeFromLibrary()
+            } else {
+                addToLibrary()
             }
         }
 
@@ -2238,6 +2236,99 @@ class TVDetailsViewModel
                     }
                 }
         }
+
+        /**
+         * Add TV show to library
+         */
+        fun addToLibrary() {
+            val currentTvShow = uiState.value.tvShow ?: return
+
+            viewModelScope.launch {
+                try {
+                    val libraryEntity =
+                        LibraryEntity(
+                            // TODO: Get from user session
+                            userId = 1L,
+                            contentId = currentTvShow.id,
+                            contentType = "TV_SHOW",
+                            title = currentTvShow.title,
+                            description = currentTvShow.description,
+                            thumbnailUrl = currentTvShow.cardImageUrl,
+                            isFavorite = false,
+                            isDownloaded = false,
+                            addedAt = java.util.Date(),
+                            updatedAt = java.util.Date(),
+                        )
+
+                    val result = libraryRepository.addToLibrary(libraryEntity)
+                    when (result) {
+                        is Result.Success -> {
+                            updateState { copy(isInLibrary = true) }
+                        }
+                        is Result.Error -> {
+                            updateState { copy(error = "Failed to add to library: ${result.exception.message}") }
+                        }
+                        is Result.Loading -> {
+                            // Loading state handled elsewhere
+                        }
+                    }
+                } catch (e: Exception) {
+                    updateState { copy(error = "Failed to add to library: ${e.message}") }
+                }
+            }
+        }
+
+        /**
+         * Remove TV show from library
+         */
+        fun removeFromLibrary() {
+            val currentTvShow = uiState.value.tvShow ?: return
+
+            viewModelScope.launch {
+                try {
+                    // TODO: Get userId from session
+                    val result = libraryRepository.removeFromLibrary(1L, currentTvShow.id)
+                    when (result) {
+                        is Result.Success -> {
+                            updateState { copy(isInLibrary = false) }
+                        }
+                        is Result.Error -> {
+                            updateState { copy(error = "Failed to remove from library: ${result.exception.message}") }
+                        }
+                        is Result.Loading -> {
+                            // Loading state handled elsewhere
+                        }
+                    }
+                } catch (e: Exception) {
+                    updateState { copy(error = "Failed to remove from library: ${e.message}") }
+                }
+            }
+        }
+
+        /**
+         * Check if TV show is in library
+         */
+        private suspend fun checkLibraryStatus(tvShowId: String) {
+            try {
+                // TODO: Get userId from session
+                val result = libraryRepository.isInLibrary(1L, tvShowId)
+                when (result) {
+                    is Result.Success -> {
+                        updateState { copy(isInLibrary = result.data) }
+                    }
+                    is Result.Error -> {
+                        // Silently fail for library status check
+                        updateState { copy(isInLibrary = false) }
+                    }
+                    is Result.Loading -> {
+                        // Loading state handled elsewhere
+                    }
+                }
+            } catch (e: Exception) {
+                // Silently fail for library status check
+                updateState { copy(isInLibrary = false) }
+            }
+        }
     }
 
 /**
@@ -2250,6 +2341,7 @@ data class TVDetailsUiState(
     val relatedShows: List<TVShowContentDetail> = emptyList(),
     val isLoading: Boolean = false,
     val isLoaded: Boolean = false,
+    val isInLibrary: Boolean = false,
     val error: String? = null,
     val isFromRealDebrid: Boolean = false,
     val availableSources: List<StreamingSource> = emptyList(),

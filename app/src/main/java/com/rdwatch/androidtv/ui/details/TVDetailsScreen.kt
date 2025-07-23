@@ -153,6 +153,7 @@ fun TVDetailsScreen(
                     creditsState = creditsState,
                     sourcesState = sourcesState,
                     episodeSourcesMap = episodeSourcesMap,
+                    uiState = uiState,
                     viewModel = viewModel,
                     playbackViewModel = playbackViewModel,
                     onNavigateToVideoPlayer = onNavigateToVideoPlayer,
@@ -161,8 +162,8 @@ fun TVDetailsScreen(
                             // TODO: Determine which episode to show advanced source selection for
                             // Should consider: selected episode, next unwatched episode, or first episode
                             // Remove ContentAction.Play - now handled by episode-specific source selection
-                            is ContentAction.AddToWatchlist -> {
-                                viewModel.toggleWatchlist(tvShow.id)
+                            is ContentAction.AddToLibrary -> {
+                                viewModel.toggleLibrary(tvShow.id)
                             }
                             is ContentAction.Like -> {
                                 viewModel.toggleLike(tvShow.id)
@@ -212,6 +213,7 @@ private fun TVDetailsContent(
     creditsState: UiState<ExtendedContentMetadata>,
     sourcesState: UiState<List<StreamingSource>>,
     episodeSourcesMap: Map<String, List<com.rdwatch.androidtv.ui.details.models.advanced.SourceMetadata>>,
+    uiState: TVDetailsUiState,
     viewModel: TVDetailsViewModel,
     playbackViewModel: PlaybackViewModel,
     onNavigateToVideoPlayer: (videoUrl: String, title: String) -> Unit,
@@ -266,8 +268,20 @@ private fun TVDetailsContent(
 
         // Action buttons row
         item {
+            // Create updated content detail with current library state
+            val updatedTvShow =
+                tvShow.copy(
+                    actionOverrides =
+                        createDynamicActions(
+                            tvShow = tvShow,
+                            isInLibrary = uiState.isInLibrary,
+                            isLiked = false, // TODO: Add like state tracking
+                            progress = progress,
+                        ),
+                )
+
             ActionSection(
-                content = tvShow,
+                content = updatedTvShow,
                 onActionClick = onActionClick,
                 modifier = Modifier.padding(horizontal = 32.dp, vertical = 8.dp),
             )
@@ -675,6 +689,39 @@ private fun TVDetailsErrorScreen(
             }
         }
     }
+}
+
+/**
+ * Creates dynamic actions based on current state
+ */
+private fun createDynamicActions(
+    tvShow: TVShowContentDetail,
+    isInLibrary: Boolean,
+    isLiked: Boolean,
+    progress: List<com.rdwatch.androidtv.data.entities.WatchProgressEntity>,
+): List<ContentAction> {
+    val actions = mutableListOf<ContentAction>()
+
+    // Add play/resume action based on progress
+    val hasProgress = progress.isNotEmpty()
+    if (tvShow.isPlayable()) {
+        actions.add(ContentAction.Play(isResume = hasProgress))
+    }
+
+    // Add library action with current state
+    actions.add(ContentAction.AddToLibrary(isInLibrary = isInLibrary))
+
+    // Add like action with current state
+    actions.add(ContentAction.Like(isLiked = isLiked))
+
+    // Add share action
+    actions.add(ContentAction.Share())
+
+    // Add download action if available
+    // TODO: Add download state tracking
+    actions.add(ContentAction.Download(isDownloaded = false, isDownloading = false))
+
+    return actions
 }
 
 /** Preview configurations for TVDetailsScreen */

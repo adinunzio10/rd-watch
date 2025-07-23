@@ -435,9 +435,13 @@ class ExoPlayerManager
         }
 
         private fun handlePlaybackEnded() {
+            DebugLogger.d("ExoPlayerManager", "handlePlaybackEnded called - playback has completed")
             scope.launch {
                 stateRepository.endPlaybackSession()
+                DebugLogger.d("ExoPlayerManager", "Playback session ended in repository")
             }
+            // The PlaybackState.ENDED is already set in the listener above
+            // This ensures the UI can react to the ended state
         }
 
         fun startPlaybackSession(
