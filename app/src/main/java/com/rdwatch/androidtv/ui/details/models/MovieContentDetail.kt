@@ -9,7 +9,7 @@ import com.rdwatch.androidtv.Movie
 data class MovieContentDetail(
     private val movie: Movie,
     private val progress: ContentProgress = ContentProgress(),
-    private val isInWatchlist: Boolean = false,
+    private val isInLibrary: Boolean = false,
     private val isLiked: Boolean = false,
     private val isDownloaded: Boolean = false,
     private val isDownloading: Boolean = false,
@@ -43,8 +43,8 @@ data class MovieContentDetail(
             // Play action
             add(ContentAction.Play(isResume = progress.isPartiallyWatched))
 
-            // Watchlist action
-            add(ContentAction.AddToWatchlist(isInWatchlist))
+            // Library action
+            add(ContentAction.AddToLibrary(isInLibrary))
 
             // Like action
             add(ContentAction.Like(isLiked))
@@ -84,10 +84,10 @@ data class MovieContentDetail(
     }
 
     /**
-     * Create a copy with updated watchlist status
+     * Create a copy with updated library status
      */
-    fun withWatchlistStatus(inWatchlist: Boolean): MovieContentDetail {
-        return copy(isInWatchlist = inWatchlist)
+    fun withLibraryStatus(inLibrary: Boolean): MovieContentDetail {
+        return copy(isInLibrary = inLibrary)
     }
 
     /**
@@ -121,7 +121,7 @@ data class MovieContentDetail(
         fun fromMovie(
             movie: Movie,
             progress: ContentProgress = ContentProgress(),
-            isInWatchlist: Boolean = false,
+            isInLibrary: Boolean = false,
             isLiked: Boolean = false,
             isDownloaded: Boolean = false,
             isDownloading: Boolean = false,
@@ -131,7 +131,7 @@ data class MovieContentDetail(
             return MovieContentDetail(
                 movie = movie,
                 progress = progress,
-                isInWatchlist = isInWatchlist,
+                isInLibrary = isInLibrary,
                 isLiked = isLiked,
                 isDownloaded = isDownloaded,
                 isDownloading = isDownloading,

@@ -153,9 +153,9 @@ sealed class ContentAction(val title: String, val icon: String) {
         icon = "play_arrow",
     )
 
-    class AddToWatchlist(val isInWatchlist: Boolean = false) : ContentAction(
-        title = if (isInWatchlist) "Remove from Watchlist" else "Add to Watchlist",
-        icon = if (isInWatchlist) "remove" else "add",
+    class AddToLibrary(val isInLibrary: Boolean = false) : ContentAction(
+        title = if (isInLibrary) "Remove from Library" else "Add to Library",
+        icon = if (isInLibrary) "remove" else "add",
     )
 
     class Like(val isLiked: Boolean = false) : ContentAction(

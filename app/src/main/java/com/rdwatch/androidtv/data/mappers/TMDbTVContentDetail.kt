@@ -19,7 +19,7 @@ data class TMDbTVContentDetail(
     private val tmdbTV: TMDbTVResponse,
     private val credits: TMDbCreditsResponse? = null,
     private val progress: ContentProgress = ContentProgress(),
-    private val isInWatchlist: Boolean = false,
+    private val isInLibrary: Boolean = false,
     private val isLiked: Boolean = false,
     private val isDownloaded: Boolean = false,
     private val isDownloading: Boolean = false,
@@ -78,7 +78,7 @@ data class TMDbTVContentDetail(
 
     override val actions: List<ContentAction> =
         createContentActions(
-            isInWatchlist = isInWatchlist,
+            isInLibrary = isInLibrary,
             isLiked = isLiked,
             isDownloaded = isDownloaded,
             isDownloading = isDownloading,
@@ -262,8 +262,8 @@ data class TMDbTVContentDetail(
     /**
      * Create a copy with updated watchlist status
      */
-    fun withWatchlistStatus(inWatchlist: Boolean): TMDbTVContentDetail {
-        return copy(isInWatchlist = inWatchlist)
+    fun withLibraryStatus(inLibrary: Boolean): TMDbTVContentDetail {
+        return copy(isInLibrary = inLibrary)
     }
 
     /**
@@ -390,7 +390,7 @@ data class TMDbTVContentDetail(
     }
 
     private fun createContentActions(
-        isInWatchlist: Boolean,
+        isInLibrary: Boolean,
         isLiked: Boolean,
         isDownloaded: Boolean,
         isDownloading: Boolean,
@@ -401,7 +401,7 @@ data class TMDbTVContentDetail(
             add(ContentAction.Play(isResume = hasProgress))
 
             // Watchlist action
-            add(ContentAction.AddToWatchlist(isInWatchlist))
+            add(ContentAction.AddToLibrary(isInLibrary))
 
             // Like action
             add(ContentAction.Like(isLiked))

@@ -3,6 +3,8 @@ package com.rdwatch.androidtv.ui.details
 import android.content.Context
 import androidx.lifecycle.viewModelScope
 import com.rdwatch.androidtv.Movie
+import com.rdwatch.androidtv.data.entities.LibraryEntity
+import com.rdwatch.androidtv.data.repository.LibraryRepository
 import com.rdwatch.androidtv.data.repository.TMDbMovieRepository
 import com.rdwatch.androidtv.network.models.tmdb.TMDbMovieResponse
 import com.rdwatch.androidtv.presentation.viewmodel.BaseViewModel
@@ -34,6 +36,7 @@ class MovieDetailsViewModel
         private val tmdbMovieRepository: TMDbMovieRepository,
         private val tmdbMovieService: com.rdwatch.androidtv.network.api.TMDbMovieService,
         private val scraperSourceManager: ScraperSourceManager,
+        private val libraryRepository: LibraryRepository,
         @ApplicationContext private val context: Context,
     ) : BaseViewModel<MovieDetailsUiState>() {
         // Advanced source management
@@ -138,6 +141,9 @@ class MovieDetailsViewModel
                             loadRelatedMovies(tmdbId)
                             loadMovieCredits(tmdbId)
 
+                            // Check library status
+                            checkLibraryStatus(tmdbId.toString())
+
                             // Load scraper sources
                             loadSourcesForMovie(tmdbId.toString(), movieResponse.imdbId)
                             return@launch
@@ -181,7 +187,8 @@ class MovieDetailsViewModel
                                             description = movieResponse.overview,
                                             cardImageUrl = movieResponse.posterPath?.let { "https://image.tmdb.org/t/p/w342$it" },
                                             backgroundImageUrl = movieResponse.backdropPath?.let { "https://image.tmdb.org/t/p/w780$it" },
-                                            videoUrl = null, // TMDb doesn't provide video URLs
+                                            // TMDb doesn't provide video URLs
+                                            videoUrl = null,
                                             studio = "TMDb",
                                         )
 
@@ -192,7 +199,8 @@ class MovieDetailsViewModel
                                             isLoading = false,
                                             error = null,
                                             isLoaded = true,
-                                            isFromRealDebrid = false, // TMDb content is not from Real Debrid
+                                            // TMDb content is not from Real Debrid
+                                            isFromRealDebrid = false,
                                             tmdbResponse = movieResponse,
                                         )
                                     }
@@ -200,6 +208,9 @@ class MovieDetailsViewModel
                                     // Load related movies and credits
                                     loadRelatedMovies(tmdbId)
                                     loadMovieCredits(tmdbId)
+
+                                    // Check library status
+                                    checkLibraryStatus(tmdbId.toString())
 
                                     // Load scraper sources
                                     loadSourcesForMovie(tmdbId.toString(), movieResponse.imdbId)
@@ -380,38 +391,94 @@ class MovieDetailsViewModel
         }
 
         /**
-         * Add movie to watchlist
+         * Add movie to library
          */
-        fun addToWatchlist() {
+        fun addToLibrary() {
             val currentMovie = uiState.value.movie ?: return
 
             viewModelScope.launch {
                 try {
-                    // Enhanced watchlist functionality - placeholder implementation
-                    // In real implementation, this would save to local database or cloud service
-                    updateState { copy(isInWatchlist = true) }
+                    val libraryEntity =
+                        LibraryEntity(
+                            // TODO: Get from user session
+                            userId = 1L,
+                            contentId = currentMovie.id.toString(),
+                            contentType = "MOVIE",
+                            title = currentMovie.title ?: "Unknown Title",
+                            description = currentMovie.description,
+                            thumbnailUrl = currentMovie.cardImageUrl,
+                            isFavorite = false,
+                            isDownloaded = false,
+                            addedAt = java.util.Date(),
+                            updatedAt = java.util.Date(),
+                        )
 
-                    // Future: Save to local database
-                    // watchlistRepository.addToWatchlist(currentMovie.id)
+                    val result = libraryRepository.addToLibrary(libraryEntity)
+                    when (result) {
+                        is Result.Success -> {
+                            updateState { copy(isInLibrary = true) }
+                        }
+                        is Result.Error -> {
+                            updateState { copy(error = "Failed to add to library: ${result.exception.message}") }
+                        }
+                        is Result.Loading -> {
+                            // Loading state handled elsewhere
+                        }
+                    }
                 } catch (e: Exception) {
-                    updateState { copy(error = "Failed to add to watchlist: ${e.message}") }
+                    updateState { copy(error = "Failed to add to library: ${e.message}") }
                 }
             }
         }
 
         /**
-         * Remove movie from watchlist
+         * Check if movie is in library
          */
-        fun removeFromWatchlist() {
+        private suspend fun checkLibraryStatus(movieId: String) {
+            try {
+                // TODO: Get userId from session
+                val result = libraryRepository.isInLibrary(1L, movieId)
+                when (result) {
+                    is Result.Success -> {
+                        updateState { copy(isInLibrary = result.data) }
+                    }
+                    is Result.Error -> {
+                        // Silently fail for library status check
+                        updateState { copy(isInLibrary = false) }
+                    }
+                    is Result.Loading -> {
+                        // Loading state handled elsewhere
+                    }
+                }
+            } catch (e: Exception) {
+                // Silently fail for library status check
+                updateState { copy(isInLibrary = false) }
+            }
+        }
+
+        /**
+         * Remove movie from library
+         */
+        fun removeFromLibrary() {
+            val currentMovie = uiState.value.movie ?: return
+
             viewModelScope.launch {
                 try {
-                    // Enhanced watchlist functionality - placeholder implementation
-                    updateState { copy(isInWatchlist = false) }
-
-                    // Future: Remove from local database
-                    // watchlistRepository.removeFromWatchlist(currentMovie.id)
+                    // TODO: Get userId from session
+                    val result = libraryRepository.removeFromLibrary(1L, currentMovie.id.toString())
+                    when (result) {
+                        is Result.Success -> {
+                            updateState { copy(isInLibrary = false) }
+                        }
+                        is Result.Error -> {
+                            updateState { copy(error = "Failed to remove from library: ${result.exception.message}") }
+                        }
+                        is Result.Loading -> {
+                            // Loading state handled elsewhere
+                        }
+                    }
                 } catch (e: Exception) {
-                    updateState { copy(error = "Failed to remove from watchlist: ${e.message}") }
+                    updateState { copy(error = "Failed to remove from library: ${e.message}") }
                 }
             }
         }
@@ -903,7 +970,7 @@ data class MovieDetailsUiState(
     val movie: Movie? = null,
     val isLoading: Boolean = false,
     val isLoaded: Boolean = false,
-    val isInWatchlist: Boolean = false,
+    val isInLibrary: Boolean = false,
     val isLiked: Boolean = false,
     val isDownloading: Boolean = false,
     val isDownloaded: Boolean = false,

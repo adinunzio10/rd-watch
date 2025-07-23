@@ -95,18 +95,7 @@ class SearchViewModel
                             )
                         }
 
-                        // Add to search history
-                        try {
-                            val userId = userRepository.getDefaultUserId()
-                            currentUserId = userId
-                            searchHistoryManager.addSearchQuery(
-                                userId = userId,
-                                query = currentState.searchQuery,
-                                filtersJson = serializeFilters(currentState.searchFilters),
-                            )
-                        } catch (e: Exception) {
-                            android.util.Log.e("SearchViewModel", "Failed to add to search history", e)
-                        }
+                        // Search history will be added after successful search
 
                         // Perform TMDb multi-search
                         tmdbSearchRepository.multiSearchAsContentDetails(
@@ -128,9 +117,10 @@ class SearchViewModel
                                         )
                                     }
 
-                                    // Update search history with results count
+                                    // Add to search history with results count
                                     try {
                                         val userId = userRepository.getDefaultUserId()
+                                        currentUserId = userId
                                         searchHistoryManager.addSearchQuery(
                                             userId = userId,
                                             query = currentState.searchQuery,
@@ -138,7 +128,7 @@ class SearchViewModel
                                             filtersJson = serializeFilters(currentState.searchFilters),
                                         )
                                     } catch (e: Exception) {
-                                        android.util.Log.e("SearchViewModel", "Failed to update search history", e)
+                                        android.util.Log.e("SearchViewModel", "Failed to add to search history", e)
                                     }
                                 }
                                 is Result.Error -> {
@@ -270,7 +260,7 @@ class SearchViewModel
                 try {
                     val userId = userRepository.getDefaultUserId()
                     searchHistoryManager.deleteSearchQuery(userId, query)
-                    loadSearchHistory()
+                    // The reactive flow will automatically update the UI
                 } catch (e: Exception) {
                     android.util.Log.e("SearchViewModel", "Failed to delete search history", e)
                 }
@@ -291,13 +281,18 @@ class SearchViewModel
         }
 
         /**
-         * Load search history
+         * Load search history - maintains reactive subscription
          */
         private fun loadSearchHistory() {
             viewModelScope.launch {
                 try {
                     val userId = userRepository.getDefaultUserId()
                     searchHistoryManager.getRecentSearchHistory(userId)
+                        .stateIn(
+                            scope = viewModelScope,
+                            started = SharingStarted.WhileSubscribed(5000),
+                            initialValue = emptyList(),
+                        )
                         .collect { history ->
                             _searchHistory.value = history
                         }

@@ -42,9 +42,11 @@ fun TVSearchKeyboard(
     initialText: String = "",
     placeholder: String = "Search for movies, TV shows...",
     isVoiceSearchEnabled: Boolean = true,
+    onExitDown: (() -> Unit)? = null,
+    keyboardFocusRequester: FocusRequester? = null,
 ) {
     var currentText by remember { mutableStateOf(initialText) }
-    val firstKeyFocusRequester = remember { FocusRequester() }
+    val firstKeyFocusRequester = keyboardFocusRequester ?: remember { FocusRequester() }
 
     LaunchedEffect(initialText) {
         currentText = initialText
@@ -95,6 +97,7 @@ fun TVSearchKeyboard(
             },
             firstKeyFocusRequester = firstKeyFocusRequester,
             isVoiceSearchEnabled = isVoiceSearchEnabled,
+            onExitDown = onExitDown,
         )
     }
 }
@@ -155,8 +158,11 @@ private fun TVKeyboardGrid(
     firstKeyFocusRequester: FocusRequester,
     isVoiceSearchEnabled: Boolean,
     modifier: Modifier = Modifier,
+    onExitDown: (() -> Unit)? = null,
 ) {
     val keyboardLayout = getTVKeyboardLayout(isVoiceSearchEnabled)
+    val flattenedKeys = keyboardLayout.flatten()
+    val bottomRowStartIndex = keyboardLayout.take(3).sumOf { it.size } // First 3 rows
 
     LazyVerticalGrid(
         columns = GridCells.Fixed(13), // Standard QWERTY width
@@ -165,12 +171,15 @@ private fun TVKeyboardGrid(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         contentPadding = PaddingValues(8.dp),
     ) {
-        items(keyboardLayout.flatten().size) { index ->
-            val key = keyboardLayout.flatten()[index]
+        items(flattenedKeys.size) { index ->
+            val key = flattenedKeys[index]
+            val isBottomRow = index >= bottomRowStartIndex
 
             TVKeyboardKey(
                 key = key,
                 onKeyPressed = onKeyPressed,
+                isBottomRow = isBottomRow,
+                onExitDown = onExitDown,
                 modifier =
                     if (index == 0) {
                         Modifier.focusRequester(firstKeyFocusRequester)
@@ -188,6 +197,8 @@ private fun TVKeyboardKey(
     key: KeyboardKey,
     onKeyPressed: (KeyboardKey) -> Unit,
     modifier: Modifier = Modifier,
+    isBottomRow: Boolean = false,
+    onExitDown: (() -> Unit)? = null,
 ) {
     var isFocused by remember { mutableStateOf(false) }
 
@@ -207,6 +218,14 @@ private fun TVKeyboardKey(
                             Key.DirectionCenter, Key.Enter -> {
                                 onKeyPressed(key)
                                 true
+                            }
+                            Key.DirectionDown -> {
+                                if (isBottomRow && onExitDown != null) {
+                                    onExitDown()
+                                    true
+                                } else {
+                                    false
+                                }
                             }
                             else -> false
                         }

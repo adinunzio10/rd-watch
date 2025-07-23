@@ -187,6 +187,7 @@ fun VideoPlayerScreen(
             ExitConfirmationDialog(
                 onConfirm = {
                     videoPlayerViewModel.dismissExitConfirmation()
+                    videoPlayerViewModel.cleanup()
                     onBackPressed()
                 },
                 onDismiss = {
@@ -293,6 +294,35 @@ fun VideoPlayerScreen(
                     posterUrl = posterUrl,
                     deviceInfo = "AndroidTV",
                 )
+            }
+        }
+    }
+
+    // Handle playback ended state
+    LaunchedEffect(playerState.playbackState, tmdbShowId, seasonNumber, episodeNumber) {
+        if (playerState.playbackState == PlaybackState.ENDED) {
+            DebugLogger.d("VideoPlayerScreen", "Playback ended detected")
+
+            // For TV episodes, trigger auto-play check
+            if (tmdbShowId != null && seasonNumber != null && episodeNumber != null) {
+                autoPlayController.onPlaybackEnded(
+                    tmdbShowId = tmdbShowId,
+                    seasonNumber = seasonNumber,
+                    episodeNumber = episodeNumber,
+                    showTitle = title,
+                    posterUrl = posterUrl,
+                )
+                // Give auto-play system time to process and show countdown
+                kotlinx.coroutines.delay(1000)
+            }
+
+            // If auto-play is not showing (meaning no next episode or auto-play disabled)
+            // and we're not already navigating, go back
+            if (!autoPlayState.showCountdown) {
+                DebugLogger.d("VideoPlayerScreen", "No auto-play countdown, navigating back")
+                // Small delay to ensure any final state updates are processed
+                kotlinx.coroutines.delay(500)
+                onBackPressed()
             }
         }
     }
@@ -648,6 +678,17 @@ class VideoPlayerViewModel
                     errorMessage = "An error occurred: ${exception.message}",
                 )
             }
+        }
+
+        fun cleanup() {
+            DebugLogger.d("VideoPlayerViewModel", "cleanup called - releasing ExoPlayerManager")
+            exoPlayerManager.release()
+        }
+
+        override fun onCleared() {
+            super.onCleared()
+            DebugLogger.d("VideoPlayerViewModel", "onCleared called - performing cleanup")
+            cleanup()
         }
     }
 

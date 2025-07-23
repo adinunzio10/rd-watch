@@ -214,7 +214,7 @@ fun MovieDetailsScreen(
                                         watchPercentage = watchProgress,
                                         isCompleted = isCompleted,
                                     ),
-                                isInWatchlist = uiState.isInWatchlist,
+                                isInLibrary = uiState.isInLibrary,
                                 isLiked = uiState.isLiked,
                                 isDownloaded = uiState.isDownloaded,
                                 isDownloading = uiState.isDownloading,
@@ -225,11 +225,11 @@ fun MovieDetailsScreen(
                             content = movieContentDetail,
                             onActionClick = { action ->
                                 when (action) {
-                                    is ContentAction.AddToWatchlist -> {
-                                        if (action.isInWatchlist) {
-                                            viewModel.removeFromWatchlist()
+                                    is ContentAction.AddToLibrary -> {
+                                        if (action.isInLibrary) {
+                                            viewModel.removeFromLibrary()
                                         } else {
-                                            viewModel.addToWatchlist()
+                                            viewModel.addToLibrary()
                                         }
                                     }
                                     is ContentAction.Like -> {
