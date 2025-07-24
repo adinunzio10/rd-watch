@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.media3.common.util.UnstableApi
 import com.rdwatch.androidtv.Movie
+import com.rdwatch.androidtv.presentation.components.LoadingOverlay
 import com.rdwatch.androidtv.ui.common.UiState
 import com.rdwatch.androidtv.ui.components.CastCrewSection
 import com.rdwatch.androidtv.ui.components.ImagePriority
@@ -37,6 +38,7 @@ import com.rdwatch.androidtv.ui.details.models.*
 import com.rdwatch.androidtv.ui.details.models.advanced.*
 import com.rdwatch.androidtv.ui.focus.TVFocusIndicator
 import com.rdwatch.androidtv.ui.focus.tvFocusable
+import com.rdwatch.androidtv.ui.viewmodel.MediaReadyState
 import com.rdwatch.androidtv.ui.viewmodel.PlaybackViewModel
 
 /**
@@ -84,6 +86,7 @@ fun MovieDetailsScreen(
 
     // Get playback progress
     val contentProgress by playbackViewModel.inProgressContent.collectAsState()
+    val mediaReadyState by playbackViewModel.mediaReadyState.collectAsState()
     val currentMovieProgress = movie?.let { contentProgress.find { it.contentId == movie.videoUrl } }
     val watchProgress = currentMovieProgress?.watchPercentage ?: 0f
     val isCompleted = movie?.let { playbackViewModel.isContentCompleted(it.videoUrl ?: "") } ?: false
@@ -183,199 +186,208 @@ fun MovieDetailsScreen(
                     firstFocusRequester.requestFocus()
                 }
 
-                LazyColumn(
-                    modifier =
-                        modifier
-                            .fillMaxSize()
-                            .background(MaterialTheme.colorScheme.background),
+                LoadingOverlay(
+                    isLoading = mediaReadyState is MediaReadyState.Preparing,
+                    message =
+                        when (mediaReadyState) {
+                            is MediaReadyState.Preparing -> "Loading ${movie.title}"
+                            else -> null
+                        },
                 ) {
-                    // Hero Section
-                    item {
-                        MovieHeroSection(
-                            movie = movie,
-                            uiState = uiState,
-                            watchProgress = watchProgress,
-                            isCompleted = isCompleted,
-                            onPlayClick = onPlayClick,
-                            onBackPressed = onBackPressed,
-                            firstFocusRequester = firstFocusRequester,
-                            overscanMargin = overscanMargin,
-                            viewModel = viewModel,
-                        )
-                    }
-
-                    // Action Buttons Section
-                    item {
-                        val movieContentDetail =
-                            MovieContentDetail(
+                    LazyColumn(
+                        modifier =
+                            modifier
+                                .fillMaxSize()
+                                .background(MaterialTheme.colorScheme.background),
+                    ) {
+                        // Hero Section
+                        item {
+                            MovieHeroSection(
                                 movie = movie,
-                                progress =
-                                    ContentProgress(
-                                        watchPercentage = watchProgress,
-                                        isCompleted = isCompleted,
-                                    ),
-                                isInLibrary = uiState.isInLibrary,
-                                isLiked = uiState.isLiked,
-                                isDownloaded = uiState.isDownloaded,
-                                isDownloading = uiState.isDownloading,
-                                isFromRealDebrid = uiState.isFromRealDebrid,
+                                uiState = uiState,
+                                watchProgress = watchProgress,
+                                isCompleted = isCompleted,
+                                onPlayClick = onPlayClick,
+                                onBackPressed = onBackPressed,
+                                firstFocusRequester = firstFocusRequester,
+                                overscanMargin = overscanMargin,
+                                viewModel = viewModel,
                             )
-
-                        ActionSection(
-                            content = movieContentDetail,
-                            onActionClick = { action ->
-                                when (action) {
-                                    is ContentAction.AddToLibrary -> {
-                                        if (action.isInLibrary) {
-                                            viewModel.removeFromLibrary()
-                                        } else {
-                                            viewModel.addToLibrary()
-                                        }
-                                    }
-                                    is ContentAction.Like -> {
-                                        viewModel.toggleLike()
-                                    }
-                                    is ContentAction.Share -> {
-                                        viewModel.shareMovie()
-                                    }
-                                    is ContentAction.Download -> {
-                                        if (!action.isDownloaded && !action.isDownloading) {
-                                            viewModel.downloadMovie()
-                                        }
-                                    }
-                                    is ContentAction.Delete -> {
-                                        viewModel.deleteFromRealDebrid()
-                                    }
-                                    else -> {
-                                        // Handle other actions
-                                    }
-                                }
-                            },
-                            modifier = Modifier.padding(horizontal = overscanMargin, vertical = 8.dp),
-                        )
-                    }
-
-                    // Tab navigation
-                    item {
-                        ContentDetailTabs(
-                            selectedTabIndex = selectedTabIndex,
-                            contentType = ContentType.MOVIE,
-                            onTabSelected = { tabIndex -> viewModel.selectTab(tabIndex) },
-                            modifier = Modifier.padding(horizontal = overscanMargin),
-                        )
-                    }
-
-                    // Tab content based on selected tab
-                    when (selectedTabIndex) {
-                        0 -> {
-                            // Overview Tab
-                            item {
-                                MovieInfoSection(
-                                    movie = movie,
-                                    uiState = uiState,
-                                    isOverview = true,
-                                    modifier = Modifier.padding(horizontal = overscanMargin),
-                                )
-                            }
                         }
 
-                        1 -> {
-                            // Details Tab
-                            item {
-                                MovieInfoSection(
+                        // Action Buttons Section
+                        item {
+                            val movieContentDetail =
+                                MovieContentDetail(
                                     movie = movie,
-                                    uiState = uiState,
-                                    isOverview = false,
-                                    modifier = Modifier.padding(horizontal = overscanMargin),
+                                    progress =
+                                        ContentProgress(
+                                            watchPercentage = watchProgress,
+                                            isCompleted = isCompleted,
+                                        ),
+                                    isInLibrary = uiState.isInLibrary,
+                                    isLiked = uiState.isLiked,
+                                    isDownloaded = uiState.isDownloaded,
+                                    isDownloading = uiState.isDownloading,
+                                    isFromRealDebrid = uiState.isFromRealDebrid,
                                 )
+
+                            ActionSection(
+                                content = movieContentDetail,
+                                onActionClick = { action ->
+                                    when (action) {
+                                        is ContentAction.AddToLibrary -> {
+                                            if (action.isInLibrary) {
+                                                viewModel.removeFromLibrary()
+                                            } else {
+                                                viewModel.addToLibrary()
+                                            }
+                                        }
+                                        is ContentAction.Like -> {
+                                            viewModel.toggleLike()
+                                        }
+                                        is ContentAction.Share -> {
+                                            viewModel.shareMovie()
+                                        }
+                                        is ContentAction.Download -> {
+                                            if (!action.isDownloaded && !action.isDownloading) {
+                                                viewModel.downloadMovie()
+                                            }
+                                        }
+                                        is ContentAction.Delete -> {
+                                            viewModel.deleteFromRealDebrid()
+                                        }
+                                        else -> {
+                                            // Handle other actions
+                                        }
+                                    }
+                                },
+                                modifier = Modifier.padding(horizontal = overscanMargin, vertical = 8.dp),
+                            )
+                        }
+
+                        // Tab navigation
+                        item {
+                            ContentDetailTabs(
+                                selectedTabIndex = selectedTabIndex,
+                                contentType = ContentType.MOVIE,
+                                onTabSelected = { tabIndex -> viewModel.selectTab(tabIndex) },
+                                modifier = Modifier.padding(horizontal = overscanMargin),
+                            )
+                        }
+
+                        // Tab content based on selected tab
+                        when (selectedTabIndex) {
+                            0 -> {
+                                // Overview Tab
+                                item {
+                                    MovieInfoSection(
+                                        movie = movie,
+                                        uiState = uiState,
+                                        isOverview = true,
+                                        modifier = Modifier.padding(horizontal = overscanMargin),
+                                    )
+                                }
                             }
 
-                            // Related Movies Section
-                            when (val currentRelatedMoviesState = relatedMoviesState) {
-                                is com.rdwatch.androidtv.ui.common.UiState.Success -> {
-                                    if (currentRelatedMoviesState.data.isNotEmpty()) {
+                            1 -> {
+                                // Details Tab
+                                item {
+                                    MovieInfoSection(
+                                        movie = movie,
+                                        uiState = uiState,
+                                        isOverview = false,
+                                        modifier = Modifier.padding(horizontal = overscanMargin),
+                                    )
+                                }
+
+                                // Related Movies Section
+                                when (val currentRelatedMoviesState = relatedMoviesState) {
+                                    is com.rdwatch.androidtv.ui.common.UiState.Success -> {
+                                        if (currentRelatedMoviesState.data.isNotEmpty()) {
+                                            item {
+                                                RelatedMoviesSection(
+                                                    movies = currentRelatedMoviesState.data,
+                                                    onMovieClick = onMovieClick,
+                                                    modifier = Modifier.padding(horizontal = overscanMargin),
+                                                )
+                                            }
+                                        }
+                                    }
+                                    is com.rdwatch.androidtv.ui.common.UiState.Loading -> {
                                         item {
-                                            RelatedMoviesSection(
-                                                movies = currentRelatedMoviesState.data,
-                                                onMovieClick = onMovieClick,
+                                            Box(
+                                                modifier =
+                                                    Modifier
+                                                        .fillMaxWidth()
+                                                        .padding(horizontal = overscanMargin),
+                                                contentAlignment = Alignment.Center,
+                                            ) {
+                                                CircularProgressIndicator()
+                                            }
+                                        }
+                                    }
+                                    is com.rdwatch.androidtv.ui.common.UiState.Error -> {
+                                        // Don't show error for related movies, just skip section
+                                    }
+                                    else -> {
+                                        // Handle UiState.Idle or any other state - just skip section
+                                    }
+                                }
+                            }
+
+                            2 -> {
+                                // Cast & Crew Tab
+                                when (val currentCreditsState = creditsState) {
+                                    is UiState.Success -> {
+                                        item {
+                                            CastCrewSection(
+                                                metadata = currentCreditsState.data,
                                                 modifier = Modifier.padding(horizontal = overscanMargin),
                                             )
                                         }
                                     }
-                                }
-                                is com.rdwatch.androidtv.ui.common.UiState.Loading -> {
-                                    item {
-                                        Box(
-                                            modifier =
-                                                Modifier
-                                                    .fillMaxWidth()
-                                                    .padding(horizontal = overscanMargin),
-                                            contentAlignment = Alignment.Center,
-                                        ) {
-                                            CircularProgressIndicator()
+                                    is UiState.Loading -> {
+                                        item {
+                                            Box(
+                                                modifier =
+                                                    Modifier
+                                                        .fillMaxWidth()
+                                                        .padding(horizontal = overscanMargin),
+                                                contentAlignment = Alignment.Center,
+                                            ) {
+                                                CircularProgressIndicator()
+                                            }
                                         }
                                     }
-                                }
-                                is com.rdwatch.androidtv.ui.common.UiState.Error -> {
-                                    // Don't show error for related movies, just skip section
-                                }
-                                else -> {
-                                    // Handle UiState.Idle or any other state - just skip section
+                                    is UiState.Error -> {
+                                        item {
+                                            Box(
+                                                modifier =
+                                                    Modifier
+                                                        .fillMaxWidth()
+                                                        .padding(horizontal = overscanMargin),
+                                                contentAlignment = Alignment.Center,
+                                            ) {
+                                                Text(
+                                                    text = "Failed to load cast & crew",
+                                                    style = MaterialTheme.typography.bodyMedium,
+                                                    color = MaterialTheme.colorScheme.error,
+                                                )
+                                            }
+                                        }
+                                    }
+                                    else -> {
+                                        // Handle UiState.Idle or any other state - just skip section
+                                    }
                                 }
                             }
                         }
 
-                        2 -> {
-                            // Cast & Crew Tab
-                            when (val currentCreditsState = creditsState) {
-                                is UiState.Success -> {
-                                    item {
-                                        CastCrewSection(
-                                            metadata = currentCreditsState.data,
-                                            modifier = Modifier.padding(horizontal = overscanMargin),
-                                        )
-                                    }
-                                }
-                                is UiState.Loading -> {
-                                    item {
-                                        Box(
-                                            modifier =
-                                                Modifier
-                                                    .fillMaxWidth()
-                                                    .padding(horizontal = overscanMargin),
-                                            contentAlignment = Alignment.Center,
-                                        ) {
-                                            CircularProgressIndicator()
-                                        }
-                                    }
-                                }
-                                is UiState.Error -> {
-                                    item {
-                                        Box(
-                                            modifier =
-                                                Modifier
-                                                    .fillMaxWidth()
-                                                    .padding(horizontal = overscanMargin),
-                                            contentAlignment = Alignment.Center,
-                                        ) {
-                                            Text(
-                                                text = "Failed to load cast & crew",
-                                                style = MaterialTheme.typography.bodyMedium,
-                                                color = MaterialTheme.colorScheme.error,
-                                            )
-                                        }
-                                    }
-                                }
-                                else -> {
-                                    // Handle UiState.Idle or any other state - just skip section
-                                }
-                            }
+                        // Bottom spacing for TV overscan
+                        item {
+                            Spacer(modifier = Modifier.height(overscanMargin))
                         }
-                    }
-
-                    // Bottom spacing for TV overscan
-                    item {
-                        Spacer(modifier = Modifier.height(overscanMargin))
                     }
                 }
             }
@@ -401,22 +413,21 @@ fun MovieDetailsScreen(
         onSourceSelected = { source ->
             viewModel.onSourceSelected(source)
 
-            // Navigate to video player with selected source
+            // Start movie playback and wait for media to be ready before navigating
             movie?.let { currentMovie ->
-                // Start the advanced source playback in the background
                 playbackViewModel.startMoviePlaybackWithSource(
                     movie = currentMovie,
                     source = source,
+                    onNavigateToVideoPlayer = { videoUrl, title ->
+                        // Create a movie with the source URL for navigation
+                        val movieWithSource =
+                            currentMovie.copy(
+                                videoUrl = videoUrl,
+                            )
+                        // Navigate to video player screen only when media is ready
+                        onPlayClick(movieWithSource)
+                    },
                 )
-
-                // Create a movie with the source URL for navigation
-                val movieWithSource =
-                    currentMovie.copy(
-                        videoUrl = source.metadata["originalUrl"] ?: "",
-                    )
-
-                // Navigate to video player screen
-                onPlayClick(movieWithSource)
             }
         },
         onRefresh = {
@@ -443,6 +454,15 @@ fun MovieDetailsScreen(
                 playbackViewModel.startMoviePlaybackWithSource(
                     movie = currentMovie,
                     source = source,
+                    onNavigateToVideoPlayer = { videoUrl, title ->
+                        // Create a movie with the source URL for navigation
+                        val movieWithSource =
+                            currentMovie.copy(
+                                videoUrl = videoUrl,
+                            )
+                        // Navigate to video player screen only when media is ready
+                        onPlayClick(movieWithSource)
+                    },
                 )
             }
         },
