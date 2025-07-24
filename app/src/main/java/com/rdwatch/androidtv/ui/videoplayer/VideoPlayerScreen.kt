@@ -129,16 +129,24 @@ fun VideoPlayerScreen(
     DebugLogger.d("VideoPlayerScreen", "UI State Debug: hasVideo=${uiState.hasVideo}, isLoading=${uiState.isLoading}, hasError=${uiState.hasError}")
     // Managers are now accessed directly from ViewModel, not from UI state
 
+    // Comprehensive debug logging for movie loading investigation
+    DebugLogger.d("VideoPlayerScreen", "=== MOVIE LOADING DEBUG START ===")
+    DebugLogger.d("VideoPlayerScreen", "uiState.hasVideo: ${uiState.hasVideo}")
+    DebugLogger.d("VideoPlayerScreen", "uiState.isLoading: ${uiState.isLoading}")
+    DebugLogger.d("VideoPlayerScreen", "uiState.hasError: ${uiState.hasError}")
+    DebugLogger.d("VideoPlayerScreen", "uiState.errorMessage: ${uiState.errorMessage}")
+    DebugLogger.d("VideoPlayerScreen", "mediaReadyState: $mediaReadyState")
+    DebugLogger.d("VideoPlayerScreen", "title: $title")
+    DebugLogger.d("VideoPlayerScreen", "videoUrl: $videoUrl")
+    DebugLogger.d("VideoPlayerScreen", "=== MOVIE LOADING DEBUG END ===")
+
     Box(modifier = modifier.fillMaxSize()) {
         when {
-            uiState.isLoading || mediaReadyState is MediaReadyState.Preparing -> {
-                LoadingScreen(
-                    title = title,
-                    modifier = Modifier.fillMaxSize(),
-                )
-            }
-
             uiState.hasError || mediaReadyState is MediaReadyState.Error -> {
+                DebugLogger.d(
+                    "VideoPlayerScreen",
+                    "CONDITION HIT: Error screen (uiState.hasError=${uiState.hasError}, mediaReadyState is Error=${mediaReadyState is MediaReadyState.Error})",
+                )
                 val errorMessage =
                     when (val state = mediaReadyState) {
                         is MediaReadyState.Error -> state.message
@@ -158,6 +166,7 @@ fun VideoPlayerScreen(
             }
 
             uiState.hasVideo -> {
+                DebugLogger.d("VideoPlayerScreen", "CONDITION HIT: hasVideo - creating TvPlayerView")
                 DebugLogger.d("VideoPlayerScreen", "hasVideo condition met - creating TvPlayerView")
                 TvPlayerView(
                     exoPlayerManager = videoPlayerViewModel.exoPlayerManager,
@@ -170,15 +179,18 @@ fun VideoPlayerScreen(
             }
 
             else -> {
+                DebugLogger.w("VideoPlayerScreen", "CONDITION HIT: ELSE FALLBACK - This should not happen with new LoadingOverlay!")
                 DebugLogger.w(
                     "VideoPlayerScreen",
-                    "NO CONDITION MET - Gray screen shown! isLoading=${uiState.isLoading}, hasError=${uiState.hasError}, hasVideo=${uiState.hasVideo}, mediaReadyState=$mediaReadyState",
+                    "FALLBACK STATE: isLoading=${uiState.isLoading}, hasError=${uiState.hasError}, hasVideo=${uiState.hasVideo}, mediaReadyState=$mediaReadyState",
                 )
-                // Show loading state for any unhandled cases
-                LoadingScreen(
-                    title = title,
+                // Show blank screen instead of LoadingScreen (LoadingOverlay handles loading now)
+                Box(
                     modifier = Modifier.fillMaxSize(),
-                )
+                    contentAlignment = Alignment.Center,
+                ) {
+                    // Blank screen - LoadingOverlay on details screen handles loading feedback
+                }
             }
         }
 

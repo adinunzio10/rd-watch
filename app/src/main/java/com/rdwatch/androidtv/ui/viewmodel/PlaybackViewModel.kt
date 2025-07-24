@@ -279,9 +279,13 @@ class PlaybackViewModel
         fun startMoviePlaybackWithSource(
             movie: com.rdwatch.androidtv.Movie,
             source: com.rdwatch.androidtv.ui.details.models.advanced.SourceMetadata,
+            onNavigateToVideoPlayer: (videoUrl: String, title: String) -> Unit = { _, _ -> },
         ) {
             viewModelScope.launch {
                 try {
+                    // Set state to preparing
+                    _mediaReadyState.value = MediaReadyState.Preparing
+
                     // Extract URL from metadata (stored in metadata map)
                     val sourceUrl = source.metadata["originalUrl"] ?: ""
 
@@ -316,6 +320,46 @@ class PlaybackViewModel
                     exoPlayerManager.play()
 
                     android.util.Log.d("PlaybackViewModel", "Advanced movie playback started successfully")
+
+                    // Wait for media to be ready before navigating (same logic as TV shows)
+                    var timeoutCounter = 0
+                    val maxTimeout = 100 // 10 seconds (100 * 100ms)
+
+                    while (timeoutCounter < maxTimeout) {
+                        val currentState = playerState.value
+
+                        // Check for errors first
+                        if (currentState.error != null) {
+                            android.util.Log.e("PlaybackViewModel", "Movie media preparation error: ${currentState.error}")
+                            _mediaReadyState.value = MediaReadyState.Error(currentState.error)
+                            return@launch
+                        }
+
+                        // Check if media is ready
+                        if (currentState.hasVideo &&
+                            (
+                                currentState.playbackState == PlaybackState.READY ||
+                                    currentState.playbackState == PlaybackState.BUFFERING
+                            )
+                        ) {
+                            android.util.Log.d("PlaybackViewModel", "Movie media is ready, navigating to video player")
+                            _mediaReadyState.value = MediaReadyState.Ready
+
+                            // Navigate to video player only when media is ready
+                            onNavigateToVideoPlayer(resolvedUrl, movieTitle)
+                            return@launch
+                        }
+
+                        // Wait a bit before checking again
+                        delay(100)
+                        timeoutCounter++
+                    }
+
+                    // Timeout reached
+                    android.util.Log.e("PlaybackViewModel", "Movie media preparation timeout")
+                    _mediaReadyState.value = MediaReadyState.Error("Media preparation timed out")
+
+                    android.util.Log.d("PlaybackViewModel", "Waiting for movie media preparation...")
                 } catch (e: Exception) {
                     android.util.Log.e("PlaybackViewModel", "Failed to start advanced movie playback: ${e.message}")
                     // Update UI state to show error

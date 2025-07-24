@@ -44,6 +44,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.media3.common.util.UnstableApi
+import com.rdwatch.androidtv.presentation.components.LoadingOverlay
 import com.rdwatch.androidtv.ui.common.UiState
 import com.rdwatch.androidtv.ui.components.CastCrewSection
 import com.rdwatch.androidtv.ui.details.components.ActionSection
@@ -64,6 +65,7 @@ import com.rdwatch.androidtv.ui.details.models.TVEpisode
 import com.rdwatch.androidtv.ui.details.models.TVSeason
 import com.rdwatch.androidtv.ui.details.models.TVShowContentDetail
 import com.rdwatch.androidtv.ui.theme.UIConstants
+import com.rdwatch.androidtv.ui.viewmodel.MediaReadyState
 import com.rdwatch.androidtv.ui.viewmodel.PlaybackViewModel
 
 /**
@@ -93,6 +95,7 @@ fun TVDetailsScreen(
     val selectedTabIndex by viewModel.selectedTabIndex.collectAsState()
     val uiState by viewModel.uiState.collectAsState()
     val progress by playbackViewModel.inProgressContent.collectAsState()
+    val mediaReadyState by playbackViewModel.mediaReadyState.collectAsState()
     val creditsState by viewModel.creditsState.collectAsState()
     val sourcesState by viewModel.sourcesState.collectAsState()
     val episodeSourcesMap by viewModel.episodeSourcesMap.collectAsState()
@@ -144,56 +147,69 @@ fun TVDetailsScreen(
                         .fillMaxSize()
                         .background(MaterialTheme.colorScheme.background),
             ) {
-                TVDetailsContent(
-                    tvShow = tvShow,
-                    selectedSeason = selectedSeason,
-                    selectedEpisode = selectedEpisode,
-                    selectedTabIndex = selectedTabIndex,
-                    progress = progress,
-                    creditsState = creditsState,
-                    sourcesState = sourcesState,
-                    episodeSourcesMap = episodeSourcesMap,
-                    uiState = uiState,
-                    viewModel = viewModel,
-                    playbackViewModel = playbackViewModel,
-                    onNavigateToVideoPlayer = onNavigateToVideoPlayer,
-                    onActionClick = { action ->
-                        when (action) {
-                            // TODO: Determine which episode to show advanced source selection for
-                            // Should consider: selected episode, next unwatched episode, or first episode
-                            // Remove ContentAction.Play - now handled by episode-specific source selection
-                            is ContentAction.AddToLibrary -> {
-                                viewModel.toggleLibrary(tvShow.id)
-                            }
-                            is ContentAction.Like -> {
-                                viewModel.toggleLike(tvShow.id)
-                            }
-                            is ContentAction.Share -> {
-                                viewModel.shareContent(tvShow)
-                            }
-                            is ContentAction.Download -> {
+                LoadingOverlay(
+                    isLoading = mediaReadyState is MediaReadyState.Preparing,
+                    message =
+                        when (mediaReadyState) {
+                            is MediaReadyState.Preparing -> {
                                 selectedEpisode?.let { episode ->
-                                    viewModel.downloadEpisode(episode)
+                                    "Loading ${episode.title}"
+                                } ?: "Loading Episode"
+                            }
+                            else -> null
+                        },
+                ) {
+                    TVDetailsContent(
+                        tvShow = tvShow,
+                        selectedSeason = selectedSeason,
+                        selectedEpisode = selectedEpisode,
+                        selectedTabIndex = selectedTabIndex,
+                        progress = progress,
+                        creditsState = creditsState,
+                        sourcesState = sourcesState,
+                        episodeSourcesMap = episodeSourcesMap,
+                        uiState = uiState,
+                        viewModel = viewModel,
+                        playbackViewModel = playbackViewModel,
+                        onNavigateToVideoPlayer = onNavigateToVideoPlayer,
+                        onActionClick = { action ->
+                            when (action) {
+                                // TODO: Determine which episode to show advanced source selection for
+                                // Should consider: selected episode, next unwatched episode, or first episode
+                                // Remove ContentAction.Play - now handled by episode-specific source selection
+                                is ContentAction.AddToLibrary -> {
+                                    viewModel.toggleLibrary(tvShow.id)
+                                }
+                                is ContentAction.Like -> {
+                                    viewModel.toggleLike(tvShow.id)
+                                }
+                                is ContentAction.Share -> {
+                                    viewModel.shareContent(tvShow)
+                                }
+                                is ContentAction.Download -> {
+                                    selectedEpisode?.let { episode ->
+                                        viewModel.downloadEpisode(episode)
+                                    }
+                                }
+                                else -> {
+                                    // Handle other actions
                                 }
                             }
-                            else -> {
-                                // Handle other actions
-                            }
-                        }
-                    },
-                    onSeasonSelected = { season -> viewModel.selectSeason(season) },
-                    onEpisodeSelected = { episode ->
-                        viewModel.selectEpisode(episode)
-                        onEpisodeClick(episode)
-                    },
-                    onTabSelected = { tabIndex -> viewModel.selectTab(tabIndex) },
-                    onBackPressed = onBackPressed,
-                    backButtonFocusRequester = backButtonFocusRequester,
-                    tabFocusRequester = tabFocusRequester,
-                    listState = listState,
-                    episodeGridHeight = episodeGridHeight,
-                    modifier = Modifier.fillMaxSize(),
-                )
+                        },
+                        onSeasonSelected = { season -> viewModel.selectSeason(season) },
+                        onEpisodeSelected = { episode ->
+                            viewModel.selectEpisode(episode)
+                            onEpisodeClick(episode)
+                        },
+                        onTabSelected = { tabIndex -> viewModel.selectTab(tabIndex) },
+                        onBackPressed = onBackPressed,
+                        backButtonFocusRequester = backButtonFocusRequester,
+                        tabFocusRequester = tabFocusRequester,
+                        listState = listState,
+                        episodeGridHeight = episodeGridHeight,
+                        modifier = Modifier.fillMaxSize(),
+                    )
+                }
             }
         }
         else -> {
@@ -489,6 +505,8 @@ private fun TVDetailsContent(
         onDismiss = { viewModel.hideSourceSelection() },
         onSourceSelected = { source ->
             viewModel.onSourceSelected(source)
+            // Dismiss bottom sheet first to make loading screen visible
+            viewModel.hideSourceSelection()
             // Trigger playback if episode is selected
             sourceSelectionState.selectedEpisode?.let { episode ->
                 playbackViewModel.startEpisodePlaybackWithSource(
@@ -517,6 +535,8 @@ private fun TVDetailsContent(
             viewModel.updateViewMode(viewMode)
         },
         onPlaySource = { source ->
+            // Dismiss bottom sheet first to make loading screen visible
+            viewModel.hideSourceSelection()
             sourceSelectionState.selectedEpisode?.let { episode ->
                 playbackViewModel.startEpisodePlaybackWithSource(
                     tvShow = tvShow,
