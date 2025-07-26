@@ -122,48 +122,98 @@ class AutoPlayController
 
         /**
          * User clicked Play Now or countdown reached zero
-         * Triggers immediate playback of the next episode
+         * Triggers immediate playback of the next episode with enhanced error handling
          */
-        fun playNextEpisode(onNavigateToEpisode: (NextEpisodeResult) -> Unit) {
+        fun playNextEpisode(
+            onNavigateToEpisode: (NextEpisodeResult) -> Unit,
+            onAutoPlaySuccess: ((streamingUrl: String, episodeTitle: String) -> Unit)? = null,
+            onAutoPlayError: ((errorMessage: String) -> Unit)? = null,
+        ) {
             val currentState = _autoPlayState.value
             val nextEpisode = currentState.nextEpisode
 
             if (nextEpisode == null) {
                 DebugLogger.w("AutoPlayController", "No next episode to play")
+                val errorMessage = "Next episode not available"
                 _autoPlayState.value =
                     _autoPlayState.value.copy(
                         showCountdown = false,
-                        error = "Next episode not available",
+                        error = errorMessage,
                     )
+                onAutoPlayError?.invoke(errorMessage)
                 return
             }
 
             // Validate episode data before navigation
             if (nextEpisode.tmdbShowId <= 0 || nextEpisode.seasonNumber < 0 || nextEpisode.episodeNumber <= 0) {
                 DebugLogger.e("AutoPlayController", "Invalid next episode data: ${nextEpisode.getDisplayText()}")
+                val errorMessage = "Invalid episode data: ${nextEpisode.getDisplayText()}"
                 _autoPlayState.value =
                     _autoPlayState.value.copy(
                         showCountdown = false,
-                        error = "Invalid episode data",
+                        error = errorMessage,
                     )
+                onAutoPlayError?.invoke(errorMessage)
                 return
             }
 
-            DebugLogger.i("AutoPlayController", "Playing next episode: ${nextEpisode.getDisplayText()}")
+            DebugLogger.i("AutoPlayController", "Initiating auto-play for next episode: ${nextEpisode.getDisplayText()}")
 
             try {
                 // Hide countdown first
                 hideCountdown()
 
-                // Trigger navigation with error handling
-                onNavigateToEpisode(nextEpisode)
-            } catch (e: Exception) {
-                DebugLogger.e("AutoPlayController", "Error navigating to next episode", e)
+                // Set loading state during navigation
                 _autoPlayState.value =
                     _autoPlayState.value.copy(
-                        error = "Navigation failed: ${e.message}",
+                        isLoading = true,
+                        error = null,
                     )
+
+                // Trigger navigation with enhanced callbacks
+                onNavigateToEpisode(nextEpisode)
+
+                DebugLogger.d("AutoPlayController", "Auto-play navigation callback invoked successfully")
+            } catch (e: Exception) {
+                DebugLogger.e("AutoPlayController", "Error triggering auto-play navigation", e)
+                val errorMessage = "Auto-play failed: ${e.message}"
+                _autoPlayState.value =
+                    _autoPlayState.value.copy(
+                        isLoading = false,
+                        error = errorMessage,
+                    )
+                onAutoPlayError?.invoke(errorMessage)
             }
+        }
+
+        /**
+         * Callback for when auto-play navigation completes successfully
+         * Called from the navigation system after episode resolution
+         */
+        fun onAutoPlayNavigationSuccess(
+            streamingUrl: String,
+            episodeTitle: String,
+        ) {
+            DebugLogger.i("AutoPlayController", "Auto-play navigation successful: $episodeTitle")
+            _autoPlayState.value =
+                AutoPlayState(
+                    isLoading = false,
+                    error = null,
+                )
+        }
+
+        /**
+         * Callback for when auto-play navigation fails
+         * Called from the navigation system if episode resolution fails
+         */
+        fun onAutoPlayNavigationError(errorMessage: String) {
+            DebugLogger.e("AutoPlayController", "Auto-play navigation failed: $errorMessage")
+            _autoPlayState.value =
+                _autoPlayState.value.copy(
+                    isLoading = false,
+                    showCountdown = false,
+                    error = "Auto-play failed: $errorMessage",
+                )
         }
 
         /**

@@ -13,6 +13,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.media3.common.util.UnstableApi
+import com.rdwatch.androidtv.autoplay.AutoPlayNavigationBridge
 import com.rdwatch.androidtv.player.ExoPlayerManager
 import com.rdwatch.androidtv.player.PlaybackState
 import com.rdwatch.androidtv.player.TvPlayerView
@@ -24,6 +25,7 @@ import com.rdwatch.androidtv.presentation.viewmodel.BaseViewModel
 import com.rdwatch.androidtv.ui.components.AutoPlayCountdown
 import com.rdwatch.androidtv.ui.theme.UIConstants
 import com.rdwatch.androidtv.ui.viewmodel.AutoPlayController
+import com.rdwatch.androidtv.ui.viewmodel.AutoPlayNavigationViewModel
 import com.rdwatch.androidtv.ui.viewmodel.MediaReadyState
 import com.rdwatch.androidtv.ui.viewmodel.PlaybackViewModel
 import com.rdwatch.androidtv.util.DebugLogger
@@ -45,6 +47,7 @@ fun VideoPlayerScreen(
     playbackViewModel: PlaybackViewModel = hiltViewModel(),
     videoPlayerViewModel: VideoPlayerViewModel = hiltViewModel(),
     autoPlayController: AutoPlayController = hiltViewModel(),
+    autoPlayNavigationViewModel: AutoPlayNavigationViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
     val systemUiController = com.google.accompanist.systemuicontroller.rememberSystemUiController()
@@ -262,13 +265,26 @@ fun VideoPlayerScreen(
                     posterUrl = autoPlayState.posterUrl,
                     countdownSeconds = autoPlayState.countdownSeconds,
                     onPlayNow = {
-                        autoPlayController.playNextEpisode { nextEpisode ->
-                            onNavigateToEpisode?.invoke(
-                                nextEpisode.tmdbShowId,
-                                nextEpisode.seasonNumber,
-                                nextEpisode.episodeNumber,
-                            )
-                        }
+                        autoPlayController.playNextEpisode(
+                            onNavigateToEpisode = { nextEpisode ->
+                                // Use enhanced auto-play navigation with fallback to legacy callback
+                                if (autoPlayNavigationViewModel.isEnhancedNavigationSupported()) {
+                                    autoPlayNavigationViewModel.handleAutoPlayNavigation(
+                                        nextEpisode = nextEpisode,
+                                        showTitle = autoPlayState.showTitle,
+                                        autoPlayController = autoPlayController,
+                                        fallbackNavigationCallback = onNavigateToEpisode,
+                                    )
+                                } else {
+                                    // Fall back to legacy navigation
+                                    onNavigateToEpisode?.invoke(
+                                        nextEpisode.tmdbShowId,
+                                        nextEpisode.seasonNumber,
+                                        nextEpisode.episodeNumber,
+                                    )
+                                }
+                            },
+                        )
                     },
                     onCancel = {
                         autoPlayController.cancelAutoPlay()

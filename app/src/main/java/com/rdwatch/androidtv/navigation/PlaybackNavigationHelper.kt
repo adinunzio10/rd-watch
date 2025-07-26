@@ -2,10 +2,17 @@ package com.rdwatch.androidtv.navigation
 
 import androidx.media3.common.util.UnstableApi
 import com.rdwatch.androidtv.Movie
+import com.rdwatch.androidtv.autoplay.AutoPlayEpisodeResult
+import com.rdwatch.androidtv.autoplay.EpisodeAutoPlayService
 import com.rdwatch.androidtv.data.repository.NextEpisodeResult
 import com.rdwatch.androidtv.player.ExoPlayerManager
 import com.rdwatch.androidtv.player.MediaMetadata
 import com.rdwatch.androidtv.player.state.PlaybackStateRepository
+import com.rdwatch.androidtv.util.DebugLogger
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -16,7 +23,11 @@ class PlaybackNavigationHelper
     constructor(
         private val exoPlayerManager: ExoPlayerManager,
         private val playbackStateRepository: PlaybackStateRepository,
+        private val episodeAutoPlayService: EpisodeAutoPlayService,
     ) {
+        // Coroutine scope for handling async auto-play operations
+        private val autoPlayScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
         /**
          * Navigate to video player with proper content setup
          */
@@ -161,58 +172,107 @@ class PlaybackNavigationHelper
         /**
          * Navigate to the next episode for auto-play functionality
          * This method is called from the AutoPlayController when countdown completes
+         * Now integrates with EpisodeAutoPlayService for complete source resolution
          */
         fun navigateToNextEpisode(
             nextEpisode: NextEpisodeResult,
             showTitle: String,
+            onSuccess: ((streamingUrl: String, episodeTitle: String) -> Unit)? = null,
+            onError: ((errorMessage: String) -> Unit)? = null,
         ) {
-            // Create a content ID for the next episode
-            val episodeContentId = "${nextEpisode.tmdbShowId}:${nextEpisode.seasonNumber}:${nextEpisode.episodeNumber}"
-            val episodeTitle = "$showTitle - ${nextEpisode.getFormattedEpisodeId()}"
-            val fullTitle =
-                if (nextEpisode.episodeTitle != null) {
-                    "$episodeTitle: ${nextEpisode.episodeTitle}"
-                } else {
-                    episodeTitle
-                }
+            DebugLogger.d(
+                "PlaybackNavigationHelper",
+                "Starting auto-play navigation for ${nextEpisode.getDisplayText()}",
+            )
 
             // Save current progress before switching episodes
             saveCurrentProgress()
 
-            // In a complete implementation, this would:
-            // 1. Fetch episode details from TMDb API
-            // 2. Get available sources for the episode
-            // 3. Select the best source based on user preferences
-            // 4. Resolve the playable URL
-            // 5. Prepare the media with ExoPlayer
+            // Resolve episode sources asynchronously
+            autoPlayScope.launch {
+                try {
+                    val result =
+                        episodeAutoPlayService.resolveEpisodeForAutoPlay(
+                            nextEpisode = nextEpisode,
+                            showTitle = showTitle,
+                        )
 
-            // For now, we'll create placeholder metadata and trigger navigation
-            val episodeMetadata =
-                MediaMetadata(
-                    title = fullTitle,
-                    description = "Auto-playing next episode",
-                    thumbnailUrl = null, // Would come from TMDb episode data
-                )
+                    when (result) {
+                        is AutoPlayEpisodeResult.Success -> {
+                            val episodeTitle = "$showTitle - ${nextEpisode.getFormattedEpisodeId()}"
+                            val fullTitle =
+                                if (nextEpisode.episodeTitle != null) {
+                                    "$episodeTitle: ${nextEpisode.episodeTitle}"
+                                } else {
+                                    episodeTitle
+                                }
 
-            // TODO: In actual implementation, replace with real episode URL resolution
-            // exoPlayerManager.prepareMedia(
-            //     mediaUrl = resolvedEpisodeUrl,
-            //     contentId = episodeContentId,
-            //     title = fullTitle,
-            //     metadata = episodeMetadata,
-            //     shouldResume = false, // Always start new episodes from beginning
-            // )
+                            val episodeContentId = "${nextEpisode.tmdbShowId}:${nextEpisode.seasonNumber}:${nextEpisode.episodeNumber}"
 
-            // For now, we'll just log the auto-play navigation
-            android.util.Log.i(
-                "PlaybackNavigationHelper",
-                "Auto-play navigation to: $fullTitle (${nextEpisode.tmdbShowId})",
-            )
+                            // Create episode metadata for the player
+                            val episodeMetadata =
+                                MediaMetadata(
+                                    title = fullTitle,
+                                    description = "Auto-playing next episode",
+                                    thumbnailUrl = null, // Would come from TMDb episode data
+                                )
 
-            // TODO: Trigger actual navigation to the episode
-            // This would typically involve:
-            // 1. Updating the current VideoPlayerScreen with new episode parameters
-            // 2. Or navigating to a new instance with the episode details
+                            DebugLogger.i(
+                                "PlaybackNavigationHelper",
+                                "Successfully resolved episode URL for auto-play: $fullTitle",
+                            )
+
+                            // Prepare the media with ExoPlayer
+                            exoPlayerManager.prepareMedia(
+                                mediaUrl = result.streamingUrl,
+                                contentId = episodeContentId,
+                                title = fullTitle,
+                                metadata = episodeMetadata,
+                                shouldResume = false, // Always start new episodes from beginning
+                            )
+
+                            // Start playback
+                            exoPlayerManager.play()
+
+                            // Notify success
+                            onSuccess?.invoke(result.streamingUrl, fullTitle)
+
+                            DebugLogger.i(
+                                "PlaybackNavigationHelper",
+                                "Auto-play navigation completed successfully for ${nextEpisode.getDisplayText()}",
+                            )
+                        }
+
+                        is AutoPlayEpisodeResult.NoSourcesFound -> {
+                            val errorMsg = "No sources found for ${nextEpisode.getDisplayText()}"
+                            DebugLogger.w("PlaybackNavigationHelper", errorMsg)
+                            onError?.invoke(errorMsg)
+                        }
+
+                        is AutoPlayEpisodeResult.NoSuitableSource -> {
+                            val errorMsg = "No suitable source found for auto-play (${result.availableSources.size} sources available)"
+                            DebugLogger.w("PlaybackNavigationHelper", errorMsg)
+                            onError?.invoke(errorMsg)
+                        }
+
+                        is AutoPlayEpisodeResult.UrlResolutionFailed -> {
+                            val errorMsg = "Failed to resolve streaming URL for ${result.source.id}"
+                            DebugLogger.w("PlaybackNavigationHelper", errorMsg)
+                            onError?.invoke(errorMsg)
+                        }
+
+                        is AutoPlayEpisodeResult.ResolutionError -> {
+                            val errorMsg = "Episode resolution error: ${result.errorMessage}"
+                            DebugLogger.e("PlaybackNavigationHelper", errorMsg)
+                            onError?.invoke(errorMsg)
+                        }
+                    }
+                } catch (e: Exception) {
+                    val errorMsg = "Unexpected error during auto-play navigation: ${e.message}"
+                    DebugLogger.e("PlaybackNavigationHelper", errorMsg, e)
+                    onError?.invoke(errorMsg)
+                }
+            }
         }
 
         /**
