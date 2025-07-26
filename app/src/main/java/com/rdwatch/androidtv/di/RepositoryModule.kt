@@ -14,6 +14,8 @@ import com.rdwatch.androidtv.repository.MovieRepository
 import com.rdwatch.androidtv.repository.MovieRepositoryImpl
 import com.rdwatch.androidtv.repository.RealDebridContentRepository
 import com.rdwatch.androidtv.repository.RealDebridContentRepositoryImpl
+import com.rdwatch.androidtv.ui.details.repository.SourceAggregationRepository
+import com.rdwatch.androidtv.ui.details.repository.SourceAggregationRepositoryImpl
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -47,6 +49,10 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindLibraryRepository(libraryRepositoryImpl: LibraryRepositoryImpl): LibraryRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindSourceAggregationRepository(sourceAggregationRepositoryImpl: SourceAggregationRepositoryImpl): SourceAggregationRepository
 
     companion object {
         @Provides

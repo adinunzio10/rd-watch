@@ -33,11 +33,11 @@ class TVDetailsViewModel
         private val tmdbTVRepository: com.rdwatch.androidtv.data.repository.TMDbTVRepository,
         private val scraperSourceManager: ScraperSourceManager,
         private val libraryRepository: LibraryRepository,
+        private val sourceListViewModel: SourceListViewModel,
         @ApplicationContext private val context: Context,
     ) : BaseViewModel<TVDetailsUiState>() {
         // Advanced source management
         private val advancedSourceManager = AdvancedSourceManager(context)
-        private val sourceListViewModel = SourceListViewModel()
 
         // Job management for canceling concurrent API requests
         private var seasonLoadingJob: Job? = null

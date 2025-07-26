@@ -37,11 +37,11 @@ class MovieDetailsViewModel
         private val tmdbMovieService: com.rdwatch.androidtv.network.api.TMDbMovieService,
         private val scraperSourceManager: ScraperSourceManager,
         private val libraryRepository: LibraryRepository,
+        private val sourceListViewModel: SourceListViewModel,
         @ApplicationContext private val context: Context,
     ) : BaseViewModel<MovieDetailsUiState>() {
         // Advanced source management
         private val advancedSourceManager = AdvancedSourceManager(context)
-        private val sourceListViewModel = SourceListViewModel()
 
         private val _movieState = MutableStateFlow<UiState<Movie>>(UiState.Loading)
         val movieState: StateFlow<UiState<Movie>> = _movieState.asStateFlow()
