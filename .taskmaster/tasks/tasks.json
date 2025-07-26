@@ -2001,7 +2001,7 @@
         "dependencies": [
           16
         ],
-        "status": "pending",
+        "status": "cancelled",
         "subtasks": []
       },
       {
@@ -2014,157 +2014,22 @@
         "dependencies": [
           15
         ],
-        "status": "pending",
+        "status": "deferred",
         "subtasks": []
       },
       {
         "id": 22,
         "title": "Build Auto-play with Intelligent Source Selection",
         "description": "Create smart auto-play system that selects optimal sources for next episodes",
-        "details": "Implement source ranking algorithm: score = (cached ? 1000 : 0) + (quality_score * 100) + (seeders * 10) + (pack_bonus * 50). Create learning system: track user source selections, adjust weights based on preferences. Build fallback chains: primary source → secondary → tertiary. Implement pre-fetching: resolve next episode source during current playback. Add smart pack reuse: if current episode from pack, use same for next. Create source health monitoring: mark failed sources, skip in future. Add user preferences: quality threshold, release group preferences. Show source selection reasoning in UI.",
-        "testStrategy": "Test ranking algorithm with various inputs. Test learning system adaptation. Verify fallback chain execution. Test pre-fetch timing. Test pack reuse logic. Mock source failures. Test preference application. Verify UI reasoning display.",
-        "priority": "low",
+        "status": "deferred",
         "dependencies": [
           15,
-          16,
-          20
+          16
         ],
-        "status": "pending",
-        "subtasks": [
-          {
-            "id": 1,
-            "title": "Design core ranking algorithm architecture",
-            "description": "Create the foundational ranking algorithm with scoring mechanisms and weight calculations",
-            "dependencies": [],
-            "details": "Design a flexible ranking system that can score items based on multiple factors including relevance, performance metrics, user behavior, and contextual signals. Include interfaces for pluggable scoring functions.",
-            "status": "pending",
-            "testStrategy": ""
-          },
-          {
-            "id": 2,
-            "title": "Implement feedback learning system",
-            "description": "Build a machine learning system that adapts rankings based on user feedback and behavior",
-            "dependencies": [
-              1
-            ],
-            "details": "Create a feedback loop that captures user interactions (clicks, dwell time, conversions) and updates ranking weights. Implement online learning algorithms to continuously improve rankings.",
-            "status": "pending",
-            "testStrategy": ""
-          },
-          {
-            "id": 3,
-            "title": "Create intelligent fallback chains",
-            "description": "Develop a system for graceful degradation when primary ranking methods fail",
-            "dependencies": [
-              1
-            ],
-            "details": "Build fallback mechanisms that activate when primary rankers are unavailable or underperforming. Include rule-based fallbacks, cached results, and simplified ranking algorithms.",
-            "status": "pending",
-            "testStrategy": ""
-          },
-          {
-            "id": 4,
-            "title": "Implement predictive pre-fetching",
-            "description": "Add intelligent pre-fetching to anticipate user needs and improve response times",
-            "dependencies": [
-              1,
-              2
-            ],
-            "details": "Create a prediction system that pre-computes rankings for likely queries based on user patterns, temporal trends, and contextual signals. Include cache warming strategies.",
-            "status": "pending",
-            "testStrategy": ""
-          },
-          {
-            "id": 5,
-            "title": "Build result pack reuse system",
-            "description": "Implement efficient reuse of previously computed ranking results",
-            "dependencies": [
-              1,
-              4
-            ],
-            "details": "Design a caching layer that intelligently stores and reuses ranking results. Include similarity detection to identify when cached results can be adapted for new queries.",
-            "status": "pending",
-            "testStrategy": ""
-          },
-          {
-            "id": 6,
-            "title": "Add comprehensive health monitoring",
-            "description": "Create monitoring systems to track ranking algorithm performance and health",
-            "dependencies": [
-              1,
-              2,
-              3
-            ],
-            "details": "Implement real-time monitoring of ranking quality metrics, latency, error rates, and model drift. Include alerting for anomalies and automatic circuit breakers.",
-            "status": "pending",
-            "testStrategy": ""
-          },
-          {
-            "id": 7,
-            "title": "Integrate user preference system",
-            "description": "Build personalization capabilities into the ranking algorithm",
-            "dependencies": [
-              1,
-              2
-            ],
-            "details": "Create user profile management that captures preferences, historical behavior, and context. Integrate personalization signals into ranking calculations while maintaining privacy.",
-            "status": "pending",
-            "testStrategy": ""
-          },
-          {
-            "id": 8,
-            "title": "Create ranking reasoning UI",
-            "description": "Develop user interface components that explain ranking decisions",
-            "dependencies": [
-              1,
-              7
-            ],
-            "details": "Build UI elements that show why items are ranked as they are, including contributing factors and weights. Provide interactive controls for users to adjust preferences.",
-            "status": "pending",
-            "testStrategy": ""
-          },
-          {
-            "id": 9,
-            "title": "Optimize algorithm performance",
-            "description": "Enhance ranking speed and efficiency through various optimization techniques",
-            "dependencies": [
-              1,
-              2,
-              4,
-              5
-            ],
-            "details": "Implement performance optimizations including vectorization, parallel processing, approximate algorithms, and efficient data structures. Target sub-100ms latency.",
-            "status": "pending",
-            "testStrategy": ""
-          },
-          {
-            "id": 10,
-            "title": "Implement A/B testing framework",
-            "description": "Build infrastructure for testing ranking algorithm variations",
-            "dependencies": [
-              1,
-              2,
-              6
-            ],
-            "details": "Create a framework for running controlled experiments on ranking algorithms. Include traffic splitting, metric collection, and statistical analysis capabilities.",
-            "status": "pending",
-            "testStrategy": ""
-          },
-          {
-            "id": 11,
-            "title": "Create ranking quality metrics",
-            "description": "Develop comprehensive metrics to measure and track ranking effectiveness",
-            "dependencies": [
-              1,
-              2,
-              6,
-              10
-            ],
-            "details": "Implement metrics for relevance (NDCG, MAP), user satisfaction (CTR, dwell time), diversity, freshness, and fairness. Build dashboards for monitoring these metrics.",
-            "status": "pending",
-            "testStrategy": ""
-          }
-        ]
+        "priority": "high",
+        "details": "Implement source ranking algorithm: score = (cached ? 1000 : 0) + (quality_score * 100) + (seeders * 10) + (pack_bonus * 50). Create learning system: track user source selections, adjust weights based on preferences. Build fallback chains: primary source → secondary → tertiary. Implement pre-fetching: resolve next episode source during current playback. Add smart pack reuse: if current episode from pack, use same for next. Create source health monitoring: mark failed sources, skip in future. Add user preferences: quality threshold, release group preferences. Show source selection reasoning in UI.",
+        "testStrategy": "Test ranking algorithm with various inputs. Test learning system adaptation. Verify fallback chain execution. Test pre-fetch timing. Test pack reuse logic. Mock source failures. Test preference application. Verify UI reasoning display.",
+        "subtasks": []
       },
       {
         "id": 23,
@@ -3020,11 +2885,90 @@
             "testStrategy": ""
           }
         ]
+      },
+      {
+        "id": 33,
+        "title": "Review and Fix Auto-play Functionality Implementation",
+        "description": "Investigate and resolve issues with the existing auto-play functionality that was implemented in Task 15 but is not working correctly.",
+        "details": "Conduct thorough code review of auto-play implementation from Task 15 to identify gaps or bugs. Review episode progression logic in NextEpisodeRepository and binge mode countdown functionality. Investigate integration points between episode tracking and ExoPlayer to ensure proper auto-play triggering. Fix any missing event handlers or state management issues. Verify countdown timer implementation (10s before auto-play). Check for proper cleanup and cancellation when user manually intervenes. Ensure auto-play respects user preferences and can be enabled/disabled. Review error handling for cases where next episode is unavailable or fails to load. Integrate with source selection logic if needed. Add proper logging and debugging capabilities to track auto-play behavior. Update UI components to properly display auto-play countdown and allow user cancellation.",
+        "testStrategy": "Test complete episode playback with auto-play enabled to verify next episode starts automatically. Test countdown timer accuracy and UI display. Verify user can cancel auto-play during countdown. Test edge cases: last episode of season, last episode of series, network failures during auto-play. Test with various video formats and playback scenarios. Verify auto-play respects user settings when disabled. Test memory and resource cleanup when auto-play is cancelled. Verify proper error handling when next episode fails to load. Test integration with episode progression tracking. Use manual testing on Android TV device with remote control to simulate real user experience.",
+        "status": "done",
+        "dependencies": [
+          15,
+          12
+        ],
+        "priority": "medium",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Code review of Task 15 implementation",
+            "description": "Conduct thorough review of existing auto-play implementation from Task 15, examining NextEpisodeRepository, episode progression logic, and binge mode countdown functionality",
+            "dependencies": [],
+            "details": "Review all files modified in Task 15 implementation including NextEpisodeRepository, episode tracking components, and binge mode UI. Identify gaps in implementation, unused code paths, and potential integration issues with ExoPlayer.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Identify and fix event handler/state management issues",
+            "description": "Debug and resolve problems with event handling and state management in the auto-play system",
+            "dependencies": [
+              "33.1"
+            ],
+            "details": "Investigate state synchronization between episode completion detection and auto-play triggering. Fix missing event listeners, state update bugs, and ensure proper communication between components.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Fix countdown timer and UI integration",
+            "description": "Resolve issues with the 10-second countdown timer display and user interaction",
+            "dependencies": [
+              "33.2"
+            ],
+            "details": "Debug countdown timer accuracy, UI display problems, and ensure proper integration with the overall playback UI. Fix any timing inconsistencies or visual glitches in the countdown display.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Implement proper cleanup and cancellation logic",
+            "description": "Add robust cleanup mechanisms and user cancellation handling for auto-play functionality",
+            "dependencies": [
+              "33.3"
+            ],
+            "details": "Implement proper resource cleanup when auto-play is cancelled, ensure timers are properly disposed, and handle user intervention scenarios like manual navigation or app backgrounding.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Add error handling for edge cases",
+            "description": "Implement comprehensive error handling for auto-play edge cases and failure scenarios",
+            "dependencies": [
+              "33.4"
+            ],
+            "details": "Handle edge cases like last episode of season/series, network failures during auto-play, missing next episode data, and source resolution failures. Add proper fallback behavior and user notifications.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 6,
+            "title": "Integration testing with source selection",
+            "description": "Perform end-to-end testing of auto-play functionality integrated with source selection system",
+            "dependencies": [
+              "33.5"
+            ],
+            "details": "Test complete auto-play workflow including episode completion detection, countdown display, source resolution for next episode, and seamless playback transition. Verify integration with existing source selection logic.",
+            "status": "done",
+            "testStrategy": ""
+          }
+        ]
       }
     ],
     "metadata": {
       "created": "2025-06-22T03:41:46.714Z",
-      "updated": "2025-07-22T02:18:19.708Z",
+      "updated": "2025-07-24T05:04:02.026Z",
       "description": "Tasks for master context"
     }
   }

@@ -1,93 +1,53 @@
 {
 	"meta": {
-		"generatedAt": "2025-07-20T00:57:55.115Z",
-		"tasksAnalyzed": 10,
-		"totalTasks": 32,
-		"analysisCount": 10,
+		"generatedAt": "2025-07-24T04:48:53.227Z",
+		"tasksAnalyzed": 5,
+		"totalTasks": 33,
+		"analysisCount": 5,
 		"thresholdScore": 5,
 		"projectName": "rd-watch",
 		"usedResearch": true
 	},
 	"complexityAnalysis": [
 		{
-			"taskId": 14,
-			"taskTitle": "Build Library Management System",
-			"complexityScore": 7,
-			"recommendedSubtasks": 12,
-			"expansionPrompt": "Break down the library management system into focused subtasks: data layer setup (entities, DAOs, repository), UI components (grid layouts, category filters, search), business logic (CRUD operations, sorting algorithms), media handling (poster caching, offline support), import/export functionality, and integration with existing playback tracking systems.",
-			"reasoning": "This task involves multiple complex components: database design with relationships, UI with filtering/sorting, image caching strategy, export/import file handling, and integration with existing systems. The variety of features (categories, search, statistics, quick actions) and performance requirements (500+ items) warrant significant decomposition."
-		},
-		{
-			"taskId": 15,
-			"taskTitle": "Implement Smart Episode Progression",
-			"complexityScore": 8,
-			"recommendedSubtasks": 10,
-			"expansionPrompt": "Decompose the episode progression system into: core progression logic (next episode calculation, season boundaries), data models for tracking, UI components (continue watching row, progress indicators), special case handlers (anthologies, specials), auto-play implementation with countdown UI, notification system setup, and integration with existing playback completion tracking.",
-			"reasoning": "High complexity due to intricate business logic for episode progression, edge cases (special episodes, irregular numbering), UI/UX considerations (binge mode, notifications), and tight integration with multiple existing systems. The smart detection and boundary handling require careful algorithmic design."
-		},
-		{
 			"taskId": 18,
 			"taskTitle": "Build Download Management Interface",
 			"complexityScore": 8,
-			"recommendedSubtasks": 14,
-			"expansionPrompt": "Structure the download manager into: UI screens (active/completed sections, add torrent flow), Real Debrid API integration layer, file selection interface for multi-file torrents, background service architecture with WorkManager, notification system, download state management, queue operations (pause/resume/delete), bandwidth controls, auto-delete logic, and comprehensive error handling.",
-			"reasoning": "Complex due to multiple technical challenges: background processing, real-time updates, system notifications, API integration, file handling, and robust state management. The requirement for large torrent support (50+ files) and various user controls adds significant complexity."
-		},
-		{
-			"taskId": 20,
-			"taskTitle": "Create Season Pack Detection System",
-			"complexityScore": 6,
-			"recommendedSubtasks": 8,
-			"expansionPrompt": "Break down into: pattern matching engine for various naming conventions, database schema for pack information, episode mapping logic, UI indicators for pack vs single sources, preference system implementation, edge case handlers (double episodes, incomplete packs), and integration with existing torrent selection flow.",
-			"reasoning": "Moderate complexity focusing on pattern recognition and data mapping. While the core logic is straightforward, handling various naming conventions and edge cases requires careful design. The intelligent reuse system adds algorithmic complexity."
-		},
-		{
-			"taskId": 21,
-			"taskTitle": "Implement Episode Numbering Inconsistency Handler",
-			"complexityScore": 9,
-			"recommendedSubtasks": 15,
-			"expansionPrompt": "Organize into: multi-API integration layer (TMDb, TVDb, Trakt), database design for mapping tables, flagging system UI and data model, episode guide selection interface, community submission system architecture, API response normalization, conflict resolution logic, manual override mechanisms, and comprehensive testing framework for known problematic shows.",
-			"reasoning": "Very high complexity due to multiple API integrations, complex data reconciliation, community features, and handling of inherently messy real-world data. The need to support multiple episode ordering systems and user-submitted mappings significantly increases scope."
-		},
-		{
-			"taskId": 22,
-			"taskTitle": "Build Auto-play with Intelligent Source Selection",
-			"complexityScore": 9,
-			"recommendedSubtasks": 11,
-			"expansionPrompt": "Decompose into: ranking algorithm implementation with configurable weights, machine learning system for preference adaptation, fallback chain architecture, pre-fetching service, pack reuse optimizer, source health monitoring system, user preference management, UI for displaying reasoning, performance optimization, and comprehensive testing framework.",
-			"reasoning": "Very complex due to ML components, multi-factor optimization, real-time decision making, and integration with multiple systems. The learning aspect and need for explainable AI (reasoning display) add significant architectural complexity."
+			"recommendedSubtasks": 12,
+			"expansionPrompt": "Create a comprehensive download management system for Real Debrid transfers. Break down into: 1) UI components for download listing and status display, 2) Add torrent/magnet flow with file selection, 3) Real-time progress monitoring system, 4) Queue management operations, 5) Background service implementation with WorkManager, 6) System notification handling, 7) Auto-delete functionality, 8) Download history and search features.",
+			"reasoning": "High complexity due to multiple API integrations, background service requirements, real-time updates, file management, and complex UI states. Requires coordination between UI, background services, notifications, and persistent storage."
 		},
 		{
 			"taskId": 23,
 			"taskTitle": "Implement Voice Search and Commands",
 			"complexityScore": 7,
 			"recommendedSubtasks": 10,
-			"expansionPrompt": "Structure into: Android TV SearchManager integration, voice command parser for various patterns, VoiceSearchActivity implementation, continuous listening service, natural language processing layer, TextToSpeech feedback system, multi-language support infrastructure, ambiguous result handler UI, and comprehensive voice testing framework.",
-			"reasoning": "Complex due to platform-specific APIs, NLP requirements, continuous listening challenges, and multi-language support. The need for natural language understanding and handling ambiguous queries adds significant complexity beyond basic voice recognition."
+			"expansionPrompt": "Implement Android TV voice control system. Break down into: 1) SearchManager integration for basic voice search, 2) Voice command recognition system, 3) Natural language processing for queries, 4) VoiceSearchActivity implementation, 5) Continuous listening mode during playback, 6) Multi-language support, 7) Voice feedback with TTS, 8) Ambiguous query handling UI.",
+			"reasoning": "Complex due to Android TV voice API integration, natural language processing requirements, multiple command types, continuous listening implementation, and multi-language support. Requires careful handling of voice recognition edge cases."
 		},
 		{
 			"taskId": 24,
 			"taskTitle": "Create Android TV Recommendations",
 			"complexityScore": 6,
-			"recommendedSubtasks": 9,
-			"expansionPrompt": "Break down into: TvRecommendationService implementation, recommendation channel setup, content analysis for smart recommendations, WorkManager periodic tasks, deep-link handling system, preference management UI, analytics integration, image optimization for recommendations, and system limit handling.",
-			"reasoning": "Moderate complexity involving Android TV specific APIs and background processing. While the core recommendation system is straightforward, managing channels, periodic updates, and smart content analysis add layers of complexity."
+			"recommendedSubtasks": 8,
+			"expansionPrompt": "Build Android TV home screen recommendation system. Break down into: 1) TvRecommendationService setup, 2) Recommendation channel creation, 3) Content metadata and image handling, 4) WorkManager periodic update tasks, 5) Deep-link handling, 6) User preferences for recommendations, 7) Smart recommendation algorithm, 8) Analytics tracking.",
+			"reasoning": "Moderate to high complexity involving Android TV system integration, periodic background updates, content curation algorithms, and system recommendation limits. Requires understanding of Android TV recommendation framework."
 		},
 		{
 			"taskId": 25,
 			"taskTitle": "Optimize Performance and Polish UI",
-			"complexityScore": 8,
-			"recommendedSubtasks": 15,
-			"expansionPrompt": "Organize into: performance profiling and analysis, image loading optimization, Baseline Profile creation, animation system implementation (transitions, parallax), database query optimization, app shortcuts setup, error boundary implementation, loading states throughout app, Compose optimization techniques, focus management improvements, haptic feedback system, onboarding flow design, and comprehensive performance testing suite.",
-			"reasoning": "High complexity due to the breadth of optimizations needed across the entire app. Performance work requires deep technical knowledge, careful measurement, and iterative refinement. The polish aspects (animations, haptics, onboarding) require significant UX consideration."
+			"complexityScore": 9,
+			"recommendedSubtasks": 14,
+			"expansionPrompt": "Comprehensive performance optimization and UI polish. Break down into: 1) Performance profiling and bottleneck identification, 2) Image loading optimization with progressive loading, 3) Baseline Profile implementation, 4) Animation system with transitions and parallax, 5) Database query optimization, 6) Memory management improvements, 7) Loading state implementations, 8) Focus restoration logic, 9) Haptic feedback system, 10) Onboarding flow creation.",
+			"reasoning": "Very high complexity as it touches every aspect of the app. Requires deep performance analysis, multiple optimization techniques, UI/UX improvements, and extensive testing across different device capabilities. Dependencies on all other tasks increase complexity."
 		},
 		{
-			"taskId": 32,
-			"taskTitle": "Enhance ExoPlayer Controls and Functionality",
-			"complexityScore": 8,
-			"recommendedSubtasks": 13,
-			"expansionPrompt": "Decompose into: player controls UI overhaul with TV optimization, hamburger menu system architecture, quality selection with Real Debrid integration, subtitle management system (detection, styling, formats), TV remote mapping and focus management, seek preview implementation, PlayerControlsViewModel creation, settings persistence layer, overlay animations, and cross-device compatibility testing.",
-			"reasoning": "High complexity due to extensive UI work, multiple feature integrations (quality, subtitles, speed), TV-specific UX requirements, and Real Debrid API integration. The need for seamless playback during quality switches and comprehensive remote control mapping adds significant technical challenges."
+			"taskId": 33,
+			"taskTitle": "Review and Fix Auto-play Functionality Implementation",
+			"complexityScore": 5,
+			"recommendedSubtasks": 6,
+			"expansionPrompt": "Debug and fix existing auto-play implementation. Break down into: 1) Code review of Task 15 implementation, 2) Identify and fix event handler/state management issues, 3) Fix countdown timer and UI integration, 4) Implement proper cleanup and cancellation logic, 5) Add error handling for edge cases, 6) Integration testing with source selection.",
+			"reasoning": "Moderate complexity as it's primarily debugging and fixing existing code rather than building from scratch. Requires understanding of existing implementation, ExoPlayer integration, and state management. Limited scope compared to new feature development."
 		}
 	]
 }
